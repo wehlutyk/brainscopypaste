@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 ## Code adapted from http://code.activestate.com/recipes/573463/ (r7)
 '''
 This module is for translating an XML file into a list/dict structure
-It is tuned for Spinn3r XML data
+It can also specially parse text tags (e.g. body of a post, like <description>
+in Spinn3r XML data, and extract outward links
 '''
 
 
@@ -10,7 +12,6 @@ It is tuned for Spinn3r XML data
 
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
-import hashlib
 import re
 
 
@@ -100,10 +101,6 @@ class TextHtmlParser(HTMLParser):
                     attrsdict[attr[0]] = attr[1]
             
             self.outlinks.append(attrsdict)
-    
-    def close(self):
-        HTMLParser.close(self)
-        return self.outlinks
 
 
 def _ConvertDictToXmlRecurse(parent, dictitem):
@@ -139,7 +136,8 @@ def ConvertDictToXml(xmldict):
     _ConvertDictToXmlRecurse(root, xmldict[roottag])
     return root
 
-def _ConvertXmlToDictRecurse(node, dictclass):
+
+def _ConvertXmlToDictRecurse(node, text_tags, dictclass):
     nodedict = dictclass()
     
     if len(node.items()) > 0:
@@ -148,7 +146,7 @@ def _ConvertXmlToDictRecurse(node, dictclass):
     
     for child in node:
         # recursively add the element's children
-        newitem = _ConvertXmlToDictRecurse(child, dictclass)
+        newitem = _ConvertXmlToDictRecurse(child, text_tags, dictclass)
         if nodedict.has_key(child.tag):
             # found duplicate tag, force a list
             if type(nodedict[child.tag]) is type([]):
@@ -167,13 +165,25 @@ def _ConvertXmlToDictRecurse(node, dictclass):
     else: 
         text = node.text.strip()
 
-    if node.tag == 'description' or node.tag == 'title':
+    if not isinstance(text, unicode):
+        text = unicode(text, 'utf-8')
+
+    if node.tag in text_tags:
         # If we're in some kind of text node, strip the text and get outward links
         texthtmlparser = TextHtmlParser()
         text = texthtmlparser.unescape(text)
         text_stripped = re.sub(u'<[^<]+?>', '', text)
         texthtmlparser.feed(text)
         text_outlinks = texthtmlparser.outlinks
+        
+        if not isinstance(text, unicode):
+            text = unicode(text, 'utf-8')
+        if not isinstance(text_stripped, unicode):
+            text_stripped = unicode(text_stripped, 'utf-8')
+        for link in text_outlinks:
+            for attr in link:
+                if not isinstance(link[attr], unicode):
+                    link[attr] = unicode(link[attr], 'utf--8')
 
         nodedict['_text'] = text
         nodedict['_text_stripped'] = text_stripped
@@ -189,7 +199,7 @@ def _ConvertXmlToDictRecurse(node, dictclass):
     return nodedict
 
 
-def ConvertXmlToDict(root, dictclass=XmlDictObject):
+def ConvertXmlToDict(root, text_tags=[], dictclass=XmlDictObject):
     '''
     Converts an XML file or ElementTree Element to a dictionary
     '''
@@ -200,20 +210,9 @@ def ConvertXmlToDict(root, dictclass=XmlDictObject):
     elif not isinstance(root, ElementTree.Element):
         raise TypeError, 'Expected ElementTree.Element or file path string'
 
-    return dictclass({root.tag: _ConvertXmlToDictRecurse(root, dictclass)})
+    return dictclass({root.tag: _ConvertXmlToDictRecurse(root, text_tags, dictclass)})
 
 
-def ConvertSpinn3rToDict(root, dictclass=XmlDictObject):
-    '''
-    Converts a Spinn3r XML file or ElementTree Element to a dictionary,
-    adds a hash of the guid for each item, and returns the first meaningful
-    level of data: the list of <item>s
-    '''
-    
-    dictxml = ConvertXmlToDict(root, dictclass)
-    for it in dictxml.dataset.item:
-        it['guid_sha1'] = hashlib.sha1(it['guid']).hexdigest()
-    return dictxml.dataset.item
 
 # Tests should go here
 
