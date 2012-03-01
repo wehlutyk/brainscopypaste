@@ -1,15 +1,26 @@
-## {{{ http://code.activestate.com/recipes/573463/ (r7)
+## Code adapted from http://code.activestate.com/recipes/573463/ (r7)
+'''
+This module is for translating an XML file into a list/dict structure
+It is tuned for Spinn3r XML data
+'''
+
+
+
+# Imports
+
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
+import hashlib
 import re
+
 
 
 # Module Code:
 
 class XmlDictObject(dict):
-    """
+    '''
     Adds object like functionality to the standard dictionary.
-    """
+    '''
 
     def __init__(self, initdict=None):
         if initdict is None:
@@ -30,9 +41,9 @@ class XmlDictObject(dict):
 
     @staticmethod
     def Wrap(x):
-        """
+        '''
         Static method to wrap a dictionary recursively as an XmlDictObject
-        """
+        '''
 
         if isinstance(x, dict):
             return XmlDictObject((k, XmlDictObject.Wrap(v)) for (k, v) in x.iteritems())
@@ -51,11 +62,49 @@ class XmlDictObject(dict):
             return x
         
     def UnWrap(self):
-        """
+        '''
         Recursively converts an XmlDictObject to a standard dictionary and returns the result.
-        """
+        '''
 
         return XmlDictObject._UnWrap(self)
+
+
+class TextHtmlParser(HTMLParser):
+    '''
+    Can parse the body or title of a blog post (e.g. <description> or
+    <title> tags in Spinn3r data), and return outward links in the format
+    of a list. Each outward link is represented by a dictionary containing
+    attributename,value keypairs (or a list of values for an attribute that
+    has multiple instances
+    '''
+     
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.outlinks = []
+    
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            # Convert the attrs argument to a dictionary with lists if an attribute has multiple instances
+            attrsdict = {}
+            for attr in attrs:
+                if attrsdict.has_key(attr[0]):
+                    # found duplicate attribute, force a list
+                    if type(attrsdict[attr[0]]) is type([]):
+                        # append to existing list
+                        attrsdict[attr[0]].append(attr[1])
+                    else:
+                        # convert to list
+                        attrsdict[attr[0]] = [attrsdict[attr[0]], attr[1]]
+                else:
+                    # only one, directly set the dictionary
+                    attrsdict[attr[0]] = attr[1]
+            
+            self.outlinks.append(attrsdict)
+    
+    def close(self):
+        HTMLParser.close(self)
+        return self.outlinks
+
 
 def _ConvertDictToXmlRecurse(parent, dictitem):
     assert type(dictitem) is not type([])
@@ -76,11 +125,14 @@ def _ConvertDictToXmlRecurse(parent, dictitem):
                 _ConvertDictToXmlRecurse(elem, child)
     else:
         parent.text = str(dictitem)
+
     
 def ConvertDictToXml(xmldict):
-    """
-    Converts a dictionary to an XML ElementTree Element 
-    """
+    '''
+    Converts a dictionary to an XML ElementTree Element
+    This DOES NOT take into account the _text, _text_stripped, _text_outlinks variables
+    It is not tested for this, and will most probably fail to reconstitute the original XML
+    '''
 
     roottag = xmldict.keys()[0]
     root = ElementTree.Element(roottag)
@@ -136,10 +188,11 @@ def _ConvertXmlToDictRecurse(node, dictclass):
 
     return nodedict
 
+
 def ConvertXmlToDict(root, dictclass=XmlDictObject):
-    """
+    '''
     Converts an XML file or ElementTree Element to a dictionary
-    """
+    '''
 
     # If a string is passed in, try to open it as a file
     if type(root) == type(''):
@@ -149,34 +202,17 @@ def ConvertXmlToDict(root, dictclass=XmlDictObject):
 
     return dictclass({root.tag: _ConvertXmlToDictRecurse(root, dictclass)})
 
-class TextHtmlParser(HTMLParser):
-    def __init__(self):
-        HTMLParser.__init__(self)
-        self.outlinks = []
-    
-    def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            # Convert the attrs argument to a dictionary with lists if an attribute has multiple instances
-            attrsdict = {}
-            for attr in attrs:
-                if attrsdict.has_key(attr[0]):
-                    # found duplicate attribute, force a list
-                    if type(attrsdict[attr[0]]) is type([]):
-                        # append to existing list
-                        attrsdict[attr[0]].append(attr[1])
-                    else:
-                        # convert to list
-                        attrsdict[attr[0]] = [attrsdict[attr[0]], attr[1]]
-                else:
-                    # only one, directly set the dictionary
-                    attrsdict[attr[0]] = attr[1]
-            
-            self.outlinks.append(attrsdict)
-    
-    def close(self):
-        HTMLParser.close(self)
-        return self.outlinks
 
+def ConvertSpinn3rToDict(root, dictclass=XmlDictObject):
+    '''
+    Converts a Spinn3r XML file or ElementTree Element to a dictionary,
+    returning the first meaningful level of data: the list of <item>s
+    '''
+    dictxml = ConvertXmlToDict(root, dictclass)
+    for it in dictxml.dataset.item:
+        it['guid_sha1'] = hashlib.sha1(it['guid']).hexdigest()
+    return dictxml.dataset.item
 
 # Tests should go here
+
 #if __name__ == '__main__':
