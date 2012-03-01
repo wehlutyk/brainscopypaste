@@ -1,23 +1,7 @@
 ## {{{ http://code.activestate.com/recipes/573463/ (r7)
 from xml.etree import ElementTree
-
-# calling example
-def main():
-    configdict = ConvertXmlToDict('config.xml')
-    pprint(configdict)
-
-    # you can access the data as a dictionary
-    print configdict['settings']['color']
-    configdict['settings']['color'] = 'red'
-
-    # or you can access it like object attributes
-    print configdict.settings.color
-    configdict.settings.color = 'red'
-
-    root = ConvertDictToXml(configdict)
-
-    tree = ElementTree.ElementTree(root)
-    tree.write('config.new.xml')
+from HTMLParser import HTMLParser
+import re
 
 
 # Module Code:
@@ -125,21 +109,33 @@ def _ConvertXmlToDictRecurse(node, dictclass):
             # only one, directly set the dictionary
             nodedict[child.tag] = newitem
 
+
     if node.text is None: 
         text = ''
     else: 
         text = node.text.strip()
-    
-    if len(nodedict) > 0:            
-        # if we have a dictionary add the text as a dictionary value (if there is any)
+
+    if node.tag == 'description' or node.tag == 'title':
+        # If we're in some kind of text node, strip the text and get outward links
+        texthtmlparser = TextHtmlParser()
+        text = texthtmlparser.unescape(text)
+        text_stripped = re.sub(u'<[^<]+?>', '', text)
+        texthtmlparser.feed(text)
+        text_outlinks = texthtmlparser.outlinks
+
+        nodedict['_text'] = text
+        nodedict['_text_stripped'] = text_stripped
+        nodedict['_text_outlinks'] = text_outlinks
+    elif len(nodedict) > 0:
+        # If we're not in a text node, if we have a dictionary add the text as a dictionary value (if there is any)
         if len(text) > 0:
             nodedict['_text'] = text
     else:
         # if we don't have child nodes or attributes, just set the text
         nodedict = text
-        
+
     return nodedict
-        
+
 def ConvertXmlToDict(root, dictclass=XmlDictObject):
     """
     Converts an XML file or ElementTree Element to a dictionary
@@ -153,8 +149,34 @@ def ConvertXmlToDict(root, dictclass=XmlDictObject):
 
     return dictclass({root.tag: _ConvertXmlToDictRecurse(root, dictclass)})
 
+class TextHtmlParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.outlinks = []
+    
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            # Convert the attrs argument to a dictionary with lists if an attribute has multiple instances
+            attrsdict = {}
+            for attr in attrs:
+                if attrsdict.has_key(attr[0]):
+                    # found duplicate attribute, force a list
+                    if type(attrsdict[attr[0]]) is type([]):
+                        # append to existing list
+                        attrsdict[attr[0]].append(attr[1])
+                    else:
+                        # convert to list
+                        attrsdict[attr[0]] = [attrsdict[attr[0]], attr[1]]
+                else:
+                    # only one, directly set the dictionary
+                    attrsdict[attr[0]] = attr[1]
+            
+            self.outlinks.append(attrsdict)
+    
+    def close(self):
+        HTMLParser.close(self)
+        return self.outlinks
 
-if __name__ == '__main__':
-    main()
-## end of http://code.activestate.com/recipes/573463/ }}}
 
+# Tests should go here
+#if __name__ == '__main__':
