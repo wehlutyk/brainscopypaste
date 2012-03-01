@@ -206,7 +206,8 @@ def ConvertXmlToDict(root, dictclass=XmlDictObject):
 def ConvertSpinn3rToDict(root, dictclass=XmlDictObject):
     '''
     Converts a Spinn3r XML file or ElementTree Element to a dictionary,
-    returning the first meaningful level of data: the list of <item>s
+    adds a hash of the guid for each item, and returns the first meaningful
+    level of data: the list of <item>s
     '''
     dictxml = ConvertXmlToDict(root, dictclass)
     for it in dictxml.dataset.item:
