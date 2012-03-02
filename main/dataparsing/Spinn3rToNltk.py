@@ -50,7 +50,7 @@ def SaveNltkFiles(rootfolder, dictitems):
     for it in dictitems:
         # Create the directories
         fullpath = os.path.join(rootfolder, it['nltk_filename'])
-        (folder, filename) = os.path.split(fullpath)
+        folder = os.path.split(fullpath)[0]
         
         if not os.path.exists(folder):
             os.makedirs(folder)
