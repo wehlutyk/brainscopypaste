@@ -7,7 +7,7 @@ Methods to convert Spinn3r XML data to an NLTK corpus reader
 
 # Imports
 
-from xmlparsing.XmlDictObject import XmlDictObject, ConvertXmlToDict
+from dataparsing.xmlparsing.XmlDictObject import XmlDictObject, ConvertXmlToDict
 from nltk.corpus.reader.plaintext import CategorizedPlaintextCorpusReader
 from warnings import warn
 import os

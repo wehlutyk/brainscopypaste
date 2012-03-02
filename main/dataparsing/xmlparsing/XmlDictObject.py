@@ -12,7 +12,7 @@ in Spinn3r XML data, and extract outward links
 
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
-import re
+import nltk
 
 
 
@@ -172,7 +172,7 @@ def _ConvertXmlToDictRecurse(node, text_tags, dictclass):
         # If we're in some kind of text node, strip the text and get outward links
         texthtmlparser = TextHtmlParser()
         text = texthtmlparser.unescape(text)
-        text_stripped = re.sub(u'<[^<]+?>', '', text)
+        text_stripped = nltk.clean_html(text)
         texthtmlparser.feed(text)
         text_outlinks = texthtmlparser.outlinks
         
