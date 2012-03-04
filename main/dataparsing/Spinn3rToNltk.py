@@ -28,12 +28,10 @@ def ConvertSpinn3rToDict(root, dictclass=XmlDictObject):
     '''
     
     dictxml = ConvertXmlToDict(root, text_tags=['description','title'], dictclass=dictclass)
-    i = 0
-    for it in dictxml.dataset.item:
+    for i, it in enumerate(dictxml.dataset.item):
         guid_sha1 = hashlib.sha1(it['guid']).hexdigest()
         it['guid_sha1'] = guid_sha1
         it['nltk_filename'] = os.path.join(it['date_found'][:10], it['publisher_type'], '{}-'.format(i) + guid_sha1 + '.txt')
-        i += 1
     return dictxml.dataset.item
 
 
