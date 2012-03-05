@@ -7,17 +7,13 @@ in Spinn3r XML data, and extract outward links
 '''
 
 
-#
 # Imports
-#
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
 import nltk
 
 
-#
 # Module Code:
-#
 class XmlDictObject(dict):
     '''
     Adds object like functionality to the standard dictionary.
@@ -76,7 +72,7 @@ class TextHtmlParser(HTMLParser):
     <title> tags in Spinn3r data), and return outward links in the format
     of a list. Each outward link is represented by a dictionary containing
     attributename,value keypairs (or a list of values for an attribute that
-    has multiple instances
+    has multiple instances)
     '''
      
     def __init__(self):
@@ -101,40 +97,6 @@ class TextHtmlParser(HTMLParser):
                     attrsdict[attr[0]] = attr[1]
             
             self.outlinks.append(attrsdict)
-
-
-def _ConvertDictToXmlRecurse(parent, dictitem):
-    assert type(dictitem) is not type([])
-
-    if isinstance(dictitem, dict):
-        for (tag, child) in dictitem.iteritems():
-            if str(tag) == '_text':
-                parent.text = str(child)
-            elif type(child) is type([]):
-                # iterate through the array and convert
-                for listchild in child:
-                    elem = ElementTree.Element(tag)
-                    parent.append(elem)
-                    _ConvertDictToXmlRecurse(elem, listchild)
-            else:                
-                elem = ElementTree.Element(tag)
-                parent.append(elem)
-                _ConvertDictToXmlRecurse(elem, child)
-    else:
-        parent.text = str(dictitem)
-
-
-def ConvertDictToXml(xmldict):
-    '''
-    Converts a dictionary to an XML ElementTree Element
-    This DOES NOT take into account the _text, _text_stripped, _text_outlinks variables
-    It is not tested for this, and will most probably fail to reconstitute the original XML
-    '''
-
-    roottag = xmldict.keys()[0]
-    root = ElementTree.Element(roottag)
-    _ConvertDictToXmlRecurse(root, xmldict[roottag])
-    return root
 
 
 def _ConvertXmlToDictRecurse(node, text_tags, dictclass):

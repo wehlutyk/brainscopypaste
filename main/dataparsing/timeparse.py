@@ -4,18 +4,14 @@ Parsing functions for strings representing time
 '''
 
 
-#
 # Imports
-#
 from datetime import timedelta, datetime
 from calendar import timegm
 from pylab import sign
 import re
 
 
-#
 # Module code
-#
 def isostr_to_epoch(isostr):
     '''
     Takes a string in format '%Y-%m-%dT%H:%M:%SZ'
