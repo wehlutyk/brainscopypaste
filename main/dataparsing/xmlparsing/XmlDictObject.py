@@ -7,17 +7,17 @@ in Spinn3r XML data, and extract outward links
 '''
 
 
-
+#
 # Imports
-
+#
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
 import nltk
 
 
-
+#
 # Module Code:
-
+#
 class XmlDictObject(dict):
     '''
     Adds object like functionality to the standard dictionary.
@@ -123,7 +123,7 @@ def _ConvertDictToXmlRecurse(parent, dictitem):
     else:
         parent.text = str(dictitem)
 
-    
+
 def ConvertDictToXml(xmldict):
     '''
     Converts a dictionary to an XML ElementTree Element
@@ -158,7 +158,6 @@ def _ConvertXmlToDictRecurse(node, text_tags, dictclass):
         else:
             # only one, directly set the dictionary
             nodedict[child.tag] = newitem
-
 
     if node.text is None: 
         text = ''
@@ -211,9 +210,3 @@ def ConvertXmlToDict(root, text_tags=[], dictclass=XmlDictObject):
         raise TypeError, 'Expected ElementTree.Element or file path string'
 
     return dictclass({root.tag: _ConvertXmlToDictRecurse(root, text_tags, dictclass)})
-
-
-
-# Tests should go here
-
-#if __name__ == '__main__':

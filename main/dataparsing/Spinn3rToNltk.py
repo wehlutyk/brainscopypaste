@@ -4,9 +4,9 @@ Methods to convert Spinn3r XML data to an NLTK corpus reader
 '''
 
 
-
+#
 # Imports
-
+#
 from dataparsing.xmlparsing.XmlDictObject import XmlDictObject, ConvertXmlToDict
 from nltk.corpus.reader.plaintext import CategorizedPlaintextCorpusReader
 from warnings import warn
@@ -17,9 +17,9 @@ import hashlib
 import codecs
 
 
-
+#
 # Module code
-
+#
 def ConvertSpinn3rToDict(root, dictclass=XmlDictObject):
     '''
     Converts a Spinn3r XML file or ElementTree Element to a dictionary.
@@ -72,9 +72,3 @@ def CreateSpinn3rCategorizedPlaintextCorpusReader(rootfolder, filename):
     rootfolder_nltk = os.path.join(rootfolder, 'nltk')
     SaveNltkFiles(rootfolder_nltk, dictitems)
     return CategorizedPlaintextCorpusReader(root=rootfolder_nltk, fileids=r'.*', cat_pattern=r'[^/]+/([^/]+)/.*')
-
-
-
-# Tests should go here
-
-#if __name__ == '__main__':
