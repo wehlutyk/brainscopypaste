@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Objects that take an imported datasource to convert it to a dict,
-and later save that to NLTK files
+Objects to interface various data structures with NLTK
 '''
 
 
@@ -12,15 +11,28 @@ from re import sub
 from time import ctime
 from warnings import warn
 
+
 # Module code
-class DictNltk():
-    def __init__(self, rootfolder, dictitems):
+
+class DictNltk(object):
+    '''
+    A class that takes an imported datasource to convert it to a dict,
+    and later save that to NLTK files
+    '''
+    
+    def __init__(self, rootfolder, dictitems, tkey):
+        # Root folder where the data is to be stored
         self.rootfolder = rootfolder
+        
+        # The dictionary that holds the data
         self.dictitems = dictitems
+        
+        # The key saying where the relevant text is in the dictitems dictionary
+        self.tkey = tkey
     
     def save_files(self):
         '''
-        Saves the dictionary of items to their Nltk filenames
+        Saves the dictionary of items to their Nltk filenames, taking text_key as the key
         '''
         
         if os.path.exists(self.rootfolder):
@@ -37,10 +49,10 @@ class DictNltk():
                 os.makedirs(folder)
             f = c_open(fullpath, 'wb', encoding='utf-8')
             
-            if type(it['description']) == type([]):
-                for d in it['description']:
+            if type(it[self.tkey]) == type([]):
+                for d in it[self.tkey]:
                     if len(d['_text']) > 0:
                         f.write(d['_text_stripped'])
             else:
-                f.write(it['description']['_text_stripped'])
+                f.write(it[self.tkey]['_text_stripped'])
             f.close()
