@@ -1,5 +1,5 @@
-./main/data/*
-./main/data.original/*
+./trunk/data/*
+./trunk/data.original/*
 ./.settings
 *.ipynb
 .pydevproject
