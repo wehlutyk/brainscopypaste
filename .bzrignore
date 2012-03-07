@@ -3,3 +3,4 @@ data.original/*
 .settings
 *.ipynb
 .pydevproject
+.project
