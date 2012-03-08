@@ -48,6 +48,7 @@ class MT_dataset(object):
     def print_quote_ids(self):
         '''
         Reads the cluster file and prints out on each line all the quotes that belong to the same cluster
+        (Was called 'leskovec_clusters_encoding.py', changed to this name to reflect what is does)
         '''
         
         # Open the files
