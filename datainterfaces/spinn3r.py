@@ -17,27 +17,37 @@ import re
 
 # Module code
 class Spinn3rCategorizedPlaintextCorpusReader(CategorizedPlaintextCorpusReader):
-    def __init__(self, rootfolder, filename):
+    def __init__(self, rootfolder, filename=None, nltkfiles_are_present=False):
         '''
         Creates a CategorzedPlaintextCorpusReader based on a stripped Spinn3r XML file.
         '''
         
         # Set class variables
         self.rootfolder = rootfolder
-        self.filename = StripXmlNamespaces(os.path.join(rootfolder, filename))
+        self.nltkfolder = os.path.join(rootfolder, 'nltk')
         
-        # Get the dictionary corresponding to the Spinn3r XML file
-        dictitems = self.ConvertSpinn3rToDict()
-        rootfolder_nltk = os.path.join(rootfolder, 'nltk')
-        
-        # Save that dictionary to Nltk files
-        dn = DictNltk(rootfolder_nltk, dictitems, 'description')
-        dn.save_files()
+        if nltkfiles_are_present == False:
+            if filename == None:
+                raise Exception("Bad set of arguments: 'nltkfiles_are_present == False' and \
+                                 I have no XML filename to parse")
+            # The NLTK files are not yet created, we should parse the XML and create the files
+            # Get the dictionary corresponding to the Spinn3r XML file
+            strippedfilename = StripXmlNamespaces(os.path.join(rootfolder, filename))
+            dictitems = self.ConvertSpinn3rToDict(strippedfilename)
+            
+            # Save that dictionary to Nltk files
+            dn = DictNltk(self.nltkfolder, dictitems, 'description')
+            dn.save_files()
+        else:
+            # The NLTK files are already created, no need to parse the XML
+            if filename != None:
+                raise Exception("Bad set of arguments: I have an XML filename to parse, and \
+                                 'nltkfiles_are_present == True', meaning the XML is already parsed")
         
         # Finally init the Nltk reader
-        CategorizedPlaintextCorpusReader.__init__(self, root=rootfolder_nltk, fileids=r'.*', cat_pattern=r'[^/]+/([^/]+)/.*')
+        CategorizedPlaintextCorpusReader.__init__(self, root=self.nltkfolder, fileids=r'.*', cat_pattern=r'[^/]+/([^/]+)/.*')
 
-    def ConvertSpinn3rToDict(self):
+    def ConvertSpinn3rToDict(self, strippedfilename):
         '''
         Converts a Spinn3r XML file or ElementTree Element to a dictionary.
         For each item, it adds a hash of the guid and a filename for use by nltk.
@@ -45,7 +55,7 @@ class Spinn3rCategorizedPlaintextCorpusReader(CategorizedPlaintextCorpusReader):
         '''
         
         # Get the dict corresponding to the Spinn3r XML file
-        dictxml = ConvertXmlToDict(os.path.join(self.rootfolder, self.filename), text_tags=['description','title'])
+        dictxml = ConvertXmlToDict(os.path.join(self.rootfolder, strippedfilename), text_tags=['description','title'])
         
         # For each item, add a guid and an Nltk filename
         for i, it in enumerate(dictxml.dataset.item):
