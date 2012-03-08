@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ## Code adapted from http://code.activestate.com/recipes/573463/ (r7)
 '''
