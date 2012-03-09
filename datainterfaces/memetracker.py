@@ -18,9 +18,6 @@ class MT_dataset(object):
     def __init__(self, mt_filename):
         self.mt_filename = mt_filename
         self.rootfolder = os.path.split(mt_filename)[0]
-        self.n_skip = 6
-        self.n_lines = 8357595 # or count them self.count_lines(mt_filename)
-        self.lineinfostep = self.n_lines//20
     
     def print_quotes_freq(self):
         '''
@@ -80,30 +77,96 @@ class MT_dataset(object):
         # Return the created file name
         return outfilename
     
+    def load_clusters(self):
+        '''
+        Load the whole clusters file into a dictionary
+        '''
+        
+        # Initialize the cluster file parser
+        def init(self):
+            self.cluster_id = None
+            self.quote_id = None
+            self.clusters = {}
+        
+        def handle_cluster(self, line_fields):
+            self.cluster_id = int(line_fields[3])
+            self.clusters[self.cluster_id] = {'ClSz': int(line_fields[0]), \
+                                       'TotFq': int(line_fields[1]), \
+                                       'Root': line_fields[2], \
+                                       'Quotes': {}}
+        
+        def handle_quote(self, line_fields):
+            self.quote_id = int(line_fields[4])
+            self.clusters[self.cluster_id]['Quotes'][self.quote_id] = {'QtFq': int(line_fields[1]), \
+                                                                       'N_Urls': int(line_fields[2]), \
+                                                                       'QtStr': line_fields[3], \
+                                                                       'Links': {}}
+        
+        def handle_url(self, line_fields):
+            self.clusters[self.cluster_id]['Quotes'][self.quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
+                                                                                                'Fq': int(line_fields[3]), \
+                                                                                                'UrlTy': line_fields[4]}
+        
+        cluster_parser = ClusterFileParser(init=init, \
+                                           handle_cluster=handle_cluster, \
+                                           handle_quote=handle_quote, \
+                                           handle_url=handle_url)
+        
+        print 'Loading cluster file into a dictionary... ( percentage completed:',
+        cluster_parser.parse(self.mt_filename)
+        print ') done'
+        self.clusters = cluster_parser.clusters
+
+
+class ClusterFileParser(object):
+    '''
+    A class to parse a cluster file, with custom cluster-, quote-, and url-handlers
+    '''
+    
+    def __init__(self, init, handle_cluster, handle_quote, handle_url):
+        # Set the handlers
+        self.handle_cluster = handle_cluster
+        self.handle_quote = handle_quote
+        self.handle_url = handle_url
+        
+        # Some variables to print progress info
+        self.n_skip = 6
+        self.n_lines = 8357595 # or count them self.count_lines(mt_filename)
+        self.lineinfostep = int(round(self.n_lines/20))
+        
+        # Run the custom initialisation function
+        init(self)
+    
     def skip_lines(self, f):
+        '''
+        Skip the first few lines in a file object
+        '''
+        
         for i in xrange(self.n_skip):
             f.readline()
     
     def count_lines(self, filename):
+        '''
+        Count the lines of a file
+        '''
+        
         print "Counting lines for '" + filename + "'..."
         with c_open(filename, 'rb', encoding='utf-8') as f:
             for i, l in enumerate(f):
                 pass
             return i + 1
     
-    def load_clusters(self):
+    def parse(self, filename):
         '''
-        Load the whole clusters file into a dictionary
+        Do the actual parsing
         '''
         
         # Open the file
-        with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile:
+        with c_open(filename, 'rb', encoding='utf-8') as infile:
             # Skip the first few lines
             self.skip_lines(infile)
             
             # Parse the file
-            print 'Loading cluster file into a dictionary... ( percentage completed:',
-            self.clusters = {}
             for i, line in enumerate(infile):
                 # Give some info about progress
                 if i % self.lineinfostep == 0:
@@ -112,21 +175,10 @@ class MT_dataset(object):
                 line_fields = re.split(r'[\t\r\n]', line)
                 # Is this a cluster definition line?
                 if line0[0] != '':
-                    cluster_id = int(line_fields[3])
-                    self.clusters[cluster_id] = {'ClSz': int(line_fields[0]), \
-                                                 'TotFq': int(line_fields[1]), \
-                                                 'Root': line_fields[2], \
-                                                 'Quotes': {}}
+                    self.handle_cluster(self, line_fields)
                 # Is this a quote definition line?
                 elif line[0] == '\t' and line[1] != '\t':
-                    quote_id = int(line_fields[4])
-                    self.clusters[cluster_id]['Quotes'][quote_id] = {'QtFq': int(line_fields[1]), \
-                                                                     'N_Urls': int(line_fields[2]), \
-                                                                     'QtStr': line_fields[3], \
-                                                                     'Links': {}}
+                    self.handle_quote(self, line_fields)
                 # Is this a url definition line?
                 elif line[0] == '\t' and line[1] == '\t' and line[2] != '\t':
-                    self.clusters[cluster_id]['Quotes'][quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
-                                                                                             'Fq': int(line_fields[3]), \
-                                                                                             'UrlTy': line_fields[4]}
-            print ') done'
+                    self.handle_url(self, line_fields)
