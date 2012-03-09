@@ -13,7 +13,7 @@ import re
 
 
 # Module code
-def isostr_to_epoch(isostr):
+def isostr_to_epoch_linkfluence(isostr):
     '''
     Takes a string in format '%Y-%m-%dT%H:%M:%SZ'
                           or '%Y-%m-%dT%H:%M:%S+%Hz:%Mz'
@@ -21,7 +21,7 @@ def isostr_to_epoch(isostr):
     and converts it to a number of seconds since the epoch
     '''
     
-    # Convert the 'Z' to '+00:00'
+    # Convert any potential 'Z' to '+00:00'
     tzisostr = re.sub(r'Z$', '+00:00', isostr)
     
     # Get the timezone offset and strip it from the tzisostr
@@ -45,3 +45,13 @@ def isostr_to_epoch(isostr):
     
     # Finally, return the number of seconds since epoch
     return timegm(utcdt.utctimetuple())
+
+
+def isostr_to_epoch_mt(isostr):
+    '''
+    Takes a string in format '%Y-%m-%d %H:%M:%S' and converts it to a number of seconds since epoch
+    '''
+    
+    dt = datetime.strptime(isostr, '%Y-%m-%d %H:%M:%S')
+    assert dt.tzinfo is None
+    return timegm(dt.utctimetuple())
