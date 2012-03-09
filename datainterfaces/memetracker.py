@@ -9,6 +9,7 @@ See http://memetracker.org/ for details about it
 # Imports
 from __future__ import division
 from codecs import open as c_open
+from abc import ABCMeta, abstractmethod
 import re
 import os
 
@@ -83,69 +84,52 @@ class MT_dataset(object):
         '''
         
         # Initialize the cluster file parser
-        def init(self):
-            self.cluster_id = None
-            self.quote_id = None
-            self.clusters = {}
+        clusters_loader = ClustersLoader()
         
-        def handle_cluster(self, line_fields):
-            self.cluster_id = int(line_fields[3])
-            self.clusters[self.cluster_id] = {'ClSz': int(line_fields[0]), \
-                                       'TotFq': int(line_fields[1]), \
-                                       'Root': line_fields[2], \
-                                       'Quotes': {}}
-        
-        def handle_quote(self, line_fields):
-            self.quote_id = int(line_fields[4])
-            self.clusters[self.cluster_id]['Quotes'][self.quote_id] = {'QtFq': int(line_fields[1]), \
-                                                                       'N_Urls': int(line_fields[2]), \
-                                                                       'QtStr': line_fields[3], \
-                                                                       'Links': {}}
-        
-        def handle_url(self, line_fields):
-            self.clusters[self.cluster_id]['Quotes'][self.quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
-                                                                                                'Fq': int(line_fields[3]), \
-                                                                                                'UrlTy': line_fields[4]}
-        
-        cluster_parser = ClusterFileParser(init=init, \
-                                           handle_cluster=handle_cluster, \
-                                           handle_quote=handle_quote, \
-                                           handle_url=handle_url)
-        
+        # Do the parsing and save it
         print 'Loading cluster file into a dictionary... ( percentage completed:',
-        cluster_parser.parse(self.mt_filename)
+        clusters_loader.parse(self.mt_filename)
         print ') done'
-        self.clusters = cluster_parser.clusters
+        self.clusters = clusters_loader.clusters
 
 
-class ClusterFileParser(object):
+class ClustersFileParser:
     '''
-    A class to parse a cluster file, with custom cluster-, quote-, and url-handlers
+    An abstract class to define cluster file parsers, with custom cluster-, quote-, and url-handlers
     '''
     
-    def __init__(self, init, handle_cluster, handle_quote, handle_url):
-        # Set the handlers
-        self.handle_cluster = handle_cluster
-        self.handle_quote = handle_quote
-        self.handle_url = handle_url
-        
+    # Make this an abstract base class: can't be instantiated, must be sub-classed
+    # In addition, methods marked @abstractmethod must be overridden
+    # (i.e. they're not implemented here, but should be implemented in sub-classes)
+    __metaclass__ = ABCMeta
+    
+    def __init__(self):
         # Some variables to print progress info
-        self.n_skip = 6
-        self.n_lines = 8357595 # or count them self.count_lines(mt_filename)
-        self.lineinfostep = int(round(self.n_lines/20))
-        
-        # Run the custom initialisation function
-        init(self)
+        self._n_skip = 6
+        self._n_lines = 8357595 # or count them self._count_lines(mt_filename)
+        self._lineinfostep = int(round(self._n_lines/20))
     
-    def skip_lines(self, f):
+    @abstractmethod
+    def handle_cluster(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def handle_quote(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def handle_url(self):
+        raise NotImplementedError
+    
+    def _skip_lines(self, f):
         '''
         Skip the first few lines in a file object
         '''
         
-        for i in xrange(self.n_skip):
+        for i in xrange(self._n_skip):
             f.readline()
     
-    def count_lines(self, filename):
+    def _count_lines(self, filename):
         '''
         Count the lines of a file
         '''
@@ -164,21 +148,52 @@ class ClusterFileParser(object):
         # Open the file
         with c_open(filename, 'rb', encoding='utf-8') as infile:
             # Skip the first few lines
-            self.skip_lines(infile)
+            self._skip_lines(infile)
             
             # Parse the file
             for i, line in enumerate(infile):
                 # Give some info about progress
-                if i % self.lineinfostep == 0:
-                    print int(round(i*100/self.n_lines)),
+                if i % self._lineinfostep == 0:
+                    print int(round(i*100/self._n_lines)),
                 line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
                 line_fields = re.split(r'[\t\r\n]', line)
                 # Is this a cluster definition line?
                 if line0[0] != '':
-                    self.handle_cluster(self, line_fields)
+                    self.handle_cluster(line_fields)
                 # Is this a quote definition line?
                 elif line[0] == '\t' and line[1] != '\t':
-                    self.handle_quote(self, line_fields)
+                    self.handle_quote(line_fields)
                 # Is this a url definition line?
                 elif line[0] == '\t' and line[1] == '\t' and line[2] != '\t':
-                    self.handle_url(self, line_fields)
+                    self.handle_url(line_fields)
+
+
+class ClustersLoader(ClustersFileParser):
+    '''
+    A class to parse a cluster file, and load it all into a dictionary
+    '''
+    
+    def __init__(self):
+        super(ClustersLoader, self).__init__()
+        self.cluster_id = None
+        self.quote_id = None
+        self.clusters = {}
+    
+    def handle_cluster(self, line_fields):
+        self.cluster_id = int(line_fields[3])
+        self.clusters[self.cluster_id] = {'ClSz': int(line_fields[0]), \
+                                   'TotFq': int(line_fields[1]), \
+                                   'Root': line_fields[2], \
+                                   'Quotes': {}}
+    
+    def handle_quote(self, line_fields):
+        self.quote_id = int(line_fields[4])
+        self.clusters[self.cluster_id]['Quotes'][self.quote_id] = {'QtFq': int(line_fields[1]), \
+                                                                   'N_Urls': int(line_fields[2]), \
+                                                                   'QtStr': line_fields[3], \
+                                                                   'Links': {}}
+    
+    def handle_url(self, line_fields):
+        self.clusters[self.cluster_id]['Quotes'][self.quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
+                                                                                            'Fq': int(line_fields[3]), \
+                                                                                            'UrlTy': line_fields[4]}
