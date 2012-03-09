@@ -12,10 +12,10 @@ import pylab as pl
 
 
 # Module code
-def view_cluster_timeline(cluster_timeline, mean_res=5):
-    # Do the histogram with the requested level of detail in time
-    days_span = int(round(timeline_span(cluster_timeline).total_seconds() / 86400))
-    freqs, bins = pl.histogram(cluster_timeline, days_span)
+def view_timeline(timeline, mean_res=5):
+    # Do the histogram
+    days_span = int(round(timeline_span(timeline).total_seconds() / 86400))
+    freqs, bins = pl.histogram(timeline, days_span)
     x_secs = (bins[:-1] + bins[1:])//2
     
     # Smooth the curve

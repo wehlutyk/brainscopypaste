@@ -107,6 +107,20 @@ class MT_dataset(object):
         clusters_timeline_loader.parse(self.mt_filename)
         print ') done'
         self.clusters_timeline = clusters_timeline_loader.clusters_timeline
+    
+    def load_clustersquotes_timeline(self):
+        '''
+        Load quote times for each quote for each cluster, and put that into nested dictionaries
+        '''
+        
+        # Initialize the cluster file parser
+        clustersquotes_timeline_loader = ClustersQuotesTimelineLoader()
+        
+        # Do the parsing and save it
+        print 'Loading the times of urls, for each quote, for each cluster, into a dictionary... ( percentage completed:',
+        clustersquotes_timeline_loader.parse(self.mt_filename)
+        print ') done'
+        self.clustersquotes_timeline = clustersquotes_timeline_loader.clustersquotes_timeline
 
 
 class ClustersFileParser:
@@ -262,20 +276,43 @@ class ClustersTimelineLoader(ClustersFileParser):
             self.url_cnt += 1
 
 
-#class ClustersQuotesTimelineLoader(ClustersFileParser):
-#    '''
-#    A class to load, from the cluster file, the time of all the urls belonging to a quote, belonging to cluster ;
-#    and that for each cluster. This results in a dictionary (keys=clusters) of dictionaries (keys=quotes) of
-#    dictionaries (keys=quote properties and a numpy array corresponding to the time of each url)
-#    (here, a distinction is made between the quotes)
-#    '''
-#    
-#    def __init__(self):
-#        # Init the parent class
-#        super(ClustersLoader, self).__init__()
-#        
-#        # Init the counters and the result
-#        self.cluster_id = None
-#        self.url_cnt = None
-#        self.clustersquotes_timeline = {}
-#        
+class ClustersQuotesTimelineLoader(ClustersFileParser):
+    '''
+    A class to load, from the cluster file, the time of all the urls belonging to a quote, belonging to cluster ;
+    and that for each cluster. This results in a dictionary (keys=clusters) of dictionaries (keys=quotes) of
+    dictionaries (keys=quote properties and a numpy array corresponding to the time of each url)
+    (here, a distinction is made between the quotes)
+    '''
+    
+    def __init__(self):
+        # Init the parent class
+        super(ClustersQuotesTimelineLoader, self).__init__()
+        
+        # Init the counters and the result
+        self.cluster_id = None
+        self.quote_id = None
+        self.url_cnt = None
+        self.clustersquotes_timeline = {}
+    
+    def handle_cluster(self, line_fields):
+        # Set the cluster id
+        self.cluster_id = int(line_fields[3])
+        
+        # Create a sub-dictionary for the cluster
+        self.clustersquotes_timeline[self.cluster_id] = {'Root': line_fields[2], 'Quotes': {}}
+    
+    def handle_quote(self, line_fields):
+        # Set the quote id and the url counter
+        self.quote_id = int(line_fields[4])
+        self.url_cnt = 0
+        
+        # Create a dictionary with relevant data
+        self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id] = {'QtStr': line_fields[3], \
+                                                                                  'Times': np.zeros(int(line_fields[1]))}
+    
+    def handle_url(self, line_fields):
+        # Add the url time to the current array in the root dictionary
+        # Add one instance for each time the quote appeared in that post
+        for i in xrange(int(line_fields[3])):
+            self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id]['Times'][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
+            self.url_cnt += 1
