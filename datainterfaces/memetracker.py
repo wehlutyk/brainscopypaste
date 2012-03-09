@@ -108,8 +108,8 @@ class MT_dataset(object):
                 # Give some info about progress
                 if i % self.lineinfostep == 0:
                     print int(round(i*100/self.n_lines)),
-                line0 = re.split(r'[\xa0\s+\t\n]+', line)
-                line_fields = re.split(r'\t', line)
+                line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
+                line_fields = re.split(r'[\t\r\n]', line)
                 # Is this a cluster definition line?
                 if line0[0] != '':
                     cluster_id = int(line_fields[3])
