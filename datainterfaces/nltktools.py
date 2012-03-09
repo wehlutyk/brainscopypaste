@@ -6,6 +6,7 @@ Objects to interface various data structures with NLTK
 
 
 # Imports
+from __future__ import division
 import os
 from codecs import open as c_open
 from re import sub

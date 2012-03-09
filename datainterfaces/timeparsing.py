@@ -6,6 +6,7 @@ Parsing functions for strings representing time
 
 
 # Imports
+from __future__ import division
 from datetime import timedelta, datetime
 from calendar import timegm
 from pylab import sign

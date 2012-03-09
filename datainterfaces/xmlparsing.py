@@ -9,6 +9,7 @@ in Spinn3r XML data, and extract outward links
 
 
 # Imports
+from __future__ import division
 from xml.etree import ElementTree
 from HTMLParser import HTMLParser
 import nltk

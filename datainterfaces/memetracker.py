@@ -7,6 +7,7 @@ See http://memetracker.org/ for details about it
 
 
 # Imports
+from __future__ import division
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
 from datainterfaces.timeparsing import isostr_to_epoch_mt
