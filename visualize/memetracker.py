@@ -29,7 +29,6 @@ def view_timeline(timeline, mean_res=5):
     for d in x_secs_interp:
         x_dates_interp.append(datetime.fromtimestamp(d))
     
-    pl.figure()
     pl.plot_date(x_dates, freqs, xdate=True, fmt='-')
     pl.plot_date(x_dates_interp, freqs_interp, xdate=True, fmt='-')
     pl.legend(['*Quotes per day*', '{}-day moving average'.format(mean_res)], loc='best')
