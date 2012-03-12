@@ -11,7 +11,9 @@ from __future__ import division
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
 from datainterfaces.timeparsing import isostr_to_epoch_mt
+from datetime import datetime
 import numpy as np
+import pylab as pl
 import re
 import os
 
@@ -316,3 +318,40 @@ class ClustersQuotesTimelineLoader(ClustersFileParser):
         for i in xrange(int(line_fields[3])):
             self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id]['Times'][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
             self.url_cnt += 1
+
+
+class Quote(object):
+    '''
+    Holds a quote and a few attributes about it
+    '''
+    
+    def __init__(self, line_fields):
+        self.tot_freq = int(line_fields[1])
+        self.tot_urls = int(line_fields[2])
+        self.string = line_fields[3]
+        self.id = line_fields[4]
+        self.urls = []
+        self.url_times = []
+        self.url_freqs = []
+        self.url_types = []
+        self.attrs_computed = False
+    
+    def compute_attrs(self):
+        if self.attrs_computed:
+            raise Exception('Attributes already computed for quote {} (string "{}")'.format(self.id, self.string))
+        
+        if len(self.url_times) > 0:
+            # Start, end, and time span of the quote
+            self.start = datetime.fromtimestamp(np.amin(self.url_times))
+            self.end = datetime.fromtimestamp(np.amax(self.url_times))
+            self.span = self.end - self.start
+            self.span_days = int(round(self.span.total_seconds() / 86400))
+            
+            # Maximum instances-per-day (i.e. highest spike)
+            self.ipd, bins = pl.histogram(self.url_times, self.span_days)
+            self.ipd_x_secs = (bins[:-1] + bins[1:])//2
+            self.argmax_ipd = np.argmax(self.ipd)
+            self.max_ipd = self.ipd[self.argmax_ipd]
+            self.max_ipd_x_secs = self.ipd_x_secs[self.argmax_ipd]
+            
+            self.attrs_computed = True
