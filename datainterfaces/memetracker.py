@@ -257,11 +257,14 @@ class Quote(Timeline):
         self.id = line_fields[4]
         super(Quote, self).__init__(self.tot_freq)
     
+    def __repr__(self):
+        return '<' + self.__class__ + ': ' + self.__unicode__() + '>'
+    
     def __str__(self):
         return self.__unicode__()
     
     def __unicode__(self):
-        return self.string + ' (quote #{} ; tot_freq={})'.format(self.id, self.tot_freq)
+        return '"' + self.string + '" (quote #{} ; tot_freq={})'.format(self.id, self.tot_freq)
     
     def plot(self, smooth_res=5):
         v_mt.plot_timeline(self, label=self.__unicode__(), smooth_res=smooth_res)
@@ -276,11 +279,14 @@ class Cluster(object):
         self.id = int(line_fields[3])
         self.quotes = {}
     
+    def __repr__(self):
+        return '<' + self.__class__ + ': ' + self.__unicode__() + '>'
+    
     def __str__(self):
         return self.__unicode__()
     
     def __unicode__(self):
-        return self.root + ' (cluster #{} ; tot_quotes={} ; tot_freq={})'.format(self.id, self.n_quotes, self.tot_freq)
+        return '"' + self.root + '" (cluster #{} ; tot_quotes={} ; tot_freq={})'.format(self.id, self.n_quotes, self.tot_freq)
     
     def add_quote(self, line_fields):
         self.quote[int(line_fields[4])] = Quote(line_fields)

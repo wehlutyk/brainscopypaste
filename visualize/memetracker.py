@@ -12,7 +12,7 @@ import pylab as pl
 
 
 # Module code
-def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5):
+def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5, legend_size=10.0):
     '''
     Plot a timeline.
     smooth_res is the number of days used to compute an additional smoothed curve
@@ -39,7 +39,7 @@ def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5):
         pl.plot_date(x_dates_smooth, ipd_smooth, xdate=True, fmt='-', label='{} ({}-day moving average)'.format(label, smooth_res))
     
     # Show the legend
-    pl.legend(loc='best')
+    pl.legend(loc='best', prop={'size': legend_size})
 
 
 def smooth_data(x_secs, ipd, smooth_res):
