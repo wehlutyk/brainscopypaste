@@ -258,7 +258,7 @@ class Quote(Timeline):
         super(Quote, self).__init__(self.tot_freq)
     
     def __repr__(self):
-        return '<' + self.__class__ + ': ' + self.__unicode__() + '>'
+        return '<Quote: ' + self.__unicode__() + '>'
     
     def __str__(self):
         return self.__unicode__()
@@ -280,7 +280,7 @@ class Cluster(object):
         self.quotes = {}
     
     def __repr__(self):
-        return '<' + self.__class__ + ': ' + self.__unicode__() + '>'
+        return '<Cluster: ' + self.__unicode__() + '>'
     
     def __str__(self):
         return self.__unicode__()
@@ -296,10 +296,14 @@ class Cluster(object):
             qt.plot(smooth_res=smooth_res)
         pl.title(self.__unicode__())
     
-    def plot(self, smooth_res=5):
+    def build_cluster_timeline(self):
         cl_timeline = Timeline(self.tot_freq)
         for qt in self.quotes.values():
             cl_timeline.url_times[cl_timeline.current_idx:cl_timeline.current_idx+qt.tot_freq] = qt.url_times
             cl_timeline.current_idx += qt.tot_freq
         cl_timeline.compute_attrs()
+        return cl_timeline
+    
+    def plot(self, smooth_res=5):
+        cl_timeline = self.build_cluster_timeline()
         v_mt.plot_timeline(cl_timeline, label=self.__unicode__(), smooth_res=smooth_res)
