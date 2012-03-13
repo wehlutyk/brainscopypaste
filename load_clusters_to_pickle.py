@@ -15,17 +15,17 @@ import os
 #filename = 'clust-cropped-50000.txt'
 filename = 'clust-qt08080902w3mfq5.txt'
 rootfolder = '/home/sebastien/Code/cogmaster-stage/data/MemeTracker/'
-savefile = os.path.join(rootfolder, 'clusters_') + filename + '.pickle'
+picklefile = os.path.join(rootfolder, 'clusters_') + filename + '.pickle'
 
 # Check that the destination doesn't already exist
-if os.path.exists(savefile):
-    raise Exception("File '" + savefile + "' already exists!")
+if os.path.exists(picklefile):
+    raise Exception("File '" + picklefile + "' already exists!")
 
 # Load the data
 MT = mt.MT_dataset(os.path.join(rootfolder, filename))
 MT.load_clusters()
 
 # And save it
-print 'Saving clusters_timeline to file...',
-ps.save(MT.clusters, savefile)
+print 'Saving Clusters to pickle file...',
+ps.save(MT.clusters, picklefile)
 print 'done'
