@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Load all cluster timelines and save them to a pickled file
+Load all Clusters and save them to a pickled file
 '''
 
 
@@ -12,10 +12,10 @@ import os
 
 
 # Code
-filename = 'clust-cropped-50000.txt'
-#filename = 'clust-qt08080902w3mfq5.txt'
+#filename = 'clust-cropped-50000.txt'
+filename = 'clust-qt08080902w3mfq5.txt'
 rootfolder = '/home/sebastien/Code/cogmaster-stage/data/MemeTracker/'
-savefile = os.path.join(rootfolder, 'clustersquotes_timeline_') + filename + '.pickle'
+savefile = os.path.join(rootfolder, 'clusters_') + filename + '.pickle'
 
 # Check that the destination doesn't already exist
 if os.path.exists(savefile):
@@ -23,9 +23,9 @@ if os.path.exists(savefile):
 
 # Load the data
 MT = mt.MT_dataset(os.path.join(rootfolder, filename))
-MT.load_clustersquotes_timeline()
+MT.load_clusters()
 
 # And save it
-print 'Saving clustersquotes_timeline to file...',
-ps.save(MT.clustersquotes_timeline, savefile)
+print 'Saving clusters_timeline to file...',
+ps.save(MT.clusters, savefile)
 print 'done'

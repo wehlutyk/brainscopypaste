@@ -12,8 +12,8 @@ import os
 
 
 # Code
-#filename = 'clust-cropped-50000.txt'
-filename = 'clust-qt08080902w3mfq5.txt'
+filename = 'clust-cropped-50000.txt'
+#filename = 'clust-qt08080902w3mfq5.txt'
 rootfolder = '/home/sebastien/Code/cogmaster-stage/data/MemeTracker/'
 savefile = os.path.join(rootfolder, 'clustersquotes_timeline_') + filename + '.pickle'
 

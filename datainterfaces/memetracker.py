@@ -11,7 +11,9 @@ from __future__ import division
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
 from datainterfaces.timeparsing import isostr_to_epoch_mt
+import visualize.memetracker as v_mt
 from datetime import datetime
+from warnings import warn
 import numpy as np
 import pylab as pl
 import re
@@ -84,45 +86,45 @@ class MT_dataset(object):
     
     def load_clusters(self):
         '''
-        Load the whole clusters file into a dictionary
+        Load the whole clusters file into a dictionary of Cluster objects
         '''
         
         # Initialize the cluster file parser
         clusters_loader = ClustersLoader()
         
         # Do the parsing and save it
-        print 'Loading cluster file into a dictionary... ( percentage completed:',
+        print 'Loading cluster file into a dictionary of Cluster objects... ( percentage completed:',
         clusters_loader.parse(self.mt_filename)
         print ') done'
         self.clusters = clusters_loader.clusters
     
-    def load_clusters_timeline(self):
-        '''
-        Load quote times for each cluster, and put that into a dictionary
-        '''
-        
-        # Initialize the cluster file parser
-        clusters_timeline_loader = ClustersTimelineLoader()
-        
-        # Do the parsing and save it
-        print 'Loading the times of urls, for each cluster, into a dictionary... ( percentage completed:',
-        clusters_timeline_loader.parse(self.mt_filename)
-        print ') done'
-        self.clusters_timeline = clusters_timeline_loader.clusters_timeline
-    
-    def load_clustersquotes_timeline(self):
-        '''
-        Load quote times for each quote for each cluster, and put that into nested dictionaries
-        '''
-        
-        # Initialize the cluster file parser
-        clustersquotes_timeline_loader = ClustersQuotesTimelineLoader()
-        
-        # Do the parsing and save it
-        print 'Loading the times of urls, for each quote, for each cluster, into a dictionary... ( percentage completed:',
-        clustersquotes_timeline_loader.parse(self.mt_filename)
-        print ') done'
-        self.clustersquotes_timeline = clustersquotes_timeline_loader.clustersquotes_timeline
+#    def load_clusters_timeline(self):
+#        '''
+#        Load quote times for each cluster, and put that into a dictionary
+#        '''
+#        
+#        # Initialize the cluster file parser
+#        clusters_timeline_loader = ClustersTimelineLoader()
+#        
+#        # Do the parsing and save it
+#        print 'Loading the times of urls, for each cluster, into a dictionary... ( percentage completed:',
+#        clusters_timeline_loader.parse(self.mt_filename)
+#        print ') done'
+#        self.clusters_timeline = clusters_timeline_loader.clusters_timeline
+#    
+#    def load_clustersquotes_timeline(self):
+#        '''
+#        Load quote times for each quote for each cluster, and put that into nested dictionaries
+#        '''
+#        
+#        # Initialize the cluster file parser
+#        clustersquotes_timeline_loader = ClustersQuotesTimelineLoader()
+#        
+#        # Do the parsing and save it
+#        print 'Loading the times of urls, for each quote, for each cluster, into a dictionary... ( percentage completed:',
+#        clustersquotes_timeline_loader.parse(self.mt_filename)
+#        print ') done'
+#        self.clustersquotes_timeline = clustersquotes_timeline_loader.clustersquotes_timeline
 
 
 class ClustersFileParser:
@@ -199,7 +201,6 @@ class ClustersFileParser:
                 elif line[0] == '\t' and line[1] == '\t' and line[2] != '\t':
                     self.handle_url(line_fields)
 
-
 class ClustersLoader(ClustersFileParser):
     '''
     A class to parse a cluster file, and load it all into a dictionary
@@ -215,143 +216,231 @@ class ClustersLoader(ClustersFileParser):
         self.clusters = {}
     
     def handle_cluster(self, line_fields):
-        # Set the cluster id
+        # Remember the cluster id
         self.cluster_id = int(line_fields[3])
-        
         # And create the cluster in the root dictionary
-        self.clusters[self.cluster_id] = {'ClSz': int(line_fields[0]), \
-                                   'TotFq': int(line_fields[1]), \
-                                   'Root': line_fields[2], \
-                                   'Quotes': {}}
+        self.clusters[self.cluster_id] = Cluster(line_fields)
     
     def handle_quote(self, line_fields):
-        # Set the quote id
+        # Remember the quote id
         self.quote_id = int(line_fields[4])
-        
-        # Create the quote in the current cluster's sub-dictionary
-        self.clusters[self.cluster_id]['Quotes'][self.quote_id] = {'QtFq': int(line_fields[1]), \
-                                                                   'N_Urls': int(line_fields[2]), \
-                                                                   'QtStr': line_fields[3], \
-                                                                   'Links': {}}
+        # And create the quote in the current cluster's sub-dictionary
+        self.clusters[self.cluster_id].quotes[self.quote_id] = Quote(line_fields)
     
     def handle_url(self, line_fields):
-        # Add that url the the current quote's sub-dictionary
-        self.clusters[self.cluster_id]['Quotes'][self.quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
-                                                                                            'Fq': int(line_fields[3]), \
-                                                                                            'UrlTy': line_fields[4]}
+        # Add that url the the current quote's timeline
+        self.clusters[self.cluster_id].quotes[self.quote_id].add_url(line_fields)
 
 
-class ClustersTimelineLoader(ClustersFileParser):
-    '''
-    A class to load, from the cluster file, the time of all the urls belonging to a cluster ;
-    and that for each cluster. This results in a dictionary of numpy arrays: each dictionary
-    key is a cluster id, and the corresponding array is the list of times at which the urls
-    (belonging to that cluster) were published (there is *NO* per-quote-distinction).
-    '''
-    
-    def __init__(self):
-        # Init the parent class
-        super(ClustersTimelineLoader, self).__init__()
-        
-        # Init the counters and the result
-        self.cluster_id = None
-        self.url_cnt = None
-        self.clusters_timeline = {}
-    
-    def handle_cluster(self, line_fields):
-        # Set the quote counter and the cluster id
-        self.cluster_id = int(line_fields[3])
-        self.url_cnt = 0
-        
-        # Create an array of TotFq size in the root dictionary, to save the url times later on
-        self.clusters_timeline[self.cluster_id] = np.zeros(int(line_fields[1]))
-    
-    def handle_quote(self, line_fields):
-        # Nothing to do!
-        pass
-    
-    def handle_url(self, line_fields):
-        # Add the url time to the current array in the root dictionary
-        # Add one instance for each time the quote appeared in that post
-        for i in xrange(int(line_fields[3])):
-            self.clusters_timeline[self.cluster_id][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
-            self.url_cnt += 1
+#class ClustersLoader(ClustersFileParser):
+#    '''
+#    A class to parse a cluster file, and load it all into a dictionary
+#    '''
+#    
+#    def __init__(self):
+#        # Init the parent class
+#        super(ClustersLoader, self).__init__()
+#        
+#        # Init the counters and the result
+#        self.cluster_id = None
+#        self.quote_id = None
+#        self.clusters = {}
+#    
+#    def handle_cluster(self, line_fields):
+#        # Set the cluster id
+#        self.cluster_id = int(line_fields[3])
+#        
+#        # And create the cluster in the root dictionary
+#        self.clusters[self.cluster_id] = {'ClSz': int(line_fields[0]), \
+#                                   'TotFq': int(line_fields[1]), \
+#                                   'Root': line_fields[2], \
+#                                   'Quotes': {}}
+#    
+#    def handle_quote(self, line_fields):
+#        # Set the quote id
+#        self.quote_id = int(line_fields[4])
+#        
+#        # Create the quote in the current cluster's sub-dictionary
+#        self.clusters[self.cluster_id]['Quotes'][self.quote_id] = {'QtFq': int(line_fields[1]), \
+#                                                                   'N_Urls': int(line_fields[2]), \
+#                                                                   'QtStr': line_fields[3], \
+#                                                                   'Links': {}}
+#    
+#    def handle_url(self, line_fields):
+#        # Add that url the the current quote's sub-dictionary
+#        self.clusters[self.cluster_id]['Quotes'][self.quote_id]['Links'][line_fields[5]] = {'Tm': line_fields[2], \
+#                                                                                            'Fq': int(line_fields[3]), \
+#                                                                                            'UrlTy': line_fields[4]}
 
 
-class ClustersQuotesTimelineLoader(ClustersFileParser):
-    '''
-    A class to load, from the cluster file, the time of all the urls belonging to a quote, belonging to cluster ;
-    and that for each cluster. This results in a dictionary (keys=clusters) of dictionaries (keys=quotes) of
-    dictionaries (keys=quote properties and a numpy array corresponding to the time of each url)
-    (here, a distinction is made between the quotes)
-    '''
-    
-    def __init__(self):
-        # Init the parent class
-        super(ClustersQuotesTimelineLoader, self).__init__()
-        
-        # Init the counters and the result
-        self.cluster_id = None
-        self.quote_id = None
-        self.url_cnt = None
-        self.clustersquotes_timeline = {}
-    
-    def handle_cluster(self, line_fields):
-        # Set the cluster id
-        self.cluster_id = int(line_fields[3])
-        
-        # Create a sub-dictionary for the cluster
-        self.clustersquotes_timeline[self.cluster_id] = {'Root': line_fields[2], 'Quotes': {}}
-    
-    def handle_quote(self, line_fields):
-        # Set the quote id and the url counter
-        self.quote_id = int(line_fields[4])
-        self.url_cnt = 0
-        
-        # Create a dictionary with relevant data
-        self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id] = {'QtStr': line_fields[3], \
-                                                                                  'Times': np.zeros(int(line_fields[1]))}
-    
-    def handle_url(self, line_fields):
-        # Add the url time to the current array in the root dictionary
-        # Add one instance for each time the quote appeared in that post
-        for i in xrange(int(line_fields[3])):
-            self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id]['Times'][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
-            self.url_cnt += 1
+#class ClustersTimelineLoader(ClustersFileParser):
+#    '''
+#    A class to load, from the cluster file, the time of all the urls belonging to a cluster ;
+#    and that for each cluster. This results in a dictionary of numpy arrays: each dictionary
+#    key is a cluster id, and the corresponding array is the list of times at which the urls
+#    (belonging to that cluster) were published (there is *NO* per-quote-distinction).
+#    '''
+#    
+#    def __init__(self):
+#        # Init the parent class
+#        super(ClustersTimelineLoader, self).__init__()
+#        
+#        # Init the counters and the result
+#        self.cluster_id = None
+#        self.url_cnt = None
+#        self.clusters_timeline = {}
+#    
+#    def handle_cluster(self, line_fields):
+#        # Set the quote counter and the cluster id
+#        self.cluster_id = int(line_fields[3])
+#        self.url_cnt = 0
+#        
+#        # Create an array of TotFq size in the root dictionary, to save the url times later on
+#        self.clusters_timeline[self.cluster_id] = np.zeros(int(line_fields[1]))
+#    
+#    def handle_quote(self, line_fields):
+#        # Nothing to do!
+#        pass
+#    
+#    def handle_url(self, line_fields):
+#        # Add the url time to the current array in the root dictionary
+#        # Add one instance for each time the quote appeared in that post
+#        for i in xrange(int(line_fields[3])):
+#            self.clusters_timeline[self.cluster_id][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
+#            self.url_cnt += 1
 
 
-class Quote(object):
+#class ClustersQuotesTimelineLoader(ClustersFileParser):
+#    '''
+#    A class to load, from the cluster file, the time of all the urls belonging to a quote, belonging to cluster ;
+#    and that for each cluster. This results in a dictionary (keys=clusters) of dictionaries (keys=quotes) of
+#    dictionaries (keys=quote properties and a numpy array corresponding to the time of each url)
+#    (here, a distinction is made between the quotes)
+#    '''
+#    
+#    def __init__(self):
+#        # Init the parent class
+#        super(ClustersQuotesTimelineLoader, self).__init__()
+#        
+#        # Init the counters and the result
+#        self.cluster_id = None
+#        self.quote_id = None
+#        self.url_cnt = None
+#        self.clustersquotes_timeline = {}
+#    
+#    def handle_cluster(self, line_fields):
+#        # Set the cluster id
+#        self.cluster_id = int(line_fields[3])
+#        
+#        # Create a sub-dictionary for the cluster
+#        self.clustersquotes_timeline[self.cluster_id] = {'Root': line_fields[2], 'Quotes': {}}
+#    
+#    def handle_quote(self, line_fields):
+#        # Set the quote id and the url counter
+#        self.quote_id = int(line_fields[4])
+#        self.url_cnt = 0
+#        
+#        # Create a dictionary with relevant data
+#        self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id] = {'QtStr': line_fields[3], \
+#                                                                                  'Times': np.zeros(int(line_fields[1]))}
+#    
+#    def handle_url(self, line_fields):
+#        # Add the url time to the current array in the root dictionary
+#        # Add one instance for each time the quote appeared in that post
+#        for i in xrange(int(line_fields[3])):
+#            self.clustersquotes_timeline[self.cluster_id]['Quotes'][self.quote_id]['Times'][self.url_cnt] = isostr_to_epoch_mt(line_fields[2])
+#            self.url_cnt += 1
+
+
+class Timeline(object):
     '''
-    Holds a quote and a few attributes about it
+    Holds a series of urls (with their times, etc.), and a few attributes about that series
     '''
     
-    def __init__(self, line_fields):
-        self.tot_freq = int(line_fields[1])
-        self.tot_urls = int(line_fields[2])
-        self.string = line_fields[3]
-        self.id = line_fields[4]
-        self.urls = []
-        self.url_times = []
-        self.url_freqs = []
-        self.url_types = []
+    def __init__(self, length):
+        self.url_times = np.zeros(length)
+        self.current_idx = 0
         self.attrs_computed = False
     
     def compute_attrs(self):
         if self.attrs_computed:
-            raise Exception('Attributes already computed for quote {} (string "{}")'.format(self.id, self.string))
+            warn('Attributes already computed for this timeline object, you might be computing this twice for nothing')
         
-        if len(self.url_times) > 0:
-            # Start, end, and time span of the quote
-            self.start = datetime.fromtimestamp(np.amin(self.url_times))
-            self.end = datetime.fromtimestamp(np.amax(self.url_times))
-            self.span = self.end - self.start
-            self.span_days = int(round(self.span.total_seconds() / 86400))
-            
-            # Maximum instances-per-day (i.e. highest spike)
-            self.ipd, bins = pl.histogram(self.url_times, self.span_days)
-            self.ipd_x_secs = (bins[:-1] + bins[1:])//2
-            self.argmax_ipd = np.argmax(self.ipd)
-            self.max_ipd = self.ipd[self.argmax_ipd]
-            self.max_ipd_x_secs = self.ipd_x_secs[self.argmax_ipd]
-            
-            self.attrs_computed = True
+        if self.current_idx != len(self.url_times):
+            warn('The number of urls entered (={}) is not equal to the number '.format(self.current_idx) \
+                 + 'of urls allocated for (={}) when you created this timeline object. '.format(len(self.url_times)) \
+                 + 'There must be a problem somewhere')
+        
+        # Start, end, and time span of the quote
+        self.start = datetime.fromtimestamp(self.url_times.min())
+        self.end = datetime.fromtimestamp(self.url_times.max())
+        self.span = self.end - self.start
+        self.span_days = max(1, int(round(self.span.total_seconds() / 86400)))
+        
+        # Histogram, and maximum instances-per-day (i.e. highest spike)
+        self.ipd, bins = pl.histogram(self.url_times, self.span_days)
+        self.ipd_x_secs = (bins[:-1] + bins[1:])//2
+        self.argmax_ipd = np.argmax(self.ipd)
+        self.max_ipd = self.ipd[self.argmax_ipd]
+        self.max_ipd_x_secs = self.ipd_x_secs[self.argmax_ipd]
+        
+        self.attrs_computed = True
+    
+    def add_url(self, line_fields):
+        for i in xrange(int(line_fields[3])):
+            self.url_times[self.current_idx] = int(isostr_to_epoch_mt(line_fields[2]))
+            self.current_idx += 1
+    
+    def plot(self, smooth_res=5):
+        v_mt.plot_timeline(self, smooth_res=smooth_res)
+
+
+class Quote(Timeline):
+    def __init__(self, line_fields):
+        self.n_urls = int(line_fields[2])
+        self.tot_freq = int(line_fields[1])
+        self.string = line_fields[3]
+        self.string_length = len(self.string)
+        self.id = line_fields[4]
+        super(Quote, self).__init__(self.tot_freq)
+    
+    def __str__(self):
+        return self.__unicode__()
+    
+    def __unicode__(self):
+        return self.string + ' (quote #{} ; tot_freq={})'.format(self.id, self.tot_freq)
+    
+    def plot(self, smooth_res=5):
+        v_mt.plot_timeline(self, label=self.__unicode__(), smooth_res=smooth_res)
+
+
+class Cluster(object):
+    def __init__(self, line_fields):
+        self.n_quotes = int(line_fields[0])
+        self.tot_freq = int(line_fields[1])
+        self.root = line_fields[2]
+        self.root_length = len(self.root)
+        self.id = int(line_fields[3])
+        self.quotes = {}
+    
+    def __str__(self):
+        return self.__unicode__()
+    
+    def __unicode__(self):
+        return self.root + ' (cluster #{} ; tot_quotes={} ; tot_freq={})'.format(self.id, self.n_quotes, self.tot_freq)
+    
+    def add_quote(self, line_fields):
+        self.quote[int(line_fields[4])] = Quote(line_fields)
+    
+    def plot_quotes(self, smooth_res=-1):
+        for qt in self.quotes.values():
+            qt.plot(smooth_res=smooth_res)
+        pl.title(self.__unicode__())
+    
+    def plot(self, smooth_res=5):
+        cl_timeline = Timeline(self.tot_freq)
+        for qt in self.quotes.values():
+            cl_timeline.url_times[cl_timeline.current_idx:cl_timeline.current_idx+qt.tot_freq] = qt.url_times
+            cl_timeline.current_idx += qt.tot_freq
+        cl_timeline.compute_attrs()
+        v_mt.plot_timeline(cl_timeline, label=self.__unicode__(), smooth_res=smooth_res)
