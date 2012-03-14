@@ -8,7 +8,7 @@ Compute a few statistics about the MemeTracker dataset
 # Imports
 from pylab import *
 from nltk import word_tokenize
-import datainterfaces.picklesaver as ps
+import datainterface.picklesaver as ps
 import analyze.memetracker as a_mt
 import os
 

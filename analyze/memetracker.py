@@ -8,7 +8,7 @@ Tools to analyse data from the MemeTracker dataset
 # Imports
 from __future__ import division
 from nltk import word_tokenize
-import datainterfaces.memetracker as d_mt
+import datastructure.memetracker as ds_mt
 import numpy as np
 
 
@@ -39,7 +39,7 @@ def frame_cluster(cl, start, end):
     
     n_quotes = len(framed_quotes)
     tot_freq = sum([qt.tot_freq for qt in framed_quotes.values()])
-    framed_cluster = d_mt.Cluster(n_quotes=n_quotes, tot_freq=tot_freq, root=cl.root, cl_id=cl.id)
+    framed_cluster = ds_mt.Cluster(n_quotes=n_quotes, tot_freq=tot_freq, root=cl.root, cl_id=cl.id)
     framed_cluster.quotes = framed_quotes
     
     return framed_cluster
@@ -55,7 +55,7 @@ def frame_quote(qt, start, end):
         return None
     n_urls = len(set(framed_times))
     tot_freq = len(framed_times)
-    framed_qt = d_mt.Quote(n_urls=n_urls, tot_freq=tot_freq, string=qt.string, qt_id=qt.id)
+    framed_qt = ds_mt.Quote(n_urls=n_urls, tot_freq=tot_freq, string=qt.string, qt_id=qt.id)
     framed_qt.url_times = framed_times
     framed_qt.current_idx = tot_freq
     framed_qt.compute_attrs()
@@ -98,29 +98,9 @@ def get_timebags(cluster, n_bags):
     
     timebags = []
     for i in xrange(n_bags):
-        timebags.append(TimeBag(cluster, cl_start + i*step, cl_start + (i+1)*step))
+        timebags.append(ds_mt.TimeBag(cluster, cl_start + i*step, cl_start + (i+1)*step))
     
     return timebags
-
-
-class TimeBag(object):
-    def __init__(self, cluster, start, end):
-        framed_cluster = frame_cluster(cluster, start, end)
-        
-        self.id_fromcluster = cluster.id
-        self.strings = []
-        self.tot_freq = framed_cluster.tot_freq
-        self.tot_freqs = np.zeros(framed_cluster.n_quotes)
-        self.n_urlss = np.zeros(framed_cluster.n_quotes)
-        self.ids = np.zeros(framed_cluster.n_quotes)
-        
-        for i, qt in enumerate(framed_cluster.quotes.values()):
-            self.strings.append(qt.string)
-            self.tot_freqs[i] = qt.tot_freq
-            self.n_urlss[i] = qt.n_urls
-            self.ids[i] = qt.id
-        
-        self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
 
 
 def build_n_quotes_to_clusterids(clusters):

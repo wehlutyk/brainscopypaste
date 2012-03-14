@@ -7,8 +7,8 @@ Objects to interface Spinn3r data with other data structures
 
 # Imports
 from __future__ import division
-from datainterfaces.xmlparsing import ConvertXmlToDict
-from datainterfaces.nltktools import DictNltk
+from datainterface.xmlparsing import ConvertXmlToDict
+from datainterface.nltktools import DictNltk
 from nltk.corpus.reader.plaintext import CategorizedPlaintextCorpusReader
 from codecs import open as c_open
 import os

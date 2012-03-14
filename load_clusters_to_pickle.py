@@ -6,8 +6,8 @@ Load all Clusters and save them to a pickled file
 
 
 # Imports
-import datainterfaces.picklesaver as ps
-import datainterfaces.memetracker as mt
+import datainterface.picklesaver as ps
+import datainterface.memetracker as mt
 import os
 
 
