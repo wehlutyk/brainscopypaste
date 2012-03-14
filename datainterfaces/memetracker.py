@@ -216,28 +216,26 @@ class Timeline(object):
         self.attrs_computed = False
     
     def compute_attrs(self):
-        if self.attrs_computed:
-            warn('Attributes already computed for this timeline object, you might be computing this twice for nothing')
-        
         if self.current_idx != len(self.url_times):
             warn('The number of urls entered (={}) is not equal to the number '.format(self.current_idx) \
                  + 'of urls allocated for (={}) when you created this timeline object. '.format(len(self.url_times)) \
                  + 'There must be a problem somewhere')
         
-        # Start, end, and time span of the quote
-        self.start = datetime.fromtimestamp(self.url_times.min())
-        self.end = datetime.fromtimestamp(self.url_times.max())
-        self.span = self.end - self.start
-        self.span_days = max(1, int(round(self.span.total_seconds() / 86400)))
-        
-        # Histogram, and maximum instances-per-day (i.e. highest spike)
-        self.ipd, bins = pl.histogram(self.url_times, self.span_days)
-        self.ipd_x_secs = (bins[:-1] + bins[1:])//2
-        self.argmax_ipd = np.argmax(self.ipd)
-        self.max_ipd = self.ipd[self.argmax_ipd]
-        self.max_ipd_x_secs = self.ipd_x_secs[self.argmax_ipd]
-        
-        self.attrs_computed = True
+        if not self.attrs_computed:
+            # Start, end, and time span of the quote
+            self.start = self.url_times.min()
+            self.end = self.url_times.max()
+            self.span = datetime.fromtimestamp(self.end) - datetime.fromtimestamp(self.start)
+            self.span_days = max(1, int(round(self.span.total_seconds() / 86400)))
+            
+            # Histogram, and maximum instances-per-day (i.e. highest spike)
+            self.ipd, bins = pl.histogram(self.url_times, self.span_days)
+            self.ipd_x_secs = (bins[:-1] + bins[1:])//2
+            self.argmax_ipd = np.argmax(self.ipd)
+            self.max_ipd = self.ipd[self.argmax_ipd]
+            self.max_ipd_x_secs = self.ipd_x_secs[self.argmax_ipd]
+            
+            self.attrs_computed = True
     
     def add_url(self, line_fields):
         for i in xrange(int(line_fields[3])):
@@ -249,12 +247,30 @@ class Timeline(object):
 
 
 class Quote(Timeline):
-    def __init__(self, line_fields):
-        self.n_urls = int(line_fields[2])
-        self.tot_freq = int(line_fields[1])
-        self.string = line_fields[3]
-        self.string_length = len(self.string)
-        self.id = line_fields[4]
+    def __init__(self, line_fields=None, n_urls=None, tot_freq=None, string=None, qt_id=None):
+        if line_fields != None:
+            if n_urls != None or tot_freq != None or string != None or qt_id != None:
+                raise ValueError('Bad set of arguments when creating this quote. ' \
+                                 + 'You must specify either "line_fields" (={}) '.format(line_fields) \
+                                 + 'OR all of "n_urls" (={}), "tot_freq" (={}), '.format(n_urls, tot_freq) \
+                                 + '"string" (={}), and "qt_id" (={}).'.format(string, qt_id))
+            self.n_urls = int(line_fields[2])
+            self.tot_freq = int(line_fields[1])
+            self.string = line_fields[3]
+            self.string_length = len(self.string)
+            self.id = line_fields[4]
+        else:
+            if n_urls == None or tot_freq == None or string == None or qt_id == None:
+                raise ValueError('Bad set of arguments when creating this quote. ' \
+                                 + 'You must specify either "line_fields" (={}) '.format(line_fields) \
+                                 + 'OR all of "n_urls" (={}), "tot_freq" (={}), '.format(n_urls, tot_freq) \
+                                 + '"string" (={}), and "qt_id" (={}).'.format(string, qt_id))
+            self.n_urls = n_urls
+            self.tot_freq = tot_freq
+            self.string = string
+            self.string_length = len(string)
+            self.id = qt_id
+        
         super(Quote, self).__init__(self.tot_freq)
     
     def __repr__(self):
@@ -271,13 +287,32 @@ class Quote(Timeline):
 
 
 class Cluster(object):
-    def __init__(self, line_fields):
-        self.n_quotes = int(line_fields[0])
-        self.tot_freq = int(line_fields[1])
-        self.root = line_fields[2]
-        self.root_length = len(self.root)
-        self.id = int(line_fields[3])
+    def __init__(self, line_fields=None, n_quotes=None, tot_freq=None, root=None, cl_id=None):
+        if line_fields != None:
+            if n_quotes != None or tot_freq != None or root != None or cl_id != None:
+                raise ValueError('Bad set of arguments when creating this cluster. ' \
+                                 + 'You must specify either "line_fields" (={}) '.format(line_fields) \
+                                 + 'OR all of "n_quotes" (={}), "tot_freq" (={}), '.format(n_quotes, tot_freq) \
+                                 + '"root" (={}), and "cl_id" (={}).'.format(root, cl_id))
+            self.n_quotes = int(line_fields[0])
+            self.tot_freq = int(line_fields[1])
+            self.root = line_fields[2]
+            self.root_length = len(self.root)
+            self.id = int(line_fields[3])
+        else:
+            if n_quotes == None or tot_freq == None or root == None or cl_id == None:
+                raise ValueError('Bad set of arguments when creating this cluster. ' \
+                                 + 'You must specify either "line_fields" (={}) '.format(line_fields) \
+                                 + 'OR all of "n_quotes" (={}), "tot_freq" (={}), '.format(n_quotes, tot_freq) \
+                                 + '"root" (={}), and "cl_id" (={}).'.format(root, cl_id))
+            self.n_quotes = n_quotes
+            self.tot_freq = tot_freq
+            self.root = root
+            self.root_length = len(root)
+            self.id = cl_id
+        
         self.quotes = {}
+        self.timeline_built = False
     
     def __repr__(self):
         return '<Cluster: ' + self.__unicode__() + '>'
@@ -296,14 +331,15 @@ class Cluster(object):
             qt.plot(smooth_res=smooth_res)
         pl.title(self.__unicode__())
     
-    def build_cluster_timeline(self):
-        cl_timeline = Timeline(self.tot_freq)
-        for qt in self.quotes.values():
-            cl_timeline.url_times[cl_timeline.current_idx:cl_timeline.current_idx+qt.tot_freq] = qt.url_times
-            cl_timeline.current_idx += qt.tot_freq
-        cl_timeline.compute_attrs()
-        return cl_timeline
+    def build_timeline(self):
+        if not self.timeline_built:
+            self.timeline = Timeline(self.tot_freq)
+            for qt in self.quotes.values():
+                self.timeline.url_times[self.timeline.current_idx:self.timeline.current_idx+qt.tot_freq] = qt.url_times
+                self.timeline.current_idx += qt.tot_freq
+            self.timeline.compute_attrs()
+            self.timeline_built = True
     
     def plot(self, smooth_res=5):
-        cl_timeline = self.build_cluster_timeline()
-        v_mt.plot_timeline(cl_timeline, label=self.__unicode__(), smooth_res=smooth_res)
+        self.build_timeline()
+        v_mt.plot_timeline(self.timeline, label=self.__unicode__(), smooth_res=smooth_res)
