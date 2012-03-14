@@ -9,6 +9,7 @@ Compute a few statistics about the MemeTracker dataset
 from pylab import *
 from nltk import word_tokenize
 import datainterfaces.picklesaver as ps
+import analyze.memetracker as a_mt
 import os
 
 
@@ -26,12 +27,7 @@ print 'done'
 # FIRST: Distribution of number of quotes/clusters
 # Compute the (length -> cluster ids) dictionary
 print 'Computing distribution of number of quotes/cluster...',
-inv_cl_lengths = {}
-for cl in clusters.values():
-    if inv_cl_lengths.has_key(cl.n_quotes):
-        inv_cl_lengths[cl.n_quotes].append(cl.id)
-    else:
-        inv_cl_lengths[cl.n_quotes] = [cl.id]
+inv_cl_lengths = a_mt.build_n_quotes_to_clusterids(clusters)
 
 # Put that into plottable format
 cl_lengths = []
@@ -52,14 +48,7 @@ legend()
 # SECOND: Distribution of number of words/quote
 # Compute the (number of words -> number of quotes) dictionary
 print 'Computing distribution of number of words/quote...',
-inv_qt_lengths = {}
-for cl in clusters.values():
-    for qt in cl.quotes.values():
-        n_words = len(word_tokenize(qt.string.lower()))
-        if inv_qt_lengths.has_key(n_words):
-            inv_qt_lengths[n_words] += 1
-        else:
-            inv_qt_lengths[n_words] = 1
+inv_qt_lengths = a_mt.build_quotelengths_to_quoteids(clusters)
 
 # Put that into plottable format
 qt_lengths = []

@@ -7,20 +7,17 @@ Tools to analyse data from the MemeTracker dataset
 
 # Imports
 from __future__ import division
+from nltk import word_tokenize
 import datainterfaces.memetracker as d_mt
 import numpy as np
 
 
 # Module code
-def frame_cluster_5day(cluster):
+def frame_cluster_around_peak(cluster, span_before=2*86400, span_after=2*86400):
     '''
     Create a new cluster by cropping the one passed as an argument in a +/-48h time frame
     around the 24h with highest activity
     '''
-    
-    # How many days to keep, around the 24 hours with maximum activity
-    span_before = 2 * 86400
-    span_after = 2 * 86400
     
     cluster.build_timeline()
     max_24h = find_max_24h_frame(cluster.timeline)
@@ -36,7 +33,9 @@ def frame_cluster(cl, start, end):
     for qt in cl.quotes.values():
         qt.compute_attrs()
         if (start <= qt.start <= end) or (qt.start <= start <= qt.end):
-            framed_quotes[qt.id] = frame_quote(qt, start, end)
+            framed_quote = frame_quote(qt, start, end)
+            if framed_quote != None:
+                framed_quotes[qt.id] = framed_quote
     
     n_quotes = len(framed_quotes)
     tot_freq = sum([qt.tot_freq for qt in framed_quotes.values()])
@@ -52,6 +51,8 @@ def frame_quote(qt, start, end):
     '''
     
     framed_times = frame_timeline(qt, start, end)
+    if len(framed_times) == 0:
+        return None
     n_urls = len(set(framed_times))
     tot_freq = len(framed_times)
     framed_qt = d_mt.Quote(n_urls=n_urls, tot_freq=tot_freq, string=qt.string, qt_id=qt.id)
@@ -86,13 +87,58 @@ def find_max_24h_frame(timeline):
     return start_times[np.argmax(ipd_all)]
 
 
-#def get_timebags(cluster, n_bags):
-#    '''
-#    Return n_bags bags of quotes computed from the cluster (time bags)
-#    '''
-#    pass
-#
-#
-#class TimeBag(object):
-#    def __init__(self, cluster, start, end):
-#        pass
+def get_timebags(cluster, n_bags):
+    '''
+    Return n_bags bags of quotes computed from the cluster (time bags)
+    '''
+    
+    cluster.build_timeline()
+    step = int(round(cluster.timeline.span.total_seconds() / n_bags))
+    cl_start = cluster.timeline.start
+    
+    timebags = []
+    for i in xrange(n_bags):
+        timebags.append(TimeBag(cluster, cl_start + i*step, cl_start + (i+1)*step))
+    
+    return timebags
+
+
+class TimeBag(object):
+    def __init__(self, cluster, start, end):
+        framed_cluster = frame_cluster(cluster, start, end)
+        
+        self.id_fromcluster = cluster.id
+        self.strings = []
+        self.tot_freq = framed_cluster.tot_freq
+        self.tot_freqs = np.zeros(framed_cluster.n_quotes)
+        self.n_urlss = np.zeros(framed_cluster.n_quotes)
+        self.ids = np.zeros(framed_cluster.n_quotes)
+        
+        for i, qt in enumerate(framed_cluster.quotes.values()):
+            self.strings.append(qt.string)
+            self.tot_freqs[i] = qt.tot_freq
+            self.n_urlss[i] = qt.n_urls
+            self.ids[i] = qt.id
+        
+        self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+
+
+def build_n_quotes_to_clusterids(clusters):
+    inv_cl_lengths = {}
+    for cl in clusters.values():
+        if inv_cl_lengths.has_key(cl.n_quotes):
+            inv_cl_lengths[cl.n_quotes].append(cl.id)
+        else:
+            inv_cl_lengths[cl.n_quotes] = [cl.id]
+    return inv_cl_lengths
+
+
+def build_quotelengths_to_quoteids(clusters):
+    inv_qt_lengths = {}
+    for cl in clusters.values():
+        for qt in cl.quotes.values():
+            n_words = len(word_tokenize(qt.string.lower()))
+            if inv_qt_lengths.has_key(n_words):
+                inv_qt_lengths[n_words] += 1
+            else:
+                inv_qt_lengths[n_words] = 1
