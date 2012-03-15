@@ -10,7 +10,7 @@ See http://memetracker.org/ for details about it
 from __future__ import division
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
-from datastructure.memetracker import  Quote, Cluster
+from datastructure.memetracker import Quote, Cluster
 import re
 import os
 

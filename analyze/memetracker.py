@@ -13,19 +13,19 @@ import numpy as np
 
 
 # Module code
-def frame_cluster_around_peak(cluster, span_before=2*86400, span_after=2*86400):
+def frame_cluster_around_peak(cl, span_before=2*86400, span_after=2*86400):
     '''
     Create a new cluster by cropping the one passed as an argument in a +/-48h time frame
     around the 24h with highest activity
     '''
     
-    cluster.build_timeline()
-    max_24h = find_max_24h_frame(cluster.timeline)
+    cl.build_timeline()
+    max_24h = find_max_24h_frame(cl.timeline)
     
     start = max_24h - span_before
     end = max_24h + 86400 + span_after
     
-    return frame_cluster(cluster, start, end)
+    return frame_cluster(cl, start, end)
 
 
 def frame_cluster(cl, start, end):
