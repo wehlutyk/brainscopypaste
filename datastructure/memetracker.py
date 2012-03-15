@@ -9,7 +9,8 @@ Structures and classes to deal with the MemeTracker dataset
 from __future__ import division
 from datainterface.timeparsing import isostr_to_epoch_mt
 import visualize.memetracker as v_mt
-import analyze.memetracker as a_mt
+# "import analyze.memetracker as a_mt" has been moved into TimeBag.__init__ to prevent a circular import problem
+# see http://docs.python.org/faq/programming.html#what-are-the-best-practices-for-using-import-in-a-module for more info
 from datetime import datetime
 from warnings import warn
 import numpy as np
@@ -159,6 +160,8 @@ class Cluster(object):
 
 class TimeBag(object):
     def __init__(self, cluster, start, end):
+        # This import goes here to prevent a circular import problem
+        import analyze.memetracker as a_mt
         framed_cluster = a_mt.frame_cluster(cluster, start, end)
         
         self.id_fromcluster = cluster.id
