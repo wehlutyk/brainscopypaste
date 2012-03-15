@@ -1,35 +1,54 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Structures and methods to deal with the MemeTracker dataset
-See http://memetracker.org/ for details about it
-'''
+
+"""Classes for loading data from the MemeTracker dataset
+
+Classes:
+  * MT_dataset: represent (part of) the MemeTracker dataset
+  * ClustersFileParser: Abstract Base Class to help defining parser for the MemeTracker file format
+  * ClustersLoader: parser for the MemeTracker file format used to load all the data into a dict of Cluster objects
+"""
 
 
 # Imports
 from __future__ import division
+import re
+import os
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
 from datastructure.memetracker import Quote, Cluster
-import re
-import os
 
 
 # Module code
 class MT_dataset(object):
+    
+    """Represent (part of) the MemeTracker dataset.
+    
+    Methods:
+      * __init__: initialize the class with a filename and the folder containing it
+      * print_quotes_freq: create a file containing, one per line, all the quotes of the dataset and their frequencies
+      * print_quote_ids: create a file containing, on each line, all the quote ids belonging to a same cluster
+      * load_clusters: load the whole dataset into a dictionary of Cluster objects
+    """
+    
     def __init__(self, mt_filename):
+        """Initialize the class with a filename and the folder containing it, for saving other files."""
         self.mt_filename = mt_filename
         self.rootfolder = os.path.split(mt_filename)[0]
     
-    def print_quotes_freq(self):
-        '''
-        Reads the clusters file and prints out in another file what quotes are present, along with their frequencies
-        '''
+    def print_quotes_freqs(self):
+        """Create a file containing, one per line, all the quotes of the dataset and their frequencies.
+        
+        Effects:
+          * the desired file is created in the folder containing the dataset file, named 'quotes_and_frequency'
+        
+        Returns: the full path to the file created.
+        """
         
         # Open the files
         outfilename = os.path.join(self.rootfolder, 'quotes_and_frequency')
         with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
+            c_open(outfilename, 'wb', encoding='utf-8') as outfile:
             # Skip the first lines
             self.skip_lines(infile)
             
@@ -45,15 +64,18 @@ class MT_dataset(object):
         return outfilename
 
     def print_quote_ids(self):
-        '''
-        Reads the cluster file and prints out on each line all the quotes that belong to the same cluster
-        (Was called 'leskovec_clusters_encoding.py', changed to this name to reflect what is does)
-        '''
+        """Create a file containing, on each line, all the quote ids belonging to a same cluster.
+        
+        Effects:
+          * the desired file is created in the folder containing the dataset file, named 'quotes_and_frequency'
+        
+        Returns: the full path to the file created.
+        """
         
         # Open the files
         outfilename = os.path.join(self.rootfolder, 'quote_ids')
         with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
+            c_open(outfilename, 'wb', encoding='utf-8') as outfile:
             # Skip the first few lines
             self.skip_lines(infile)
             
@@ -80,9 +102,11 @@ class MT_dataset(object):
         return outfilename
     
     def load_clusters(self):
-        '''
-        Load the whole clusters file into a dictionary of Cluster objects
-        '''
+        """Load the whole clusters file into a dictionary of Cluster objects.
+        
+        Effects:
+          * the dictionary of Cluster objects is put into self.clusters
+        """
         
         # Initialize the cluster file parser
         clusters_loader = ClustersLoader()
@@ -95,45 +119,79 @@ class MT_dataset(object):
 
 
 class ClustersFileParser:
-    '''
-    An abstract class to define cluster file parsers, with custom cluster-, quote-, and url-handlers
-    '''
     
-    # Make this an abstract base class: can't be instantiated, must be sub-classed
-    # In addition, methods marked @abstractmethod must be overridden
-    # (i.e. they're not implemented here, but should be implemented in sub-classes)
+    """Abstract Base Class to help defining parser for the MemeTracker file format.
+    
+    'Abstract Base Class' means you can't instantiate this class. It must be sub-classed, and is meant to be
+    used as a building block for classes that parse the dataset file. Methods with the @abstractmethod
+    decorator are not implemented here, and must be overloaded (i.e. redefined) in sub-classes. Methods starting
+    with an underscore (_X) don't need to be used by sub-classes.
+    
+    The idea here is to ease the writing of a parser for the dataset file: a sub-class need only define the
+    cluster-, quote-, and url-handlers, which define what happens when a cluster-, a quote-, or a url-declaration
+    is encountered in the dataset file; the rest of the parsing code is common for all classes and is implemented
+    in this base class.
+    
+    Methods:
+      * __init__: initialize the class with some internal info for parsing and printing progress info
+      * parse: parse a file, using the defined cluster-, quote-, and url-handlers
+    
+    Abstract methods (must be overloaded in sub-classes):
+      * handle_cluster: handle a cluster definition encountered in the dataset file
+      * handle_quote: handle a quote definition encountered in the dataset file
+      * handle_url: handle a url definition encountered in the dataset file
+    
+    Private methods (don't need to be used in sub-classes)::
+      * _skip_lines: skip the first few lines in an open file (usually the syntax definition lines)
+      * _count_lines: count the number of lines in a file
+    """
+    
+    # This statement makes this an Abstract Base Class. See the docstring above for what that means.
+    # More details at http://docs.python.org/library/abc.html
     __metaclass__ = ABCMeta
     
     def __init__(self):
-        # Some variables to print progress info
+        """Initialize the class with some internal info for parsing and printing progress info."""
+        # How many lines to skip at the beginning of the file
         self._n_skip = 6
-        self._n_lines = 8357595 # or count them self._count_lines(mt_filename)
+        # Number of lines of the file
+        self._n_lines = 8357595 # or count them directly, but it's longer: self._count_lines(mt_filename)
+        # We'll print progress info each time we've read a multiple of self._lineinfostep
         self._lineinfostep = int(round(self._n_lines/20))
     
+    # This decorator requires sub-classes to overload this method
     @abstractmethod
     def handle_cluster(self):
         raise NotImplementedError
     
+    # This decorator requires sub-classes to overload this method
     @abstractmethod
     def handle_quote(self):
         raise NotImplementedError
     
+    # This decorator requires sub-classes to overload this method
     @abstractmethod
     def handle_url(self):
         raise NotImplementedError
     
     def _skip_lines(self, f):
-        '''
-        Skip the first few lines in a file object
-        '''
+        """Skip the first few lines in an open file (usually the syntax definition lines).
+        
+        Arguments:
+          * f: an open file where you want lines to be skipped
+        """
         
         for i in xrange(self._n_skip):
             f.readline()
     
     def _count_lines(self, filename):
-        '''
-        Count the lines of a file
-        '''
+        """Count the number of lines in a file.
+        
+        Arguments:
+          * filename: the path to the file from which the lines are counted
+        
+        Returns: the number of lines in the file.
+        """
         
         print "Counting lines for '" + filename + "'..."
         with c_open(filename, 'rb', encoding='utf-8') as f:
@@ -142,9 +200,13 @@ class ClustersFileParser:
             return i + 1
     
     def parse(self, filename):
-        '''
-        Do the actual parsing
-        '''
+        """Parse a file, using the defined cluster-, quote-, and url-handlers.
+        
+        Arguments:
+          * filename: the path to the file to parse
+        
+        Effects: whatever effects the cluster-, quote-, and url-handlers have, and nothing else.
+        """
         
         # Open the file
         with c_open(filename, 'rb', encoding='utf-8') as infile:
@@ -170,31 +232,44 @@ class ClustersFileParser:
 
 
 class ClustersLoader(ClustersFileParser):
-    '''
-    A class to parse a cluster file, and load it all into a dictionary
-    '''
+    
+    """Parser for the MemeTracker file format used to load all the data into a dict of Cluster objects.
+    It is built as a sub-class of the ClustersFileParser, and therefore overloads the cluster-, quote-,
+    and url-handlers. The parsing itself is implemented by the ClustersFileParser.
+    
+    Methods:
+      * __init__: initialize the ClustersFileParser and some variables used for keeping track of what's happening during parsing
+      * handle_cluster: handle a cluster definition in the dataset file
+      * handle_quote: handle a quote definition in the dataset file
+      * handle_url: handle a url definition in the dataset file
+    """
     
     def __init__(self):
+        """Initialize the ClustersFileParser and some variables used for keeping track of what's happening during parsing."""
         # Init the parent class
         super(ClustersLoader, self).__init__()
         
-        # Init the counters and the result
+        # Variables keeping track of what cluster and what quote we're currently parsing
         self.cluster_id = None
         self.quote_id = None
+        # Init the result: a dict of Cluster objects
         self.clusters = {}
     
     def handle_cluster(self, line_fields):
-        # Remember the cluster id
+        """Handle a cluster definition in the dataset file."""
+        # Remember the Cluster id
         self.cluster_id = int(line_fields[3])
-        # And create the cluster in the root dictionary
+        # And create the Cluster in the root dict
         self.clusters[self.cluster_id] = Cluster(line_fields)
     
     def handle_quote(self, line_fields):
-        # Remember the quote id
+        """Handle a quote definition in the dataset file."""
+        # Remember the Quote id
         self.quote_id = int(line_fields[4])
-        # And create the quote in the current cluster's sub-dictionary
+        # And create the Quote in the current Cluster's sub-dict
         self.clusters[self.cluster_id].quotes[self.quote_id] = Quote(line_fields)
     
     def handle_url(self, line_fields):
-        # Add that url the the current quote's timeline
+        """Handle a url definition in the dataset file."""
+        # Add that url the current Quote's Timeline
         self.clusters[self.cluster_id].quotes[self.quote_id].add_url(line_fields)
