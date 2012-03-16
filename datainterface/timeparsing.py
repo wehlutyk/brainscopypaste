@@ -1,26 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Parsing functions for strings representing time
-'''
+
+"""Methods for parsing and converting strings representing dates and times.
+
+Methods:
+  * isostr_to_epoch_linkfluence: convert a time-string from the Linkfluence dataset into seconds since epoch
+  * isostr_to_epoch_mt: convert a time-string from the MemeTracker dataset into seconds since epoch
+"""
 
 
 # Imports
 from __future__ import division
 from datetime import timedelta, datetime
 from calendar import timegm
-from pylab import sign
 import re
+from pylab import sign
 
 
 # Module code
 def isostr_to_epoch_linkfluence(isostr):
-    '''
-    Takes a string in format '%Y-%m-%dT%H:%M:%SZ'
-                          or '%Y-%m-%dT%H:%M:%S+%Hz:%Mz'
-                          or '%Y-%m-%dT%H:%M:%S-%Hz:%Mz'
-    and converts it to a number of seconds since the epoch
-    '''
+    """Convert a time-string from the Linkfluence dataset into seconds since epoch.
+    
+    Arguments:
+      * isostr: a string in format '%Y-%m-%dT%H:%M:%SZ'
+                                or '%Y-%m-%dT%H:%M:%S+%Hz:%Mz'
+                                or '%Y-%m-%dT%H:%M:%S-%Hz:%Mz'
+    
+    Returns: the number of seconds between epoch and the time represented by 'isostr'.
+    """
     
     # Convert any potential 'Z' to '+00:00'
     tzisostr = re.sub(r'Z$', '+00:00', isostr)
@@ -49,9 +56,13 @@ def isostr_to_epoch_linkfluence(isostr):
 
 
 def isostr_to_epoch_mt(isostr):
-    '''
-    Takes a string in format '%Y-%m-%d %H:%M:%S' and converts it to a number of seconds since epoch
-    '''
+    """Convert a time-string from the MemeTracker dataset into seconds since epoch.
+    
+    Arguments:
+      * isostr: a string in format '%Y-%m-%d %H:%M:%S'
+    
+    Returns: the number of seconds between epoch and the time represented by 'isostr'.
+    """
     
     dt = datetime.strptime(isostr, '%Y-%m-%d %H:%M:%S')
     assert dt.tzinfo is None

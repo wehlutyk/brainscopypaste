@@ -134,7 +134,8 @@ class Cluster(object):
         return self.__unicode__()
     
     def __unicode__(self):
-        return '"' + self.root + '" (cluster #{} ; tot_quotes={} ; tot_freq={})'.format(self.id, self.n_quotes, self.tot_freq)
+        return '"' + self.root + '" (cluster #{} ; tot_quotes={} ; tot_freq={})'.format(self.id, \
+                                                                                        self.n_quotes, self.tot_freq)
     
     def add_quote(self, line_fields):
         self.quote[int(line_fields[4])] = Quote(line_fields)

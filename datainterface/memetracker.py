@@ -48,7 +48,7 @@ class MT_dataset(object):
         # Open the files
         outfilename = os.path.join(self.rootfolder, 'quotes_and_frequency')
         with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-            c_open(outfilename, 'wb', encoding='utf-8') as outfile:
+             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
             # Skip the first lines
             self.skip_lines(infile)
             
@@ -75,7 +75,7 @@ class MT_dataset(object):
         # Open the files
         outfilename = os.path.join(self.rootfolder, 'quote_ids')
         with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-            c_open(outfilename, 'wb', encoding='utf-8') as outfile:
+             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
             # Skip the first few lines
             self.skip_lines(infile)
             
