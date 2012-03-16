@@ -11,17 +11,17 @@ Statistics computed:
 
 
 # Imports
-from pylab import plot, xlabel, ylabel, figure, legend
+from pylab import plot, xlabel, ylabel, figure, legend, show
 import os
 import datainterface.picklesaver as ps
 import analyze.memetracker as a_mt
+import settings as st
 
 
 # Code
-#filename = 'clust-cropped-50000.txt'
-filename = 'clust-qt08080902w3mfq5.txt'
-rootfolder = '/home/sebastien/Code/cogmaster-stage/data/MemeTracker/'
-picklefile = os.path.join(rootfolder, 'clusters_') + filename + '.pickle'
+#filename = st.memetracker_test_rel
+filename = st.memetracker_full_rel
+picklefile = os.path.join(st.memetracker_root, 'clusters_') + filename + '.pickle'
 
 # Load the data
 print 'Loading data...',
@@ -68,3 +68,7 @@ plot(qt_lengths, qt_lengths_n, label='Distribution du nombre de mots/quote')
 xlabel('Nombre de mots')
 ylabel('Nombre de quotes')
 legend()
+
+# Show it all
+show()
+

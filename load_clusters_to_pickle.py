@@ -5,23 +5,23 @@
 
 
 # Imports
+import os
 import datainterface.picklesaver as ps
 import datainterface.memetracker as mt
-import os
+import settings as st
 
 
 # Code
-#filename = 'clust-cropped-50000.txt'
-filename = 'clust-qt08080902w3mfq5.txt'
-rootfolder = '/home/sebastien/Code/cogmaster-stage/data/MemeTracker/'
-picklefile = os.path.join(rootfolder, 'clusters_') + filename + '.pickle'
+#filename = st.memetracker_test_rel
+filename = st.memetracker_full_rel
+picklefile = os.path.join(st.memetracker_root, 'clusters_') + filename + '.pickle'
 
 # Check that the destination doesn't already exist
 if os.path.exists(picklefile):
     raise Exception("File '" + picklefile + "' already exists!")
 
 # Load the data
-MT = mt.MT_dataset(os.path.join(rootfolder, filename))
+MT = mt.MT_dataset(os.path.join(st.memetracker_root, filename))
 MT.load_clusters()
 
 # And save it
