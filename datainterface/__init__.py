@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Classes and methods for loading data from raw datasets into the datastructure objects.
+"""Load data from raw datasets into the datastructure objects.
+
+These modules are used to load raw dataset files into objects defined in the datastructure package.
+
+The spinn3r module successively uses the nltktools and xmlparsing modules. The memetracker module
+is pretty standalone (but uses the datastructure package). The timeparsing and picklesaver modules
+are utilities that are used everywhere throughout the code.
 
 Modules:
-  * memetracker: classes for loading data from the MemeTracker dataset
-  * nltktools: classes for interfacing NLTK objects and dataset objects
-  * picklesaver: methods to save or load any data in pickle format
-  * spinn3r: classes and methods for loading data from the custom XML Spinn3r data format
-  * timeparsing: methods for parsing and converting strings representing dates and times
-  * xmlparsing: classes and methods for parsing generic XML files and some HTML
+  * memetracker: load data from the MemeTracker dataset
+  * nltktools: interface NLTK objects and dataset objects
+  * picklesaver: save or load any data in pickle format
+  * spinn3r: load data from the custom XML Spinn3r data format into an NLTK Reader
+  * timeparsing: parse and convert strings representing dates and times
+  * xmlparsing: parse XML into a dict, extract links from HTML, or strip HTML from tags
+
 """

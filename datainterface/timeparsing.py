@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Methods for parsing and converting strings representing dates and times.
+"""Parse and convert strings representing dates and times.
 
 Methods:
   * isostr_to_epoch_linkfluence: convert a time-string from the Linkfluence dataset into seconds since epoch
   * isostr_to_epoch_mt: convert a time-string from the MemeTracker dataset into seconds since epoch
+
 """
 
 
@@ -27,6 +28,7 @@ def isostr_to_epoch_linkfluence(isostr):
                                 or '%Y-%m-%dT%H:%M:%S-%Hz:%Mz'
     
     Returns: the number of seconds between epoch and the time represented by 'isostr'.
+    
     """
     
     # Convert any potential 'Z' to '+00:00'
@@ -62,6 +64,7 @@ def isostr_to_epoch_mt(isostr):
       * isostr: a string in format '%Y-%m-%d %H:%M:%S'
     
     Returns: the number of seconds between epoch and the time represented by 'isostr'.
+    
     """
     
     dt = datetime.strptime(isostr, '%Y-%m-%d %H:%M:%S')

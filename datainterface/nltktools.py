@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Classes for interfacing NLTK objects and dataset objects.
+"""Interface NLTK objects and dataset objects.
 
 Classes:
-  * DictNltk: tool to save an imported datasource (in a list of dicts) to NLTK files,
-              for later importing by an NLTK reader
+  * DictNltk: save an imported datasource (in a list of dicts) to NLTK files, for later importing by an NLTK reader
+
 """
 
 
@@ -21,11 +21,12 @@ from warnings import warn
 # Module code
 class DictNltk(object):
     
-    """Tool to save an imported datasource (in a list of dicts) to NLTK files, for later importing by an NLTK reader.
+    """Save an imported datasource (in a list of dicts) to NLTK files, for later importing by an NLTK reader.
     
     Methods:
       * __init__: initialize the class with file path info, the data, and what keys represent text in the list of dicts
-      * save_files: save the immported data (in a list of dicts) to NLTK files
+      * save_files: save the imported data (in a list of dicts) to NLTK files
+    
     """
     
     def __init__(self, nltkfolder, dictitems, tkey):
@@ -40,7 +41,9 @@ class DictNltk(object):
                   data to be saved to the NLTK files is. The item under the 'tkey' key in the dict must be a dict itself, 
                   with a '_text' key (containing a string) and, if that string is not empty, an additional '_text_stripped'
                   key containing the text from the '_text' key stripped from any unwanted stuff (e.g. HTML tags). The
-                  '_text_stripped' string is what is saved to the NLTK file of that dict.
+                  '_text_stripped' string is what is saved to the NLTK file of that dict. This format corresponds to
+                  what is returned by the datainterface.xmlparsing.ConvertXmlToDict method.
+        
         """
         
         # Root folder where the data is to be stored
@@ -51,7 +54,7 @@ class DictNltk(object):
         self.tkey = tkey
     
     def save_files(self):
-        """Save the immported data (in a dict) to NLTK files.
+        """Save the imported data (in a dict) to NLTK files.
         
         Effects:
           * looks at the self.tkey key in each dict of dictitem (this will fail if one dict does not have the
@@ -60,6 +63,7 @@ class DictNltk(object):
             to the file indicated by the 'nltk_filename' key of the 1st-level dict.
           * it will not overwrite an existing nltkfolder: if the nltkfolder already exists, it is moved to a backup,
             (printed to stdout) and the rest of the processing goes on
+        
         """
         
         if os.path.exists(self.nltkfolder):

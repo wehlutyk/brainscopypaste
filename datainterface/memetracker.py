@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Classes for loading data from the MemeTracker dataset
+"""Load data from the MemeTracker dataset.
 
 Classes:
   * MT_dataset: represent (part of) the MemeTracker dataset
   * ClustersFileParser: Abstract Base Class to help defining parser for the MemeTracker file format
-  * ClustersLoader: parser for the MemeTracker file format used to load all the data into a dict of Cluster objects
+  * ClustersLoader: parse the MemeTracker file format to load all the data into a dict of Cluster objects
+
 """
 
 
@@ -29,6 +30,7 @@ class MT_dataset(object):
       * print_quotes_freq: create a file containing, one per line, all the quotes of the dataset and their frequencies
       * print_quote_ids: create a file containing, on each line, all the quote ids belonging to a same cluster
       * load_clusters: load the whole dataset into a dictionary of Cluster objects
+    
     """
     
     def __init__(self, mt_filename):
@@ -43,6 +45,7 @@ class MT_dataset(object):
           * the desired file is created in the folder containing the dataset file, named 'quotes_and_frequency'
         
         Returns: the full path to the file created.
+        
         """
         
         # Open the files
@@ -70,6 +73,7 @@ class MT_dataset(object):
           * the desired file is created in the folder containing the dataset file, named 'quotes_and_frequency'
         
         Returns: the full path to the file created.
+        
         """
         
         # Open the files
@@ -106,6 +110,7 @@ class MT_dataset(object):
         
         Effects:
           * the dictionary of Cluster objects is put into self.clusters
+        
         """
         
         # Initialize the cluster file parser
@@ -122,12 +127,12 @@ class ClustersFileParser:
     
     """Abstract Base Class to help defining parser for the MemeTracker file format.
     
-    'Abstract Base Class' means you can't instantiate this class. It must be sub-classed, and is meant to be
+    'Abstract Base Class' means you can't instantiate this class. It must be subclassed, and is meant to be
     used as a building block for classes that parse the dataset file. Methods with the @abstractmethod
-    decorator are not implemented here, and must be overloaded (i.e. redefined) in sub-classes. Methods starting
-    with an underscore (_X) don't need to be used by sub-classes.
+    decorator are not implemented here, and must be overloaded (i.e. redefined) in subclasses. Methods starting
+    with an underscore (_X) don't need to be used by subclasses.
     
-    The idea here is to ease the writing of a parser for the dataset file: a sub-class need only define the
+    The idea here is to ease the writing of a parser for the dataset file: a subclass need only define the
     cluster-, quote-, and url-handlers, which define what happens when a cluster-, a quote-, or a url-declaration
     is encountered in the dataset file; the rest of the parsing code is common for all classes and is implemented
     in this base class.
@@ -136,14 +141,15 @@ class ClustersFileParser:
       * __init__: initialize the class with some internal info for parsing and printing progress info
       * parse: parse a file, using the defined cluster-, quote-, and url-handlers
     
-    Abstract methods (must be overloaded in sub-classes):
+    Abstract methods (must be overloaded in subclasses):
       * handle_cluster: handle a cluster definition encountered in the dataset file
       * handle_quote: handle a quote definition encountered in the dataset file
       * handle_url: handle a url definition encountered in the dataset file
     
-    Private methods (don't need to be used in sub-classes)::
+    Private methods (don't need to be used in subclasses)::
       * _skip_lines: skip the first few lines in an open file (usually the syntax definition lines)
       * _count_lines: count the number of lines in a file
+    
     """
     
     # This statement makes this an Abstract Base Class. See the docstring above for what that means.
@@ -159,17 +165,17 @@ class ClustersFileParser:
         # We'll print progress info each time we've read a multiple of self._lineinfostep
         self._lineinfostep = int(round(self._n_lines/20))
     
-    # This decorator requires sub-classes to overload this method
+    # This decorator requires subclasses to overload this method
     @abstractmethod
     def handle_cluster(self):
         raise NotImplementedError
     
-    # This decorator requires sub-classes to overload this method
+    # This decorator requires subclasses to overload this method
     @abstractmethod
     def handle_quote(self):
         raise NotImplementedError
     
-    # This decorator requires sub-classes to overload this method
+    # This decorator requires subclasses to overload this method
     @abstractmethod
     def handle_url(self):
         raise NotImplementedError
@@ -179,6 +185,7 @@ class ClustersFileParser:
         
         Arguments:
           * f: an open file where you want lines to be skipped
+        
         """
         
         for i in xrange(self._n_skip):
@@ -191,6 +198,7 @@ class ClustersFileParser:
           * filename: the path to the file from which the lines are counted
         
         Returns: the number of lines in the file.
+        
         """
         
         print "Counting lines for '" + filename + "'..."
@@ -206,6 +214,7 @@ class ClustersFileParser:
           * filename: the path to the file to parse
         
         Effects: whatever effects the cluster-, quote-, and url-handlers have, and nothing else.
+        
         """
         
         # Open the file
@@ -233,8 +242,9 @@ class ClustersFileParser:
 
 class ClustersLoader(ClustersFileParser):
     
-    """Parser for the MemeTracker file format used to load all the data into a dict of Cluster objects.
-    It is built as a sub-class of the ClustersFileParser, and therefore overloads the cluster-, quote-,
+    """Parse the MemeTracker file format to load all the data into a dict of Cluster objects.
+    
+    This is built as a subclass of the ClustersFileParser, and therefore overloads the cluster-, quote-,
     and url-handlers. The parsing itself is implemented by the ClustersFileParser.
     
     Methods:
@@ -242,6 +252,7 @@ class ClustersLoader(ClustersFileParser):
       * handle_cluster: handle a cluster definition in the dataset file
       * handle_quote: handle a quote definition in the dataset file
       * handle_url: handle a url definition in the dataset file
+    
     """
     
     def __init__(self):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Methods to save or load any data in pickle format
+"""Save or load any data in pickle format
 
 Methods:
   * save: save a structure to a file
   * load: load a structure from a file
+
 """
 
 
@@ -20,6 +21,7 @@ def save(s, filepath):
     Arguments:
       * s: the structure to save
       * filepath: full path to the file to save to
+    
     """
     
     with open(filepath, 'wb') as f:
@@ -33,6 +35,7 @@ def load(filepath):
       * filepath: full path to the file to load from
     
     Returns: the loaded structure.
+    
     """
     
     with open(filepath, 'rb') as f:

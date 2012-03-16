@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Analysis methods for the MemeTracker dataset.
+"""Analyze data from the MemeTracker dataset.
 
 Methods:
   * frame_cluster_around_peak: cut off quote occurrences in a Cluster around the 24h
@@ -15,6 +15,7 @@ Methods:
                                   Cluster ids having that number of quotes
   * build_quoteslengths_to_quoteids: build a dict associating Quote string lengths to
                                      the number of Quotes having that string length
+
 """
 
 
@@ -35,6 +36,7 @@ def frame_cluster_around_peak(cl, span_before=2*86400, span_after=2*86400):
       * span_after: time span (in seconds) to include after the end of the max 24h window
     
     Returns: a new framed Cluster.
+    
     """
     
     cl.build_timeline()
@@ -55,6 +57,7 @@ def frame_cluster(cl, start, end):
       * end: time (in seconds from epoch) of the end of the target time window
     
     Returns: a new framed Cluster.
+    
     """
     
     # Recreate each Quote, framed
@@ -88,6 +91,7 @@ def frame_quote(qt, start, end):
       * end: time (in seconds from epoch) of the end of the target time window
     
     Returns: a new framed Quote.
+    
     """
     
     # Frame the Timeline of the Quote
@@ -117,6 +121,7 @@ def frame_timeline(tm, start, end):
       * end: time (in seconds from epoch) of the end of the target time window
     
     Returns: a new framed Timeline.
+    
     """
     
     # Careful to return a copy, otherwise we just get a particular view of the same memory space,
@@ -133,7 +138,8 @@ def find_max_24h_window(timeline, prec=30*60):
     Optional arguments:
       * prec: the precision (in seconds) of the position of the returned time window. Defaults to half an hour.
     
-    Returns: the time (in seconds from epoch) of the beginning of the maximum activity window. 
+    Returns: the time (in seconds from epoch) of the beginning of the maximum activity window.
+    
     """
     
     # How many windows are we testing
@@ -166,6 +172,7 @@ def build_timebags(cluster, n_bags):
       * n_bags: the number of TimeBags to chop the Cluster into
     
     Returns: a list of TimeBags.
+    
     """
     
     # Build the Timeline for the Cluster, set the parameters for the TimeBags
@@ -188,6 +195,7 @@ def build_n_quotes_to_clusterids(clusters):
       * The dict of Clusters to work on
     
     Returns: the dict of 'number of Quotes' -> 'sequence of Cluster ids'.
+    
     """
     
     # Self-explanatory
@@ -208,6 +216,7 @@ def build_quotelengths_to_n_quote(clusters):
       * The dict of Clusters to work on
     
     Returns: the dict of 'Quote string lengths' -> 'number of Quotes having that string length'.
+    
     """
     
     # Self-explanatory

@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Classes and methods for loading data from the custom XML Spinn3r data format.
+"""Load data from the custom XML Spinn3r data format into an NLTK Reader.
 
 Classes:
-  * Spinn3rCategorizedPlaintextCorpusReader: interface for reading XML Spinn3r data with an NLTK reader
+  * Spinn3rCategorizedPlaintextCorpusReader: load data from the custom XML Spinn3r data format into an NLTK Reader
 
 Methods:
-  * StripXmlNamespaces: convert a Spinn3r XML into a valid XML file
+  * StripXmlNamespaces: convert a Spinn3r XML into a valid XML file (used by Spinn3rCategorizedPlaintextCorpusReader)
+
 """
 
 
@@ -25,32 +26,34 @@ from datainterface.nltktools import DictNltk
 # Module code
 class Spinn3rCategorizedPlaintextCorpusReader(CategorizedPlaintextCorpusReader):
     
-    """Interface for reading XML Spinn3r data with an NLTK reader.
+    """Load data from the custom XML Spinn3r data format into an NLTK Reader.
     
-    This is used to go from a raw Spinn3r XML data file to a usable NLTK reader: this class is a sub-class
+    This is used to go from a raw Spinn3r XML data file to a usable NLTK Reader: this class is a subclass
     of CategorizedPlaintextCorpusReader which overload __init__ to load directly from a raw Spinnn3r XML file.
     
     Methods:
-      * __init__: initialize the parent CategorzedPlaintextCorpusReader with data from a stripped Spinn3r XML file
-      * ConvertSpinn3rToDict: load a stripped Spinn3r XML file into a dict ; this is used by __init__, and
+      * __init__: create a CategorizedPlaintextCorpusReader (= parent class of self) from a raw Spinn3r XML file
+      * ConvertSpinn3rToDict: load a stripped Spinn3r XML file into a dict; this is used by __init__, and
                               need not be used by the end user
+    
     """
     
     def __init__(self, rootfolder, filename=None, nltkfiles_are_present=False):
-        """Initialize the parent CategorzedPlaintextCorpusReader with data from a stripped Spinn3r XML file.
+        """Create a CategorizedPlaintextCorpusReader (= parent class of self) from a raw Spinn3r XML file.
         
         Arguments:
-          * rootfolder: the folder where 'filename' is located ; an 'nltk' folder will be created in this
+          * rootfolder: the folder where 'filename' is located; an 'nltk' folder will be created in this
                         folder, where the NLTK files will be saved
         
         Optional arguments -- ONE (but only one) of these two arguments must be given:
-          * filename: the raw Spinn3r XML file to load data from ; it need not be stripped from namespaces
+          * filename: the raw Spinn3r XML file to load data from; it need not be stripped from namespaces
                       (i.e. it really is the raw data from Spinn3r), since this is done internally be __init__
           * nltkfiles_are_present: boolean saying if the NLTK files corresponding to the Spinn3r data have
                                    already been created, or if they need to be created. False (default) means
                                    the 'filename' arguments must be present, and that file will be parse as a
                                    raw Spinn3r XML. True means that the NLTK files have already been created,
                                    and there is no need to give the 'filename' argument.
+        
         """
         
         # Set class variables
@@ -90,6 +93,7 @@ class Spinn3rCategorizedPlaintextCorpusReader(CategorizedPlaintextCorpusReader):
           * strippedfilename: the stripped Spinn3r XML file to load data from
         
         Returns: the final list of items, each represented by a dict (i.e. a list of dicts is returned).
+        
         """
         
         # Get the dict corresponding to the Spinn3r XML file
@@ -121,6 +125,7 @@ def StripXmlNamespaces(filename, namespaces=['dc', 'weblog', 'atom', 'post', 'fe
                     which are the namespaces I found in the file I work on.
     
     Returns: full path to the resulting stripped XML file.
+    
     """
     
     stripped_filename = re.sub(r'\.xml$', '.stripped.xml', filename)
