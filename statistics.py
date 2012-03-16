@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Compute a few statistics about the MemeTracker dataset
-'''
+
+"""Compute some statistics about the MemeTracker dataset.
+
+Statistics computed:
+  * The distribution of number of quotes per cluster
+  * The distribution of number of words per quote
+
+"""
 
 
 # Imports
-from pylab import *
-from nltk import word_tokenize
+from pylab import plot, xlabel, ylabel, figure, legend
+import os
 import datainterface.picklesaver as ps
 import analyze.memetracker as a_mt
-import os
 
 
 # Code
@@ -48,7 +52,7 @@ legend()
 # SECOND: Distribution of number of words/quote
 # Compute the (number of words -> number of quotes) dictionary
 print 'Computing distribution of number of words/quote...',
-inv_qt_lengths = a_mt.build_quotelengths_to_quoteids(clusters)
+inv_qt_lengths = a_mt.build_quotelengths_to_n_quote(clusters)
 
 # Put that into plottable format
 qt_lengths = []
