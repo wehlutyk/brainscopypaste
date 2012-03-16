@@ -159,7 +159,7 @@ class Quote(Timeline):
     def plot(self, smooth_res=5):
         """Plot the time evolution of the Quote (with a legend).
         
-        Arguments:
+        Optional arguments:
           * smooth_res: when plotting, a moving average of the evolution can be additionally plotted; this is the width,
                         in days, of that moving average. If -1 is given, no moving average is plotted. Defaults to 5 days.
         
@@ -247,7 +247,7 @@ class Cluster(object):
     def plot_quotes(self, smooth_res=-1):
         """Plot the individual Quotes of the Cluster.
         
-        Arguments:
+        Optional arguments:
           * smooth_res: when plotting, a moving average of the evolution of the quotes can be additionally plotted; this
                         is the width, in days, of that moving average. If -1 is given, no moving average is plotted.
                         Defaults to -1 (no moving average plotted).
@@ -271,7 +271,7 @@ class Cluster(object):
     def plot(self, smooth_res=5):
         """Plot the time evolution of the Cluster as a single Timeline.
         
-        Arguments:
+        Optional arguments:
           * smooth_res: when plotting, a moving average of the evolution can be additionally plotted; this is the width,
                         in days, of that moving average. If -1 is given, no moving average is plotted. Defaults to 5 days.
         

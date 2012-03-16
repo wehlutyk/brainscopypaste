@@ -32,8 +32,10 @@ def frame_cluster_around_peak(cl, span_before=2*86400, span_after=2*86400):
     
     Arguments:
       * cl: the Cluster to work on
-      * span_before: time span (in seconds) to include before the beginning of the max 24h window
-      * span_after: time span (in seconds) to include after the end of the max 24h window
+    
+    Optional arguments:
+      * span_before: time span (in seconds) to include before the beginning of the max 24h window; defaults to 2 days
+      * span_after: time span (in seconds) to include after the end of the max 24h window; defautls to 2 days
     
     Returns: a new framed Cluster.
     

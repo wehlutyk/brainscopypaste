@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Methods to visualize data from the MemeTracker dataset
-'''
+
+"""Visualize data from the MemeTracker dataset
+
+Methods:
+  * plot_timeline: plot the evolution of a Timeline, with an optional legend and an optional moving average
+  * smooth_data: compute a moving average of a histogram (used in plot_timeline)
+
+"""
 
 
 # Imports
@@ -13,11 +18,19 @@ import pylab as pl
 
 # Module code
 def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5, legend_on=True, legend_size=10.0):
-    '''
-    Plot a timeline.
-    smooth_res is the number of days used to compute an additional smoothed curve
-    set smooth_res to -1 to disable the additional smoothed curve
-    '''
+    """Plot the evolution of a Timeline, with an optional legend and an optional moving average.
+    
+    Arguments:
+      * timeline: the timeline to plot
+    
+    Optional arguments:
+      * label: a legend label; defaults to 'raw timeline, no info'
+      * smooth_res: the width, in days, of the moving average; if -1 is given, no moving average is plotted;
+                    defaults to 5 days
+      * legend_on: boolean specifying if the legend is to be shown or not; defaults to True
+      * legend_size: float specifying the font size of the legen; defaults to 10.0
+    
+    """
     
     if not timeline.attrs_computed:
         timeline.compute_attrs()
@@ -44,6 +57,17 @@ def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5, legend_
 
 
 def smooth_data(x_secs, ipd, smooth_res):
+    """Compute a moving average of a histogram (used in plot_timeline).
+    
+    Arguments:
+      * x_secs: the x values of the histogram (i.e. the middles of the bins)
+      * ipd: the histogram values to be smoothed (ipd stands for instances per day)
+      * smooth_res: the width, in days, of the moving average to be computed
+    
+    Returns: a tuple (x_secs_smooth, ipd_smooth) containing the x and y values for the computed moving average.
+    
+    """
+    
     start = int(pl.ceil(smooth_res/2))
     end = len(x_secs)-start+1
     length = end - start
