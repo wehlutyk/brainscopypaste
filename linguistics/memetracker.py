@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Some linguistic processing for the memetracker dataset
-'''
+
+"""Linguistic analysis tools for the MemeTracker dataset.
+
+TODO: this module needs more commenting
+
+"""
 
 
 # Imports
@@ -14,7 +17,7 @@ import numpy as np
 
 # Module code
 def levenshtein(s1, s2):
-    """Compute levenshtein distance between s1 and s2"""
+    """Compute levenshtein distance between s1 and s2."""
 
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
