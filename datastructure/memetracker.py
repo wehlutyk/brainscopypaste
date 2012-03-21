@@ -20,6 +20,7 @@ import numpy as np
 import pylab as pl
 from datainterface.timeparsing import isostr_to_epoch_mt
 import visualize.memetracker as v_mt
+import linguistics.memetracker as l_mt
 # "import analyze.memetracker as a_mt" has been moved into TimeBag.__init__ to prevent a circular import problem
 # see http://docs.python.org/faq/programming.html#what-are-the-best-practices-for-using-import-in-a-module for more info
 
@@ -325,3 +326,11 @@ class TimeBag(object):
             self.ids[i] = qt.id
         
         self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+    
+    def levenshtein_closedball(self, center_string, d):
+        """Get the stings in the TimeBag that are at levenshtein-distance d from a string."""
+        return l_mt.timebag_levenshtein_closedball(self, center_string, d)
+    
+    def levenshtein_word_closedball(self, center_string, d):
+        """Get the stings in the TimeBag that are at levenshtein_word-distance d from a string."""
+        return l_mt.timebag_levenshtein_word_closedball(self, center_string, d)

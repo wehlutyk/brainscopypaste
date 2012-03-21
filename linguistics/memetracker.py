@@ -4,6 +4,7 @@
 """Linguistic analysis tools for the MemeTracker dataset.
 
 TODO: this module needs more commenting
+TODO: this module needs cleaning up
 
 """
 
@@ -13,6 +14,7 @@ TODO: this module needs more commenting
 #import re
 #import lang_detection as ld
 import numpy as np
+from nltk import word_tokenize 
 
 
 # Module code
@@ -38,9 +40,29 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 
-def timebag_levenshtein_closedball(center_string, timebag, d):
-    distances = [ levenshtein(center_string, bag_string) for bag_string in timebag.strings ]
-    return np.where(distances <= d)
+def levenshtein_word(s1, s2):
+    """Compute levenshtein distance between s1 and s2, taking words as the editing unit."""
+    return levenshtein(word_tokenize(s1), word_tokenize(s2))
+
+
+def timebag_levenshtein_closedball(timebag, center_string, d):
+    """Get the stings in a TimeBag that are at levenshtein-distance d from a string."""
+    distances = np.array([ levenshtein(center_string, bag_string) for bag_string in timebag.strings ])
+    idx = np.where(distances <= d)
+    if len(idx) > 0:
+        return idx[0].tolist()
+    else:
+        return []
+
+
+def timebag_levenshtein_word_closedball(timebag, center_string, d):
+    """Get the stings in a TimeBag that are at levenshtein_word-distance d from a string."""
+    distances = np.array([ levenshtein_word(center_string, bag_string) for bag_string in timebag.strings ])
+    idx = np.where(distances <= d)
+    if len(idx) > 0:
+        return idx[0].tolist()
+    else:
+        return []
 
 
 #infile = open('quotes_and_frequency','r')
