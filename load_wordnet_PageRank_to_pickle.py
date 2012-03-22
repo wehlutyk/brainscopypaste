@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the PageRank scores for the lemmas in Wordnet, and save it to a pickle file."""
+"""Compute the PageRank scores for the lemmas in Wordnet, and save the scores dict to a pickle file."""
 
 
 # Imports

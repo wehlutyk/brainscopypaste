@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-TODO: this module needs documenting
+"""Compute PageRank scores corresponding to the Wordnet synonyms graph.
+
+Methods:
+  * build_wn_PR_adjacency_matrix: build the adjacency matrix (in Compressed Sparse Row format) for the WN synonyms graph
+  * build_wn_PR_scores: compute the PageRank scores corresponding to the WN synonyms graph
+
 """
 
 
@@ -16,6 +20,14 @@ import numpy as np
 
 # Module code
 def build_wn_PR_adjacency_matrix():
+    """Build the adjacency matrix (in Compressed Sparse Row format) for the WN synonyms graph.
+    
+    Returns: a tuple (lem_coords, Mwn_csr):
+      * lem_coords: a dict associating each lemma to its coordinate in the adjacency matrix
+      * Mwn_csr: the adjacency matrix, in CSR format, of the WN synonyms graph, with ones on the diagonal
+    
+    """
+    
     # Build the dictionary of word coordinates
     print 'Building word coordinates...',
     lem_coords = {}
@@ -52,7 +64,7 @@ def build_wn_PR_adjacency_matrix():
     # the corresponding word (see details of the PageRank algorithm)
     # Here we divide by the row sum (which is the same as the column sum, since the matrix is
     # symmetric), then transpose to change that into a division by column sum (which is what
-    # PageRank does)
+    # PageRank does). This is because column sum is inefficient in a CSR matrix.
     print 'Compensating link weights with number of outlinks...',
     for i in xrange(num_lems):
         row_vals = Mwn_csr.data[Mwn_csr.indptr[i]:Mwn_csr.indptr[i+1]].copy()
@@ -64,7 +76,14 @@ def build_wn_PR_adjacency_matrix():
 
 
 def build_wn_PR_scores():
-    # Get the connectivity matrix
+    """Compute the PageRank scores corresponding to the WN synonyms graph.
+    
+    Returns: a dict associating each WN lemma to its PageRank score (computed with ones on the diagonal
+             of the adjacency matrix)
+    
+    """
+    
+    # Get the adjacency matrix
     (lem_coords, Mwn_csr) = build_wn_PR_adjacency_matrix()
     
     # Compute the PageRank scores
@@ -72,7 +91,7 @@ def build_wn_PR_scores():
     score_list = eigs(Mwn_csr, 1, which='LM', v0=np.ones(len(lem_coords)), maxiter=10000)[1]
     print 'OK'
     
-    # Plug back the correspondance of words with scores
+    # Plug back the scores into a dict of lemmas
     print 'Replugging the PageRank scores into a dict of words...',
     lem_scores = {}
     for (w, i) in lem_coords.iteritems():

@@ -9,5 +9,6 @@ an object-oriented interface for analysis of the data.
 Modules:
   * lang_detection: detect the language in a text
   * memetracker: linguistic analysis tools for the MemeTracker dataset
+  * wordnettools: compute PageRank scores corresponding to the Wordnet synonyms graph
 
 """
