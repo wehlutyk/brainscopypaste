@@ -186,6 +186,7 @@ class Cluster(object):
       * build_timeline: build the Timeline representing the occurrences of the cluster as a single object
                         (not categorized into quotes; this is used to plot the occurrences of the cluster)
       * plot: plot the time evolution of the Cluster as a single Timeline
+      * build_timebags: build a number of TimeBags from the Cluster
     
     """
     
@@ -280,6 +281,20 @@ class Cluster(object):
         
         self.build_timeline()
         v_mt.plot_timeline(self.timeline, label=self.__unicode__(), smooth_res=smooth_res)
+    
+    def build_timebags(self, n_bags):
+        """Build a number of TimeBags from the Cluster.
+        
+        Arguments:
+          * n_bags: the number of TimeBags to build
+        
+        Returns: a list of TimeBag objects
+        
+        """
+        
+        # This import goes here to prevent a circular import problem
+        import analyze.memetracker as a_mt
+        return a_mt.build_timebags(self, n_bags)
 
 
 class TimeBag(object):
@@ -302,7 +317,7 @@ class TimeBag(object):
         too.
         
         Arguments:
-          * cluster: the Cluster from which ot build the TimeBag
+          * cluster: the Cluster from which to build the TimeBag
           * start: starting time for the TimeBag, in seconds from epoch
           * end: ending time for the TimeBag, in seconds from epoch
         

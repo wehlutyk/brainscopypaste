@@ -21,7 +21,7 @@ def plot_timeline(timeline, label='raw timeline, no info', smooth_res=5, legend_
     """Plot the evolution of a Timeline, with an optional legend and an optional moving average.
     
     Arguments:
-      * timeline: the timeline to plot
+      * timeline: the Timeline to plot
     
     Optional arguments:
       * label: a legend label; defaults to 'raw timeline, no info'

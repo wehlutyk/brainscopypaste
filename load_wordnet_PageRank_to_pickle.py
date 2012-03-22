@@ -12,7 +12,7 @@ import settings as st
 
 
 # Code
-picklefile = os.path.join(st.data_root, 'wordnet_PR_scores.pickle')
+picklefile = st.wordnet_PR_pickle
 
 # Check that the destination doesn't already exist
 if os.path.exists(picklefile):

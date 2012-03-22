@@ -11,7 +11,7 @@ import os
 # Root folder for all the data. If we do this properly, this could be the only setting to change between computers :-)
 data_root = '/home/sebastien/Code/cogmaster-stage/data'
 
-# Folder for MemeTracker data, relative to dataroot
+# Folder for MemeTracker data, relative to data_root
 memetracker_root_rel = 'MemeTracker'
 memetracker_root = os.path.join(data_root, memetracker_root_rel)
 
@@ -22,3 +22,7 @@ memetracker_full = os.path.join(memetracker_root, memetracker_full_rel)
 # File for a subset of the MemeTracker dataset for testing algorithms before a full-blown run, relative to memetracker_root
 memetracker_test_rel = 'clust-cropped-50000.txt'
 memetracker_test = os.path.join(memetracker_root, memetracker_test_rel)
+
+# Pickle file for the Wordnet PageRank scores, relative to data_root
+wordnet_PR_pickle_rel = 'wordnet_PR_scores.pickle'
+wordnet_PR_pickle = os.path.join(data_root, wordnet_PR_pickle_rel)
