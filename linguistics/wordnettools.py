@@ -3,7 +3,6 @@
 
 """
 TODO: this module needs documenting
-TODO: there's a problem somewhere... I get negative PR scores (e.g. for 'will', 'can')
 """
 
 
@@ -32,15 +31,20 @@ def build_wn_PR_adjacency_matrix():
     print 'OK'
     
     # Build the Compressed Sparse Row matrix corresponding to the synonyms network in Wordnet
-    # This should yield a symmetric matrix with zeros on the diagonal
-    print 'Building Wordnet connectivity matrix...',
+    print 'Building Wordnet adjacency matrix...',
+    # This first loop should result in a symmetric matrix with zeros on the diagonal
     ij = ([], [])
     for syn in wn.all_synsets():
         for lem1 in syn.lemma_names:
             for lem2 in syn.lemma_names:
-                #if lem1 != lem2:
-                ij[0].append(lem_coords[lem1])
-                ij[1].append(lem_coords[lem2])
+                if lem1 != lem2:
+                    ij[0].append(lem_coords[lem1])
+                    ij[1].append(lem_coords[lem2])
+    # Set the diagonal
+    for i in xrange(num_lems):
+        ij[0].append(i)
+        ij[1].append(i)
+    # And create the CSR matrix
     Mwn_csr = csr_matrix(([1]*len(ij[0]), ij), shape=(num_lems, num_lems), dtype=np.float)
     print 'OK'
     
