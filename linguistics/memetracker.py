@@ -3,8 +3,27 @@
 
 """Linguistic analysis tools for the MemeTracker dataset.
 
-TODO: this module needs more commenting
-TODO: this module needs cleaning up
+Methods:
+  * levenshtein: compute levenshtein distance between s1 and s2
+  * levenshtein_word: compute levenshtein distance between s1 and s2, taking words as the editing unit
+  * timebag_levenshtein_closedball: get the indexes of the strings in a TimeBag that are at
+                                    levenshtein-distance <= d from a string
+  * timebag_levenshtein_word_closedball: get the indexes of the strings in a TimeBag that are at
+                                         levenshtein_word-distance <= d from a string
+  * timebag_levenshtein_sphere: get the indexes of the strings in a TimeBag that are at
+                                levenshtein-distance == d from a string
+  * timebag_levenshtein_word_sphere: get the indexes of the strings in a TimeBag that are at
+                                     levenshtein_word-distance == d from a string
+  * hamming: compute hamming distance between s1 and s2
+  * hamming_word: compute hamming distance between s1 and s2, taking words as the editing unit
+  * timebag_hamming_closedball: get the indexes of the strings in a TimeBag that are at
+                                hamming-distance <= d from a string
+  * timebag_hamming_word_closedball: get the indexes of the strings in a TimeBag that are at
+                                     hamming_word-distance <= d from a string
+  * timebag_hamming_sphere: get the indexes of the strings in a TimeBag that are at
+                            hamming-distance == d from a string
+  * timebag_hamming_word_sphere: get the indexes of the strings in a TimeBag that are at
+                                 hamming_word-distance == d from a string
 
 """
 
@@ -31,7 +50,7 @@ def levenshtein(s1, s2):
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1    # j+1 instead of j since previous_row and current_row
+            insertions = previous_row[j + 1] + 1    # j+1 instead of j since previous_row and
             deletions = current_row[j] + 1          # current_row are one character longer than s2
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
@@ -46,7 +65,7 @@ def levenshtein_word(s1, s2):
 
 
 def timebag_levenshtein_closedball(timebag, center_string, d):
-    """Get the stings in a TimeBag that are at levenshtein-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at levenshtein-distance <= d from a string."""
     distances = np.array([ levenshtein(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances <= d)
     if len(idx) > 0:
@@ -56,7 +75,7 @@ def timebag_levenshtein_closedball(timebag, center_string, d):
 
 
 def timebag_levenshtein_word_closedball(timebag, center_string, d):
-    """Get the stings in a TimeBag that are at levenshtein_word-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at levenshtein_word-distance <= d from a string."""
     distances = np.array([ levenshtein_word(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances <= d)
     if len(idx) > 0:
@@ -65,7 +84,7 @@ def timebag_levenshtein_word_closedball(timebag, center_string, d):
         return []
 
 def timebag_levenshtein_sphere(timebag, center_string, d):
-    """Get the stings in a TimeBag that are exactly at levenshtein-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at levenshtein-distance == d from a string."""
     distances = np.array([ levenshtein(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances == d)
     if len(idx) > 0:
@@ -75,7 +94,7 @@ def timebag_levenshtein_sphere(timebag, center_string, d):
 
 
 def timebag_levenshtein_word_sphere(timebag, center_string, d):
-    """Get the stings in a TimeBag that are exactly at levenshtein_word-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at levenshtein_word-distance == d from a string."""
     distances = np.array([ levenshtein_word(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances == d)
     if len(idx) > 0:
@@ -98,7 +117,7 @@ def hamming_word(s1, s2):
 
 
 def timebag_hamming_closedball(timebag, center_string, d):
-    """Get the stings in a TimeBag that are at hamming-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at hamming-distance <= d from a string."""
     distances = np.array([ hamming(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where((0 <= distances) * (distances <= d))
     if len(idx) > 0:
@@ -108,7 +127,7 @@ def timebag_hamming_closedball(timebag, center_string, d):
 
 
 def timebag_hamming_word_closedball(timebag, center_string, d):
-    """Get the stings in a TimeBag that are at hamming_word-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at hamming_word-distance <= d from a string."""
     distances = np.array([ hamming_word(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where((0 <= distances) * (distances <= d))
     if len(idx) > 0:
@@ -118,7 +137,7 @@ def timebag_hamming_word_closedball(timebag, center_string, d):
 
 
 def timebag_hamming_sphere(timebag, center_string, d):
-    """Get the stings in a TimeBag that are exactly at hamming-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at hamming-distance == d from a string."""
     distances = np.array([ hamming(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances == d)
     if len(idx) > 0:
@@ -128,7 +147,7 @@ def timebag_hamming_sphere(timebag, center_string, d):
 
 
 def timebag_hamming_word_sphere(timebag, center_string, d):
-    """Get the stings in a TimeBag that are exactly at hamming_word-distance d from a string."""
+    """Get the indexes of the strings in a TimeBag that are at hamming_word-distance == d from a string."""
     distances = np.array([ hamming_word(center_string, bag_string) for bag_string in timebag.strings ])
     idx = np.where(distances == d)
     if len(idx) > 0:

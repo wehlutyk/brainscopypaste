@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Analyze the 1-word changes (levenshtein_word distance = 1) in the MemeTracker dataset.
+"""Analyze the 1-word changes (hamming_word-distance == 1) in the MemeTracker dataset.
 
-TODO: this script needs more commenting.
+This script fetches the PR scores of words that are substituted through time in the MemeTracker Clusters.
+It takes each Cluster, splits it into a number of TimeBags, then looks at the transitions between TimeBags
+defined by the 'bag_transitions' variable: for each transition (e.g. TimeBag #0 to TimeBag #2), it takes
+the highest frequency string in the first TimeBag, gets all strings in the second TimeBag which are at
+hamming_word-distance == 1, and stores the scores of the substituted word and the new word. If any one of
+those words is not referenced in the PR scores, it takes note of it (in the 'nonlemmas' variable). It then
+saves all the data to pickle files. The output is two files: one containing the ranks of (substituted word, new word)
+couples (which is a Nx2 numpy array), the other containing a list of dicts with data about the words that didn't
+have PR scores (data stored is: cluster id ('cl_id'), tokenized start string ('t_smax'), tokenized end string ('t_s')
+and index of the changed word ('idx')).
 
 """
 
