@@ -305,6 +305,17 @@ class TimeBag(object):
     
     Methods:
       * __init__: build the TimeBag from a Cluster, a starting time, and an ending time
+      * levenshtein_closedball: get the strings in the TimeBag that are at levenshtein-distance d from a string
+      * levenshtein_word_closedball: get the strings in the TimeBag that are at levenshtein_word-distance d
+                                     from a string
+      * hamming_closedball: get the strings in the TimeBag that are at hamming-distance d from a string
+      * hamming_word_closedball: get the strings in the TimeBag that are at hamming_word-distance d from a string
+      * levenshtein_sphere: get the strings in the TimeBag that are exactly at levenshtein-distance d from a string
+      * levenshtein_word_sphere: get the strings in the TimeBag that are exactly at levenshtein_word-distance d
+                                     from a string
+      * hamming_sphere: get the strings in the TimeBag that are exactly at hamming-distance d from a string
+      * hamming_word_sphere: get the strings in the TimeBag that are exactly at hamming_word-distance d from a string
+
     
     """
     
@@ -340,12 +351,39 @@ class TimeBag(object):
             self.n_urlss[i] = qt.n_urls
             self.ids[i] = qt.id
         
-        self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+        if len(self.tot_freqs) > 0:
+            self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+        else:
+            self.max_freq_string = ''
     
     def levenshtein_closedball(self, center_string, d):
-        """Get the stings in the TimeBag that are at levenshtein-distance d from a string."""
+        """Get the strings in the TimeBag that are at levenshtein-distance d from a string."""
         return l_mt.timebag_levenshtein_closedball(self, center_string, d)
     
     def levenshtein_word_closedball(self, center_string, d):
-        """Get the stings in the TimeBag that are at levenshtein_word-distance d from a string."""
+        """Get the strings in the TimeBag that are at levenshtein_word-distance d from a string."""
         return l_mt.timebag_levenshtein_word_closedball(self, center_string, d)
+    
+    def levenshtein_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at levenshtein-distance d from a string."""
+        return l_mt.timebag_levenshtein_sphere(self, center_string, d)
+    
+    def levenshtein_word_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at levenshtein_word-distance d from a string."""
+        return l_mt.timebag_levenshtein_word_sphere(self, center_string, d)
+    
+    def hamming_closedball(self, center_string, d):
+        """Get the strings in the TimeBag that are at hamming-distance d from a string."""
+        return l_mt.timebag_hamming_closedball(self, center_string, d)
+    
+    def hamming_word_closedball(self, center_string, d):
+        """Get the strings in the TimeBag that are at hamming_word-distance d from a string."""
+        return l_mt.timebag_hamming_word_closedball(self, center_string, d)
+    
+    def hamming_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at hamming-distance d from a string."""
+        return l_mt.timebag_hamming_sphere(self, center_string, d)
+    
+    def hamming_word_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at hamming_word-distance d from a string."""
+        return l_mt.timebag_hamming_word_sphere(self, center_string, d)

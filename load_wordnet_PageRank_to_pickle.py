@@ -5,7 +5,6 @@
 
 
 # Imports
-import os
 import datainterface.picklesaver as ps
 import linguistics.wordnettools as wnt
 import settings as st
@@ -15,8 +14,7 @@ import settings as st
 picklefile = st.wordnet_PR_pickle
 
 # Check that the destination doesn't already exist
-if os.path.exists(picklefile):
-    raise Exception("File '" + picklefile + "' already exists!")
+st.check_file(picklefile)
 
 # Compute the PR scores
 print '*** Computing PageRank scores for the lemmas in Wordnet:'

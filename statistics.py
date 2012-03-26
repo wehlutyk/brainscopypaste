@@ -12,7 +12,6 @@ Statistics computed:
 
 # Imports
 from pylab import plot, xlabel, ylabel, figure, legend, show
-import os
 import datainterface.picklesaver as ps
 import analyze.memetracker as a_mt
 import settings as st
@@ -20,8 +19,9 @@ import settings as st
 
 # Code
 #filename = st.memetracker_test_rel
+#picklefile = st.memetracker_test_pickle
 filename = st.memetracker_full_rel
-picklefile = os.path.join(st.memetracker_root, 'clusters_') + filename + '.pickle'
+picklefile = st.memetracker_full_pickle
 
 # Load the data
 print 'Loading data...',
