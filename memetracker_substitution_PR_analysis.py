@@ -21,13 +21,14 @@ and index of the changed word ('idx')).
 from __future__ import division
 from nltk import word_tokenize
 import numpy as np
+from nltk.stem import WordNetLemmatizer
 import datainterface.picklesaver as ps
 import settings as st
 
 
 # Code
 n_timebags = 3
-bag_transitions = [(0, 2)]
+bag_transitions = [(0,1), (1, 2)]
 sphere_radius = 1
 pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
 pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
@@ -40,7 +41,8 @@ st.check_file(pickle_nonlemmas)
 
 # Load the clusters and the PageRank scores
 print 'Loading cluster and PageRank data...',
-clusters = ps.load(st.memetracker_full_pickle)
+#clusters = ps.load(st.memetracker_full_pickle)
+clusters = ps.load(st.memetracker_full_framed_pickle)
 PR = ps.load(st.wordnet_PR_pickle)
 print 'OK'
 
@@ -54,6 +56,7 @@ info_step = int(round(n_clusters / 100))
 print 'Doing PageRank substitution analysis:'
 transitionranks = []
 nonlemmas = []
+lemmatizer = WordNetLemmatizer()
 progress = 0
 for cl in clusters.itervalues():
     # Progress info
@@ -71,11 +74,17 @@ for cl in clusters.itervalues():
             # Find the word that was changed
             t_s = word_tokenize(s)
             t_smax = word_tokenize(smax)
-            idx = np.where([w1 != w2 for (w1,w2) in zip(t_s, t_smax)])[0]
+            idx = np.where([w1 != w2 for (w1, w2) in zip(t_s, t_smax)])[0]
+#            # Lemmatize the words
+#            lem1 = lemmatizer.lemmatize(t_smax[idx])
+#            lem2 = lemmatizer.lemmatize(t_s[idx])
+            # Don't lemmatize words
+            lem1 = t_smax[idx]
+            lem2 = t_s[idx]
             # See if the concerned words are in the PR scores
             try:
                 # If so, store the two PR ranks (the [0] are to take out the unnecessary 1-dimension of PR[...])
-                transitionranks.append([ PR[t_smax[idx]][0], PR[t_s[idx]][0] ])
+                transitionranks.append([ PR[lem1][0], PR[lem2][0] ])
             except KeyError:
                 # If not, keep track of what we left out
                 nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})

@@ -37,11 +37,13 @@ check_folder(memetracker_root)
 memetracker_full_rel = 'clust-qt08080902w3mfq5.txt'
 memetracker_full = os.path.join(memetracker_root, memetracker_full_rel)
 memetracker_full_pickle = memetracker_full + '.pickle'
+memetracker_full_framed_pickle = memetracker_full + '_framed.pickle'
 
 # File for a subset of the MemeTracker dataset for testing algorithms before a full-blown run, relative to memetracker_root
 memetracker_test_rel = 'clust-cropped-50000.txt'
 memetracker_test = os.path.join(memetracker_root, memetracker_test_rel)
 memetracker_test_pickle = memetracker_test + '.pickle'
+memetracker_test_framed_pickle = memetracker_test + '_framed.pickle'
 
 # Folder for files concerning the MemeTracker substitution PageRank analysis
 memetracker_PR_root_rel = 'PR_analysis'
