@@ -73,6 +73,6 @@ for cl in clusters.itervalues():
 
 # And save the data
 print 'Done. Saving data...',
-ps.save(transitionranks, np.array(pickle_transitionranks))
+ps.save(np.array(transitionranks), pickle_transitionranks)
 ps.save(nonlemmas, pickle_nonlemmas)
 print 'OK'
