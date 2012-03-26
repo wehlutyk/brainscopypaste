@@ -17,8 +17,9 @@ import settings as st
 
 
 # Code
-n_timebags = 2
-ball_radius = 1
+n_timebags = 3
+bag_transitions = [(0, 2)]
+sphere_radius = 1
 pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
 pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
 
@@ -41,7 +42,7 @@ info_step = int(round(n_clusters / 100))
 
 
 # Do the actual computing
-print 'Doing PageRank substitution analysis...'
+print 'Doing PageRank substitution analysis:'
 transitionranks = []
 nonlemmas = []
 progress = 0
@@ -53,10 +54,10 @@ for cl in clusters.itervalues():
     
     # Build the TimeBags for that Cluster
     tbgs = cl.build_timebags(n_timebags)
-    for i in xrange(n_timebags-1):
+    for i, j in bag_transitions:
         # Get the highest freq string in a TimeBag, as well as its "daughter" strings (hamming_word distance = 1)
         smax = tbgs[i].max_freq_string
-        ball_strings = [ tbgs[i+1].strings[j] for j in tbgs[i+1].hamming_word_sphere(smax, ball_radius)]
+        ball_strings = [ tbgs[j].strings[k] for k in tbgs[j].hamming_word_sphere(smax, sphere_radius)]
         for s in ball_strings:
             # Find the word that was changed
             t_s = word_tokenize(s)
