@@ -64,8 +64,8 @@ for cl in clusters.itervalues():
             idx = np.where([w1 != w2 for (w1,w2) in zip(t_s, t_smax)])[0]
             # See if the concerned words are in the PR scores
             try:
-                # If so, store the two PR ranks
-                transitionranks.append([ PR[t_smax[idx]], PR[t_s[idx]] ])
+                # If so, store the two PR ranks (the [0] are to take out the unnecessary 1-dimension of PR[...])
+                transitionranks.append([ PR[t_smax[idx]][0], PR[t_s[idx]][0] ])
             except KeyError:
                 # If not, keep track of what we left out
                 nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})
