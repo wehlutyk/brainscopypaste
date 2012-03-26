@@ -28,7 +28,7 @@ import settings as st
 
 # Code
 n_timebags = 3
-bag_transitions = [(0,1), (1, 2)]
+bag_transitions = [(0, 1)]
 sphere_radius = 1
 pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
 pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
@@ -41,15 +41,15 @@ st.check_file(pickle_nonlemmas)
 
 # Load the clusters and the PageRank scores
 print 'Loading cluster and PageRank data...',
-#clusters = ps.load(st.memetracker_full_pickle)
-clusters = ps.load(st.memetracker_full_framed_pickle)
+clusters = ps.load(st.memetracker_full_pickle)
+#clusters = ps.load(st.memetracker_full_framed_pickle)
 PR = ps.load(st.wordnet_PR_pickle)
 print 'OK'
 
 
 # Stuff for printing progress information
 n_clusters = len(clusters)
-info_step = int(round(n_clusters / 100))
+info_step = max(int(round(n_clusters / 100)), 1)
 
 
 # Do the actual computing

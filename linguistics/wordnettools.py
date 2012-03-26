@@ -57,7 +57,7 @@ def build_wn_PR_adjacency_matrix():
         ij[0].append(i)
         ij[1].append(i)
     # And create the CSR matrix
-    Mwn_csr = csr_matrix(([1]*len(ij[0]), ij), shape=(num_lems, num_lems), dtype=np.float)
+    Mwn_csr = csr_matrix((np.ones(len(ij[0])), ij), shape=(num_lems, num_lems), dtype=np.float)
     print 'OK'
     
     # Compensate the weights by dividing each value by the number of outward links from
