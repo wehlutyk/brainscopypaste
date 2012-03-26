@@ -49,10 +49,10 @@ memetracker_PR_root = os.path.join(memetracker_root, memetracker_PR_root_rel)
 check_folder(memetracker_PR_root)
 
 # Pickle files for the MemeTracker substitution PageRank analysis
-memetracker_PR_transitionranks_rel = 'transitionranks.pickle'
-memetracker_PR_nonlemmas_rel = 'nonlemmas.pickle'
-memetracker_PR_transitionranks = os.path.join(memetracker_PR_root, memetracker_PR_transitionranks_rel)
-memetracker_PR_nonlemmas = os.path.join(memetracker_PR_root, memetracker_PR_nonlemmas_rel)
+memetracker_PR_transitionranks_pickle_rel = 'transitionranks.pickle'
+memetracker_PR_nonlemmas_pickle_rel = 'nonlemmas.pickle'
+memetracker_PR_transitionranks_pickle = os.path.join(memetracker_PR_root, memetracker_PR_transitionranks_pickle_rel)
+memetracker_PR_nonlemmas_pickle = os.path.join(memetracker_PR_root, memetracker_PR_nonlemmas_pickle_rel)
 
 # Pickle file for the Wordnet PageRank scores, relative to data_root
 wordnet_PR_pickle_rel = 'wordnet_PR_scores.pickle'

@@ -19,8 +19,8 @@ import settings as st
 # Code
 n_timebags = 2
 ball_radius = 1
-pickle_transitionranks = st.memetracker_PR_transitionranks
-pickle_nonlemmas = st.memetracker_PR_nonlemmas
+pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
+pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
 
 
 # Check that the destinations don't already exist
