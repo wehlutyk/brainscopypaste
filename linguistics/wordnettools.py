@@ -23,9 +23,10 @@ from slepc4py import SLEPc
 def build_wn_PR_adjacency_matrix():
     """Build the adjacency matrix (in Compressed Sparse Row format) for the WN synonyms graph.
     
-    Returns: a tuple (lem_coords, M_sp):
+    Returns: a tuple (lem_coords, M_pet):
       * lem_coords: a dict associating each lemma to its coordinate in the adjacency matrix
-      * M_sp: the adjacency matrix, in CSR format, of the WN synonyms graph, with ones on the diagonal
+      * M_pet: the adjacency matrix, in PETSc Matrix format, of the WN synonyms graph,
+               with zeros on the diagonal, omitting lemmas which are not connected
     
     """
     
@@ -36,10 +37,11 @@ def build_wn_PR_adjacency_matrix():
     # Not using wn.all_lemma_names since it seems some lemmas are not in that iterator
     # creates a KeyError in the next loop, when filling ij
     for syn in wn.all_synsets():
-        for lem in syn.lemma_names:
-            if not lem_coords.has_key(lem):
-                lem_coords[lem] = i
-                i += 1
+        if len(syn.lemma_names) > 1:
+            for lem in syn.lemma_names:
+                if not lem_coords.has_key(lem):
+                    lem_coords[lem] = i
+                    i += 1
     num_lems = len(lem_coords)
     print 'OK'
     
@@ -48,15 +50,13 @@ def build_wn_PR_adjacency_matrix():
     # This first loop should result in a symmetric matrix with zeros on the diagonal
     ij = ([], [])
     for syn in wn.all_synsets():
-        for lem1 in syn.lemma_names:
-            for lem2 in syn.lemma_names:
-                if lem1 != lem2:
-                    ij[0].append(lem_coords[lem1])
-                    ij[1].append(lem_coords[lem2])
-    # Set the diagonal
-    for i in xrange(num_lems):
-        ij[0].append(i)
-        ij[1].append(i)
+        if len(syn.lemma_names) > 1:
+            for lem1 in syn.lemma_names:
+                for lem2 in syn.lemma_names:
+                    if lem1 != lem2:
+                        ij[0].append(lem_coords[lem1])
+                        ij[1].append(lem_coords[lem2])
+    
     # Create the Scipy CSR matrix
     tM_sp = csr_matrix((np.ones(len(ij[0])), ij), shape=(num_lems, num_lems), dtype=np.float)
     print 'OK'
@@ -104,7 +104,7 @@ def build_wn_PR_scores():
     E.setOperators(M_pet)
     E.setProblemType(SLEPc.EPS.ProblemType.NHEP)
     E.setDimensions(nev=4)
-    E.setTolerances(tol=1e-20, max_it=1000)
+    E.setTolerances(tol=1e-15, max_it=10000)
     E.solve()
     print 'OK'
     
@@ -159,9 +159,13 @@ def build_wn_PR_scores():
     found = False
     for (k, vr, vi, error) in results:
         if k.imag == 0.0 and round(k.real, 13) == 1.0:
-            scores = vr.getValues(range(len(lem_coords)))
+            scores = vr.getArray()
             if np.prod(scores > 0) == True:
                 found = True
+                break
+            elif np.prod(scores < 0) == True:
+                found = True
+                scores = - scores
                 break
     if not found:
         raise Exception('No eigenvector was found for eigenvalue 1 with only > 0 components!')
