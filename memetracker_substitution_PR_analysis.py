@@ -28,7 +28,7 @@ import settings as st
 
 # Code
 n_timebags = 3
-bag_transitions = [(0, 1)]
+bag_transitions = [(1, 2)]
 sphere_radius = 1
 pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
 pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
@@ -41,8 +41,8 @@ st.check_file(pickle_nonlemmas)
 
 # Load the clusters and the PageRank scores
 print 'Loading cluster and PageRank data...',
-clusters = ps.load(st.memetracker_full_pickle)
-#clusters = ps.load(st.memetracker_full_framed_pickle)
+#clusters = ps.load(st.memetracker_full_pickle)
+clusters = ps.load(st.memetracker_full_framed_pickle)
 PR = ps.load(st.wordnet_PR_pickle)
 print 'OK'
 
@@ -83,8 +83,8 @@ for cl in clusters.itervalues():
             lem2 = t_s[idx]
             # See if the concerned words are in the PR scores
             try:
-                # If so, store the two PR ranks (the [0] are to take out the unnecessary 1-dimension of PR[...])
-                transitionranks.append([ PR[lem1][0], PR[lem2][0] ])
+                # If so, store the two PR ranks
+                transitionranks.append([ PR[lem1], PR[lem2] ])
             except KeyError:
                 # If not, keep track of what we left out
                 nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})
