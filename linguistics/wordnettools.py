@@ -4,8 +4,17 @@
 """Compute PageRank scores corresponding to the Wordnet synonyms graph.
 
 Methods:
-  * build_wn_PR_adjacency_matrix: build the adjacency matrix (in Compressed Sparse Row format) for the WN synonyms graph
+  * build_wn_PR_adjacency_matrix: build the adjacency matrix (in PETSc Mat format)
+                                  for the WN synonyms graph
   * build_wn_PR_scores: compute the PageRank scores corresponding to the WN synonyms graph
+
+The PageRank scores computed depend on the following details:
+  * The adjacency matrix is built for the lemmas in WN, with zeros on the diagonal. Any non-linked
+    lemma (i.e. which has no synonyms in WN) is removed from the matrix. The constructed matrix is
+    symmetric before normalization or each column by the forward-link count.
+  * The solution of the eigenproblem may not be unique (the matrix need not have a 1-dimensional
+    eigenspace associated to the eigenvalue 1, and if it does the approximation in computation could
+    break that), but is computed with a 1e-15 tolerance.
 
 """
 
@@ -103,7 +112,7 @@ def build_wn_PR_scores():
     E.create()
     E.setOperators(M_pet)
     E.setProblemType(SLEPc.EPS.ProblemType.NHEP)
-    E.setDimensions(nev=4)
+    E.setDimensions(nev=3)
     E.setTolerances(tol=1e-15, max_it=10000)
     E.solve()
     print 'OK'
@@ -158,7 +167,7 @@ def build_wn_PR_scores():
     
     found = False
     for (k, vr, vi, error) in results:
-        if k.imag == 0.0 and round(k.real, 13) == 1.0:
+        if k.imag == 0.0 and round(k.real, 10) == 1.0:
             scores = vr.getArray()
             if np.prod(scores > 0) == True:
                 found = True
