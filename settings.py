@@ -24,6 +24,7 @@ def check_file(filename):
 
 
 # Root folder for all the data. If we do this properly, this could be the only setting to change between computers :-)
+# This could be changed to '~/Code/cogmaster-stage/data', or even better '../data'. But we should check it works...
 data_root = '/home/sebastien/Code/cogmaster-stage/data'
 if not os.path.exists(data_root):
     os.makedirs(data_root)
