@@ -9,7 +9,7 @@ defined by the 'bag_transitions' variable: for each transition (e.g. TimeBag #0 
 the highest frequency string in the first TimeBag, gets all strings in the second TimeBag which are at
 hamming_word-distance == 1, and stores the scores of the substituted word and the new word if they happen to be
 synonyms. If any one of those words is not referenced in the PR scores, it takes note of it (in the 'nonlemmas'
-variable). It then saves all the data to pickle files. The output is two files: one containing the ranks of
+variable). It then saves all the data to pickle files. The output is two files: one containing the scores of
 (substituted word, new word) couples (which is a Nx2 numpy array), the other containing a list of dicts with
 data about the words that didn't have PR scores (data stored is: cluster id ('cl_id'), tokenized start string
 ('t_smax'), tokenized end string ('t_s') and index of the changed word ('idx')).
@@ -31,12 +31,12 @@ import settings as st
 n_timebags = 2
 bag_transitions = [(0, 1)]
 sphere_radius = 1
-pickle_transitionranks = st.memetracker_PR_transitionranks_pickle
+pickle_transitionscores = st.memetracker_PR_transitionscores_pickle
 pickle_nonlemmas = st.memetracker_PR_nonlemmas_pickle
 
 
 # Check that the destinations don't already exist
-st.check_file(pickle_transitionranks)
+st.check_file(pickle_transitionscores)
 st.check_file(pickle_nonlemmas)
 
 
@@ -55,7 +55,7 @@ info_step = max(int(round(n_clusters / 100)), 1)
 
 # Do the actual computing
 print 'Doing PageRank substitution analysis:'
-transitionranks = []
+transitionscores = []
 nonlemmas = []
 lemmatizer = WordNetLemmatizer()
 progress = 0
@@ -86,8 +86,8 @@ for cl in clusters.itervalues():
             if len(set(wn.synsets(lem1)).intersection(set(wn.synsets(lem2)))) > 0:
                 # See if the concerned words are in the PR scores
                 try:
-                    # If so, store the two PR ranks
-                    transitionranks.append([ PR[lem1], PR[lem2] ])
+                    # If so, store the two PR scores
+                    transitionscores.append([ PR[lem1], PR[lem2] ])
                 except KeyError:
                     # If not, keep track of what we left out
                     nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})
@@ -95,6 +95,6 @@ for cl in clusters.itervalues():
 
 # And save the data
 print 'Done. Saving data...',
-ps.save(np.array(transitionranks), pickle_transitionranks)
+ps.save(np.array(transitionscores), pickle_transitionscores)
 ps.save(nonlemmas, pickle_nonlemmas)
 print 'OK'
