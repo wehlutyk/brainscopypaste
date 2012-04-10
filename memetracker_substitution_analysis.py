@@ -27,7 +27,6 @@ The output is as follows (see settings.py for the full filenames):
 # Imports
 from __future__ import division
 import argparse
-import textwrap
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
@@ -39,33 +38,21 @@ import settings as st
 # Code
 
 # Create the arguments parser, to get arguments from the command line
-parser = argparse.ArgumentParser(description=textwrap.dedent('''
-                                             Analyze the 1-word changes \
-                                             (hamming_word-distance == 1) in the MemeTracker dataset.
-                                             '''))
+parser = argparse.ArgumentParser(description='Analyze the 1-word changes \
+(hamming_word-distance == 1) in the MemeTracker dataset.')
 parser.add_argument('--framing', action='store', nargs=1, \
-                    required=True, help=textwrap.dedent('''
-                                        1: analyze framed clusters ; \
-                                        0: analyse non-framed clusters.
-                                        '''))
+                    required=True, help='1: analyze framed clusters ; 0: analyse non-framed clusters.')
 parser.add_argument('--lemmatizing', action='store', nargs=1, \
-                    required=True, help=textwrap.dedent("""
-                                        1: lemmatize words before searching \
-                                        for them in the features lists ; 0: don't lemmatize them.
-                                        """))
+                    required=True, help="1: lemmatize words before searching for them in the \
+features lists ; 0: don't lemmatize them.")
 parser.add_argument('--synonyms', action='store', nargs=1, \
-                    required=True, help=textwrap.dedent("""
-                                        1: compare only synonym words (i.e. words that both have a \
-                                        lemma in the same synset ; 0: compare also non-synonyms.
-                                        """))
+                    required=True, help="1: compare only synonym words (i.e. words that both have a \
+lemma in the same synset ; 0: compare also non-synonyms.")
 parser.add_argument('--ntimebags', action='store', nargs=1, required=True, \
                     help='Number of timebags to cut the clusters into')
 parser.add_argument('transitions', action='store', nargs='+', \
-                    help=textwrap.dedent("""
-                         Space-separated list of transitions between timebags 
-                         that are to be examined, in format 'n1-n2' where n1 and n2 are the indices of 
-                         the timebags (starting at 0) ; e.g. '0-1 1-2'.
-                         """))
+                    help="Space-separated list of transitions between timebags that are to be examined, \
+in format 'n1-n2' where n1 and n2 are the indices of the timebags (starting at 0) ; e.g. '0-1 1-2'.")
 
 
 # Get the actual arguments
