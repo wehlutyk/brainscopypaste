@@ -11,7 +11,7 @@ import settings as st
 
 
 # Code
-picklefile = st.wordnet_PR_pickle
+picklefile = st.wordnet_PR_scores_pickle
 
 # Check that the destination doesn't already exist
 st.check_file(picklefile)
