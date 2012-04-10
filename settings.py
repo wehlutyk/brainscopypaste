@@ -47,17 +47,17 @@ memetracker_test_pickle = memetracker_test + '.pickle'
 memetracker_test_framed_pickle = memetracker_test + '_framed.pickle'
 
 # Folder for files concerning the MemeTracker substitution PageRank analysis
-memetracker_PR_root_rel = 'PR_analysis'
-memetracker_PR_root = os.path.join(memetracker_root, memetracker_PR_root_rel)
-check_folder(memetracker_PR_root)
+memetracker_subst_root_rel = 'subst_analysis'
+memetracker_subst_root = os.path.join(memetracker_root, memetracker_subst_root_rel)
+check_folder(memetracker_subst_root)
 
 # Pickle files for the MemeTracker substitution analysis
-memetracker_subst_transitionPRscores_pickle_rel = 'transitionPRscores.pickle'
-memetracker_subst_transitiondegrees_pickle_rel = 'transitiondegrees.pickle'
-memetracker_subst_nonlemmas_pickle_rel = 'nonlemmas.pickle'
-memetracker_subst_transitionPRscores_pickle = os.path.join(memetracker_PR_root, memetracker_subst_transitionPRscores_pickle_rel)
-memetracker_subst_transitiondegrees_pickle = os.path.join(memetracker_PR_root, memetracker_subst_transitiondegrees_pickle_rel)
-memetracker_subst_nonlemmas_pickle = os.path.join(memetracker_PR_root, memetracker_subst_nonlemmas_pickle_rel)
+memetracker_subst_transitionPRscores_pickle_rel = '{}transitionPRscores.pickle'
+memetracker_subst_transitiondegrees_pickle_rel = '{}transitiondegrees.pickle'
+memetracker_subst_nonlemmas_pickle_rel = '{}nonlemmas.pickle'
+memetracker_subst_transitionPRscores_pickle = os.path.join(memetracker_subst_root, memetracker_subst_transitionPRscores_pickle_rel)
+memetracker_subst_transitiondegrees_pickle = os.path.join(memetracker_subst_root, memetracker_subst_transitiondegrees_pickle_rel)
+memetracker_subst_nonlemmas_pickle = os.path.join(memetracker_subst_root, memetracker_subst_nonlemmas_pickle_rel)
 
 # Pickle file for the Wordnet PageRank scores, relative to data_root
 wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores.pickle'

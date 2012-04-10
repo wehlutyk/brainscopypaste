@@ -26,6 +26,8 @@ The output is as follows (see settings.py for the full filenames):
 
 # Imports
 from __future__ import division
+import argparse
+import textwrap
 from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
@@ -35,23 +37,102 @@ import settings as st
 
 
 # Code
-n_timebags = 2
-bag_transitions = [(0, 1)]
+
+# Create the arguments parser, to get arguments from the command line
+parser = argparse.ArgumentParser(description=textwrap.dedent('''
+                                             Analyze the 1-word changes \
+                                             (hamming_word-distance == 1) in the MemeTracker dataset.
+                                             '''))
+parser.add_argument('--framing', action='store', nargs=1, \
+                    required=True, help=textwrap.dedent('''
+                                        1: analyze framed clusters ; \
+                                        0: analyse non-framed clusters.
+                                        '''))
+parser.add_argument('--lemmatizing', action='store', nargs=1, \
+                    required=True, help=textwrap.dedent("""
+                                        1: lemmatize words before searching \
+                                        for them in the features lists ; 0: don't lemmatize them.
+                                        """))
+parser.add_argument('--synonyms', action='store', nargs=1, \
+                    required=True, help=textwrap.dedent("""
+                                        1: compare only synonym words (i.e. words that both have a \
+                                        lemma in the same synset ; 0: compare also non-synonyms.
+                                        """))
+parser.add_argument('--ntimebags', action='store', nargs=1, required=True, \
+                    help='Number of timebags to cut the clusters into')
+parser.add_argument('transitions', action='store', nargs='+', \
+                    help=textwrap.dedent("""
+                         Space-separated list of transitions between timebags 
+                         that are to be examined, in format 'n1-n2' where n1 and n2 are the indices of 
+                         the timebags (starting at 0) ; e.g. '0-1 1-2'.
+                         """))
+
+
+# Get the actual arguments
+args = parser.parse_args()
+framing = int(args.framing[0])
+lemmatizing = int(args.lemmatizing[0])
+synonyms_only = int(args.synonyms[0])
+n_timebags = int(args.ntimebags[0])
+bag_transitions = [ (int(s.split('-')[0]), int(s.split('-')[1])) for s in args.transitions ]
+
+
+# A few checks on the arguments:
+# Check that the transitions are possible, given the number of timebags
+all_idx = [ i for tr in bag_transitions for i in tr ]
+if max(all_idx) >= n_timebags or min(all_idx) < 0:
+    raise Exception('Wrong bag transitions, according to the number of timebags requested')
+# Check the other arguments
+if framing != 0 and framing != 1:
+    raise Exception('Wrong value for --framing. Expected 1 or 0.')
+if lemmatizing != 0 and lemmatizing != 1:
+    raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
+if synonyms_only != 0 and synonyms_only != 1:
+    raise Exception('Wrong value for --synonyms. Expected 1 or 0.')
+
+
+# Radius of the sphere of strings around a given string
 sphere_radius = 1
-pickle_transitionPRscores = st.memetracker_subst_transitionPRscores_pickle
-pickle_transitiondegrees = st.memetracker_subst_transitiondegrees_pickle
-pickle_nonlemmas = st.memetracker_subst_nonlemmas_pickle
+
+# Filenames for saving the data, with a prefix depending on the options
+file_prefix = ''
+if framing == 0:
+    file_prefix += 'N'
+file_prefix += 'F_'
+if lemmatizing == 0:
+    file_prefix += 'N'
+file_prefix += 'L_'
+if synonyms_only == 0:
+    file_prefix += 'N'
+file_prefix += 'S_'
+file_prefix += str(n_timebags) + '_'
+for (i, j) in bag_transitions:
+    file_prefix += '{}-{}_'.format(i, j)
+
+pickle_transitionPRscores = st.memetracker_subst_transitionPRscores_pickle.format(file_prefix)
+pickle_transitiondegrees = st.memetracker_subst_transitiondegrees_pickle.format(file_prefix)
+pickle_nonlemmas = st.memetracker_subst_nonlemmas_pickle.format(file_prefix)
 
 
 # Check that the destinations don't already exist
 st.check_file(pickle_transitionPRscores)
+st.check_file(pickle_transitiondegrees)
 st.check_file(pickle_nonlemmas)
 
 
-# Load the clusters and the PageRank scores
+# Print some info, and load the clusters and the PageRank scores
+print 'Doing analysis with the following parameters:'
+print '  framing = {}'.format(framing)
+print '  lemmatizing = {}'.format(lemmatizing)
+print '  synonyms = {}'.format(synonyms_only)
+print '  n_timebags = {}'.format(n_timebags)
+print '  transitions = {}'.format(bag_transitions)
+print
 print 'Loading cluster, PageRank, and degree data...',
-#clusters = ps.load(st.memetracker_full_pickle)
-clusters = ps.load(st.memetracker_full_framed_pickle)
+if framing == 1:
+    clusters = ps.load(st.memetracker_full_framed_pickle)
+else:
+    clusters = ps.load(st.memetracker_full_pickle)
 PR = ps.load(st.wordnet_PR_scores_pickle)
 degrees = ps.load(st.wordnet_degrees_pickle)
 print 'OK'
@@ -86,22 +167,27 @@ for cl in clusters.itervalues():
             t_s = word_tokenize(s)
             t_smax = word_tokenize(smax)
             idx = np.where([w1 != w2 for (w1, w2) in zip(t_s, t_smax)])[0]
-            # Lemmatize the words
-            lem1 = lemmatizer.lemmatize(t_smax[idx])
-            lem2 = lemmatizer.lemmatize(t_s[idx])
-#            # Don't lemmatize words
-#            lem1 = t_smax[idx]
-#            lem2 = t_s[idx]
-            # See if the words have a common synset, i.e. are they synonyms
-            if len(set(wn.synsets(lem1)).intersection(set(wn.synsets(lem2)))) > 0:
-                # See if the concerned words are in the PR scores
-                try:
-                    # If so, store the features
-                    transitionPRscores.append([ PR[lem1], PR[lem2] ])
-                    transitiondegrees.append([ degrees[lem1], degrees[lem2] ])
-                except KeyError:
-                    # If not, keep track of what we left out
-                    nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})
+            if lemmatizing == 1:
+                # Lemmatize the words
+                lem1 = lemmatizer.lemmatize(t_smax[idx])
+                lem2 = lemmatizer.lemmatize(t_s[idx])
+            else:
+                # Don't lemmatize words
+                lem1 = t_smax[idx]
+                lem2 = t_s[idx]
+            if synonyms_only == 1:
+                # See if the words have a common synset, i.e. are they synonyms.
+                # If not, break to next item in the loop
+                if len(set(wn.synsets(lem1)).intersection(set(wn.synsets(lem2)))) == 0:
+                    break
+            # See if the concerned words are in the feature lists
+            try:
+                # If so, store the features
+                transitionPRscores.append([ PR[lem1], PR[lem2] ])
+                transitiondegrees.append([ degrees[lem1], degrees[lem2] ])
+            except KeyError:
+                # If not, keep track of what we left out
+                nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 't_smax': t_smax, 'idx': idx})
 
 
 # And save the data
