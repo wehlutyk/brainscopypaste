@@ -156,12 +156,12 @@ for cl in clusters.itervalues():
             idx = np.where([w1 != w2 for (w1, w2) in zip(t_s, t_smax)])[0]
             if lemmatizing == 1:
                 # Lemmatize the words
-                lem1 = lemmatizer.lemmatize(t_smax[idx])
-                lem2 = lemmatizer.lemmatize(t_s[idx])
+                lem1 = lemmatizer.lemmatize(t_smax[idx]).lower()
+                lem2 = lemmatizer.lemmatize(t_s[idx]).lower()
             else:
                 # Don't lemmatize words
-                lem1 = t_smax[idx]
-                lem2 = t_s[idx]
+                lem1 = t_smax[idx].lower()
+                lem2 = t_s[idx].lower()
             if synonyms_only == 1:
                 # See if the words have a common synset, i.e. are they synonyms.
                 # If not, break to next item in the loop
