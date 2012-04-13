@@ -17,10 +17,12 @@ picklefile = st.wordnet_PR_scores_pickle
 st.check_file(picklefile)
 
 # Compute the PR scores
-print '*** Computing PageRank scores for the lemmas in Wordnet:'
+print
+print '*** Computing PageRank scores for the lemmas in Wordnet ***'
 scores = wnt.build_wn_PR_scores()
 
 # And save them
+print
 print "*** Saving the scores to '" + picklefile + "'...",
 ps.save(scores, picklefile)
 print 'OK'

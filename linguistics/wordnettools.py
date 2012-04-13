@@ -7,10 +7,6 @@ Methods:
   * build_wn_coords: build a dictionary associating each lemma (in lowercase) in Wordnet to a coordinate
   * build_wn_adjacency_matrix: build the adjacency matrix (in CSC or CSR format) for
                                the WN synonyms graph
-  * matrix_normalize_columns: Normalize a CSC or CSR matrix on its columns, and return in
-                              'outfmt' format ('csc' or 'csr')
-  * norm_l1: compute the l1 norm of an array
-  * matrix_eigen_solve: solve the v = M*v eigenproblem by the Power Iteration algorithm
   * build_wn_PR_scores: compute the PageRank scores corresponding to the WN synonyms graph
   * build_wn_degrees: compute the degrees of lemmas in the WN graph (not excluding lemmas not
                       connected to other lemmas)
@@ -19,9 +15,6 @@ The PageRank scores computed depend on the following details:
   * The adjacency matrix is built for the lemmas in WN, with zeros on the diagonal. Any non-linked
     lemma (i.e. which has no synonyms in WN) is removed from the matrix. The constructed matrix is
     symmetric before normalization. We then normalize on each column.
-  * The solution of the eigenproblem may not be unique (the matrix need not have a 1-dimensional
-    eigenspace associated to the eigenvalue 1, and if it does the approximation in computation could
-    break that), but is computed with a 1e-15 tolerance.
 
 """
 
@@ -32,6 +25,7 @@ from nltk.corpus import wordnet as wn
 from scipy.sparse import csc_matrix, csr_matrix
 import numpy as np
 from scipy import random
+import analyze.linalg as a_la
 
 
 # Module code
@@ -93,77 +87,6 @@ def build_wn_adjacency_matrix(lem_coords, outfmt):
     return M
 
 
-def matrix_normalize_columns(M, outfmt):
-    """Normalize a CSC or CSR matrix on its columns, and return in 'outfmt' format ('csc' or 'csr')."""
-    
-    # If the matrix is CSR, convert to CSC
-    if M.getformat() == 'csr':
-        M = M.tocsc()
-    
-    # Normalize on the columns
-    print 'Normalizing matrix on the columns...',
-    num_lems = M.get_shape()[0]
-    for i in xrange(num_lems):
-        col_vals = M.data[M.indptr[i]:M.indptr[i+1]].copy()
-        M.data[M.indptr[i]:M.indptr[i+1]] = col_vals / np.sum(col_vals)
-    print 'OK'
-    
-    # Convert to outfmt if necessary
-    if outfmt == 'csr':
-        M = M.tocsr()
-    elif outfmt != 'csc':
-        raise Exception("Unrecognized matrix format: '{}'".format(outfmt))
-    
-    return M
-
-
-def norm_l1(v):
-    """Compute the l1 norm of an array."""
-    return np.sum(np.abs(v))
-
-
-def matrix_eigen_solve(M, v0, max_it, tol):
-    """Solve the v = M*v eigenproblem by the Power Iteration algorithm.
-    
-    This will only work on a stochastic matrix, since there is no vector renormalization
-    (it created precision problems). Note that to avoid oscillation in the algorithm, each
-    iteration consists in fact of a random number (1-9) of iterations.
-    
-    Arguments:
-      * M: the matrix for the eigenproblem, preferably in CSR format
-      * v0: a starting vector for the iteration ; should be normalized
-      * max_it: the maximum number of iterations that will be performed
-      * tol: the relative precision requested
-    
-    Returns: a tuple consisting of:
-      * vv: the final eigenvector
-      * nit: the number of iterations completed
-      * prec: the final relative precision
-    
-    """
-    
-    # Initialize
-    v = v0.copy()
-    vv = M.dot(M.dot(v))
-    nit = 0
-    
-    # Loop until we reach the tolerance
-    while norm_l1(vv - v) >= tol:
-        
-        # Do the iteration calculus
-        v = vv
-        for i in range(random.randint(1, 10)):
-            vv = M.dot(M.dot(vv))
-        
-        # Or until we do too many iterations
-        nit += 1
-        if nit >= max_it:
-            break
-    
-    # Return the solution, along with convergence information
-    return (vv, nit, norm_l1(vv - v))
-
-
 def build_wn_PR_scores():
     """Compute the PageRank scores corresponding to the WN synonyms graph.
     
@@ -177,13 +100,13 @@ def build_wn_PR_scores():
     num_lems = len(lem_coords)
     
     # Get the normalized adjacency matrix
-    M = matrix_normalize_columns(build_wn_adjacency_matrix(lem_coords, outfmt='csc'), outfmt='csr')
+    M = a_la.matrix_normalize_columns(build_wn_adjacency_matrix(lem_coords, outfmt='csc'), outfmt='csr')
     
     # Solve the eigenproblem
     print 'Solving the eigenproblem...',
     v0 = random.random(num_lems)
-    v0 = v0 / norm_l1(v0)
-    (scores, nit, prec) = matrix_eigen_solve(M, v0=v0, max_it=10000, tol=1e-10)
+    v0 = v0 / a_la.norm_l1(v0)
+    (scores, nit, prec) = a_la.matrix_eigen_solve(M, v0=v0, max_it=10000, tol=1e-10)
     print 'OK'
     
     # Some info on the results
