@@ -5,38 +5,44 @@
 
 Methods:
   * levenshtein: compute levenshtein distance between s1 and s2
-  * levenshtein_word: compute levenshtein distance between s1 and s2, taking words as the editing unit
-  * timebag_levenshtein_closedball: get the indexes of the strings in a TimeBag that are at
-                                    levenshtein-distance <= d from a string
-  * timebag_levenshtein_word_closedball: get the indexes of the strings in a TimeBag that are at
-                                         levenshtein_word-distance <= d from a string
-  * timebag_levenshtein_sphere: get the indexes of the strings in a TimeBag that are at
-                                levenshtein-distance == d from a string
-  * timebag_levenshtein_word_sphere: get the indexes of the strings in a TimeBag that are at
-                                     levenshtein_word-distance == d from a string
+  * levenshtein_word: compute levenshtein distance between s1 and s2, taking
+                      words as the editing unit
+  * timebag_levenshtein_closedball: get the indexes of the strings in a
+                                    TimeBag that are at levenshtein-distance
+                                    <= d from a string
+  * timebag_levenshtein_word_closedball: get the indexes of the strings in a
+                                         TimeBag that are at
+                                         levenshtein_word-distance <= d from a
+                                         string
+  * timebag_levenshtein_sphere: get the indexes of the strings in a TimeBag
+                                that are at levenshtein-distance == d from a
+                                string
+  * timebag_levenshtein_word_sphere: get the indexes of the strings in a
+                                     TimeBag that are at
+                                     levenshtein_word-distance == d from a
+                                     string
   * hamming: compute hamming distance between s1 and s2
-  * hamming_word: compute hamming distance between s1 and s2, taking words as the editing unit
-  * timebag_hamming_closedball: get the indexes of the strings in a TimeBag that are at
-                                hamming-distance <= d from a string
-  * timebag_hamming_word_closedball: get the indexes of the strings in a TimeBag that are at
-                                     hamming_word-distance <= d from a string
-  * timebag_hamming_sphere: get the indexes of the strings in a TimeBag that are at
-                            hamming-distance == d from a string
-  * timebag_hamming_word_sphere: get the indexes of the strings in a TimeBag that are at
-                                 hamming_word-distance == d from a string
+  * hamming_word: compute hamming distance between s1 and s2, taking words as
+                  the editing unit
+  * timebag_hamming_closedball: get the indexes of the strings in a TimeBag
+                                that are at hamming-distance <= d from a
+                                string
+  * timebag_hamming_word_closedball: get the indexes of the strings in a
+                                     TimeBag that are at hamming_word-distance
+                                     <= d from a string
+  * timebag_hamming_sphere: get the indexes of the strings in a TimeBag that
+                            are at hamming-distance == d from a string
+  * timebag_hamming_word_sphere: get the indexes of the strings in a TimeBag
+                                 that are at hamming_word-distance == d from a
+                                 string
 
 """
 
 
-# Imports
-#import sys
-#import re
-#import lang_detection as ld
 import numpy as np
 from nltk import word_tokenize 
 
 
-# Module code
 def levenshtein(s1, s2):
     """Compute levenshtein distance between s1 and s2."""
 
@@ -47,27 +53,40 @@ def levenshtein(s1, s2):
         return len(s1)
     
     previous_row = xrange(len(s2) + 1)
+    
     for i, c1 in enumerate(s1):
+        
         current_row = [i + 1]
+        
         for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1    # j+1 instead of j since previous_row and
-            deletions = current_row[j] + 1          # current_row are one character longer than s2
+            
+            # previous_row and current_row are one character longer than s2,
+            # hence the 'j + 1'
+            
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
+        
         previous_row = current_row 
     
     return previous_row[-1]
 
 
 def levenshtein_word(s1, s2):
-    """Compute levenshtein distance between s1 and s2, taking words as the editing unit."""
+    """Compute levenshtein distance between s1 and s2, taking words as the
+    editing unit."""
     return levenshtein(word_tokenize(s1), word_tokenize(s2))
 
 
 def timebag_levenshtein_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at levenshtein-distance <= d from a string."""
-    distances = np.array([ levenshtein(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    levenshtein-distance <= d from a string."""
+    distances = np.array([levenshtein(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances <= d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -75,18 +94,26 @@ def timebag_levenshtein_closedball(timebag, center_string, d):
 
 
 def timebag_levenshtein_word_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at levenshtein_word-distance <= d from a string."""
-    distances = np.array([ levenshtein_word(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    levenshtein_word-distance <= d from a string."""
+    distances = np.array([levenshtein_word(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances <= d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
         return []
 
 def timebag_levenshtein_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at levenshtein-distance == d from a string."""
-    distances = np.array([ levenshtein(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    levenshtein-distance == d from a string."""
+    distances = np.array([levenshtein(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances == d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -94,9 +121,13 @@ def timebag_levenshtein_sphere(timebag, center_string, d):
 
 
 def timebag_levenshtein_word_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at levenshtein_word-distance == d from a string."""
-    distances = np.array([ levenshtein_word(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    levenshtein_word-distance == d from a string."""
+    distances = np.array([levenshtein_word(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances == d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -112,14 +143,19 @@ def hamming(s1, s2):
 
 
 def hamming_word(s1, s2):
-    """Compute the hamming distance between s1 and s2, taking words as the editing unit."""
+    """Compute the hamming distance between s1 and s2, taking words as the
+    editing unit."""
     return hamming(word_tokenize(s1), word_tokenize(s2))
 
 
 def timebag_hamming_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at hamming-distance <= d from a string."""
-    distances = np.array([ hamming(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    hamming-distance <= d from a string."""
+    distances = np.array([hamming(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where((0 <= distances) * (distances <= d))
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -127,9 +163,12 @@ def timebag_hamming_closedball(timebag, center_string, d):
 
 
 def timebag_hamming_word_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at hamming_word-distance <= d from a string."""
-    distances = np.array([ hamming_word(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    hamming_word-distance <= d from a string."""
+    distances = np.array([hamming_word(center_string, bag_string)
+                          for bag_string in timebag.strings])
     idx = np.where((0 <= distances) * (distances <= d))
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -137,9 +176,13 @@ def timebag_hamming_word_closedball(timebag, center_string, d):
 
 
 def timebag_hamming_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at hamming-distance == d from a string."""
-    distances = np.array([ hamming(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    hamming-distance == d from a string."""
+    distances = np.array([hamming(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances == d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
@@ -147,14 +190,23 @@ def timebag_hamming_sphere(timebag, center_string, d):
 
 
 def timebag_hamming_word_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at hamming_word-distance == d from a string."""
-    distances = np.array([ hamming_word(center_string, bag_string) for bag_string in timebag.strings ])
+    """Get the indexes of the strings in a TimeBag that are at
+    hamming_word-distance == d from a string."""
+    distances = np.array([hamming_word(center_string, bag_string)
+                          for bag_string in timebag.strings])
+    
     idx = np.where(distances == d)
+    
     if len(idx) > 0:
         return idx[0].tolist()
     else:
         return []
 
+
+#import sys
+#import re
+#import lang_detection as ld
+#
 #infile = open('quotes_and_frequency','r')
 #infile2 = open('clusters_leskovec','r')
 #infile3 = open('tagged_quotes_new','r')

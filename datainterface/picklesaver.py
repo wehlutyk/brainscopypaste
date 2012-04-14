@@ -10,11 +10,9 @@ Methods:
 """
 
 
-# Imports
 import pickle
 
 
-# Module code
 def save(s, filepath):
     """Save a structure to a file.
     
@@ -40,4 +38,5 @@ def load(filepath):
     
     with open(filepath, 'rb') as f:
         s = pickle.load(f)
+    
     return s
