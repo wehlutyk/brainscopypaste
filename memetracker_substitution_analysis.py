@@ -16,8 +16,8 @@ Details:
   are at hamming_word-distance == 1, and looks at any substitutions: when a
   substitution is found, depending on the parameters it can go through the
   following:
-    * get excluded if both words (substituted and substitutant) aren't NN's
-      ('--only_NN' option)
+    * get excluded if both words (substituted and substitutant) aren't from
+      the same grammatical category ('--same_POS' option)
     * the substituted and substitutant word can be lemmatized ('--lemmatize'
       option)
   Once that processing is done, the features of the substituted word and the
@@ -69,10 +69,11 @@ def get_arguments():
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
                          "0: don't lemmatize them."))
-    p.add_argument('--only_NN', action='store',
+    p.add_argument('--same_POS', action='store',
                    nargs=1, required=True,
                    help=('1: only save substitutions where both words are '
-                         "tagged as 'NN'; 0: don't apply that filter"))
+                         "tagged as the same POS tag; 0: don't apply that "
+                         'filter'))
     p.add_argument('--verbose', dest='verbose', action='store_const',
                    const=1, default=0,
                    help=('print out the transitions compared, their '
@@ -93,7 +94,7 @@ def get_arguments():
     
     framing = int(args.framing[0])
     lemmatizing = int(args.lemmatizing[0])
-    only_NN = int(args.only_NN[0])
+    same_POS = int(args.same_POS[0])
     n_timebags = int(args.n_timebags[0])
     bag_transitions = [(int(s.split('-')[0]), int(s.split('-')[1]))
                        for s in args.transitions]
@@ -112,12 +113,12 @@ def get_arguments():
     if lemmatizing != 0 and lemmatizing != 1:
         raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
     
-    if only_NN != 0 and only_NN != 1:
-        raise Exception('Wrong value for --only_NN. Expected 1 or 0.')
+    if same_POS != 0 and same_POS != 1:
+        raise Exception('Wrong value for --same_POS. Expected 1 or 0.')
     
     return {'framing': bool(framing),
             'lemmatizing': bool(lemmatizing),
-            'only_NN': bool(only_NN),
+            'same_POS': bool(same_POS),
             'verbose': bool(args.verbose),
             'n_timebags': n_timebags,
             'bag_transitions': bag_transitions}
@@ -140,10 +141,10 @@ def get_save_files(args):
     
     file_prefix += 'L_'
     
-    if not args['only_NN']:
+    if not args['same_POS']:
         file_prefix += 'N'
     
-    file_prefix += 'oNN_'
+    file_prefix += 'P_'
     file_prefix += str(args['n_timebags']) + '_'
     
     for (i, j) in args['bag_transitions']:
@@ -173,7 +174,7 @@ def load_data(args):
     print 'Doing analysis with the following parameters:'
     print '  framing = {}'.format(args['framing'])
     print '  lemmatizing = {}'.format(args['lemmatizing'])
-    print '  only_NN = {}'.format(args['only_NN'])
+    print '  same_POS = {}'.format(args['same_POS'])
     print '  verbose = {}'.format(args['verbose'])
     print '  n_timebags = {}'.format(args['n_timebags'])
     print '  transitions = {}'.format(args['bag_transitions'])
@@ -268,17 +269,19 @@ def analyze(args, data):
                 
                 # Check the POS tags if asked to.
                 
-                if args['only_NN']:
+                if args['same_POS']:
                     
-                    if (s_pos[idx] not in ['NN', 'NNS'] or
-                        smax_pos[idx] not in ['NN', 'NNS']):
+                    if s_pos[idx] != smax_pos[idx]:
                         
-                        if args['verbose']:
+                        if (s_pos[idx] != (smax_pos[idx] + 'S') and
+                            smax_pos[idx] != (s_pos[idx] + 'S')):
                             
-                            print 'Not stored (not NN or NNS)'
-                            raw_input()
-                        
-                        break
+                            if args['verbose']:
+                                
+                                print 'Not stored (not same POS)'
+                                raw_input()
+                            
+                            break
                 
                 
                 # Lemmatize the words if asked to.

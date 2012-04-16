@@ -11,14 +11,14 @@ from analyze.memetracker import build_timebag_transitions
 
 
 base_command = ('python -u memetracker_substitution_analysis.py '
-                '--framing {fra} --lemmatizing {lem} --only_NN {oNN}'
+                '--framing {fra} --lemmatizing {lem} --same_POS {pos}'
                 '--n_timebags {ntb} {b1}-{b2}')
 
 for framing in [0, 1]:
     
     for lemmatizing in [0, 1]:
         
-        for only_NN in [0, 1]:
+        for same_POS in [0, 1]:
             
             for n_timebags in [2, 3]:
                 
@@ -26,7 +26,7 @@ for framing in [0, 1]:
                     
                     os.system(base_command.format(fra=framing,
                                                   lem=lemmatizing,
-                                                  oNN=only_NN,
+                                                  pos=same_POS,
                                                   ntb=n_timebags,
                                                   b1=b1,
                                                   b2=b2))
