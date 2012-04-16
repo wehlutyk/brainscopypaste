@@ -8,15 +8,22 @@ the MemeTracker Clusters. The features are the Wordnet PageRank scores of the
 words, and their degree in the Wordnet graph.
 
 Details:
-  The script takes each Cluster, splits it into a number of TimeBags, then
-  looks at the transitions between TimeBags defined by the 'bag_transitions'
-  variable: for each transition (e.g. TimeBag #0 to TimeBag #2), it takes the
-  highest frequency string in the first TimeBag, gets all strings in the
-  second TimeBag which are at hamming_word-distance == 1, and stores the
-  features of the substituted word and the new word. If any one of those
-  words is not referenced in the features (e.g. is not the PR scores list),
-  it takes note of it (in the 'nonlemmas' variable). It then saves all the
-  data to pickle files.
+  The script takes each Cluster (framed or not, depending on the '--framing'
+  option), splits it into a number of TimeBags, then looks at the transitions
+  between TimeBags defined by the 'bag_transitions' variable: for each
+  transition (e.g. TimeBag #0 to TimeBag #2), it takes the highest frequency
+  string in the first TimeBag, gets all strings in the second TimeBag which
+  are at hamming_word-distance == 1, and looks at any substitutions: when a
+  substitution is found, depending on the parameters it can go through the
+  following:
+    * get excluded if both words (substituted and substitutant) aren't NN's
+      ('--only_NN' option)
+    * the substituted and substitutant word can be lemmatized ('--lemmatize'
+      option)
+  Once that processing is done, the features of the substituted word and the
+  new word are stored. If any one of those words is not referenced in the
+  features (e.g. is not the PR scores list), it takes note of it (in the
+  'nonlemmas' variable). It then saves all the data to pickle files.
 
 The output is as follows (see settings.py for the full filenames):
   * one file containing the PR scores of (substituted word, new word) couples
@@ -25,7 +32,7 @@ The output is as follows (see settings.py for the full filenames):
     (again a Nx2 numpy array)
   * one file containing a list of dicts with data about the words that didn't
     have associated features (the data stored is: cluster id ('cl_id'),
-    tokenized start string ('t_smax'), tokenized end string ('t_s')
+    tokenized start string ('smax_tok'), tokenized end string ('s_tok')
     and index of the changed word ('idx')).
 
 """
@@ -35,11 +42,11 @@ from __future__ import division
 
 import argparse as ap
 
-from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 
 from linguistics.memetracker import levenshtein
+from linguistics.treetagger import TreeTaggerTags
 import datainterface.picklesaver as ps
 import settings as st
 
@@ -62,6 +69,10 @@ def get_arguments():
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
                          "0: don't lemmatize them."))
+    p.add_argument('--only_NN', action='store',
+                   nargs=1, required=True,
+                   help=('1: only save substitutions where both words are '
+                         "tagged as 'NN'; 0: don't apply that filter"))
     p.add_argument('--verbose', dest='verbose', action='store_const',
                    const=1, default=0,
                    help=('print out the transitions compared, their '
@@ -82,6 +93,7 @@ def get_arguments():
     
     framing = int(args.framing[0])
     lemmatizing = int(args.lemmatizing[0])
+    only_NN = int(args.only_NN[0])
     n_timebags = int(args.n_timebags[0])
     bag_transitions = [(int(s.split('-')[0]), int(s.split('-')[1]))
                        for s in args.transitions]
@@ -100,8 +112,12 @@ def get_arguments():
     if lemmatizing != 0 and lemmatizing != 1:
         raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
     
+    if only_NN != 0 and only_NN != 1:
+        raise Exception('Wrong value for --only_NN. Expected 1 or 0.')
+    
     return {'framing': bool(framing),
             'lemmatizing': bool(lemmatizing),
+            'only_NN': bool(only_NN),
             'verbose': bool(args.verbose),
             'n_timebags': n_timebags,
             'bag_transitions': bag_transitions}
@@ -124,7 +140,10 @@ def get_save_files(args):
     
     file_prefix += 'L_'
     
-    file_prefix += 'S_'
+    if not args['only_NN']:
+        file_prefix += 'N'
+    
+    file_prefix += 'oNN_'
     file_prefix += str(args['n_timebags']) + '_'
     
     for (i, j) in args['bag_transitions']:
@@ -154,6 +173,7 @@ def load_data(args):
     print 'Doing analysis with the following parameters:'
     print '  framing = {}'.format(args['framing'])
     print '  lemmatizing = {}'.format(args['lemmatizing'])
+    print '  only_NN = {}'.format(args['only_NN'])
     print '  verbose = {}'.format(args['verbose'])
     print '  n_timebags = {}'.format(args['n_timebags'])
     print '  transitions = {}'.format(args['bag_transitions'])
@@ -179,6 +199,8 @@ def analyze(args, data):
     print 'Doing substitution analysis:'
     
     lemmatizer = WordNetLemmatizer()
+    tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                            TAGINENC='utf-8', TAGOUTENC='utf-8')
     
     # Results of the analysis
     
@@ -213,17 +235,20 @@ def analyze(args, data):
             # Highest freq string and its daughters
             # (sphere of hamming_word distance =1)
             
-            smax = tbgs[i].max_freq_string
-            daughters = [tbgs[j].strings[k]
+            smax = tbgs[i].max_freq_string.lower()
+            smax_pos = tagger.Tags(smax)
+            smax_tok = tagger.Tokenize(smax)
+            daughters = [tbgs[j].strings[k].lower()
                          for k in tbgs[j].hamming_word_sphere(smax, 1)]
             
             for s in daughters:
                 
                 # Find the word that was changed.
                 
-                t_smax = word_tokenize(smax)
-                t_s = word_tokenize(s)
-                idx = np.where([w1 != w2 for (w1, w2) in zip(t_s, t_smax)])[0]
+                s_pos = tagger.Tags(s)
+                s_tok = tagger.Tokenize(s)
+                idx = np.where([w1 != w2 for (w1, w2) in
+                                zip(s_tok, smax_tok)])[0]
                 
                 
                 # Verbose info
@@ -232,19 +257,36 @@ def analyze(args, data):
                     
                     print
                     print ("***** SUBST (cl #{}) ***** '".format(cl.id) +
-                           t_smax[idx] + "' -> '" + t_s[idx] + "'")
+                           '{}/{}'.format(smax_tok[idx], smax_pos[idx]) +
+                           "' -> '" + '{}/{}'.format(s_tok[idx], s_pos[idx]) +
+                           "'")
                     print smax
                     print '=>'
                     print s
                     print
                 
                 
+                # Check the POS tags if asked to.
+                
+                if args['only_NN']:
+                    
+                    if (s_pos[idx] not in ['NN', 'NNS'] or
+                        smax_pos[idx] not in ['NN', 'NNS']):
+                        
+                        if args['verbose']:
+                            
+                            print 'Not stored (not NN or NNS)'
+                            raw_input()
+                        
+                        break
+                
+                
                 # Lemmatize the words if asked to.
                 
                 if args['lemmatizing']:
                     
-                    lem1 = lemmatizer.lemmatize(t_smax[idx]).lower()
-                    lem2 = lemmatizer.lemmatize(t_s[idx]).lower()
+                    lem1 = lemmatizer.lemmatize(smax_tok[idx])
+                    lem2 = lemmatizer.lemmatize(s_tok[idx])
                     
                     # Verbose info
                     
@@ -253,8 +295,8 @@ def analyze(args, data):
                     
                 else:
                     
-                    lem1 = t_smax[idx].lower()
-                    lem2 = t_s[idx].lower()
+                    lem1 = smax_tok[idx]
+                    lem2 = s_tok[idx]
                 
                 
                 # Exclude if this isn't really a substitution.
@@ -265,7 +307,7 @@ def analyze(args, data):
                     
                     if args['verbose']:
                         
-                        print "Not stored (not subst)"
+                        print 'Not stored (not subst)'
                         raw_input()
                     
                     break
@@ -289,8 +331,9 @@ def analyze(args, data):
                     
                     # If we can't find them, keep track of what we left out.
                     
-                    nonlemmas.append({'cl_id': cl.id, 't_s': t_s, 
-                                      't_smax': t_smax, 'idx': idx})
+                    nonlemmas.append({'cl_id': cl.id, 's_tok': s_tok, 
+                                      'smax_tok': smax_tok, 's_pos': s_pos,
+                                      'smax_pos': smax_pos, 'idx': idx})
                     
                     # Verbose info
                     

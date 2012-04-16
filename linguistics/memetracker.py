@@ -106,6 +106,7 @@ def timebag_levenshtein_word_closedball(timebag, center_string, d):
     else:
         return []
 
+
 def timebag_levenshtein_sphere(timebag, center_string, d):
     """Get the indexes of the strings in a TimeBag that are at
     levenshtein-distance == d from a string."""

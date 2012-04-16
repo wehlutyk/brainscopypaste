@@ -100,3 +100,8 @@ wordnet_PR_scores_pickle = os.path.join(data_root,
 wordnet_degrees_pickle_rel = 'wordnet_degrees.pickle'
 
 wordnet_degrees_pickle = os.path.join(data_root, wordnet_degrees_pickle_rel)
+
+
+# TreeTagger settings
+
+treetagger_TAGDIR = '/usr/share/treetagger'
