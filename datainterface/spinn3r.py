@@ -21,7 +21,6 @@ from codecs import open as c_open
 import os
 import hashlib
 import re
-from textwrap import dedent
 
 from nltk.corpus.reader.plaintext import CategorizedPlaintextCorpusReader
 
@@ -83,11 +82,9 @@ class Spinn3rCategorizedPlaintextCorpusReader(
         if nltkfiles_are_present == False:
             
             if filename == None:
-                raise Exception(dedent("""\
-                                       Bad set of arguments: \
-                                       'nltkfiles_are_present == False' and \
-                                       I have no XML filename to parse\
-                                       """))
+                raise Exception(('Bad set of arguments: '
+                                 "'nltkfiles_are_present == False' and "
+                                 'I have no XML filename to parse'))
             
             # The NLTK files are not yet created, we should parse the XML and
             # create the files.
@@ -109,11 +106,10 @@ class Spinn3rCategorizedPlaintextCorpusReader(
             
             if filename != None:
                 
-                raise Exception(dedent("""\
-                                       Bad set of arguments: I have an XML \
-                                       filename to parse, and \
-                                       'nltkfiles_are_present == True', \
-                                       meaning the XML is already parsed"""))
+                raise Exception(('Bad set of arguments: I have an XML '
+                                 'filename to parse, and '
+                                 "'nltkfiles_are_present == True', "
+                                 'meaning the XML is already parsed'))
         
         # Finally init the Nltk reader.
         

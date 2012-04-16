@@ -6,7 +6,6 @@ file."""
 
 
 import gc
-from textwrap import dedent
 
 import datainterface.picklesaver as ps
 import datainterface.memetracker as di_mt
@@ -78,9 +77,7 @@ if __name__ == '__main__':
     
     # And save the framed clusters.
     
-    print dedent('''\
-                 Saving Framed Clusters to pickle file (this might take quite \
-                 some time, e.g. up to 30 minutes)...\
-                 '''),
+    print ('Saving Framed Clusters to pickle file (this might take quite '
+           'some time, e.g. up to 30 minutes)...'),
     ps.save(framed_clusters, picklefile_framed)
     print 'OK'

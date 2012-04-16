@@ -5,7 +5,6 @@
 
 
 import os
-from textwrap import dedent
 
 
 # Two routines for checking if folders and files exist.
@@ -21,12 +20,9 @@ def check_file(filename):
     """Check if filename already exists; if it does, raise an exception."""
     if os.path.exists(filename):
         
-        raise Exception("File '" + filename + \
-                        dedent("""\
-                               ' already exists! You should sort this out \
-                               first: I'm not going to overwrite it. \
-                               Aborting.\
-                               """))
+        raise Exception(("File '" + filename + "' already exists! You should "
+                         "sort this out first: I'm not going to overwrite "
+                         'it. Aborting.'))
 
 
 # Root folder for all the data. If we do this properly, this could be the only

@@ -81,9 +81,9 @@ class LangDetect(object):
                 
                 # Normalize and add to the total score.
                 
-                scores[lang] += (float(frequencies[trigram]) / \
-                                 float(frequencies.N())) * \
-                                 (float(count) / float(total))
+                scores[lang] += ((float(frequencies[trigram]) /
+                                  float(frequencies.N())) *
+                                  (float(count) / float(total)))
 
         return sorted(scores.items(), key=lambda x: x[1], reverse=True)[0][0]
 

@@ -19,7 +19,6 @@ import re
 import os
 from codecs import open as c_open
 from abc import ABCMeta, abstractmethod
-from textwrap import dedent
 
 from datastructure.memetracker import Quote, Cluster
 
@@ -69,10 +68,8 @@ class MT_dataset(object):
             
             # Parse it all.
             
-            print dedent('''\
-                         Reading cluster file and writing the quotes and \
-                         frequencies...\
-                         '''),
+            print ('Reading cluster file and writing the quotes and '
+                   'frequencies...'),
             
             for line in infile:
                 
@@ -149,10 +146,8 @@ class MT_dataset(object):
         
         # Do the parsing and save it.
         
-        print dedent('''\
-                     Loading cluster file into a dictionary of Cluster \
-                     objects... ( percentage completed:\
-                     '''),
+        print ('Loading cluster file into a dictionary of Cluster '
+               'objects... ( percentage completed:'),
         
         clusters_loader.parse(self.mt_filename)
         self.clusters = clusters_loader.clusters

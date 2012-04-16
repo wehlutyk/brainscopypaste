@@ -42,10 +42,10 @@ if __name__ == '__main__':
                     
                     # Create the corresponding file names.
                     
-                    file_prefix = base_prefix.format(fra=N[framing], \
-                                                     lem=N[lemmatizing], \
-                                                     ntb=n_timebags, \
-                                                     b1=b1, \
+                    file_prefix = base_prefix.format(fra=N[framing],
+                                                     lem=N[lemmatizing],
+                                                     ntb=n_timebags,
+                                                     b1=b1,
                                                      b2=b2)
                     pickle_transitiondegrees = \
                         st.memetracker_subst_transitiondegrees_pickle.format(

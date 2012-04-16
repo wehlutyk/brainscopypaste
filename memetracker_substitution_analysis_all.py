@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Do the MemeTracker substitution analysis with all possible parameter combinations."""
+"""Do the MemeTracker substitution analysis with all possible parameter
+combinations."""
 
 
 import os
-from textwrap import dedent
 
 from analyze.memetracker import build_timebag_transitions
 
 
-base_command = dedent('''\
-                      python -u memetracker_substitution_analysis.py \
-                      --framing {fra} --lemmatizing {lem} \
-                      --ntimebags {ntb} {b1}-{b2}\
-                      ''')
+base_command = ('python -u memetracker_substitution_analysis.py '
+                '--framing {fra} --lemmatizing {lem} '
+                '--n_timebags {ntb} {b1}-{b2}')
 
 for framing in [0, 1]:
     
@@ -24,8 +22,8 @@ for framing in [0, 1]:
             
             for (b1, b2) in build_timebag_transitions(n_timebags):
                 
-                os.system(base_command.format(fra=framing, \
-                                              lem=lemmatizing, \
-                                              ntb=n_timebags, \
-                                              b1=b1, \
+                os.system(base_command.format(fra=framing,
+                                              lem=lemmatizing,
+                                              ntb=n_timebags,
+                                              b1=b1,
                                               b2=b2))

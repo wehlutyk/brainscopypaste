@@ -21,7 +21,6 @@ from __future__ import division
 
 from datetime import datetime
 from warnings import warn
-from textwrap import dedent
 
 import numpy as np
 import pylab as pl
@@ -76,12 +75,10 @@ class Timeline(object):
         """
         
         if self.current_idx != len(self.url_times):
-            warn(dedent('''\
-                        The number of urls entered (={}) is not equal to the \
-                        number of urls allocated for (={}) when you created \
-                        this timeline object. There must be a problem \
-                        somewhere\
-                        '''.format(self.current_idx, len(self.url_times))))
+            warn(('The number of urls entered (={}) is not equal to the '
+                  'number of urls allocated for (={}) when you created '
+                  'this timeline object. There must be a problem '
+                  'somewhere').format(self.current_idx, len(self.url_times)))
         
         if not self.attrs_computed:
             
@@ -89,9 +86,9 @@ class Timeline(object):
             
             self.start = self.url_times.min()
             self.end = self.url_times.max()
-            self.span = datetime.fromtimestamp(self.end) - \
-                        datetime.fromtimestamp(self.start)
-            self.span_days = max(1, int(round(self.span.total_seconds() / \
+            self.span = (datetime.fromtimestamp(self.end) -
+                         datetime.fromtimestamp(self.start))
+            self.span_days = max(1, int(round(self.span.total_seconds() /
                                               86400)))
             
             # Histogram, and maximum instances-per-day (i.e. highest spike).
@@ -158,14 +155,14 @@ class Quote(Timeline):
             if (n_urls != None or tot_freq != None or
                 string != None or qt_id != None):
                 
-                raise ValueError(dedent('''\
-                                        Bad set of arguments when creating \
-                                        this quote. You must specify either \
-                                        "line_fields" (={}) OR all of \
-                                        "n_urls" (={}), "tot_freq" (={}), \
-                                        "string" (={}), and "qt_id" (={}).\
-                                        '''.format(line_fields, n_urls,
-                                                   tot_freq, string, qt_id)))
+                raise ValueError(('Bad set of arguments when creating this '
+                                  'quote. You must specify either '
+                                  '"line_fields" (={}) OR all of "n_urls"'
+                                  ' (={}), "tot_freq" (={}), "string" (={}), '
+                                  'and "qt_id" (={}).').format(line_fields,
+                                                               n_urls,
+                                                               tot_freq,
+                                                               string, qt_id))
             
             self.n_urls = int(line_fields[2])
             self.tot_freq = int(line_fields[1])
@@ -178,14 +175,14 @@ class Quote(Timeline):
             if (n_urls == None or tot_freq == None or
                 string == None or qt_id == None):
                 
-                raise ValueError(dedent('''\
-                                        Bad set of arguments when creating \
-                                        this quote. You must specify either \
-                                        "line_fields" (={}) OR all of \
-                                        "n_urls" (={}), "tot_freq" (={}), \
-                                        "string" (={}), and "qt_id" (={}).\
-                                        '''.format(line_fields, n_urls,
-                                                   tot_freq, string, qt_id)))
+                raise ValueError(('Bad set of arguments when creating this '
+                                  'quote. You must specify either '
+                                  '"line_fields" (={}) OR all of "n_urls"'
+                                  ' (={}), "tot_freq" (={}), "string" (={}), '
+                                  'and "qt_id" (={}).').format(line_fields,
+                                                               n_urls,
+                                                               tot_freq,
+                                                               string, qt_id))
             
             self.n_urls = n_urls
             self.tot_freq = tot_freq
@@ -207,8 +204,8 @@ class Quote(Timeline):
     def __unicode__(self):
         """Define how we see a Quote object when printed with print
         (e.g. >>> print myquote)."""
-        return '"' + self.string + \
-                '" (quote #{} ; tot_freq={})'.format(self.id, self.tot_freq)
+        return ('"' + self.string + '" (quote #{} ; '
+                'tot_freq={})').format(self.id, self.tot_freq)
     
     def plot(self, smooth_res=5):
         """Plot the time evolution of the Quote (with a legend).
@@ -276,14 +273,15 @@ class Cluster(object):
             if (n_quotes != None or tot_freq != None or
                 root != None or cl_id != None):
                 
-                raise ValueError(dedent('''\
-                                        Bad set of arguments when creating \
-                                        this cluster. You must specify \
-                                        either "line_fields" (={}) OR all of \
-                                        "n_quotes" (={}), "tot_freq" (={}), \
-                                        "root" (={}), and "cl_id" (={}).\
-                                        '''.format(line_fields, n_quotes,
-                                                   tot_freq, root, cl_id)))
+                raise ValueError(('Bad set of arguments when creating this '
+                                  'cluster. You must specify either '
+                                  '"line_fields" (={}) OR all of "n_quotes" '
+                                  '(={}), "tot_freq" (={}), "root" (={}), '
+                                  'and "cl_id" (={}).').format(line_fields,
+                                                               n_quotes,
+                                                               tot_freq,
+                                                               root,
+                                                               cl_id))
             
             self.n_quotes = int(line_fields[0])
             self.tot_freq = int(line_fields[1])
@@ -295,14 +293,15 @@ class Cluster(object):
             if (n_quotes == None or tot_freq == None or
                 root == None or cl_id == None):
                 
-                raise ValueError(dedent('''\
-                                        Bad set of arguments when creating \
-                                        this cluster. You must specify \
-                                        either "line_fields" (={}) OR all of \
-                                        "n_quotes" (={}), "tot_freq" (={}), \
-                                        "root" (={}), and "cl_id" (={}).\
-                                        '''.format(line_fields, n_quotes,
-                                                   tot_freq, root, cl_id)))
+                raise ValueError(('Bad set of arguments when creating this '
+                                  'cluster. You must specify either '
+                                  '"line_fields" (={}) OR all of "n_quotes" '
+                                  '(={}), "tot_freq" (={}), "root" (={}), '
+                                  'and "cl_id" (={}).').format(line_fields,
+                                                               n_quotes,
+                                                               tot_freq,
+                                                               root,
+                                                               cl_id))
             
             self.n_quotes = n_quotes
             self.tot_freq = tot_freq
@@ -325,11 +324,8 @@ class Cluster(object):
     def __unicode__(self):
         """Define how we see a Cluster object when printed with print
         (e.g. >>> print mycluster)."""
-        return '"' + self.root + \
-            dedent('''\
-                   " (cluster #{} ; tot_quotes={} ; \
-                   tot_freq={})\
-                   '''.format(self.id, self.n_quotes, self.tot_freq))
+        return ('"' + self.root + '" (cluster #{} ; tot_quotes={} ; '
+                'tot_freq={})').format(self.id, self.n_quotes, self.tot_freq)
     
     def add_quote(self, line_fields):
         """Add a Quote to the Cluster (used when loading the data into the
