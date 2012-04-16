@@ -143,8 +143,8 @@ def get_save_files(args):
     st.check_file(pickle_transitiondegrees)
     st.check_file(pickle_nonlemmas)
     
-    return {'PRscores': pickle_transitionPRscores,
-            'degrees': pickle_transitiondegrees,
+    return {'transitionPRscores': pickle_transitionPRscores,
+            'transitiondegrees': pickle_transitiondegrees,
             'nonlemmas': pickle_nonlemmas}
 
 
@@ -154,9 +154,9 @@ def load_data(args):
     print 'Doing analysis with the following parameters:'
     print '  framing = {}'.format(args['framing'])
     print '  lemmatizing = {}'.format(args['lemmatizing'])
+    print '  verbose = {}'.format(args['verbose'])
     print '  n_timebags = {}'.format(args['n_timebags'])
     print '  transitions = {}'.format(args['bag_transitions'])
-    print '  verbose = {}'.format(args['verbose'])
     print
     print 'Loading cluster, PageRank, and degree data...',
     
@@ -315,10 +315,10 @@ def save_data(files, results):
     print 'Done. Saving data...',
     
     ps.save(np.array(results['transitionPRscores']),
-            files['pickle_transitionPRscores'])
+            files['transitionPRscores'])
     ps.save(np.array(results['transitiondegrees']),
-            files['pickle_transitiondegrees'])
-    ps.save(results['nonlemmas'], files['pickle_nonlemmas'])
+            files['transitiondegrees'])
+    ps.save(results['nonlemmas'], files['nonlemmas'])
 
     print 'OK'
 
