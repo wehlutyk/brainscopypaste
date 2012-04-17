@@ -27,8 +27,8 @@ class TreeTaggerTags(TreeTagger):
     
     def Tags(self, s):
         """Tag a string and return the list of tags."""
-        return [t.split('\t')[1] for t in self.TagText(s)]
+        return [t.split('\t')[1] for t in self.TagText(s, notagdns=True)]
     
     def Tokenize(self, s):
         """Tokenize a string and return the list of tokens."""
-        return self.TagText(s, prepronly=True)
+        return self.TagText(s, notagdns=True, prepronly=True)

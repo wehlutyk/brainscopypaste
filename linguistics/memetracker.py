@@ -40,7 +40,13 @@ Methods:
 
 
 import numpy as np
-from nltk import word_tokenize 
+
+from linguistics.treetagger import TreeTaggerTags
+import settings as st
+
+
+tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                        TAGINENC='utf-8', TAGOUTENC='utf-8')
 
 
 def levenshtein(s1, s2):
@@ -76,7 +82,7 @@ def levenshtein(s1, s2):
 def levenshtein_word(s1, s2):
     """Compute levenshtein distance between s1 and s2, taking words as the
     editing unit."""
-    return levenshtein(word_tokenize(s1), word_tokenize(s2))
+    return levenshtein(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
 def timebag_levenshtein_closedball(timebag, center_string, d):
@@ -146,7 +152,7 @@ def hamming(s1, s2):
 def hamming_word(s1, s2):
     """Compute the hamming distance between s1 and s2, taking words as the
     editing unit."""
-    return hamming(word_tokenize(s1), word_tokenize(s2))
+    return hamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
 def timebag_hamming_closedball(timebag, center_string, d):

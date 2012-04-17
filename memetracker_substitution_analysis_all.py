@@ -11,7 +11,7 @@ from analyze.memetracker import build_timebag_transitions
 
 
 base_command = ('python -u memetracker_substitution_analysis.py '
-                '--framing {fra} --lemmatizing {lem} --same_POS {pos}'
+                '--framing {fra} --lemmatizing {lem} --same_POS {pos} '
                 '--n_timebags {ntb} {b1}-{b2}')
 
 for framing in [0, 1]:
