@@ -42,7 +42,7 @@ from __future__ import division
 
 import argparse as ap
 
-from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet as wn
 import numpy as np
 
 from linguistics.memetracker import levenshtein
@@ -154,18 +154,14 @@ def get_save_files(args):
         st.memetracker_subst_transitionPRscores_pickle.format(file_prefix)
     pickle_transitiondegrees = \
         st.memetracker_subst_transitiondegrees_pickle.format(file_prefix)
-    pickle_nonlemmas = \
-        st.memetracker_subst_nonlemmas_pickle.format(file_prefix)
     
     # Check that the destinations don't already exist.
     
     st.check_file(pickle_transitionPRscores)
     st.check_file(pickle_transitiondegrees)
-    st.check_file(pickle_nonlemmas)
     
     return {'transitionPRscores': pickle_transitionPRscores,
-            'transitiondegrees': pickle_transitiondegrees,
-            'nonlemmas': pickle_nonlemmas}
+            'transitiondegrees': pickle_transitiondegrees}
 
 
 def load_data(args):
@@ -199,7 +195,6 @@ def analyze(args, data):
     print
     print 'Doing substitution analysis:'
     
-    lemmatizer = WordNetLemmatizer()
     tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
                             TAGINENC='utf-8', TAGOUTENC='utf-8')
     
@@ -207,7 +202,8 @@ def analyze(args, data):
     
     transitionPRscores = []
     transitiondegrees = []
-    nonlemmas = []
+    n_stored = 0
+    n_all = 0
     
     # Progress info
     
@@ -244,6 +240,8 @@ def analyze(args, data):
             
             for s in daughters:
                 
+                n_all += 1
+                
                 # Find the word that was changed.
                 
                 s_pos = tagger.Tags(s)
@@ -271,25 +269,31 @@ def analyze(args, data):
                 
                 if args['same_POS']:
                     
-                    if s_pos[idx] != smax_pos[idx]:
+                    if s_pos[idx][:2] != smax_pos[idx][:2]:
                         
-                        if (s_pos[idx] != (smax_pos[idx] + 'S') and
-                            smax_pos[idx] != (s_pos[idx] + 'S')):
+                        if args['verbose']:
                             
-                            if args['verbose']:
-                                
-                                print 'Not stored (not same POS)'
-                                raw_input()
-                            
-                            break
+                            print 'Not stored (not same POS)'
+                            raw_input()
+                        
+                        break
                 
                 
                 # Lemmatize the words if asked to.
                 
                 if args['lemmatizing']:
                     
-                    lem1 = lemmatizer.lemmatize(smax_tok[idx])
-                    lem2 = lemmatizer.lemmatize(s_tok[idx])
+                    m1 = wn.morphy(smax_tok[idx])
+                    if m1 != None:
+                        lem1 = m1
+                    else:
+                        lem1 = smax_tok[idx]
+                    
+                    m2 = wn.morphy(s_tok[idx])
+                    if m2 != None:
+                        lem2 = m2
+                    else:
+                        lem2 = s_tok[idx]
                     
                     # Verbose info
                     
@@ -324,24 +328,19 @@ def analyze(args, data):
                                                data['PR'][lem2]])
                     transitiondegrees.append([data['degrees'][lem1],
                                               data['degrees'][lem2]])
+                    n_stored += 1
                     
                     # Verbose info
                     
                     if args['verbose']:
-                        print "Stored"
+                        print 'Stored'
                     
                 except KeyError:
                     
-                    # If we can't find them, keep track of what we left out.
-                    
-                    nonlemmas.append({'cl_id': cl.id, 's_tok': s_tok, 
-                                      'smax_tok': smax_tok, 's_pos': s_pos,
-                                      'smax_pos': smax_pos, 'idx': idx})
-                    
                     # Verbose info
                     
                     if args['verbose']:
-                        print "Not stored (not ref)"
+                        print 'Not stored (not ref)'
                 
                 
                 # Pause to read verbose info.
@@ -350,9 +349,11 @@ def analyze(args, data):
                     raw_input()
     
     
+    print
+    print 'Stored {} of {} substitutions examined.'.format(n_stored, n_all)
+    
     return {'transitionPRscores': transitionPRscores,
-            'transitiondegrees': transitiondegrees,
-            'nonlemmas': nonlemmas}
+            'transitiondegrees': transitiondegrees}
 
 
 def save_data(files, results):
@@ -364,7 +365,6 @@ def save_data(files, results):
             files['transitionPRscores'])
     ps.save(np.array(results['transitiondegrees']),
             files['transitiondegrees'])
-    ps.save(results['nonlemmas'], files['nonlemmas'])
 
     print 'OK'
 

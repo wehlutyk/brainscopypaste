@@ -14,13 +14,13 @@ base_command = ('python -u memetracker_substitution_analysis.py '
                 '--framing {fra} --lemmatizing {lem} --same_POS {pos} '
                 '--n_timebags {ntb} {b1}-{b2}')
 
-for framing in [0, 1]:
+for framing in [1]:#[0, 1]:
     
-    for lemmatizing in [0, 1]:
+    for lemmatizing in [1]:#[0, 1]:
         
-        for same_POS in [0, 1]:
+        for same_POS in [1]:#[0, 1]:
             
-            for n_timebags in [2, 3]:
+            for n_timebags in [2, 3, 4, 5]:
                 
                 for (b1, b2) in build_timebag_transitions(n_timebags):
                     

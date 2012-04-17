@@ -83,8 +83,6 @@ memetracker_subst_transitionPRscores_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_transitionPRscores_pickle_rel)
 memetracker_subst_transitiondegrees_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_transitiondegrees_pickle_rel)
-memetracker_subst_nonlemmas_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_nonlemmas_pickle_rel)
 
 
 # Pickle file for the Wordnet PageRank scores, relative to data_root.
