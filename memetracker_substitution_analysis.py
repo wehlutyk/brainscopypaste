@@ -3,37 +3,10 @@
 
 """Analyze the 1-word changes in the MemeTracker dataset.
 
-This script looks at features of words that are substituted through time in
-the MemeTracker Clusters. The features are the Wordnet PageRank scores of the
-words, and their degree in the Wordnet graph.
+See analyze.memetracker.SubstitutionAnalysis for full documentation.
 
-Details:
-  The script takes each Cluster (framed or not, depending on the '--framing'
-  option), splits it into a number of TimeBags, then looks at the transitions
-  between TimeBags defined by the 'bag_transitions' variable: for each
-  transition (e.g. TimeBag #0 to TimeBag #2), it takes the highest frequency
-  string in the first TimeBag, gets all strings in the second TimeBag which
-  are at hamming_word-distance == 1, and looks at any substitutions: when a
-  substitution is found, depending on the parameters it can go through the
-  following:
-    * get excluded if both words (substituted and substitutant) aren't from
-      the same grammatical category ('--same_POS' option)
-    * the substituted and substitutant word can be lemmatized ('--lemmatize'
-      option)
-  Once that processing is done, the features of the substituted word and the
-  new word are stored. If any one of those words is not referenced in the
-  features (e.g. is not the PR scores list), it takes note of it (in the
-  'nonlemmas' variable). It then saves all the data to pickle files.
-
-The output is as follows (see settings.py for the full filenames):
-  * one file containing the PR scores of (substituted word, new word) couples
-    (which is a Nx2 numpy array)
-  * one file containing the degrees of (substituted word, new word) couples
-    (again a Nx2 numpy array)
-  * one file containing a list of dicts with data about the words that didn't
-    have associated features (the data stored is: cluster id ('cl_id'),
-    tokenized start string ('smax_tok'), tokenized end string ('s_tok')
-    and index of the changed word ('idx')).
+Methods:
+  * get_args_from_cmdline: get arguments from the command line
 
 """
 
@@ -44,7 +17,12 @@ from analyze.memetracker import SubstitutionAnalysis
 
 
 def get_args_from_cmdline():
-    """Get arguments from the command line."""
+    """Get arguments from the command line.
+    
+    The arguments are defined by the 'add_argument' statements. Run this
+    script with the '-h' option for help on the arguments.
+    
+    """
     
     # Create the arguments parser.
     

@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Do the MemeTracker substitution analysis with all possible parameter
-combinations."""
+"""Do the MemeTracker substitution analysis with a number of timebag slicings.
+
+Methods:
+  * get_n_timebags_list_from_cmdline: get the timebag slicings from the
+                                      command line
+
+"""
 
 
 import argparse as ap
@@ -11,7 +16,12 @@ from analyze.memetracker import SubstitutionAnalysis
 
 
 def get_n_timebags_list_from_cmdline():
-    """Get the timebag slicings from the command line."""
+    """Get the timebag slicings from the command line.
+    
+    The syntax is defined by the 'add_argument' statement. Run this script
+    with the '-h' option for help on the exact syntax.
+    
+    """
     
     # Create the arguments parser.
     

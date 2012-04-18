@@ -25,6 +25,10 @@ Methods:
   * build_timebag_transitions: build the list of possible transitions from a
                                number of TimeBags
 
+Classes:
+  * SubstitutionAnalysis: analyze the 1-word changes in the MemeTracker
+                          dataset
+
 """
 
 
@@ -345,13 +349,44 @@ def build_timebag_transitions(n_timebags):
 
 class SubstitutionAnalysis(object):
     
+    """Analyze the 1-word changes in the MemeTracker dataset.
+    
+    This class looks at features of words that are substituted through time in
+    the MemeTracker Clusters. The features are the Wordnet PageRank scores of
+    the words, and their degree in the Wordnet graph.
+    
+    Methods:
+      * __init__: set the number of processes for multi-threading
+      * get_save_files: get the filenames where data is to be saved; check
+                        they don't already exist
+      * print_args: print the arguments to stdout
+      * load_data: load the data from pickle files
+      * examine_substitutions: examine substitutions and retain only those we
+                               want
+      * save_results: save the analysis results to pickle files
+      * create_args_list: create a list of possible args dicts, according to
+                          requested timebag slicings
+      * analyze: load data, do the substitution analysis, and save results
+      * analyze_all: run 'analyze' with various timebag slicings
+    
+    """
+    
     def __init__(self):
+        """Set the number of processes for multi-threading."""
         self.n_cpu = cpu_count()
         self.n_proc = self.n_cpu - 1
     
     def get_save_files(self, args):
         """Get the filenames where data is to be saved; check they don't
-        exist."""
+        already exist.
+        
+        Arguments:
+          * args: the dict of arguments, gotten from the command line or
+                  manually set
+        
+        Returns: a dict of filenames corresponding to the data to save.
+        
+        """
         
         # Create the file prefix according to 'args'.
     
@@ -390,7 +425,7 @@ class SubstitutionAnalysis(object):
                 'transitiondegrees': pickle_transitiondegrees}
     
     def print_args(self, args):
-        """Print the arguments to the console."""
+        """Print the arguments to stdout."""
         print
         print 'Doing analysis with the following parameters:'
         print '  framing = {}'.format(args['framing'])
@@ -401,7 +436,15 @@ class SubstitutionAnalysis(object):
         print '  transitions = {}'.format(args['bag_transitions'])
     
     def load_data(self, framed):
-        """Load the data from pickle files."""
+        """Load the data from pickle files.
+        
+        Arguments:
+          * framed: (boolean) load the framed or non-framed data
+        
+        Returns: a dict containing the various data structures loaded.
+        
+        """
+        
         print 'Loading cluster, PageRank, and degree data...',
         
         if framed:
@@ -417,7 +460,37 @@ class SubstitutionAnalysis(object):
         return {'clusters': clusters, 'PR': PR, 'degrees': degrees}
     
     def examine_substitutions(self, args, data):
-        """Do the substitution analysis."""
+        """Examine substitutions and retain only those we want.
+        
+        Arguments:
+          * args: the dict of arguments, gotten from the command line or
+                  manually set
+          * data: the dict containing the data to be examined
+        
+        Returns: a dict containing two Nx2 numpy arrays, each one containing
+                 the features (PR scores or degrees) of the substituted and
+                 substitutant words from the substitutions that were kept
+                 after filtering.
+        
+        Details:
+          The method takes each Cluster (framed or not, depending on the
+          'framing' argument), splits it into a number of TimeBags, then looks
+          at the transitions between TimeBags defined by the 'bag_transitions'
+          arguments in args: for each transition (e.g. TimeBag #0 to TimeBag
+          #2), it takes the highest frequency string in the first TimeBag,
+          gets all strings in the second TimeBag which are at
+          hamming_word-distance == 1, and looks at any substitutions: when a
+          substitution is found, depending on the arguments it can go through
+          the following:
+            * get excluded if both words (substituted and substitutant) aren't
+              from the same grammatical category ('same_POS' argument)
+            * the substituted and substitutant word can be lemmatized
+              ('lemmatize' argument)
+          Once that processing is done, the features of the substituted word
+          and the new word are stored (if they exist in the features list).
+        
+        """
+        
         print
         print 'Doing substitution analysis:'
         
@@ -585,7 +658,14 @@ class SubstitutionAnalysis(object):
                 'transitiondegrees': transitiondegrees}
     
     def save_results(self, files, results):
-        """Save the analysis data to pickle files."""
+        """Save the analysis results to pickle files.
+        
+        Arguments:
+          * files: the dict of filenames as given by 'get_save_files'
+          * results: the dict of results as given by 'examine_substitutions'
+        
+        """
+        
         print
         print 'Done. Saving data...',
         
@@ -597,6 +677,25 @@ class SubstitutionAnalysis(object):
         print 'OK'
     
     def create_args_list(self, n_timebags_list):
+        """Create a list of possible args dicts, according to requested
+        timebag slicings.
+        
+        The resulting args all have framing, lemmatizing, and same_POS set to
+        True. They only differ in the number of timebags to slice the clusters
+        into, and which transition to examine.
+        
+        Arguments:
+          * n_timebags_list: a list of integers, each one indicating how many
+                             timebags the clusters are to be sliced into
+        
+        Returns:
+          * args_list: a list of dicts, each one corresponding to a specific
+                       n_timebags value and a specific transition between
+                       timebags among those n_timebags. All possible
+                       transitions are included.
+        
+        """
+        
         args_list = []
         
         for n_timebags in n_timebags_list:
@@ -612,8 +711,31 @@ class SubstitutionAnalysis(object):
         
         return args_list
     
+    def analyze(self, args, data):
+        """Load data, do the substitution analysis, and save results.
+        
+        Arguments:
+          * args: the dict of args for the analysis
+          * data: the loaded data to analyzed
+        
+        """
+        
+        self.print_args(args)
+        files = self.get_save_files(args)
+        results = self.examine_substitutions(args, data)
+        self.save_results(files, results)
+    
     def analyze_all(self, n_timebags_list):
-        """Do the substitution analysis with various timebag slicings."""
+        """Run 'analyze' with various timebag slicings.
+        
+        The analysis is always done with framing, lemmatizing, and same_POS
+        activated.
+        
+        Arguments:
+          * n_timebags_list: a list of integers, each one indicating how many
+                             timebags the clusters are to be sliced into
+        
+        """
         
         print
         print ('Starting substitution analysis, for timebag '
@@ -624,12 +746,6 @@ class SubstitutionAnalysis(object):
         
         for args in args_list:
             self.analyze(args, data)
-    
-    def analyze(self, args, data):
-        self.print_args(args)
-        files = self.get_save_files(args)
-        results = self.examine_substitutions(args, data)
-        self.save_results(files, results)
     
 ## Does not yet share the cluster data between processes => needs way too
 ## much RAM.
