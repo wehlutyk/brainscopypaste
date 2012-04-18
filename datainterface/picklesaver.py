@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Save or load any data in pickle format
+"""Save or load any data in pickle format.
 
 Methods:
   * save: save a structure to a file
@@ -10,7 +10,7 @@ Methods:
 """
 
 
-import pickle
+import cPickle
 
 
 def save(s, filepath):
@@ -23,7 +23,7 @@ def save(s, filepath):
     """
     
     with open(filepath, 'wb') as f:
-        pickle.dump(s, f)
+        cPickle.dump(s, f, cPickle.HIGHEST_PROTOCOL)
 
 
 def load(filepath):
@@ -37,6 +37,6 @@ def load(filepath):
     """
     
     with open(filepath, 'rb') as f:
-        s = pickle.load(f)
+        s = cPickle.load(f)
     
     return s
