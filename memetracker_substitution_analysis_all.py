@@ -4,7 +4,7 @@
 """Do the MemeTracker substitution analysis with a number of timebag slicings.
 
 Methods:
-  * get_n_timebags_list_from_cmdline: get the timebag slicings from the
+  * get_args_from_cmdline: get the timebag slicings from the
                                       command line
 
 """
@@ -15,7 +15,7 @@ import argparse as ap
 from analyze.memetracker import SubstitutionAnalysis
 
 
-def get_n_timebags_list_from_cmdline():
+def get_args_from_cmdline():
     """Get the timebag slicings from the command line.
     
     The syntax is defined by the 'add_argument' statement. Run this script
@@ -31,6 +31,10 @@ def get_n_timebags_list_from_cmdline():
                                        'is done on the framed clusters, with '
                                        'lemmatizing and the same_POS option '
                                        'activated.'))
+    p.add_argument('--no_multi-thread', dest='multi_thread',
+                   action='store_const', const=False, default=True,
+                   help=('deactivate multi-threading (default: multi-thread '
+                         'to use all processors but one)'))
     p.add_argument('n_timebags_list', action='store', nargs='+',
                    help=('space-separated list of timebag slicings to '
                          "examine. e.g. '2 3 4' will run the substitution "
@@ -49,10 +53,20 @@ def get_n_timebags_list_from_cmdline():
         raise Exception(('The number of timebags requested must be at least '
                          '2!'))
     
-    return n_timebags_list
+    return (args.multi_thread, n_timebags_list)
 
 
 if __name__ == '__main__':
-    n_timebags_list = get_n_timebags_list_from_cmdline()
+    
+    (multi_thread, n_timebags_list) = get_args_from_cmdline()
     sa = SubstitutionAnalysis()
-    sa.analyze_all(n_timebags_list)
+    
+    if multi_thread:
+        
+        sa.analyze_all_mt(n_timebags_list)
+    
+    else:
+        
+        print
+        print 'Deactivating multi-threading.'
+        sa.analyze_all(n_timebags_list)

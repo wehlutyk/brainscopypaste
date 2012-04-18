@@ -103,3 +103,9 @@ wordnet_degrees_pickle = os.path.join(data_root, wordnet_degrees_pickle_rel)
 # TreeTagger settings
 
 treetagger_TAGDIR = '/usr/share/treetagger'
+
+
+# Redis prefixes
+redis_mt_pref = 'memetracker:'
+redis_mt_clusters_pref = redis_mt_pref + 'clusters:'
+redis_mt_clusters_framed_pref = redis_mt_pref + 'clusters-framed:'

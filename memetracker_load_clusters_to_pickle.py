@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Load all Clusters from the MemeTracker dataset and save them to a pickle
-file."""
+"""Load Clusters from the MemeTracker dataset, and save the full clusters as
+well as the framed clusters to pickle files."""
 
 
 import gc

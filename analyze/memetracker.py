@@ -43,6 +43,7 @@ import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
 from linguistics.treetagger import TreeTaggerTags
 import datainterface.picklesaver as ps
+import datainterface.redistools as rt
 import settings as st
 
 
@@ -255,7 +256,7 @@ def build_n_quotes_to_clusterids(clusters):
     that number of quotes.
     
     Arguments:
-      * The dict of Clusters to work on
+      * The RedisDataAccess Clusters connection or dict of Clusters to work on
     
     Returns: the dict of 'number of Quotes' -> 'sequence of Cluster ids'.
     
@@ -263,12 +264,12 @@ def build_n_quotes_to_clusterids(clusters):
     
     inv_cl_lengths = {}
     
-    for cl in clusters.values():
+    for cl_id, cl in clusters.iteritems():
         
         if inv_cl_lengths.has_key(cl.n_quotes):
-            inv_cl_lengths[cl.n_quotes].append(cl.id)
+            inv_cl_lengths[cl.n_quotes].append(cl_id)
         else:
-            inv_cl_lengths[cl.n_quotes] = [cl.id]
+            inv_cl_lengths[cl.n_quotes] = [cl_id]
     
     return inv_cl_lengths
 
@@ -278,7 +279,7 @@ def build_quotelengths_to_n_quote(clusters):
     having that string length.
     
     Arguments:
-      * The dict of Clusters to work on
+      * The RedisDataAccess Clusters connection or dict of Clusters to work on
     
     Returns: the dict of 'Quote string lengths' -> 'number of Quotes having
              that string length'.
@@ -289,9 +290,9 @@ def build_quotelengths_to_n_quote(clusters):
     tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
                             TAGINENC='utf-8', TAGOUTENC='utf-8')
     
-    for cl in clusters.values():
+    for cl in clusters.itervalues():
         
-        for qt in cl.quotes.values():
+        for qt in cl.quotes.itervalues():
             
             n_words = len(tagger.Tokenize(qt.string.lower()))
             
@@ -368,6 +369,9 @@ class SubstitutionAnalysis(object):
                           requested timebag slicings
       * analyze: load data, do the substitution analysis, and save results
       * analyze_all: run 'analyze' with various timebag slicings
+      * put_analyze: put an analysis job in the queue
+      * analyze_all_mt: run 'analyze' with various timebag slicings,
+                        multi-threaded
     
     """
     
@@ -445,12 +449,14 @@ class SubstitutionAnalysis(object):
         
         """
         
-        print 'Loading cluster, PageRank, and degree data...',
+        print
+        print ('Connecting to redis server for cluster data, '
+               'loading PageRank and degree data from pickle...'),
         
         if framed:
-            clusters = ps.load(st.memetracker_full_framed_pickle)
+            clusters = rt.RedisReader(st.redis_mt_clusters_framed_pref)
         else:
-            clusters = ps.load(st.memetracker_full_pickle)
+            clusters = rt.RedisReader(st.redis_mt_clusters_pref)
         
         PR = ps.load(st.wordnet_PR_scores_pickle)
         degrees = ps.load(st.wordnet_degrees_pickle)
@@ -711,17 +717,17 @@ class SubstitutionAnalysis(object):
         
         return args_list
     
-    def analyze(self, args, data):
+    def analyze(self, args):
         """Load data, do the substitution analysis, and save results.
         
         Arguments:
           * args: the dict of args for the analysis
-          * data: the loaded data to analyzed
         
         """
         
         self.print_args(args)
         files = self.get_save_files(args)
+        data = self.load_data(args['framing'])
         results = self.examine_substitutions(args, data)
         self.save_results(files, results)
     
@@ -742,46 +748,41 @@ class SubstitutionAnalysis(object):
                'slicings {}').format(n_timebags_list)
         
         args_list = self.create_args_list(n_timebags_list)
-        data = self.load_data(True)
         
         for args in args_list:
-            self.analyze(args, data)
+            self.analyze(args)
     
-## Does not yet share the cluster data between processes => needs way too
-## much RAM.
-#    def put_analyze(self, Q, args, data):
-#        Q.put(self.analyze(args, data))
-#    
-#    def analyze_all_mt(self, n_timebags_list):
-#        """Do the substitution analysis with various timebag slicings,
-#        multi-threaded."""
-#        
-#        print
-#        print ('Starting multi-threaded substitution analysis, for timebag '
-#               'slicings {}').format(n_timebags_list)
-#        
-#        args_list = self.create_args_list(n_timebags_list)
-#        data = self.load_data(True)
-#        n_jobs = len(args_list)
-#        n_groups = int(np.ceil(n_jobs / self.n_proc))
-#        Q = Queue()
-#        
-#        print
-#        print ('Grouping {} jobs into {} groups of {} processes (except '
-#               'maybe for the last group).').format(n_jobs, n_groups,
-#                                                    self.n_proc)
-#        print
-#        
-#        for i in range(n_groups):
-#            
-#            for j in range(i * self.n_proc,
-#                           min((i + 1) * self.n_proc, n_jobs)):
-#                
-#                thread = Process(target=self.put_analyze,
-#                                 args=(Q, args_list[j], data))
-#                thread.daemon = True
-#                thread.start()
-#                
-#            for j in range(i * self.n_proc,
-#                           min((i + 1) * self.n_proc, n_jobs)):
-#                Q.get()
+    def put_analyze(self, Q, args):
+        """Put an analysis job in the queue."""
+        Q.put(self.analyze(args))
+    
+    def analyze_all_mt(self, n_timebags_list):
+        """Run 'analyze' with various timebag slicings, multi-threaded."""
+        
+        print
+        print ('Starting multi-threaded substitution analysis, for timebag '
+               'slicings {}').format(n_timebags_list)
+        
+        args_list = self.create_args_list(n_timebags_list)
+        n_jobs = len(args_list)
+        n_groups = int(np.ceil(n_jobs / self.n_proc))
+        Q = Queue()
+        
+        print
+        print ('Grouping {} jobs into {} groups of {} processes (except '
+               'maybe for the last group).').format(n_jobs, n_groups,
+                                                    self.n_proc)
+        
+        for i in range(n_groups):
+            
+            for j in range(i * self.n_proc,
+                           min((i + 1) * self.n_proc, n_jobs)):
+                
+                thread = Process(target=self.put_analyze,
+                                 args=(Q, args_list[j]))
+                thread.daemon = True
+                thread.start()
+                
+            for j in range(i * self.n_proc,
+                           min((i + 1) * self.n_proc, n_jobs)):
+                Q.get()

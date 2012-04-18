@@ -42,7 +42,7 @@ def get_args_from_cmdline():
                          "are tagged as the same POS tag; 0: don't apply "
                          'that filter'))
     p.add_argument('--verbose', dest='verbose', action='store_const',
-                   const=1, default=0,
+                   const=True, default=False,
                    help=('print out the transitions compared, their '
                          'processing, and if they are stored of not'))
     p.add_argument('--n_timebags', action='store', nargs=1, required=True,
@@ -84,7 +84,7 @@ def get_args_from_cmdline():
     return {'framing': bool(framing),
             'lemmatizing': bool(lemmatizing),
             'same_POS': bool(same_POS),
-            'verbose': bool(args.verbose),
+            'verbose': args.verbose,
             'n_timebags': n_timebags,
             'bag_transitions': bag_transitions}
 
@@ -92,5 +92,4 @@ def get_args_from_cmdline():
 if __name__ == '__main__':
     args = get_args_from_cmdline()
     sa = SubstitutionAnalysis()
-    data = sa.load_data(args['framing'])
-    sa.analyze(args, data)
+    sa.analyze(args)
