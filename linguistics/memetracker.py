@@ -45,10 +45,6 @@ from linguistics.treetagger import TreeTaggerTags
 import settings as st
 
 
-tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                        TAGINENC='utf-8', TAGOUTENC='utf-8')
-
-
 def levenshtein(s1, s2):
     """Compute levenshtein distance between s1 and s2."""
 
@@ -77,6 +73,10 @@ def levenshtein(s1, s2):
         previous_row = current_row 
     
     return previous_row[-1]
+
+
+tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                        TAGINENC='utf-8', TAGOUTENC='utf-8')
 
 
 def levenshtein_word(s1, s2):

@@ -30,10 +30,16 @@ Methods:
 
 from __future__ import division
 
+from multiprocessing import Process, Queue, cpu_count
+
+from nltk.corpus import wordnet as wn
 import numpy as np
-from nltk import word_tokenize
 
 import datastructure.memetracker as ds_mt
+from linguistics.memetracker import levenshtein
+from linguistics.treetagger import TreeTaggerTags
+import datainterface.picklesaver as ps
+import settings as st
 
 
 def frame_cluster_around_peak(cl, span_before=2 * 86400,
@@ -276,12 +282,14 @@ def build_quotelengths_to_n_quote(clusters):
     """
     
     inv_qt_lengths = {}
+    tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                            TAGINENC='utf-8', TAGOUTENC='utf-8')
     
     for cl in clusters.values():
         
         for qt in cl.quotes.values():
             
-            n_words = len(word_tokenize(qt.string.lower()))
+            n_words = len(tagger.Tokenize(qt.string.lower()))
             
             if inv_qt_lengths.has_key(n_words):
                 inv_qt_lengths[n_words] += 1
@@ -333,3 +341,331 @@ def build_timebag_transitions(n_timebags):
     _build_timebag_transitions(range(n_timebags), transitions)
     
     return transitions
+
+
+class SubstitutionAnalysis(object):
+    
+    def __init__(self):
+        self.n_cpu = cpu_count()
+        self.n_proc = self.n_cpu - 1
+    
+    def get_save_files(self, args):
+        """Get the filenames where data is to be saved; check they don't
+        exist."""
+        
+        # Create the file prefix according to 'args'.
+    
+        file_prefix = ''
+        
+        if not args['framing']:
+            file_prefix += 'N'
+        
+        file_prefix += 'F_'
+        
+        if not args['lemmatizing']:
+            file_prefix += 'N'
+        
+        file_prefix += 'L_'
+        
+        if not args['same_POS']:
+            file_prefix += 'N'
+        
+        file_prefix += 'P_'
+        file_prefix += str(args['n_timebags']) + '_'
+        
+        for (i, j) in args['bag_transitions']:
+            file_prefix += '{}-{}_'.format(i, j)
+        
+        pickle_transitionPRscores = \
+            st.memetracker_subst_transitionPRscores_pickle.format(file_prefix)
+        pickle_transitiondegrees = \
+            st.memetracker_subst_transitiondegrees_pickle.format(file_prefix)
+        
+        # Check that the destinations don't already exist.
+        
+        st.check_file(pickle_transitionPRscores)
+        st.check_file(pickle_transitiondegrees)
+        
+        return {'transitionPRscores': pickle_transitionPRscores,
+                'transitiondegrees': pickle_transitiondegrees}
+    
+    def print_args(self, args):
+        """Print the arguments to the console."""
+        print
+        print 'Doing analysis with the following parameters:'
+        print '  framing = {}'.format(args['framing'])
+        print '  lemmatizing = {}'.format(args['lemmatizing'])
+        print '  same_POS = {}'.format(args['same_POS'])
+        print '  verbose = {}'.format(args['verbose'])
+        print '  n_timebags = {}'.format(args['n_timebags'])
+        print '  transitions = {}'.format(args['bag_transitions'])
+    
+    def load_data(self, framed):
+        """Load the data from pickle files."""
+        print 'Loading cluster, PageRank, and degree data...',
+        
+        if framed:
+            clusters = ps.load(st.memetracker_full_framed_pickle)
+        else:
+            clusters = ps.load(st.memetracker_full_pickle)
+        
+        PR = ps.load(st.wordnet_PR_scores_pickle)
+        degrees = ps.load(st.wordnet_degrees_pickle)
+        
+        print 'OK'
+        
+        return {'clusters': clusters, 'PR': PR, 'degrees': degrees}
+    
+    def examine_substitutions(self, args, data):
+        """Do the substitution analysis."""
+        print
+        print 'Doing substitution analysis:'
+        
+        tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                                TAGINENC='utf-8', TAGOUTENC='utf-8')
+        
+        # Results of the analysis
+        
+        transitionPRscores = []
+        transitiondegrees = []
+        n_stored = 0
+        n_all = 0
+        
+        # Progress info
+        
+        progress = 0
+        n_clusters = len(data['clusters'])
+        info_step = max(int(round(n_clusters / 100)), 1)
+        
+        for cl in data['clusters'].itervalues():
+            
+            # Progress info
+            
+            progress += 1
+            
+            if progress % info_step == 0:
+                
+                print '  {} % ({} / {} clusters)'.format(
+                    int(round(100 * progress / n_clusters)),
+                    progress, n_clusters)
+            
+            
+            # Get timebags and examine transitions.
+            
+            tbgs = cl.build_timebags(args['n_timebags'])
+            
+            for i, j in args['bag_transitions']:
+                
+                # Highest freq string and its daughters
+                # (sphere of hamming_word distance =1)
+                
+                smax = tbgs[i].max_freq_string.lower()
+                smax_pos = tagger.Tags(smax)
+                smax_tok = tagger.Tokenize(smax)
+                daughters = [tbgs[j].strings[k].lower()
+                             for k in tbgs[j].hamming_word_sphere(smax, 1)]
+                
+                for s in daughters:
+                    
+                    n_all += 1
+                    
+                    # Find the word that was changed.
+                    
+                    s_pos = tagger.Tags(s)
+                    s_tok = tagger.Tokenize(s)
+                    idx = np.where([w1 != w2 for (w1, w2) in
+                                    zip(s_tok, smax_tok)])[0]
+                    
+                    
+                    # Verbose info
+                    
+                    if args['verbose']:
+                        
+                        print
+                        print ("***** SUBST (cl #{}) ***** '".format(cl.id) +
+                               '{}/{}'.format(smax_tok[idx], smax_pos[idx]) +
+                               "' -> '" + '{}/{}'.format(s_tok[idx],
+                                                         s_pos[idx]) + "'")
+                        print smax
+                        print '=>'
+                        print s
+                        print
+                    
+                    
+                    # Check the POS tags if asked to.
+                    
+                    if args['same_POS']:
+                        
+                        if s_pos[idx][:2] != smax_pos[idx][:2]:
+                            
+                            if args['verbose']:
+                                
+                                print 'Not stored (not same POS)'
+                                raw_input()
+                            
+                            break
+                    
+                    
+                    # Lemmatize the words if asked to.
+                    
+                    if args['lemmatizing']:
+                        
+                        m1 = wn.morphy(smax_tok[idx])
+                        if m1 != None:
+                            lem1 = m1
+                        else:
+                            lem1 = smax_tok[idx]
+                        
+                        m2 = wn.morphy(s_tok[idx])
+                        if m2 != None:
+                            lem2 = m2
+                        else:
+                            lem2 = s_tok[idx]
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print ("Lemmatized to '" + lem1 + "' -> '" +
+                                   lem2 + "'")
+                        
+                    else:
+                        
+                        lem1 = smax_tok[idx]
+                        lem2 = s_tok[idx]
+                    
+                    
+                    # Exclude if this isn't really a substitution.
+                    
+                    if levenshtein(lem1, lem2) <= 1:
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            
+                            print 'Not stored (not subst)'
+                            raw_input()
+                        
+                        break
+                    
+                    
+                    # Look the words up in the features lists.
+                    
+                    try:
+                        
+                        transitionPRscores.append([data['PR'][lem1],
+                                                   data['PR'][lem2]])
+                        transitiondegrees.append([data['degrees'][lem1],
+                                                  data['degrees'][lem2]])
+                        n_stored += 1
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Stored'
+                        
+                    except KeyError:
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Not stored (not ref)'
+                    
+                    
+                    # Pause to read verbose info.
+                    
+                    if args['verbose']:
+                        raw_input()
+        
+        
+        print
+        print 'Stored {} of {} substitutions examined.'.format(n_stored,
+                                                               n_all)
+        
+        return {'transitionPRscores': transitionPRscores,
+                'transitiondegrees': transitiondegrees}
+    
+    def save_results(self, files, results):
+        """Save the analysis data to pickle files."""
+        print
+        print 'Done. Saving data...',
+        
+        ps.save(np.array(results['transitionPRscores']),
+                files['transitionPRscores'])
+        ps.save(np.array(results['transitiondegrees']),
+                files['transitiondegrees'])
+    
+        print 'OK'
+    
+    def create_args_list(self, n_timebags_list):
+        args_list = []
+        
+        for n_timebags in n_timebags_list:
+            
+            for tr in build_timebag_transitions(n_timebags):
+                
+                args_list.append({'framing': True,
+                                  'lemmatizing': True,
+                                  'same_POS': True,
+                                  'verbose': False,
+                                  'n_timebags': n_timebags,
+                                  'bag_transitions': [tr]})
+        
+        return args_list
+    
+    def analyze_all(self, n_timebags_list):
+        """Do the substitution analysis with various timebag slicings."""
+        
+        print
+        print ('Starting substitution analysis, for timebag '
+               'slicings {}').format(n_timebags_list)
+        
+        args_list = self.create_args_list(n_timebags_list)
+        data = self.load_data(True)
+        
+        for args in args_list:
+            self.analyze(args, data)
+    
+    def analyze(self, args, data):
+        self.print_args(args)
+        files = self.get_save_files(args)
+        results = self.examine_substitutions(args, data)
+        self.save_results(files, results)
+    
+## Does not yet share the cluster data between processes => needs way too
+## much RAM.
+#    def put_analyze(self, Q, args, data):
+#        Q.put(self.analyze(args, data))
+#    
+#    def analyze_all_mt(self, n_timebags_list):
+#        """Do the substitution analysis with various timebag slicings,
+#        multi-threaded."""
+#        
+#        print
+#        print ('Starting multi-threaded substitution analysis, for timebag '
+#               'slicings {}').format(n_timebags_list)
+#        
+#        args_list = self.create_args_list(n_timebags_list)
+#        data = self.load_data(True)
+#        n_jobs = len(args_list)
+#        n_groups = int(np.ceil(n_jobs / self.n_proc))
+#        Q = Queue()
+#        
+#        print
+#        print ('Grouping {} jobs into {} groups of {} processes (except '
+#               'maybe for the last group).').format(n_jobs, n_groups,
+#                                                    self.n_proc)
+#        print
+#        
+#        for i in range(n_groups):
+#            
+#            for j in range(i * self.n_proc,
+#                           min((i + 1) * self.n_proc, n_jobs)):
+#                
+#                thread = Process(target=self.put_analyze,
+#                                 args=(Q, args_list[j], data))
+#                thread.daemon = True
+#                thread.start()
+#                
+#            for j in range(i * self.n_proc,
+#                           min((i + 1) * self.n_proc, n_jobs)):
+#                Q.get()
