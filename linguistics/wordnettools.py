@@ -65,7 +65,7 @@ def build_wn_coords():
     print 'OK'
     
     return lem_coords
-    
+
 
 def build_wn_adjacency_matrix(lem_coords, outfmt):
     """Build the adjacency matrix (in CSC or CSR format) for the WN synonyms
@@ -80,7 +80,7 @@ def build_wn_adjacency_matrix(lem_coords, outfmt):
     Returns: the adjacency matrix, in Scipy CSC or CSR format, of the WN
              synonyms graph, with zeros on the diagonal, omitting lemmas which
              are not connected to any other (i.e. omitting lemmas that are
-             alone in their synset)
+             alone in their synset).
     
     """
     
@@ -117,8 +117,7 @@ def build_wn_adjacency_matrix(lem_coords, outfmt):
 def build_wn_PR_scores():
     """Compute the PageRank scores corresponding to the WN synonyms graph.
     
-    Returns: a dict associating each WN lemma to its PageRank score (computed
-             with ones on the diagonal of the adjacency matrix)
+    Returns: a dict associating each WN lemma to its PageRank score
     
     """
     
@@ -169,7 +168,7 @@ def build_wn_degrees():
     """Compute the degrees of lemmas in the WN graph (excluding lemmas not
     connected to other lemmas).
     
-    Returns: a dict associating each lemma to its degree
+    Returns: a dict associating each lemma to its degree.
     
     """
     

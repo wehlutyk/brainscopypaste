@@ -27,24 +27,24 @@ def matrix_normalize_columns(M, outfmt):
     
     """
     
-    # If the matrix is CSR, convert to CSC
+    # If the matrix is CSR, convert to CSC.
     
     if M.getformat() == 'csr':
         M = M.tocsc()
     
-    # Normalize on the columns
+    # Normalize on the columns.
     
     print 'Normalizing matrix on the columns...',
     num_lems = M.get_shape()[0]
     
     for i in xrange(num_lems):
         
-        col_vals = M.data[M.indptr[i]:M.indptr[i+1]].copy()
-        M.data[M.indptr[i]:M.indptr[i+1]] = col_vals / np.sum(col_vals)
+        col_vals = M.data[M.indptr[i]:M.indptr[i + 1]].copy()
+        M.data[M.indptr[i]:M.indptr[i + 1]] = col_vals / np.sum(col_vals)
     
     print 'OK'
     
-    # Convert to outfmt if necessary
+    # Convert to outfmt if necessary.
     
     if outfmt == 'csr':
         M = M.tocsr()
@@ -59,7 +59,7 @@ def norm_l1(v):
     return np.sum(np.abs(v))
 
 
-def matrix_eigen_solve(M, v0, max_it, tol):
+def matrix_eigen_solve(M, v0, max_it, tol, damp_v=None, d=1):
     """Solve the v = M*v eigenproblem by the Power Iteration algorithm.
     
     This will only work on a stochastic matrix, since there is no vector
@@ -69,9 +69,13 @@ def matrix_eigen_solve(M, v0, max_it, tol):
     
     Arguments:
       * M: the matrix for the eigenproblem, preferably in CSR format
-      * v0: a starting vector for the iteration ; should be normalized
+      * v0: a starting vector for the iteration; should be normalized
       * max_it: the maximum number of iterations that will be performed
       * tol: the relative precision requested
+    
+    Optional arguments:
+      * damp_v: the damping vector (normalized); defaults to a vector of zeros
+      * d: the damping factor; defaults to 1 (no damping)
     
     Returns: a tuple consisting of:
       * vv: the final eigenvector
@@ -82,28 +86,30 @@ def matrix_eigen_solve(M, v0, max_it, tol):
     
     # Initialize
     
+    if damp_v == None:
+        damp_v = np.zeros(len(v0))
     v = v0.copy()
-    vv = M.dot(M.dot(v))
+    vv = d * M.dot(v) + (1 - d) * damp_v
     nit = 0
     
-    # Loop until we reach the tolerance
+    # Loop until we reach the tolerance.
     
     while norm_l1(vv - v) >= tol:
         
-        # Do the iteration calculus
+        # Do the iteration calculus.
         
         v = vv
         
         for i in range(random.randint(1, 10)):
-            vv = M.dot(M.dot(vv))
+            vv = d * M.dot(vv) + (1 - d) * damp_v
         
-        # Or until we do too many iterations
+        # Or until we do too many iterations.
         
         nit += 1
         
         if nit >= max_it:
             break
     
-    # Return convergence information with the solution
+    # Return convergence information with the solution.
     
     return (vv, nit, norm_l1(vv - v))

@@ -153,10 +153,9 @@ class MT_dataset(object):
         self.clusters = clusters_loader.clusters
         
         print ') done'
-        
 
 
-class ClustersFileParser:
+class ClustersFileParser(object):
     
     """Abstract Base Class to help defining parser for the MemeTracker file
     format.
@@ -370,11 +369,13 @@ class ClustersLoader(ClustersFileParser):
         
         # And create the Quote in the current Cluster's sub-dict.
         
-        self.clusters[self.cluster_id].quotes[self.quote_id] = Quote(line_fields)
+        self.clusters[self.cluster_id].quotes[self.quote_id] = \
+            Quote(line_fields)
     
     def handle_url(self, line_fields):
         """Handle a url definition in the dataset file."""
         
         # Add that url the current Quote's Timeline.
         
-        self.clusters[self.cluster_id].quotes[self.quote_id].add_url(line_fields)
+        self.clusters[self.cluster_id].quotes[self.quote_id].\
+            add_url(line_fields)
