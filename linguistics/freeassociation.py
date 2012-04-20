@@ -125,7 +125,7 @@ def build_fa_PR_scores(norms):
     v0 = v0 / a_la.norm_l1(v0)
     damp_v = np.ones(num_words) / num_words
     (scores, nit, prec) = a_la.matrix_eigen_solve(M, v0=v0,
-                                                  max_it=10000, tol=1e-10,
+                                                  max_it=10000, tol=1e-15,
                                                   damp_v=damp_v, d=0.99)
     
     print 'OK'

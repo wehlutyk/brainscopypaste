@@ -65,7 +65,8 @@ def matrix_eigen_solve(M, v0, max_it, tol, damp_v=None, d=1):
     This will only work on a stochastic matrix, since there is no vector
     renormalization (it creates precision problems). Note that to avoid
     oscillation in the algorithm, each iteration consists in fact of a random
-    number (1-9) of iterations.
+    number (1-9) of iterations, and the new vector is the mean of the old one
+    and new computed value (see code).
     
     Arguments:
       * M: the matrix for the eigenproblem, preferably in CSR format
@@ -87,29 +88,26 @@ def matrix_eigen_solve(M, v0, max_it, tol, damp_v=None, d=1):
     # Initialize
     
     if damp_v == None:
+        
         damp_v = np.zeros(len(v0))
-    v = v0.copy()
-    vv = d * M.dot(v) + (1 - d) * damp_v
+        d = 1
+    
+    vv = d * M.dot(v0) + (1 - d) * damp_v
     nit = 0
     
-    # Loop until we reach the tolerance.
+    # Loop until we reach the tolerance, or do too many iterations.
     
-    while norm_l1(vv - v) >= tol:
+    while norm_l1((d * M.dot(vv) + (1 - d) * damp_v) - vv) >= tol and nit < max_it:
         
-        # Do the iteration calculus.
-        
-        v = vv
+        # Do the iteration calculus. The mean vv = (vv + ...) is to avoid
+        # oscillations in the iterations.
         
         for i in range(random.randint(1, 10)):
-            vv = d * M.dot(vv) + (1 - d) * damp_v
-        
-        # Or until we do too many iterations.
+            
+            vv = (vv + (d * M.dot(vv) + (1 - d) * damp_v)) / 2
         
         nit += 1
-        
-        if nit >= max_it:
-            break
     
     # Return convergence information with the solution.
     
-    return (vv, nit, norm_l1(vv - v))
+    return (vv, nit, norm_l1((d * M.dot(vv) + (1 - d) * damp_v) - vv))

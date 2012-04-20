@@ -25,13 +25,12 @@ if __name__ == '__main__':
     
     # Compute the PageRank scores.
     
-    print 'Computing PageRank scores from the Free Association norms...'
+    print '*** Computing PageRank scores from the Free Association norms ***'
     PRscores = l_fa.build_fa_PR_scores(norms)
-    print 'Done'
     print
     
     # And save them to pickle.
     
-    print 'Saving data to pickle...',
+    print "*** Saving the scores to '" + picklefile + "'...",
     ps.save(PRscores, picklefile)
     print 'OK'
