@@ -102,15 +102,16 @@ check_folder(memetracker_subst_root)
 # Pickle files for the MemeTracker substitution analysis, relative to
 # memetracker_subst_root.
 
-memetracker_subst_transitionPRscores_pickle_rel = \
-    '{}transitionPRscores.pickle'
-memetracker_subst_transitiondegrees_pickle_rel = '{}transitiondegrees.pickle'
-memetracker_subst_nonlemmas_pickle_rel = '{}nonlemmas.pickle'
+memetracker_subst_wn_PR_scores_pickle_rel = '{}wn_PR_scores.pickle'
+memetracker_subst_wn_degrees_pickle_rel = '{}wn_degrees.pickle'
+memetracker_subst_fa_PR_scores_pickle_rel = '{}fa_PR_scores.pickle'
 
-memetracker_subst_transitionPRscores_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_transitionPRscores_pickle_rel)
-memetracker_subst_transitiondegrees_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_transitiondegrees_pickle_rel)
+memetracker_subst_wn_PR_scores_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_wn_PR_scores_pickle_rel)
+memetracker_subst_wn_degrees_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_wn_degrees_pickle_rel)
+memetracker_subst_fa_PR_scores_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_fa_PR_scores_pickle_rel)
 
 
 ##############################################################################

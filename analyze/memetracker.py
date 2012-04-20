@@ -354,7 +354,8 @@ class SubstitutionAnalysis(object):
     
     This class looks at features of words that are substituted through time in
     the MemeTracker Clusters. The features are the Wordnet PageRank scores of
-    the words, and their degree in the Wordnet graph.
+    the words, their degree in the Wordnet graph, and the Free Association
+    PageRank scores.
     
     Methods:
       * __init__: set the number of processes for multi-threading
@@ -393,7 +394,7 @@ class SubstitutionAnalysis(object):
         """
         
         # Create the file prefix according to 'args'.
-    
+        
         file_prefix = ''
         
         if not args['framing']:
@@ -415,18 +416,22 @@ class SubstitutionAnalysis(object):
         for (i, j) in args['bag_transitions']:
             file_prefix += '{}-{}_'.format(i, j)
         
-        pickle_transitionPRscores = \
-            st.memetracker_subst_transitionPRscores_pickle.format(file_prefix)
-        pickle_transitiondegrees = \
-            st.memetracker_subst_transitiondegrees_pickle.format(file_prefix)
+        pickle_wn_PR_scores = \
+            st.memetracker_subst_wn_PR_scores_pickle.format(file_prefix)
+        pickle_wn_degrees = \
+            st.memetracker_subst_wn_degrees_pickle.format(file_prefix)
+        pickle_fa_PR_scores = \
+            st.memetracker_subst_fa_PR_scores_pickle.format(file_prefix)
         
         # Check that the destinations don't already exist.
         
-        st.check_file(pickle_transitionPRscores)
-        st.check_file(pickle_transitiondegrees)
+        st.check_file(pickle_wn_PR_scores)
+        st.check_file(pickle_wn_degrees)
+        st.check_file(pickle_fa_PR_scores)
         
-        return {'transitionPRscores': pickle_transitionPRscores,
-                'transitiondegrees': pickle_transitiondegrees}
+        return {'wn_PR_scores': pickle_wn_PR_scores,
+                'wn_degrees': pickle_wn_degrees,
+                'fa_PR_scores': pickle_fa_PR_scores}
     
     def print_args(self, args):
         """Print the arguments to stdout."""
@@ -458,12 +463,14 @@ class SubstitutionAnalysis(object):
         else:
             clusters = rt.RedisReader(st.redis_mt_clusters_pref)
         
-        PR = ps.load(st.wordnet_PR_scores_pickle)
-        degrees = ps.load(st.wordnet_degrees_pickle)
+        wn_PR = ps.load(st.wordnet_PR_scores_pickle)
+        wn_degrees = ps.load(st.wordnet_degrees_pickle)
+        fa_PR = ps.load(st.freeassociation_norms_PR_scores_pickle)
         
         print 'OK'
         
-        return {'clusters': clusters, 'PR': PR, 'degrees': degrees}
+        return {'clusters': clusters, 'wn_PR': wn_PR,
+                'wn_degrees': wn_degrees, 'fa_PR': fa_PR}
     
     def examine_substitutions(self, args, data):
         """Examine substitutions and retain only those we want.
@@ -505,9 +512,11 @@ class SubstitutionAnalysis(object):
         
         # Results of the analysis
         
-        transitionPRscores = []
-        transitiondegrees = []
-        n_stored = 0
+        wn_PR_scores = []
+        wn_degrees = []
+        fa_PR_scores = []
+        n_stored_wn = 0
+        n_stored_fa = 0
         n_all = 0
         
         # Progress info
@@ -579,7 +588,7 @@ class SubstitutionAnalysis(object):
                             
                             if args['verbose']:
                                 
-                                print 'Not stored (not same POS)'
+                                print 'Stored: NO (different POS)'
                                 raw_input()
                             
                             break
@@ -604,7 +613,7 @@ class SubstitutionAnalysis(object):
                         # Verbose info
                         
                         if args['verbose']:
-                            print ("Lemmatized to '" + lem1 + "' -> '" +
+                            print ("Lemmatized: '" + lem1 + "' -> '" +
                                    lem2 + "'")
                         
                     else:
@@ -621,33 +630,54 @@ class SubstitutionAnalysis(object):
                         
                         if args['verbose']:
                             
-                            print 'Not stored (not subst)'
+                            print 'Stored: NO (not substitution)'
                             raw_input()
                         
                         break
                     
                     
-                    # Look the words up in the features lists.
+                    # Look the words up in the WN features lists.
                     
                     try:
                         
-                        transitionPRscores.append([data['PR'][lem1],
-                                                   data['PR'][lem2]])
-                        transitiondegrees.append([data['degrees'][lem1],
-                                                  data['degrees'][lem2]])
-                        n_stored += 1
+                        wn_PR_scores.append([data['wn_PR'][lem1],
+                                             data['wn_PR'][lem2]])
+                        wn_degrees.append([data['wn_degrees'][lem1],
+                                           data['wn_degrees'][lem2]])
+                        n_stored_wn += 1
                         
                         # Verbose info
                         
                         if args['verbose']:
-                            print 'Stored'
+                            print 'Stored: wordnet YES'
                         
                     except KeyError:
                         
                         # Verbose info
                         
                         if args['verbose']:
-                            print 'Not stored (not ref)'
+                            print 'Stored: wordnet NO (not referenced)'
+                    
+                    
+                    # Look the words up in the FA features lists.
+                    
+                    try:
+                        
+                        fa_PR_scores.append([data['fa_PR'][lem1],
+                                             data['fa_PR'][lem2]])
+                        n_stored_fa += 1
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Stored: freeass YES'
+                        
+                    except KeyError:
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Stored: freeass NO (not referenced)'
                     
                     
                     # Pause to read verbose info.
@@ -657,11 +687,14 @@ class SubstitutionAnalysis(object):
         
         
         print
-        print 'Stored {} of {} substitutions examined.'.format(n_stored,
-                                                               n_all)
+        print 'Examined {} substitutions.'.format(n_all)
+        print ('Stored {} substitutions with Wordnet '
+               'scores').format(n_stored_wn)
+        print ('Stored {} substitutions with Free Association '
+               'scores').format(n_stored_fa)
         
-        return {'transitionPRscores': transitionPRscores,
-                'transitiondegrees': transitiondegrees}
+        return {'wn_PR_scores': wn_PR_scores, 'wn_degrees': wn_degrees,
+                'fa_PR_scores': fa_PR_scores}
     
     def save_results(self, files, results):
         """Save the analysis results to pickle files.
@@ -675,10 +708,9 @@ class SubstitutionAnalysis(object):
         print
         print 'Done. Saving data...',
         
-        ps.save(np.array(results['transitionPRscores']),
-                files['transitionPRscores'])
-        ps.save(np.array(results['transitiondegrees']),
-                files['transitiondegrees'])
+        ps.save(np.array(results['wn_PR_scores']), files['wn_PR_scores'])
+        ps.save(np.array(results['wn_degrees']), files['wn_degrees'])
+        ps.save(np.array(results['fa_PR_scores']), files['fa_PR_scores'])
     
         print 'OK'
     
