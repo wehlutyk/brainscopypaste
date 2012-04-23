@@ -515,8 +515,10 @@ class SubstitutionAnalysis(object):
         wn_PR_scores = []
         wn_degrees = []
         fa_PR_scores = []
-        n_stored_wn = 0
-        n_stored_fa = 0
+        fa_len = len(data['fa_PR'])
+        n_stored_wn_PR = 0
+        n_stored_wn_deg = 0
+        n_stored_fa_PR = 0
         n_all = 0
         
         # Progress info
@@ -555,6 +557,11 @@ class SubstitutionAnalysis(object):
                 
                 for s in daughters:
                     
+                    # Pause to read verbose info.
+                    
+                    if args['verbose']:
+                        raw_input()
+                    
                     n_all += 1
                     
                     # Find the word that was changed.
@@ -587,9 +594,7 @@ class SubstitutionAnalysis(object):
                         if s_pos[idx][:2] != smax_pos[idx][:2]:
                             
                             if args['verbose']:
-                                
-                                print 'Stored: NO (different POS)'
-                                raw_input()
+                                print 'Stored: NONE (different POS)'
                             
                             break
                     
@@ -629,9 +634,7 @@ class SubstitutionAnalysis(object):
                         # Verbose info
                         
                         if args['verbose']:
-                            
-                            print 'Stored: NO (not substitution)'
-                            raw_input()
+                            print 'Stored: NONE (not substitution)'
                         
                         break
                     
@@ -640,32 +643,58 @@ class SubstitutionAnalysis(object):
                     
                     try:
                         
+                        # Wordnet PageRank: take everything.
+                        
                         wn_PR_scores.append([data['wn_PR'][lem1],
                                              data['wn_PR'][lem2]])
-                        wn_degrees.append([data['wn_degrees'][lem1],
-                                           data['wn_degrees'][lem2]])
-                        n_stored_wn += 1
-                        
-                        # Verbose info
+                        n_stored_wn_PR += 1
                         
                         if args['verbose']:
-                            print 'Stored: wordnet YES'
+                            print 'Stored: wordnet PR YES'
+                        
+                        # Wordnet Degrees: exclude if deg <= 2.
+                        
+                        if (data['wn_degrees'][lem1] <= 2 or
+                            data['wn_degrees'][lem2] <= 2):
+                            raise Exception()
+                        
+                        wn_degrees.append([data['wn_degrees'][lem1],
+                                           data['wn_degrees'][lem2]])
+                        n_stored_wn_deg += 1
+                        
+                        if args['verbose']:
+                            print 'Stored: wordnet deg YES'
                         
                     except KeyError:
                         
                         # Verbose info
                         
                         if args['verbose']:
-                            print 'Stored: wordnet NO (not referenced)'
+                            
+                            print 'Stored: wordnet PR NO (not referenced)'
+                            print 'Stored: wordnet deg NO (not referenced)'
                     
+                    except Exception:
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Stored: wordnet deg NO (<= 2)'
                     
                     # Look the words up in the FA features lists.
                     
                     try:
                         
+                        # Free Association PageRank: exclude if lower than
+                        # threshold.
+                        
+                        if (abs(data['fa_PR'][lem1] - 0.1 / fa_len) < 1e-15 or
+                            abs(data['fa_PR'][lem2] - 0.1 / fa_len) < 1e-15):
+                            raise Exception()
+                        
                         fa_PR_scores.append([data['fa_PR'][lem1],
                                              data['fa_PR'][lem2]])
-                        n_stored_fa += 1
+                        n_stored_fa_PR += 1
                         
                         # Verbose info
                         
@@ -679,19 +708,22 @@ class SubstitutionAnalysis(object):
                         if args['verbose']:
                             print 'Stored: freeass NO (not referenced)'
                     
-                    
-                    # Pause to read verbose info.
-                    
-                    if args['verbose']:
-                        raw_input()
+                    except Exception:
+                        
+                        # Verbose info
+                        
+                        if args['verbose']:
+                            print 'Stored: freeass NO (<= damping)'
         
         
         print
         print 'Examined {} substitutions.'.format(n_all)
-        print ('Stored {} substitutions with Wordnet '
-               'scores').format(n_stored_wn)
-        print ('Stored {} substitutions with Free Association '
-               'scores').format(n_stored_fa)
+        print ('Stored {} substitutions with Wordnet PageRank '
+               'scores').format(n_stored_wn_PR)
+        print ('Stored {} substitutions with Wordnet degree '
+               'scores').format(n_stored_wn_deg)
+        print ('Stored {} substitutions with Free Association PageRank '
+               'scores').format(n_stored_fa_PR)
         
         return {'wn_PR_scores': wn_PR_scores, 'wn_degrees': wn_degrees,
                 'fa_PR_scores': fa_PR_scores}

@@ -4,6 +4,8 @@
 """Plot results from the memetracker_substitution_analysis_all script."""
 
 
+from warnings import warn
+
 from numpy import median, array, argsort
 import pylab as pl
 
@@ -68,9 +70,15 @@ if __name__ == '__main__':
                         
                         # Load the data.
                         
-                        wn_PR_scores = ps.load(pickle_wn_PR_scores)
-                        wn_degrees = ps.load(pickle_wn_degrees)
-                        fa_PR_scores = ps.load(pickle_fa_PR_scores)
+                        try:
+                            
+                            wn_PR_scores = ps.load(pickle_wn_PR_scores)
+                            wn_degrees = ps.load(pickle_wn_degrees)
+                            fa_PR_scores = ps.load(pickle_fa_PR_scores)
+                        
+                        except:
+                            warn(("Files for parameters '{}' "
+                                  'not found.').format(file_prefix))
                         
                         # Compute ratios and differences.
                         

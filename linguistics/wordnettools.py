@@ -138,10 +138,8 @@ def build_wn_PR_scores():
     
     v0 = random.random(num_lems)
     v0 = v0 / a_la.norm_l1(v0)
-    damp_v = np.ones(num_lems) / num_lems
     (scores, nit, prec) = a_la.matrix_eigen_solve(M, v0=v0,
-                                                  max_it=10000, tol=1e-15,
-                                                  damp_v=damp_v, d=0.99)
+                                                  max_it=10000, tol=1e-15)
     
     print 'OK'
     

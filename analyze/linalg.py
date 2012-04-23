@@ -59,7 +59,7 @@ def norm_l1(v):
     return np.sum(np.abs(v))
 
 
-def matrix_eigen_solve(M, v0, max_it, tol, damp_v=None, d=1):
+def matrix_eigen_solve(M, v0, max_it, tol, damp_v=0.0, d=1.0):
     """Solve the v = M*v eigenproblem by the Power Iteration algorithm.
     
     This will only work on a stochastic matrix, since there is no vector
@@ -87,23 +87,18 @@ def matrix_eigen_solve(M, v0, max_it, tol, damp_v=None, d=1):
     
     # Initialize
     
-    if damp_v == None:
-        
-        damp_v = np.zeros(len(v0))
-        d = 1
-    
     vv = d * M.dot(v0) + (1 - d) * damp_v
     nit = 0
     
     # Loop until we reach the tolerance, or do too many iterations.
     
-    while norm_l1((d * M.dot(vv) + (1 - d) * damp_v) - vv) >= tol and nit < max_it:
+    while (norm_l1((d * M.dot(vv) + (1 - d) * damp_v) - vv) >= tol and
+           nit < max_it):
         
         # Do the iteration calculus. The mean vv = (vv + ...) is to avoid
         # oscillations in the iterations.
         
         for i in range(random.randint(1, 10)):
-            
             vv = (vv + (d * M.dot(vv) + (1 - d) * damp_v)) / 2
         
         nit += 1
