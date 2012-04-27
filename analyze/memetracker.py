@@ -48,7 +48,7 @@ import settings as st
 
 
 def frame_cluster_around_peak(cl, span_before=2 * 86400,
-                              span_after=2 * 86400):
+                                 span_after=2 * 86400):
     """Cut off quote occurrences in a Cluster around the 24h window with
     maximum activity.
     
@@ -423,15 +423,30 @@ class SubstitutionAnalysis(object):
         pickle_fa_PR_scores = \
             st.memetracker_subst_fa_PR_scores_pickle.format(file_prefix)
         
+        pickle_wn_PR_scores_d = \
+            st.memetracker_subst_wn_PR_scores_d_pickle.format(file_prefix)
+        pickle_wn_degrees_d = \
+            st.memetracker_subst_wn_degrees_d_pickle.format(file_prefix)
+        pickle_fa_PR_scores_d = \
+            st.memetracker_subst_fa_PR_scores_d_pickle.format(file_prefix)
+        
+        
         # Check that the destinations don't already exist.
         
         st.check_file(pickle_wn_PR_scores)
         st.check_file(pickle_wn_degrees)
         st.check_file(pickle_fa_PR_scores)
         
+        st.check_file(pickle_wn_PR_scores_d)
+        st.check_file(pickle_wn_degrees_d)
+        st.check_file(pickle_fa_PR_scores_d)
+        
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,
-                'fa_PR_scores': pickle_fa_PR_scores}
+                'fa_PR_scores': pickle_fa_PR_scores,
+                'wn_PR_scores_d': pickle_wn_PR_scores_d,
+                'wn_degrees_d': pickle_wn_degrees_d,
+                'fa_PR_scores_d': pickle_fa_PR_scores_d}
     
     def print_args(self, args):
         """Print the arguments to stdout."""
@@ -480,10 +495,12 @@ class SubstitutionAnalysis(object):
                   manually set
           * data: the dict containing the data to be examined
         
-        Returns: a dict containing two Nx2 numpy arrays, each one containing
-                 the features (PR scores or degrees) of the substituted and
-                 substitutant words from the substitutions that were kept
-                 after filtering.
+        Returns: a dict containing six items: three Nx2 numpy arrays, each one
+                 containing the features (WN PR scores, WN degrees, FA PR
+                 scores) of the substituted and substitutant words from the
+                 substitutions that were kept after filtering; three lists of
+                 dicts containing the details of each substitution stored, for
+                 each feature.
         
         Details:
           The method takes each Cluster (framed or not, depending on the
@@ -500,7 +517,10 @@ class SubstitutionAnalysis(object):
             * the substituted and substitutant word can be lemmatized
               ('lemmatize' argument)
           Once that processing is done, the features of the substituted word
-          and the new word are stored (if they exist in the features list).
+          and the new word are stored (if they exist in the features list), as
+          well as details about the substitution itself (cluster id, lemmas, 
+          anything that's necessary to identify the substitution and examine
+          it later on).
         
         """
         
@@ -515,6 +535,11 @@ class SubstitutionAnalysis(object):
         wn_PR_scores = []
         wn_degrees = []
         fa_PR_scores = []
+        
+        wn_PR_scores_d = []
+        wn_degrees_d = []
+        fa_PR_scores_d = []
+        
         fa_len = len(data['fa_PR'])
         n_stored_wn_PR = 0
         n_stored_wn_deg = 0
@@ -639,6 +664,19 @@ class SubstitutionAnalysis(object):
                         break
                     
                     
+                    # The details to be saved about the substitution
+                    
+                    details = {'cl_id': cl.id,
+                               'smax': smax,
+                               's': s,
+                               'idx': idx,
+                               'lem1': lem1,
+                               'lem2': lem2,
+                               'POS1': smax_pos[idx],
+                               'POS2': s_pos[idx],
+                               'bag_tr': (i, j),
+                               'n_tbgs': args['n_timebags']}
+                    
                     # Look the words up in the WN features lists.
                     
                     try:
@@ -647,6 +685,7 @@ class SubstitutionAnalysis(object):
                         
                         wn_PR_scores.append([data['wn_PR'][lem1],
                                              data['wn_PR'][lem2]])
+                        wn_PR_scores_d.append(details)
                         n_stored_wn_PR += 1
                         
                         if args['verbose']:
@@ -660,6 +699,7 @@ class SubstitutionAnalysis(object):
                         
                         wn_degrees.append([data['wn_degrees'][lem1],
                                            data['wn_degrees'][lem2]])
+                        wn_degrees_d.append(details)
                         n_stored_wn_deg += 1
                         
                         if args['verbose']:
@@ -694,6 +734,7 @@ class SubstitutionAnalysis(object):
                         
                         fa_PR_scores.append([data['fa_PR'][lem1],
                                              data['fa_PR'][lem2]])
+                        fa_PR_scores_d.append(details)
                         n_stored_fa_PR += 1
                         
                         # Verbose info
@@ -725,8 +766,12 @@ class SubstitutionAnalysis(object):
         print ('Stored {} substitutions with Free Association PageRank '
                'scores').format(n_stored_fa_PR)
         
-        return {'wn_PR_scores': wn_PR_scores, 'wn_degrees': wn_degrees,
-                'fa_PR_scores': fa_PR_scores}
+        return {'wn_PR_scores': wn_PR_scores,
+                'wn_degrees': wn_degrees,
+                'fa_PR_scores': fa_PR_scores,
+                'wn_PR_scores_d': wn_PR_scores_d,
+                'wn_degrees_d': wn_degrees_d,
+                'fa_PR_scores_d': fa_PR_scores_d}
     
     def save_results(self, files, results):
         """Save the analysis results to pickle files.
@@ -743,6 +788,10 @@ class SubstitutionAnalysis(object):
         ps.save(np.array(results['wn_PR_scores']), files['wn_PR_scores'])
         ps.save(np.array(results['wn_degrees']), files['wn_degrees'])
         ps.save(np.array(results['fa_PR_scores']), files['fa_PR_scores'])
+        
+        ps.save(np.array(results['wn_PR_scores_d']), files['wn_PR_scores_d'])
+        ps.save(np.array(results['wn_degrees_d']), files['wn_degrees_d'])
+        ps.save(np.array(results['fa_PR_scores_d']), files['fa_PR_scores_d'])
     
         print 'OK'
     

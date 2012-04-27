@@ -64,3 +64,6 @@ class RedisReader(object):
     
     def __len__(self):
         return len(self._keys)
+    
+    def __getitem__(self, name):
+        return self._rserver.pget(self._pref, name)

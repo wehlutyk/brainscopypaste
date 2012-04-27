@@ -106,12 +106,23 @@ memetracker_subst_wn_PR_scores_pickle_rel = '{}wn_PR_scores.pickle'
 memetracker_subst_wn_degrees_pickle_rel = '{}wn_degrees.pickle'
 memetracker_subst_fa_PR_scores_pickle_rel = '{}fa_PR_scores.pickle'
 
+memetracker_subst_wn_PR_scores_d_pickle_rel = '{}wn_PR_scores_d.pickle'
+memetracker_subst_wn_degrees_d_pickle_rel = '{}wn_degrees_d.pickle'
+memetracker_subst_fa_PR_scores_d_pickle_rel = '{}fa_PR_scores_d.pickle'
+
 memetracker_subst_wn_PR_scores_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_wn_PR_scores_pickle_rel)
 memetracker_subst_wn_degrees_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_wn_degrees_pickle_rel)
 memetracker_subst_fa_PR_scores_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_fa_PR_scores_pickle_rel)
+
+memetracker_subst_wn_PR_scores_d_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_wn_PR_scores_d_pickle_rel)
+memetracker_subst_wn_degrees_d_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_wn_degrees_d_pickle_rel)
+memetracker_subst_fa_PR_scores_d_pickle = os.path.join(
+    memetracker_subst_root, memetracker_subst_fa_PR_scores_d_pickle_rel)
 
 
 ##############################################################################

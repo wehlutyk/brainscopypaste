@@ -79,6 +79,7 @@ if __name__ == '__main__':
                         except:
                             warn(("Files for parameters '{}' "
                                   'not found.').format(file_prefix))
+                            break
                         
                         # Compute ratios and differences.
                         
