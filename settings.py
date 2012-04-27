@@ -125,6 +125,11 @@ memetracker_subst_fa_PR_scores_d_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_fa_PR_scores_d_pickle_rel)
 
 
+# List of available POS tags, taken as options for the analysis scripts.
+
+memetracker_subst_POSs = ['a', 'n', 'v', 'r', 'all']
+
+
 ##############################################################################
 # TREETAGGER SETTINGS #
 #######################
@@ -140,14 +145,14 @@ treetagger_TAGDIR = '/usr/share/treetagger'
 #
 # Pickle file for the Wordnet PageRank scores, relative to data_root.
 
-wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores.pickle'
+wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
 wordnet_PR_scores_pickle = os.path.join(data_root,
                                         wordnet_PR_scores_pickle_rel)
 
 
 # Pickle file for the Wordnet degrees, relative to data root.
 
-wordnet_degrees_pickle_rel = 'wordnet_degrees.pickle'
+wordnet_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
 wordnet_degrees_pickle = os.path.join(data_root, wordnet_degrees_pickle_rel)
 
 

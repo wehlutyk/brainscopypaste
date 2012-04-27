@@ -15,7 +15,7 @@ import settings as st
 
 
 if __name__ == '__main__':
-    base_prefix = '{fra}F_{lem}L_{pos}P_{ntb}_{b1}-{b2}_'
+    base_prefix = '{fra}F_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
     N = {0: 'N', 1: ''}
     
     parameters = []
@@ -40,11 +40,11 @@ if __name__ == '__main__':
     fa_PR_scores_d_stds = []
     fa_PR_scores_d_meds = []
     
-    for framing in [1]:#[0, 1]:
+    for framing in [0, 1]:
         
-        for lemmatizing in [1]:#[0, 1]:
+        for lemmatizing in [0, 1]:
             
-            for same_POS in [1]:#[0, 1]:
+            for pos in st.memetracker_subst_POSs:
                 
                 for n_timebags in [2, 3, 4, 5]:
                     
@@ -54,7 +54,7 @@ if __name__ == '__main__':
                         
                         file_prefix = base_prefix.format(fra=N[framing],
                                                          lem=N[lemmatizing],
-                                                         pos=N[same_POS],
+                                                         pos=pos,
                                                          ntb=n_timebags,
                                                          b1=b1,
                                                          b2=b2)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                         except:
                             warn(("Files for parameters '{}' "
                                   'not found.').format(file_prefix))
-                            break
+                            continue
                         
                         # Compute ratios and differences.
                         
@@ -155,6 +155,12 @@ if __name__ == '__main__':
             'm-', linewidth=1)
     pl.plot(wn_PR_scores_r_avgs[o_wn_sra] + wn_PR_scores_r_stds[o_wn_sra],
             'm-', linewidth=1)
+    pl.plot(wn_PR_scores_r_avgs[o_wn_sra], 'bo', linewidth=2)
+    pl.plot(wn_PR_scores_r_meds[o_wn_sra], 'g.', linewidth=2)
+    pl.plot(wn_PR_scores_r_avgs[o_wn_sra] - wn_PR_scores_r_stds[o_wn_sra],
+            'm.', linewidth=1)
+    pl.plot(wn_PR_scores_r_avgs[o_wn_sra] + wn_PR_scores_r_stds[o_wn_sra],
+            'm.', linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('WN PR scores ratio (sorted by increasing average)')
     
@@ -170,6 +176,12 @@ if __name__ == '__main__':
     pl.plot(wn_degrees_r_avgs[o_wn_dra] - wn_degrees_r_stds[o_wn_dra], 'm-',
             linewidth=1)
     pl.plot(wn_degrees_r_avgs[o_wn_dra] + wn_degrees_r_stds[o_wn_dra], 'm-',
+            linewidth=1)
+    pl.plot(wn_degrees_r_avgs[o_wn_dra], 'bo', linewidth=2)
+    pl.plot(wn_degrees_r_meds[o_wn_dra], 'g.', linewidth=2)
+    pl.plot(wn_degrees_r_avgs[o_wn_dra] - wn_degrees_r_stds[o_wn_dra], 'm.',
+            linewidth=1)
+    pl.plot(wn_degrees_r_avgs[o_wn_dra] + wn_degrees_r_stds[o_wn_dra], 'm.',
             linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('WN Degrees ratio (sorted by increasing average)')
@@ -187,6 +199,12 @@ if __name__ == '__main__':
             'm-', linewidth=1)
     pl.plot(fa_PR_scores_r_avgs[o_fa_sra] + fa_PR_scores_r_stds[o_fa_sra],
             'm-', linewidth=1)
+    pl.plot(fa_PR_scores_r_avgs[o_fa_sra], 'bo', linewidth=2)
+    pl.plot(fa_PR_scores_r_meds[o_fa_sra], 'g.', linewidth=2)
+    pl.plot(fa_PR_scores_r_avgs[o_fa_sra] - fa_PR_scores_r_stds[o_fa_sra],
+            'm.', linewidth=1)
+    pl.plot(fa_PR_scores_r_avgs[o_fa_sra] + fa_PR_scores_r_stds[o_fa_sra],
+            'm.', linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('FA PR scores ratio (sorted by increasing average)')
     
@@ -203,6 +221,12 @@ if __name__ == '__main__':
             'm-', linewidth=1)
     pl.plot(wn_PR_scores_d_avgs[o_wn_sda] + wn_PR_scores_d_stds[o_wn_sda],
             'm-', linewidth=1)
+    pl.plot(wn_PR_scores_d_avgs[o_wn_sda], 'bo', linewidth=2)
+    pl.plot(wn_PR_scores_d_meds[o_wn_sda], 'g.', linewidth=2)
+    pl.plot(wn_PR_scores_d_avgs[o_wn_sda] - wn_PR_scores_d_stds[o_wn_sda],
+            'm.', linewidth=1)
+    pl.plot(wn_PR_scores_d_avgs[o_wn_sda] + wn_PR_scores_d_stds[o_wn_sda],
+            'm.', linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('WN PR scores diff (sorted by increasing average)')
     
@@ -218,6 +242,12 @@ if __name__ == '__main__':
     pl.plot(wn_degrees_d_avgs[o_wn_dda] - wn_degrees_d_stds[o_wn_dda], 'm-',
             linewidth=1)
     pl.plot(wn_degrees_d_avgs[o_wn_dda] + wn_degrees_d_stds[o_wn_dda], 'm-',
+            linewidth=1)
+    pl.plot(wn_degrees_d_avgs[o_wn_dda], 'bo', linewidth=2)
+    pl.plot(wn_degrees_d_meds[o_wn_dda], 'g.', linewidth=2)
+    pl.plot(wn_degrees_d_avgs[o_wn_dda] - wn_degrees_d_stds[o_wn_dda], 'm.',
+            linewidth=1)
+    pl.plot(wn_degrees_d_avgs[o_wn_dda] + wn_degrees_d_stds[o_wn_dda], 'm.',
             linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('WN Degrees diff (sorted by increasing average)')
@@ -235,6 +265,12 @@ if __name__ == '__main__':
             'm-', linewidth=1)
     pl.plot(fa_PR_scores_d_avgs[o_fa_sda] + fa_PR_scores_d_stds[o_fa_sda],
             'm-', linewidth=1)
+    pl.plot(fa_PR_scores_d_avgs[o_fa_sda], 'bo', linewidth=2)
+    pl.plot(fa_PR_scores_d_meds[o_fa_sda], 'g.', linewidth=2)
+    pl.plot(fa_PR_scores_d_avgs[o_fa_sda] - fa_PR_scores_d_stds[o_fa_sda],
+            'm.', linewidth=1)
+    pl.plot(fa_PR_scores_d_avgs[o_fa_sda] + fa_PR_scores_d_stds[o_fa_sda],
+            'm.', linewidth=1)
     pl.legend(['averages', 'medians', 'av +/- std'])
     pl.title('FA PR scores diff (sorted by increasing average)')
     

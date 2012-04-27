@@ -11,22 +11,29 @@ import settings as st
 
 
 if __name__ == '__main__':
-    picklefile = st.wordnet_degrees_pickle
     
-    # Check that the destination doesn't already exist.
-    
-    st.check_file(picklefile)
-    
-    # Compute the degrees.
-    
-    print
-    print '*** Computing degrees for the lemmas in Wordnet ***'
-    
-    degrees = wnt.build_wn_degrees()
-    
-    # And save them.
-    
-    print
-    print "*** Saving the degrees to '" + picklefile + "'...",
-    ps.save(degrees, picklefile)
-    print 'OK'
+    for p in st.memetracker_subst_POSs:
+        
+        # Get the filename and check the destination doesn't exist.
+        
+        picklefile = st.wordnet_degrees_pickle.format(p)
+        
+        try:
+            st.check_file(picklefile)
+        except:
+            
+            print picklefile + 'already exists, not overwriting it.'
+            continue
+        
+        # Compute the degrees.
+        
+        print
+        print ('*** Computing degrees for the lemmas in Wordnet '
+               "(POS = '{}') ***").format(p)
+        degrees = wnt.build_wn_degrees(p)
+        
+        # And save them.
+        
+        print "*** Saving the degrees to '" + picklefile + "'...",
+        ps.save(degrees, picklefile)
+        print 'OK'

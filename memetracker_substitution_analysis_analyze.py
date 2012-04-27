@@ -14,6 +14,7 @@ Methods:
 import argparse as ap
 
 from analyze.memetracker import SubstitutionAnalysis
+import settings as st
 
 
 def get_args_from_cmdline():
@@ -37,10 +38,11 @@ def get_args_from_cmdline():
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
                          "0: don't lemmatize them."))
-    p.add_argument('--same_POS', action='store', nargs=1, required=True,
-                   help=('1: only save substitutions where both words '
-                         "are tagged as the same POS tag; 0: don't apply "
-                         'that filter'))
+    p.add_argument('--POS', action='store', nargs=1, required=True,
+                   help=('select what POS to analyze. Valid values are '
+                         "'a', 'n', 'v', 'r', or 'all' (in which case only "
+                         'substitutions where words have the same POS are '
+                         'taken into account).'))
     p.add_argument('--verbose', dest='verbose', action='store_const',
                    const=True, default=False,
                    help=('print out the transitions compared, their '
@@ -59,7 +61,7 @@ def get_args_from_cmdline():
     
     framing = int(args.framing[0])
     lemmatizing = int(args.lemmatizing[0])
-    same_POS = int(args.same_POS[0])
+    POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
     bag_transitions = [(int(s.split('-')[0]), int(s.split('-')[1]))
                        for s in args.transitions]
@@ -78,12 +80,13 @@ def get_args_from_cmdline():
     if lemmatizing != 0 and lemmatizing != 1:
         raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
     
-    if same_POS != 0 and same_POS != 1:
-        raise Exception('Wrong value for --same_POS. Expected 1 or 0.')
+    if POS not in st.memetracker_subst_POSs:
+        raise Exception(('Wrong value for --POS. Expected one '
+                         'of {}.').format(st.memetracker_subst_POSs))
     
     return {'framing': bool(framing),
             'lemmatizing': bool(lemmatizing),
-            'same_POS': bool(same_POS),
+            'POS': POS,
             'verbose': args.verbose,
             'n_timebags': n_timebags,
             'bag_transitions': bag_transitions}

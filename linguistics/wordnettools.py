@@ -33,7 +33,7 @@ from scipy import random
 import analyze.linalg as a_la
 
 
-def build_wn_coords():
+def build_wn_coords(pos):
     """Build a dictionary associating each lemma (in lowercase) in Wordnet to
     a coordinate.
     
@@ -51,7 +51,7 @@ def build_wn_coords():
     # Not using wn.all_lemma_names since it seems some lemmas are not in that
     # iterator creates a KeyError in the next loop, when filling ij.
     
-    for syn in wn.all_synsets():
+    for syn in wn.all_synsets(pos):
         
         if len(syn.lemma_names) > 1:
             
@@ -67,7 +67,7 @@ def build_wn_coords():
     return lem_coords
 
 
-def build_wn_adjacency_matrix(lem_coords, outfmt):
+def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
     """Build the adjacency matrix (in CSC or CSR format) for the WN synonyms
     graph.
     
@@ -88,7 +88,7 @@ def build_wn_adjacency_matrix(lem_coords, outfmt):
     
     ij = ([], [])
     
-    for syn in wn.all_synsets():
+    for syn in wn.all_synsets(pos):
         
         if len(syn.lemma_names) > 1:
             
@@ -114,7 +114,7 @@ def build_wn_adjacency_matrix(lem_coords, outfmt):
     return M
 
 
-def build_wn_PR_scores():
+def build_wn_PR_scores(pos):
     """Compute the PageRank scores corresponding to the WN synonyms graph.
     
     Returns: a dict associating each WN lemma to its PageRank score
@@ -123,12 +123,16 @@ def build_wn_PR_scores():
     
     # Build the lemma coordinates.
     
-    lem_coords = build_wn_coords()
+    if pos == 'all':
+        pos = None
+    
+    lem_coords = build_wn_coords(pos)
     num_lems = len(lem_coords)
     
     # Get the normalized adjacency matrix.
     
     M = a_la.matrix_normalize_columns(build_wn_adjacency_matrix(lem_coords,
+                                                                pos,
                                                                 outfmt='csc'),
                                       outfmt='csr')
     
@@ -164,7 +168,7 @@ def build_wn_PR_scores():
     return lem_scores
 
 
-def build_wn_degrees():
+def build_wn_degrees(pos):
     """Compute the degrees of lemmas in the WN graph (excluding lemmas not
     connected to other lemmas).
     
@@ -174,11 +178,14 @@ def build_wn_degrees():
     
     # Build the lemma coordinates.
     
-    lem_coords = build_wn_coords()
+    if pos == 'all':
+        pos = None
+    
+    lem_coords = build_wn_coords(pos)
     
     # Get the WN adjacency matrix in Scipy CSC format.
     
-    M = build_wn_adjacency_matrix(lem_coords, outfmt='csc')
+    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
     
     # Compute the degree of each lemma name.
     
