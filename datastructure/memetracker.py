@@ -112,6 +112,10 @@ class Timeline(object):
     def plot(self, smooth_res=5):
         """Plot the Timeline."""
         v_mt.plot_timeline(self, smooth_res=smooth_res)
+    
+    def bar(self, bins=50):
+        """Plot the bar-chart of the Timeline."""
+        return v_mt.bar_timeline(self, bins)
 
 
 class Quote(Timeline):
@@ -220,6 +224,10 @@ class Quote(Timeline):
         
         v_mt.plot_timeline(self, label=self.__unicode__(),
                            smooth_res=smooth_res)
+    
+    def bar(self, bins=50):
+        """Plot the bar-chart of the Quote."""
+        return v_mt.bar_timeline(self, bins)
 
 
 class Cluster(object):
@@ -379,6 +387,20 @@ class Cluster(object):
         self.build_timeline()
         v_mt.plot_timeline(self.timeline, label=self.__unicode__(),
                            smooth_res=smooth_res)
+    
+    def bar(self, bins=50):
+        """Plot the bar-chart of the Cluster Timeline."""
+        self.build_timeline()
+        return self.timeline.bar(bins)
+    
+    def bar_quotes(self, bins=50):
+        """Plot the stacked bar-chart of the Quotes in the Cluster."""
+        return v_mt.bar_cluster(self, bins)
+    
+    def bar_quotes_norm(self, bins=50):
+        """Plot the stacked bar-chart of the Quotes in the Cluster, all
+        normalized to one."""
+        return v_mt.bar_cluster_norm(self, bins)
     
     def build_timebags(self, n_bags):
         """Build a number of TimeBags from the Cluster.
