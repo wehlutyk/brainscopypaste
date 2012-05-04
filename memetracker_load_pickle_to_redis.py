@@ -19,6 +19,7 @@ if __name__ == '__main__':
     
     clusters_pickle = st.memetracker_full_pickle
     clusters_framed_pickle = st.memetracker_full_framed_pickle
+    clusters_f_filtered_pickle = st.memetracker_full_framed_filtered_pickle
     
     # The redis connection
     
@@ -28,11 +29,11 @@ if __name__ == '__main__':
     
     # Load and save the unframed clusters
     
-    print 'Loading unframed clusters from pickle...',
+    print 'Loading full clusters from pickle...',
     clusters = ps.load(clusters_pickle)
     print 'OK'
     
-    print 'Storing unframed clusters to redis...',
+    print 'Storing full clusters to redis...',
     
     for cl_id, cl in clusters.iteritems():
         assert rserver.pset(st.redis_mt_clusters_pref, cl_id, cl)
@@ -57,6 +58,28 @@ if __name__ == '__main__':
     
     for cl_id, cl in clusters_framed.iteritems():
         assert rserver.pset(st.redis_mt_clusters_framed_pref, cl_id, cl)
+    
+    assert rserver.save()
+    print 'OK'
+    
+    # Clean up before going to the framed-filtered clusters
+    
+    print 'Garbage collecting before doing the framed-filtered clusters...',
+    del clusters_framed
+    gc.collect()
+    print 'OK'
+    
+    # Load and save the framed-filtered clusters
+    
+    print 'Loading framed-filtered clusters from pickle...',
+    clusters_f_filtered = ps.load(clusters_f_filtered_pickle)
+    print 'OK'
+    
+    print 'Storing framed-filtered clusters to redis...',
+    
+    for cl_id, cl in clusters_f_filtered.iteritems():
+        assert rserver.pset(st.redis_mt_clusters_framed_filtered_pref,
+                            cl_id, cl)
     
     assert rserver.save()
     print 'OK'

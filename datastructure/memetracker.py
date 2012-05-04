@@ -51,6 +51,7 @@ class Timeline(object):
                        useful pieces of information
       * add_url: add an url to the timeline
       * plot: plot the Timeline
+      * bar: plot the bar-chart of the Timeline
     
     """
     
@@ -135,6 +136,7 @@ class Quote(Timeline):
       * __unicode__: define how we see a Quote object when printed with print
                      (e.g. >>> print myquote)
       * plot: plot the time evolution of the Quote (with a legend)
+      * bar: plot the bar-chart of the Quote
     
     """
     
@@ -249,13 +251,19 @@ class Cluster(object):
                      print (e.g. >>> print mycluster)
       * add_quote: add a Quote to the Cluster (used when loading the data into
                    the Cluster object)
-      * plot_quotes: plot the individual Quotes of the Cluster
       * build_timeline: build the Timeline representing the occurrences of the
                         cluster as a single object (not categorized into
                         quotes; this is used to plot the occurrences of the
                         cluster)
-      * plot: plot the time evolution of the Cluster as a single Timeline
       * build_timebags: build a number of TimeBags from the Cluster
+      * plot_quotes: plot the individual Quotes of the Cluster
+      * plot: plot the time evolution of the Cluster as a single Timeline
+      * bar: plot the bar-chart of the Cluster Timeline
+      * bar_quotes: plot the stacked bar-chart of the Quotes in the Cluster,
+                    with annotations
+      * bar_quotes_norm: plot the stacked bar-chart of the Quotes in the,
+                         Cluster, all normalized to one, with text-less
+                         annotations
     
     """
     
@@ -340,6 +348,38 @@ class Cluster(object):
         Cluster object)."""
         self.quote[int(line_fields[4])] = Quote(line_fields)
     
+    def build_timeline(self):
+        """Build the Timeline representing the occurrences of the cluster as a
+        single object (used in 'plot')."""
+        if not self.timeline_built:
+            
+            self.timeline = Timeline(self.tot_freq)
+            
+            for qt in self.quotes.values():
+                
+                idx = self.timeline.current_idx
+                self.timeline.url_times[idx:idx + qt.tot_freq] = qt.url_times
+                self.timeline.current_idx += qt.tot_freq
+            
+            self.timeline.compute_attrs()
+            self.timeline_built = True
+    
+    def build_timebags(self, n_bags):
+        """Build a number of TimeBags from the Cluster.
+        
+        Arguments:
+          * n_bags: the number of TimeBags to build
+        
+        Returns: a list of TimeBag objects
+        
+        """
+        
+        # This import goes here to prevent a circular import problem.
+        
+        import analyze.memetracker as a_mt
+        
+        return a_mt.build_timebags(self, n_bags)
+    
     def plot_quotes(self, smooth_res=-1):
         """Plot the individual Quotes of the Cluster.
         
@@ -356,22 +396,6 @@ class Cluster(object):
             qt.plot(smooth_res=smooth_res)
         
         pl.title(self.__unicode__())
-    
-    def build_timeline(self):
-        """Build the Timeline representing the occurrences of the cluster as a
-        single object (used in 'plot')."""
-        if not self.timeline_built:
-            
-            self.timeline = Timeline(self.tot_freq)
-            
-            for qt in self.quotes.values():
-                
-                idx = self.timeline.current_idx
-                self.timeline.url_times[idx:idx + qt.tot_freq] = qt.url_times
-                self.timeline.current_idx += qt.tot_freq
-            
-            self.timeline.compute_attrs()
-            self.timeline_built = True
     
     def plot(self, smooth_res=5):
         """Plot the time evolution of the Cluster as a single Timeline.
@@ -394,29 +418,14 @@ class Cluster(object):
         return self.timeline.bar(bins)
     
     def bar_quotes(self, bins=50):
-        """Plot the stacked bar-chart of the Quotes in the Cluster."""
+        """Plot the stacked bar-chart of the Quotes in the Cluster, with
+        annotations."""
         return v_mt.bar_cluster(self, bins)
     
     def bar_quotes_norm(self, bins=50):
         """Plot the stacked bar-chart of the Quotes in the Cluster, all
-        normalized to one."""
+        normalized to one, with text-less annotations."""
         return v_mt.bar_cluster_norm(self, bins)
-    
-    def build_timebags(self, n_bags):
-        """Build a number of TimeBags from the Cluster.
-        
-        Arguments:
-          * n_bags: the number of TimeBags to build
-        
-        Returns: a list of TimeBag objects
-        
-        """
-        
-        # This import goes here to prevent a circular import problem.
-        
-        import analyze.memetracker as a_mt
-        
-        return a_mt.build_timebags(self, n_bags)
 
 
 class TimeBag(object):

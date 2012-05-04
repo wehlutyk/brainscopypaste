@@ -8,6 +8,17 @@ Methods:
                    and an optional moving average
   * smooth_data: compute a moving average of a histogram (used in
                  'plot_timeline')
+  * dt_toordinal: convert a datetime object to an ordinal, as used by
+                  Matplotlib
+  * bar_timeline: plot the bar-chart of a Timeline
+  * bar_cluster: plot the stacked bar-chart of Quotes in a Cluster, with added
+                 annotations
+  * bar_cluster_norm: plot the normalized stacked bar-chart of Quotes in a
+                      Cluster, with added text-less annotations
+
+Classes:
+  * ordTimeDelta: subclass of timedelta that defines the 'toordinal' method,
+                  for use in Matplotlib
 
 """
 
@@ -103,44 +114,89 @@ def smooth_data(x_secs, ipd, smooth_res):
 
 
 class ordTimeDelta(timedelta):
+    
+    """Subclass of timedelta that defines the 'toordinal' method, for use in
+    Matplotlib.
+    
+    Methods:
+      * toordinal: return the ordinal representation of the TimeDelta object
+    
+    """
+    
     def toordinal(self):
+        """Return the ordinal representation of the TimeDelta object."""
         return self.days + self.seconds / 86400
 
 
 def dt_toordinal(dt):
+    """Convert a datetime object to an ordinal, as used by Matplotlib."""
     return (dt.toordinal() + dt.hour / 24 + dt.minute / 1440 +
             dt.second / 86400)
 
+
 def bar_timeline(timeline, bins=50):
+    """Plot the bar-chart of a Timeline.
+    
+    Arguments:
+      * timeline: the Timeline object to plot
+    
+    Optional arguments:
+      * bins: same argument as the pylab.histogram function (either a integer
+              or an array specifying the bin limits). Defaults to 50.
+    
+    Returns: the bin limits as returned by pylab.histogram.
+    
+    """
     
     fig = pl.gcf()
     ax = pl.gca()
     
-    heights, bins = pl.histogram(timeline.url_times, bins=bins)
+    # Get the histogram data, and convert the bins to datetime formats.
     
+    heights, bins = pl.histogram(timeline.url_times, bins=bins)
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
                 i in range(len(bins) - 1)]
     bins_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
-    ax.bar(bins_d[:-1], heights, widths_d)
     
+    # Plot the bars.
+    
+    ax.bar(bins_d[:-1], heights, widths_d)
     ax.set_xlim(min(bins_d), max(bins_d))
     ax.set_ylim(-0.1 * max(heights), 1.1 * max(heights))
+    
+    # Format the date on the x axis and the coordinate box.
     
     loc = md.AutoDateLocator()
     formatter = md.AutoDateFormatter(loc)
     ax.xaxis.set_major_locator(loc)
     ax.xaxis.set_major_formatter(formatter)
     ax.format_xdata = md.DateFormatter('%Y-%m-%d %H:%m:%S')
-    
     fig.autofmt_xdate()
     
     return bins
 
 
 def bar_cluster(cl, bins=50):
+    """Plot the stacked bar-chart of Quotes in a Cluster, with added
+    annotations.
+    
+    Arguments:
+      * cl: the cluster to plot
+    
+    Optional arguments:
+      * bins: same argument as the pylab.histogram function (either a integer
+              or an array specifying the bin limits). Defaults to 50.
+    
+    Returns: a tuple consisting of the bins returned by pylab.histogram on the
+             Cluster's full Timeline, and of the AnnoteFinderBar object linked
+             to the plot.
+    
+    """
     
     fig = pl.gcf()
     ax = pl.gca()
+    
+    # Get the bins, to be given as common argument for all Quotes, later on.
     
     cl.build_timeline()
     cl_heights, bins = pl.histogram(cl.timeline.url_times, bins=bins)
@@ -149,12 +205,16 @@ def bar_cluster(cl, bins=50):
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
                 i in range(nbins)]
     binlims_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
-    bottoms = np.zeros(nbins)
     
+    # For future use in plotting and with the annotations.
+    
+    bottoms = np.zeros(nbins)
     l_bottoms = []
     l_heights = []
     l_quotes = sorted(cl.quotes.itervalues(), key=attrgetter('tot_freq'),
                       reverse=True)
+    
+    # Do the Quote plotting.
     
     for i, qt in enumerate(l_quotes):
         
@@ -168,13 +228,16 @@ def bar_cluster(cl, bins=50):
     ax.set_xlim(min(binlims_d), max(binlims_d))
     ax.set_ylim(-0.1 * max(cl_heights), 1.1 * max(cl_heights))
     
+    # Format the date on the x axis and the coordinate box.
+    
     loc = md.AutoDateLocator()
     formatter = md.AutoDateFormatter(loc)
     ax.xaxis.set_major_locator(loc)
     ax.xaxis.set_major_formatter(formatter)
     ax.format_xdata = md.DateFormatter('%Y-%m-%d %H:%m:%S')
-    
     fig.autofmt_xdate()
+    
+    # Create and link the annotations.
     
     af = v_an.AnnoteFinderBar(l_heights,
                               [[dt_toordinal(binlim)
@@ -186,9 +249,30 @@ def bar_cluster(cl, bins=50):
 
 
 def bar_cluster_norm(cl, bins=50):
+    """Plot the normalized stacked bar-chart of Quotes in a Cluster, with
+    added text-less annotations.
+    
+    Arguments:
+      * cl: the cluster to plot
+    
+    Optional arguments:
+      * bins: same argument as the pylab.histogram function (either a integer
+              or an array specifying the bin limits). Defaults to 50.
+    
+    Returns: a tuple consisting of the bins returned by pylab.histogram on the
+             Cluster's full Timeline, and of the AnnoteFinderBar object linked
+             to the plot. The annotations linked to the plot display no text,
+             and will only highlight the bars corresponding to the selected
+             Quote. This is meant to be linked to the AnnoteFinderBar object
+             returned by bar_cluster, to have those two subplots linked
+             together in the same figure.
+    
+    """
     
     fig = pl.gcf()
     ax = pl.gca()
+    
+    # Get the bins, to be given as common argument for all Quotes, later on.
     
     cl.build_timeline()
     cl_heights, bins = pl.histogram(cl.timeline.url_times, bins=bins)
@@ -197,20 +281,28 @@ def bar_cluster_norm(cl, bins=50):
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
                 i in range(nbins)]
     binlims_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
+    
+    # For future use in plotting, normalizing, and annotating.
+    
+    bottoms = np.zeros(nbins)
+    l_bottoms = []
     heights_qt = np.zeros((nbins, cl.n_quotes))
     l_quotes = sorted(cl.quotes.itervalues(), key=attrgetter('tot_freq'),
                       reverse=True)
     
+    # Get the histogram data.
+    
     for i, qt in enumerate(l_quotes):
         heights_qt[:, i] = pl.histogram(qt.url_times, bins=bins)[0]
+    
+    # Normalize all the heights to one.
     
     for j in range(nbins):
         
         if cl_heights[j] != 0:
             heights_qt[j, :] = heights_qt[j, :] / cl_heights[j]
     
-    bottoms = np.zeros(nbins)
-    l_bottoms = []
+    # Plot the normalized histograms.
     
     for i in range(cl.n_quotes):
         
@@ -222,13 +314,16 @@ def bar_cluster_norm(cl, bins=50):
     ax.set_xlim(min(binlims_d), max(binlims_d))
     ax.set_ylim(-0.1, 1.1)
     
+    # Format the date on the x axis and the coordinate box.
+    
     loc = md.AutoDateLocator()
     formatter = md.AutoDateFormatter(loc)
     ax.xaxis.set_major_locator(loc)
     ax.xaxis.set_major_formatter(formatter)
     ax.format_xdata = md.DateFormatter('%Y-%m-%d %H:%m:%S')
-    
     fig.autofmt_xdate()
+    
+    # Create and link the annotations.
     
     af = v_an.AnnoteFinderBar(heights_qt.transpose(),
                               [[dt_toordinal(binlim)

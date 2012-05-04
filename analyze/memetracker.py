@@ -42,6 +42,7 @@ import numpy as np
 import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
 from linguistics.treetagger import TreeTaggerTags
+from linguistics.lang_detection import LangDetect
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import settings as st
@@ -83,13 +84,14 @@ def frame_cluster(cl, start, end):
                time window
       * end: time (in seconds from epoch) of the end of the target time window
     
-    Returns: a new framed Cluster.
+    Returns: a new framed Cluster. If no quotes were kept after framing, None
+             is returned.
     
     """
     
     framed_quotes = {}
     
-    for qt in cl.quotes.values():
+    for qt in cl.quotes.itervalues():
         
         # Compute the starting time, ending time, time span, etc.
         
@@ -108,7 +110,12 @@ def frame_cluster(cl, start, end):
             if framed_quote != None:
                 framed_quotes[qt.id] = framed_quote
     
-    # Create the new framed Cluster.
+    # If no quotes were kept, return None.
+    
+    if len(framed_quotes) == 0:
+        return None
+    
+    # Else, create the new framed Cluster.
     
     n_quotes = len(framed_quotes)
     tot_freq = sum([qt.tot_freq for qt in framed_quotes.values()])
@@ -220,6 +227,60 @@ def find_max_24h_window(timeline, prec=30 * 60):
     # And get the max.
     
     return start_times[np.argmax(ipd_all)]
+
+
+tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                        TAGINENC='utf-8', TAGOUTENC='utf-8')
+
+langdetecter = LangDetect()
+
+
+def filter_cluster(cl, min_tokens):
+    """Filter a cluster to keep only English quotes longer then 'min_tokens'.
+    
+    Arguments:
+      * cl: the cluster to filter
+      * min_tokens: the minimum required number of words
+    
+    Returns: a new cluster (referencing the old quotes, not newly created
+             ones) with only the quotes that have more than 'min_tokens'
+             tokens, and that were detected to be in English. If the root of
+             the cluster had less than 'min_tokens' or if was not detected as
+             being English, or if no quotes inside the cluster were kept,
+             None is returned.
+    
+    """
+    
+    # If the root has less than wanted, filter the whole cluster.
+    
+    if (len(tagger.Tokenize(cl.root)) < min_tokens or
+        langdetecter.detect(cl.root) != 'en'):
+        return None
+    
+    # Else, examine each quote.
+    
+    filtered_quotes = {}
+    
+    for qt in cl.quotes.itervalues():
+        
+        if (len(tagger.Tokenize(qt.string)) >= min_tokens and
+            langdetecter.detect(qt.string) == 'en'):
+            filtered_quotes[qt.id] = qt
+    
+    # If no quotes where kept, filter the whole cluster.
+    
+    if len(filtered_quotes) == 0:
+        return None
+    
+    # Else, create the new filtered Cluster.
+    
+    n_quotes = len(filtered_quotes)
+    tot_freq = sum([qt.tot_freq for qt in filtered_quotes.values()])
+    filtered_cluster = ds_mt.Cluster(n_quotes=n_quotes, tot_freq=tot_freq,
+                                     root=cl.root, cl_id=cl.id)
+    filtered_cluster.quotes = filtered_quotes
+    
+    return filtered_cluster
 
 
 def build_timebags(cluster, n_bags):

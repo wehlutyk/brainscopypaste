@@ -74,6 +74,8 @@ memetracker_full_rel = 'clust-qt08080902w3mfq5.txt'
 memetracker_full = os.path.join(memetracker_root, memetracker_full_rel)
 memetracker_full_pickle = memetracker_full + '.pickle'
 memetracker_full_framed_pickle = memetracker_full + '_framed.pickle'
+memetracker_full_framed_filtered_pickle = (memetracker_full +
+                                           '_framed_filtered.pickle')
 
 
 # File for a subset of the MemeTracker dataset for testing algorithms before a
@@ -84,6 +86,8 @@ memetracker_test_rel = 'clust-cropped-50000.txt'
 memetracker_test = os.path.join(memetracker_root, memetracker_test_rel)
 memetracker_test_pickle = memetracker_test + '.pickle'
 memetracker_test_framed_pickle = memetracker_test + '_framed.pickle'
+memetracker_test_framed_filtered_pickle = (memetracker_test +
+                                           '_framed_filtered.pickle')
 
 
 ##############################################################################
@@ -206,3 +210,5 @@ freeassociation_norms_PR_scores_pickle = \
 redis_mt_pref = 'memetracker:'
 redis_mt_clusters_pref = redis_mt_pref + 'clusters:'
 redis_mt_clusters_framed_pref = redis_mt_pref + 'clusters-framed:'
+redis_mt_clusters_framed_filtered_pref = (redis_mt_pref +
+                                          'clusters-framed-filtered:')
