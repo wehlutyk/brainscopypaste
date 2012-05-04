@@ -403,10 +403,16 @@ def build_timebag_transitions(n_timebags):
     
     """
     
-    transitions = []
-    _build_timebag_transitions(range(n_timebags), transitions)
-    
-    return transitions
+##############################################################################
+#    # THIS
+#    transitions = []
+#    _build_timebag_transitions(range(n_timebags), transitions)
+#    
+#    return transitions
+##############################################################################
+    # OR THIS
+    return [(0, i) for i in range(1, n_timebags)]
+##############################################################################
 
 
 class SubstitutionAnalysis(object):
@@ -458,10 +464,10 @@ class SubstitutionAnalysis(object):
         
         file_prefix = ''
         
-        if not args['framing']:
+        if not args['ff']:
             file_prefix += 'N'
         
-        file_prefix += 'F_'
+        file_prefix += 'Ff_'
         
         if not args['lemmatizing']:
             file_prefix += 'N'
@@ -511,7 +517,7 @@ class SubstitutionAnalysis(object):
         """Print the arguments to stdout."""
         print
         print 'Doing analysis with the following parameters:'
-        print '  framing = {}'.format(args['framing'])
+        print '  ff = {}'.format(args['ff'])
         print '  lemmatizing = {}'.format(args['lemmatizing'])
         print '  POS = {}'.format(args['POS'])
         print '  verbose = {}'.format(args['verbose'])
@@ -532,8 +538,9 @@ class SubstitutionAnalysis(object):
         print ('Connecting to redis server for cluster data, '
                'loading PageRank and degree data from pickle...'),
         
-        if args['framing']:
-            clusters = rt.RedisReader(st.redis_mt_clusters_framed_pref)
+        if args['ff']:
+            clusters = \
+                rt.RedisReader(st.redis_mt_clusters_framed_filtered_pref)
         else:
             clusters = rt.RedisReader(st.redis_mt_clusters_pref)
         
@@ -562,8 +569,8 @@ class SubstitutionAnalysis(object):
                  each feature.
         
         Details:
-          The method takes each Cluster (framed or not, depending on the
-          'framing' argument), splits it into a number of TimeBags, then looks
+          The method takes each Cluster (framed-filtered or not, depending on
+          the 'ff' argument), splits it into a number of TimeBags, then looks
           at the transitions between TimeBags defined by the 'bag_transitions'
           arguments in args: for each transition (e.g. TimeBag #0 to TimeBag
           #2), it takes the highest frequency string in the first TimeBag,
@@ -636,7 +643,14 @@ class SubstitutionAnalysis(object):
                 # Highest freq string and its daughters
                 # (sphere of hamming_word distance =1)
                 
-                smax = tbgs[i].max_freq_string.lower()
+##############################################################################
+#                # THIS
+#                smax = tbgs[i].max_freq_string.lower()
+##############################################################################
+                # OR THIS
+                smax = cl.root
+##############################################################################
+                
                 smax_pos = tagger.Tags(smax)
                 smax_tok = tagger.Tokenize(smax)
                 daughters = [tbgs[j].strings[k].lower()
@@ -874,9 +888,9 @@ class SubstitutionAnalysis(object):
         """Create a list of possible args dicts, according to requested
         timebag slicings and POS tags.
         
-        The resulting args all have framing, lemmatizing, and same_POS set to
+        The resulting args all have framing-filtering and lemmatizing, set to
         True. They only differ in the number of timebags to slice the clusters
-        into, and which transition to examine.
+        into, which transition to examine, and which POSs to compare.
         
         Arguments:
           * n_timebags_list: a list of integers, each one indicating how many
@@ -902,7 +916,7 @@ class SubstitutionAnalysis(object):
                 
                 for pos in POSs:
                     
-                    args_list.append({'framing': True,
+                    args_list.append({'ff': True,
                                       'lemmatizing': True,
                                       'POS': pos,
                                       'verbose': False,
@@ -928,7 +942,7 @@ class SubstitutionAnalysis(object):
     def analyze_all(self, n_timebags_list, POSs):
         """Run 'analyze' with various timebag slicings and POS tags.
         
-        The analysis is always done with framing, lemmatizing, and same_POS
+        The analysis is always done with framing-filtering and lemmatizing
         activated.
         
         Arguments:

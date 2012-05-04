@@ -15,7 +15,7 @@ import settings as st
 
 
 if __name__ == '__main__':
-    base_prefix = '{fra}F_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
+    base_prefix = '{ff}Ff_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
     N = {0: 'N', 1: ''}
     
     parameters = []
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     fa_PR_scores_d_stds = []
     fa_PR_scores_d_meds = []
     
-    for framing in [0, 1]:
+    for ff in [0, 1]:
         
         for lemmatizing in [0, 1]:
             
@@ -52,7 +52,7 @@ if __name__ == '__main__':
                         
                         # Create the corresponding file names.
                         
-                        file_prefix = base_prefix.format(fra=N[framing],
+                        file_prefix = base_prefix.format(ff=N[ff],
                                                          lem=N[lemmatizing],
                                                          pos=pos,
                                                          ntb=n_timebags,
@@ -79,6 +79,13 @@ if __name__ == '__main__':
                         except:
                             warn(("Files for parameters '{}' "
                                   'not found.').format(file_prefix))
+                            continue
+                        
+                        if (len(wn_PR_scores) == 0 or
+                            len(wn_degrees) == 0 or
+                            len(fa_PR_scores) == 0):
+                            warn(('There is some empty data for paramters '
+                                  '{}.'.format(file_prefix)))
                             continue
                         
                         # Compute ratios and differences.

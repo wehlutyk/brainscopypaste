@@ -31,9 +31,9 @@ def get_args_from_cmdline():
                                        '(hamming_word-distance == 1) '
                                        'in the MemeTracker dataset.'))
     
-    p.add_argument('--framing', action='store', nargs=1, required=True,
-                   help=('1: analyze framed clusters; '
-                         '0: analyse non-framed clusters.'))
+    p.add_argument('--ff', action='store', nargs=1, required=True,
+                   help=('1: analyze framed-filtered clusters; '
+                         '0: analyse non-framed non-filtered clusters.'))
     p.add_argument('--lemmatizing', action='store', nargs=1, required=True,
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
@@ -59,7 +59,7 @@ def get_args_from_cmdline():
     
     args = p.parse_args()
     
-    framing = int(args.framing[0])
+    ff = int(args.ff[0])
     lemmatizing = int(args.lemmatizing[0])
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
@@ -74,8 +74,8 @@ def get_args_from_cmdline():
         raise Exception(('Wrong bag transitions, according to the '
                          'number of timebags requested'))
     
-    if framing != 0 and framing != 1:
-        raise Exception('Wrong value for --framing. Expected 1 or 0.')
+    if ff != 0 and ff != 1:
+        raise Exception('Wrong value for --ff. Expected 1 or 0.')
     
     if lemmatizing != 0 and lemmatizing != 1:
         raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
@@ -84,7 +84,7 @@ def get_args_from_cmdline():
         raise Exception(('Wrong value for --POS. Expected one '
                          'of {}.').format(st.memetracker_subst_POSs))
     
-    return {'framing': bool(framing),
+    return {'ff': bool(ff),
             'lemmatizing': bool(lemmatizing),
             'POS': POS,
             'verbose': args.verbose,

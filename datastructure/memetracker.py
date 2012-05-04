@@ -27,6 +27,7 @@ import pylab as pl
 
 from datainterface.timeparsing import isostr_to_epoch_mt
 import visualize.memetracker as v_mt
+import visualize.annotations as v_an
 import linguistics.memetracker as l_mt
 
 # "import analyze.memetracker as a_mt" has been moved into TimeBag.__init__
@@ -264,6 +265,8 @@ class Cluster(object):
       * bar_quotes_norm: plot the stacked bar-chart of the Quotes in the,
                          Cluster, all normalized to one, with text-less
                          annotations
+      * bar_all: plot the bar-plot, stacked bar-plot, and normalized stacked
+                 bar-plot for the cluster, with annotations
     
     """
     
@@ -426,6 +429,18 @@ class Cluster(object):
         """Plot the stacked bar-chart of the Quotes in the Cluster, all
         normalized to one, with text-less annotations."""
         return v_mt.bar_cluster_norm(self, bins)
+    
+    def bar_all(self, bins=50):
+        """Plot the bar-plot, stacked bar-plot, and normalized stacked bar-
+        plot for the cluster, with annotations."""
+        pl.subplot(311)
+        pl.title(self)
+        self.bar(bins)
+        pl.subplot(312)
+        af1 = self.bar_quotes(bins)[1]
+        pl.subplot(313)
+        af2 = self.bar_quotes_norm(bins)[1]
+        v_an.linkAnnotationFinders([af1, af2])
 
 
 class TimeBag(object):
@@ -486,21 +501,29 @@ class TimeBag(object):
         
         self.id_fromcluster = cluster.id
         self.strings = []
-        self.tot_freq = framed_cluster.tot_freq
-        self.tot_freqs = np.zeros(framed_cluster.n_quotes)
-        self.n_urlss = np.zeros(framed_cluster.n_quotes)
-        self.ids = np.zeros(framed_cluster.n_quotes)
         
-        for i, qt in enumerate(framed_cluster.quotes.values()):
+        if framed_cluster:
             
-            self.strings.append(qt.string)
-            self.tot_freqs[i] = qt.tot_freq
-            self.n_urlss[i] = qt.n_urls
-            self.ids[i] = qt.id
-        
-        if len(self.tot_freqs) > 0:
+            self.tot_freq = framed_cluster.tot_freq
+            self.tot_freqs = np.zeros(framed_cluster.n_quotes)
+            self.n_urlss = np.zeros(framed_cluster.n_quotes)
+            self.ids = np.zeros(framed_cluster.n_quotes)
+            
+            for i, qt in enumerate(framed_cluster.quotes.values()):
+                
+                self.strings.append(qt.string)
+                self.tot_freqs[i] = qt.tot_freq
+                self.n_urlss[i] = qt.n_urls
+                self.ids[i] = qt.id
+            
             self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+        
         else:
+            
+            self.tot_freq = 0
+            self.tot_freqs = []
+            self.n_urlss = []
+            self.ids = []
             self.max_freq_string = ''
     
     def levenshtein_closedball(self, center_string, d):

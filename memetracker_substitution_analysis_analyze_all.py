@@ -4,8 +4,7 @@
 """Do the MemeTracker substitution analysis with a number of timebag slicings.
 
 Methods:
-  * get_args_from_cmdline: get the timebag slicings from the
-                                      command line
+  * get_args_from_cmdline: get the timebag slicings from the command line
 
 """
 
@@ -27,11 +26,11 @@ def get_args_from_cmdline():
     # Create the arguments parser.
     
     p = ap.ArgumentParser(description=('run the substitution analysis '
-                                       'with a number timebag slicings, '
-                                       'specified at the command line. This '
-                                       'is done on the framed clusters, with '
-                                       'lemmatizing and the same_POS option '
-                                       'activated.'))
+                                       'with a number timebag slicings and '
+                                       'POS tags to compare, specified at '
+                                       'the command line. This is done on '
+                                       'the framed-filtered  clusters, with '
+                                       'lemmatizing activated.'))
     p.add_argument('--no_multi-thread', dest='multi_thread',
                    action='store_const', const=False, default=True,
                    help=('deactivate multi-threading (default: multi-thread '
