@@ -20,7 +20,6 @@ import textwrap
 from operator import itemgetter
 
 import pylab as pl
-from numpy import random
 from matplotlib.container import BarContainer
 import matplotlib.cm as cm
 
@@ -98,7 +97,7 @@ class AnnoteFinder(object):
     
     def distance(self, x1, x2, y1, y2):
         """Compute the distance between two points."""
-        return pl.norm(x1 - x2, y1 - y2)
+        return pl.norm([x1 - x2, y1 - y2])
     
     def __call__(self, event):
         """The callback called by Matplotlib on a click event (if we connect
