@@ -137,7 +137,7 @@ if __name__ == '__main__':
     pl.plot(wn_PR_scores_r_avgs - wn_PR_scores_r_ics, 'm.', linewidth=1)
     pl.plot(wn_PR_scores_r_avgs + wn_PR_scores_r_ics, 'm.', linewidth=1)
     pl.legend(['averages', '1', 'av +/- IC-95%'])
-    pl.title('WN PR scores ratio (sorted by increasing average)')
+    pl.title('WN PR scores ratio')
     
     af_wn_sra = AnnoteFinder(pl.arange(l_wn_sra), wn_PR_scores_r_avgs,
                              annotes)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     pl.plot(wn_degrees_r_avgs - wn_degrees_r_ics, 'm.', linewidth=1)
     pl.plot(wn_degrees_r_avgs + wn_degrees_r_ics, 'm.', linewidth=1)
     pl.legend(['averages', '1', 'av +/- IC-95%'])
-    pl.title('WN Degrees ratio (sorted by increasing average)')
+    pl.title('WN Degrees ratio')
     
     af_wn_dra = AnnoteFinder(pl.arange(l_wn_dra), wn_degrees_r_avgs, annotes)
     pl.connect('button_press_event', af_wn_dra)
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     pl.plot(fa_PR_scores_r_avgs - fa_PR_scores_r_ics, 'm.', linewidth=1)
     pl.plot(fa_PR_scores_r_avgs + fa_PR_scores_r_ics, 'm.', linewidth=1)
     pl.legend(['averages', '1', 'av +/- IC-95%'])
-    pl.title('FA PR scores ratio (sorted by increasing average)')
+    pl.title('FA PR scores ratio')
     
     af_fa_sra = AnnoteFinder(pl.arange(l_fa_sra),
                              fa_PR_scores_r_avgs, annotes)

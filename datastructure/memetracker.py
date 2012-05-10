@@ -115,7 +115,7 @@ class Timeline(object):
         """Plot the Timeline."""
         v_mt.plot_timeline(self, smooth_res=smooth_res)
     
-    def bar(self, bins=50):
+    def bar(self, bins=25):
         """Plot the bar-chart of the Timeline."""
         return v_mt.bar_timeline(self, bins)
 
@@ -228,7 +228,7 @@ class Quote(Timeline):
         v_mt.plot_timeline(self, label=self.__unicode__(),
                            smooth_res=smooth_res)
     
-    def bar(self, bins=50):
+    def bar(self, bins=25):
         """Plot the bar-chart of the Quote."""
         return v_mt.bar_timeline(self, bins)
 
@@ -415,22 +415,22 @@ class Cluster(object):
         v_mt.plot_timeline(self.timeline, label=self.__unicode__(),
                            smooth_res=smooth_res)
     
-    def bar(self, bins=50):
+    def bar(self, bins=25):
         """Plot the bar-chart of the Cluster Timeline."""
         self.build_timeline()
         return self.timeline.bar(bins)
     
-    def bar_quotes(self, bins=50):
+    def bar_quotes(self, bins=25):
         """Plot the stacked bar-chart of the Quotes in the Cluster, with
         annotations."""
         return v_mt.bar_cluster(self, bins)
     
-    def bar_quotes_norm(self, bins=50):
+    def bar_quotes_norm(self, bins=25):
         """Plot the stacked bar-chart of the Quotes in the Cluster, all
         normalized to one, with text-less annotations."""
         return v_mt.bar_cluster_norm(self, bins)
     
-    def bar_all(self, bins=50):
+    def bar_all(self, bins=25):
         """Plot the bar-plot, stacked bar-plot, and normalized stacked bar-
         plot for the cluster, with annotations."""
         pl.subplot(311)

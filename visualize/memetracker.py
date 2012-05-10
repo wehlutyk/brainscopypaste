@@ -30,6 +30,7 @@ from operator import attrgetter
 
 import numpy as np
 import pylab as pl
+from scipy.interpolate import spline
 import matplotlib.dates as md
 import matplotlib.cm as cm
 
@@ -126,6 +127,60 @@ class ordTimeDelta(timedelta):
     def toordinal(self):
         """Return the ordinal representation of the TimeDelta object."""
         return self.days + self.seconds / 86400
+    
+    def __truediv__(self, y):
+        """Make sure division is done even when __future__.division is on."""
+        return self.__div__(y)
+
+
+def fft_smooth(n, n_freqs=7):
+    """Smooth a histogram by taking the first few Fourier frequencies.
+    
+    Arguments:
+      * n: the values of the histogram to smooth
+    
+    Keyword arguments:
+      * n_freqs: the number of positive and negative frequencies to include.
+                 The total number of frequencies kept is 2 * n_freqs + 1.
+                 Defaults to 7.
+    
+    Returns:
+      * out: the smoothed values of the histogram
+    
+    """
+    
+    nn = pl.concatenate((5 * [n[0]], n, 5 * [n[-1]]))
+    l = len(n)
+    ll = len(nn)
+    ff = np.fft.fft(nn)
+    out = np.real(np.array([np.sum([ff[k] * np.exp(2 * np.pi * 1j * m * k /
+                                                   ll)
+                                    for k in range(- n_freqs, n_freqs + 1)]) /
+                            ll for m in range(ll)]))[5:-5]
+    out = max(n) * out / max(out)
+    return np.max([out, np.zeros(l)], 0)
+
+
+def build_smooth(x, n, xnew, n_freqs=7):
+    """Smooth a histogram by FFT then splining.
+    
+    Arguments:
+      * x: the x values of the histogram to smooth
+      * n: the values of the histogram to smooth
+      * xnew: the new x values for the smoothed data
+    
+    Keyword arguments:
+      * n_freqs: the number of positive and negative frequencies to include.
+                 The total number of frequencies kept is 2 * n_freqs + 1.
+                 Defaults to 7.
+    
+    Returns:
+      * out: the smoothed values of the histogram
+    
+    """
+    
+    ff = fft_smooth(n, n_freqs)
+    return spline(x, ff, xnew)
 
 
 def dt_toordinal(dt):
@@ -134,7 +189,12 @@ def dt_toordinal(dt):
             dt.second / 86400)
 
 
-def bar_timeline(timeline, bins=50):
+def timestamps_todt(timestamps):
+    """Convert a list of timestamps to a list of datetime object."""
+    return [datetime.utcfromtimestamp(t) for t in timestamps]
+
+
+def bar_timeline(timeline, bins=25):
     """Plot the bar-chart of a Timeline.
     
     Arguments:
@@ -142,7 +202,7 @@ def bar_timeline(timeline, bins=50):
     
     Optional arguments:
       * bins: same argument as the pylab.histogram function (either a integer
-              or an array specifying the bin limits). Defaults to 50.
+              or an array specifying the bin limits). Defaults to 25.
     
     Returns: the bin limits as returned by pylab.histogram.
     
@@ -155,14 +215,20 @@ def bar_timeline(timeline, bins=50):
     
     heights, bins = pl.histogram(timeline.url_times, bins=bins)
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
-                i in range(len(bins) - 1)]
-    bins_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
+                i in range(len(heights))]
+    bins_d = timestamps_todt(bins)
+    middles = (bins[:-1] + bins[1:]) / 2
+    middles_d = timestamps_todt(middles)
+    heights_sm = fft_smooth(heights)
     
     # Plot the bars.
     
     ax.bar(bins_d[:-1], heights, widths_d)
     ax.set_xlim(min(bins_d), max(bins_d))
-    ax.set_ylim(-0.1 * max(heights), 1.1 * max(heights))
+    ymax = max(pl.concatenate((heights_sm, heights)))
+    ax.set_ylim(-0.1 * ymax, 1.1 * ymax)
+    ax.plot(middles_d, heights_sm, lw=2)
+    ax.fill_between(middles_d, 0, heights_sm, color=cm.winter(0, alpha=0.3))
     
     # Format the date on the x axis and the coordinate box.
     
@@ -176,7 +242,7 @@ def bar_timeline(timeline, bins=50):
     return bins
 
 
-def bar_cluster(cl, bins=50):
+def bar_cluster(cl, bins=25):
     """Plot the stacked bar-chart of Quotes in a Cluster, with added
     annotations.
     
@@ -185,7 +251,7 @@ def bar_cluster(cl, bins=50):
     
     Optional arguments:
       * bins: same argument as the pylab.histogram function (either a integer
-              or an array specifying the bin limits). Defaults to 50.
+              or an array specifying the bin limits). Defaults to 25.
     
     Returns: a tuple consisting of the bins returned by pylab.histogram on the
              Cluster's full Timeline, and of the AnnoteFinderBar object linked
@@ -204,11 +270,14 @@ def bar_cluster(cl, bins=50):
     nbins = len(bins) - 1
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
                 i in range(nbins)]
-    binlims_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
+    bins_d = timestamps_todt(bins)
+    middles = (bins[:-1] + bins[1:]) / 2
+    middles_d = timestamps_todt(middles)
     
     # For future use in plotting and with the annotations.
     
     bottoms = np.zeros(nbins)
+    bottoms_sm = np.zeros(nbins)
     l_bottoms = []
     l_heights = []
     l_quotes = sorted(cl.quotes.itervalues(), key=attrgetter('tot_freq'),
@@ -219,14 +288,22 @@ def bar_cluster(cl, bins=50):
     for i, qt in enumerate(l_quotes):
         
         heights = pl.histogram(qt.url_times, bins=bins)[0]
-        ax.bar(left=binlims_d[:-1], height=heights, width=widths_d,
+        heights_sm = fft_smooth(heights)
+        ax.bar(left=bins_d[:-1], height=heights, width=widths_d,
                bottom=bottoms, color=cm.YlOrBr(i / cl.n_quotes))
+        ax.plot(middles_d, heights_sm + bottoms_sm,
+                color=cm.winter(i / cl.n_quotes), lw=2)
+        ax.fill_between(middles_d, bottoms_sm, heights_sm + bottoms_sm,
+                        color=cm.winter(i / cl.n_quotes, alpha=0.3),
+                        zorder=100)
         l_bottoms.append(bottoms.copy())
         l_heights.append(heights.copy())
         bottoms += heights
+        bottoms_sm += heights_sm
     
-    ax.set_xlim(min(binlims_d), max(binlims_d))
-    ax.set_ylim(-0.1 * max(cl_heights), 1.1 * max(cl_heights))
+    ax.set_xlim(min(bins_d), max(bins_d))
+    ymax = max(pl.concatenate((bottoms_sm, cl_heights)))
+    ax.set_ylim(-0.1 * ymax, 1.1 * ymax)
     
     # Format the date on the x axis and the coordinate box.
     
@@ -241,14 +318,14 @@ def bar_cluster(cl, bins=50):
     
     af = v_an.AnnoteFinderBar(l_heights,
                               [[dt_toordinal(binlim)
-                                for binlim in binlims_d]] * cl.n_quotes,
+                                for binlim in bins_d]] * cl.n_quotes,
                               l_bottoms, l_quotes)
     pl.connect('button_press_event', af)
     
     return (bins, af)
 
 
-def bar_cluster_norm(cl, bins=50):
+def bar_cluster_norm(cl, bins=25):
     """Plot the normalized stacked bar-chart of Quotes in a Cluster, with
     added text-less annotations.
     
@@ -257,7 +334,7 @@ def bar_cluster_norm(cl, bins=50):
     
     Optional arguments:
       * bins: same argument as the pylab.histogram function (either a integer
-              or an array specifying the bin limits). Defaults to 50.
+              or an array specifying the bin limits). Defaults to 25.
     
     Returns: a tuple consisting of the bins returned by pylab.histogram on the
              Cluster's full Timeline, and of the AnnoteFinderBar object linked
@@ -280,13 +357,17 @@ def bar_cluster_norm(cl, bins=50):
     nbins = len(bins) - 1
     widths_d = [ordTimeDelta(seconds=bins[i + 1] - bins[i]) for
                 i in range(nbins)]
-    binlims_d = [datetime.utcfromtimestamp(binlim) for binlim in bins]
+    bins_d = timestamps_todt(bins)
+    middles = (bins[:-1] + bins[1:]) / 2
+    middles_d = timestamps_todt(middles)
     
     # For future use in plotting, normalizing, and annotating.
     
     bottoms = np.zeros(nbins)
+    bottoms_sm = np.zeros(nbins)
     l_bottoms = []
     heights_qt = np.zeros((nbins, cl.n_quotes))
+    heights_qt_sm = np.zeros((nbins, cl.n_quotes))
     l_quotes = sorted(cl.quotes.itervalues(), key=attrgetter('tot_freq'),
                       reverse=True)
     
@@ -294,6 +375,9 @@ def bar_cluster_norm(cl, bins=50):
     
     for i, qt in enumerate(l_quotes):
         heights_qt[:, i] = pl.histogram(qt.url_times, bins=bins)[0]
+        heights_qt_sm[:, i] = build_smooth(middles, heights_qt[:, i], middles)
+    
+    cl_heights_sm = heights_qt_sm.sum(1)
     
     # Normalize all the heights to one.
     
@@ -301,17 +385,23 @@ def bar_cluster_norm(cl, bins=50):
         
         if cl_heights[j] != 0:
             heights_qt[j, :] = heights_qt[j, :] / cl_heights[j]
+        
+        if cl_heights_sm[j] != 0:
+            heights_qt_sm[j, :] = heights_qt_sm[j, :] / cl_heights_sm[j]
     
     # Plot the normalized histograms.
     
     for i in range(cl.n_quotes):
         
-        ax.bar(left=binlims_d[:-1], height=heights_qt[:, i], width=widths_d,
+        ax.bar(left=bins_d[:-1], height=heights_qt[:, i], width=widths_d,
                bottom=bottoms, color=cm.YlOrBr(i / cl.n_quotes))
+        ax.plot(middles_d, heights_qt_sm[:, i] + bottoms_sm,
+                color=cm.winter(i / cl.n_quotes), lw=2)
         l_bottoms.append(bottoms.copy())
         bottoms += heights_qt[:, i]
+        bottoms_sm += heights_qt_sm[:, i]
     
-    ax.set_xlim(min(binlims_d), max(binlims_d))
+    ax.set_xlim(min(bins_d), max(bins_d))
     ax.set_ylim(-0.1, 1.1)
     
     # Format the date on the x axis and the coordinate box.
@@ -327,7 +417,7 @@ def bar_cluster_norm(cl, bins=50):
     
     af = v_an.AnnoteFinderBar(heights_qt.transpose(),
                               [[dt_toordinal(binlim)
-                                for binlim in binlims_d]] * cl.n_quotes,
+                                for binlim in bins_d]] * cl.n_quotes,
                               l_bottoms, l_quotes, drawtext=False)
     pl.connect('button_press_event', af)
     
