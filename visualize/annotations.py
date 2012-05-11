@@ -235,7 +235,7 @@ class AnnoteFinderBar(object):
           * l_bottoms: a list of bottoms of the bars in the bar-plot, one for
                        each data set
           * annotes: a list of annotations, each one corresponding to a data
-                     set. each annote object should have an 'id' attribute,
+                     set. Each annote object should have an 'id' attribute,
                      will be displayed after formatting as
                      '{}'.format(annote).
         
@@ -380,18 +380,19 @@ class AnnoteFinderBar(object):
                     
                     (i, j, annote) = sorted(annotes, 
                                             key=itemgetter(0))[0][1:]
-                    self.drawAnnote(event.inaxes, i, j, annote)
+                    self.drawAnnote(event.inaxes, i, j, clickX, annote)
                     
                     for l in self.links:
-                        l.drawAnnote(l.axis, i, j, annote)
+                        l.drawAnnote(l.axis, i, j, clickX, annote)
     
-    def drawAnnote(self, axis, i, j, annote):
+    def drawAnnote(self, axis, i, j, x, annote):
         """Draw an annotation on the plot.
         
         Arguments:
           * axis: the axis to draw on
           * i: the index of the data series for which we're to draw the annote
           * j: the x-index of the bar which is to receive the text-anchor
+          * x: the x coordinate for the annote - not used
           * annote: the annotation to draw. It should have an 'id' attribute.
                     The text shown will be formatted using
                     '{}'.format(annote).
@@ -423,7 +424,7 @@ class AnnoteFinderBar(object):
         else:
             
             (heights, bins, bottoms) = self.data[i][:3]
-            x = (bins[j] + bins[j + 1]) / 2
+            x = (bins[j] + bins[j+1]) / 2
             y = bottoms[j] + heights[j] / 2
             
             # Create the text if asked for.
@@ -456,6 +457,246 @@ class AnnoteFinderBar(object):
             widths = [bins[k + 1] - bins[k] for k in range(len(bins) - 1)]
             m = axis.bar(bins[:-1], heights, widths, bottoms,
                          color=color, edgecolor=(0.0, 0.0, 0.0, 0.0))
+            self.drawnAnnotations[annote.id] = (t, m)
+            self.axis.figure.canvas.draw()
+
+
+class AnnoteFinderFlow(object):
+    
+    """Display annotations in a Matplotlib flow bar-plot.
+    
+    This class defines a callback for Matplotlib to display an annotation when
+    flows are clicked on. The data set where the click was is identified.
+      
+    Register this function like this:
+      
+    >>> for i in range(num_data_series):
+    >>>     fill_between(l_xs[i], l_bottoms[i], l_heights[i] + l_bottoms[i])
+    >>> af = AnnoteFinder(l_xs, l_bottoms, l_heights, annotes)
+    >>> connect('button_press_event', af)
+    
+    Methods:
+      * __init__: initialize the annotator
+      * distance: compute the distance between two points
+      * is_in_flow: detect if a click is within tolerance range of a flow
+      * __call__: the callback called by Matplotlib on a click event (if we
+                  connect the AnnoteFinderFlow to a click event)
+      * drawAnnote: draw an annotation on the plot
+    
+    """
+    
+    def __init__(self, l_xs, l_bottoms, l_heights, annotes, axis=None,
+                  drawtext=True):
+        """Initialize the annotator.
+        
+        Arguments:
+          * l_xs: a list of x coordinates of the flows, one for each data set
+          * l_bottoms: a list of bottoms of the flow in the flow-plot, one for
+                       each data set
+          * l_heights: a list of heights of the flows in the flow-plot, one
+                       for each data set
+          * annotes: a list of annotations, each one corresponding to a data
+                     set. Each annote object should have an 'id' attribute,
+                     will be displayed after formatting as
+                     '{}'.format(annote).
+        
+        Optional arguments:
+          * axis: the matplotlib.axes.AxesSubplot object to draw on. Defaults
+                  to the current axis (as given by gca()).
+          * drawtext: a boolean specifying if the text of the annotes should
+                      be shown of not. If not, the bars are only highlighted
+                      when clicked on, and no additional text is shown. This
+                      is meant to be used when linking with another bar-plot
+                      of the same data, which will show the text (meaning
+                      there is no need for the text to be shown again in this
+                      plot). Defaults to True.
+        
+        """
+        
+        self.data = zip(l_xs, l_bottoms, l_heights, annotes)
+        self.drawtext = drawtext
+        
+        # Set the axes.
+        
+        if axis is None:
+            self.axis = pl.gca()
+        else:
+            self.axis = axis
+        
+        # For later use, keeping track of what is drawn and what other plot
+        # we're connected to.
+        
+        self.drawnAnnotations = {}
+        self.links = []
+    
+    def distance(self, x1, x2, y1, y2):
+        """Compute the distance between two points."""
+        return pl.norm([x1 - x2, y1 - y2])
+    
+    def is_in_flow(self, x, y, xs, bottoms, heights):
+        """Detect if a click is within tolerance range of a flow.
+        
+        Arguments:
+          * x: the x coordinate of the click
+          * y: the y coordinate of the click
+          * xs: the x coordinates of the flow
+          * bottoms: the bottoms of the flow
+          * heights: the heights of the flow
+        
+        Returns: a tuple consisting of:
+          * is_in_flow: a boolean saying if the click is within tolerance of
+                        the bar-plot
+          * j: the x-index of the closest point in the flow data to the left
+               of the click, if is_in_flow == True (None otherwise)
+        
+        """
+        
+        is_in_flow = False
+        
+        for j in range(len(xs) - 1):
+            
+            if xs[j] <= x <= xs[j+1]:
+                
+                h_interp = (heights[j] +
+                            ((heights[j + 1] - heights[j]) /
+                             (xs[j + 1] - xs[j])) * (x - xs[j]))
+                b_interp = (bottoms[j] +
+                            ((bottoms[j + 1] - bottoms[j]) /
+                             (xs[j + 1] - xs[j])) * (x - xs[j]))
+                if b_interp <= y <= b_interp + h_interp:
+                
+                    is_in_flow = True
+                    break
+        
+        j = j if is_in_flow else None
+        return (is_in_flow, j)
+    
+    def __call__(self, event):
+        """The callback called by Matplotlib on a click event (if we connect
+        the AnnoteFinderFlow to a click event).
+        
+        Arguments:
+          * event: the event object sent by Matplotlib
+        
+        This function finds the data set corresponding to the bars nearest to
+        the click point, and draws the corresponding annotation in all the
+        connected plots. The drawn annotations consist of a highlighting of
+        the flow, and a text (if self.drawtext == True).
+        
+        """
+        
+        # Only if we're in the axes, and we're not zooming or in another mode.
+        
+        if event.inaxes and pl.get_current_fig_manager().toolbar.mode == '':
+            
+            clickX = event.xdata
+            clickY = event.ydata
+            
+            # Only if we're in our axes.
+            
+            if self.axis is None or self.axis == event.inaxes:
+                
+                # Get the annote in the flow, if it exists.
+                
+                annote = None
+                
+                for (i, (xs, bottoms, heights, a)) in enumerate(self.data):
+                    
+                    (is_in_flow, j) = self.is_in_flow(clickX, clickY, xs,
+                                                      bottoms, heights)
+                    
+                    if is_in_flow:
+                        
+                        annote = a
+                        break
+                
+                # Then plot it.
+                
+                if annote:
+                    
+                    self.drawAnnote(event.inaxes, i, j, clickX, annote)
+                    
+                    for l in self.links:
+                        l.drawAnnote(l.axis, i, j, clickX, annote)
+    
+    def drawAnnote(self, axis, i, j, x, annote):
+        """Draw an annotation on the plot.
+        
+        Arguments:
+          * axis: the axis to draw on
+          * i: the index of the data series for which we're to draw the annote
+          * j: the x index of the closest point in the flow data to the left
+               of x (see next argument).
+          * x: the x-coordinate for the annote to draw
+          * annote: the annotation to draw. It should have an 'id' attribute.
+                    The text shown will be formatted using
+                    '{}'.format(annote).
+        
+        """
+        
+        # If the annotation is already drawn, remove it.
+        
+        if annote.id in self.drawnAnnotations:
+            
+            markers = self.drawnAnnotations.pop(annote.id)
+            
+            for m in markers:
+                
+                if m:
+                    m.set_visible(not m.get_visible())
+            
+            self.axis.figure.canvas.draw()
+        
+        # Else create the annotation, store it, and display it.
+        
+        else:
+            
+            (xs, bottoms, heights) = self.data[i][:3]
+            
+            # If j is out of bounds (meaning it probably comes from a linked
+            # AnnoteFinderBar object, where j can be 1 + the max here), set it to
+            # the max.
+            
+            if j >= len(xs) - 1:
+                j = len(xs) - 2
+            
+            h_interp = (heights[j] +
+                        ((heights[j + 1] - heights[j]) /
+                         (xs[j + 1] - xs[j])) * (x - xs[j]))
+            b_interp = (bottoms[j] +
+                        ((bottoms[j + 1] - bottoms[j]) /
+                         (xs[j + 1] - xs[j])) * (x - xs[j]))
+            y = b_interp + h_interp / 2
+            
+            # Create the text if asked for.
+            
+            if self.drawtext:
+                t = axis.annotate(textwrap.fill('{}'.format(annote), 70),
+                                  xy=(x, y),
+                                  xycoords='data',
+                                  xytext=(0, 200),
+                                  textcoords='offset points',
+                                  bbox=dict(boxstyle='round',
+                                            fc=(0.95, 0.8, 1.0, 0.8),
+                                            ec=(0.85, 0.4, 1.0, 0.8)),
+                                  arrowprops=
+                                      dict(arrowstyle='wedge,tail_width=1.',
+                                           fc=(0.95, 0.8, 1.0, 0.8),
+                                           ec=(0.85, 0.4, 1.0, 0.8),
+                                           patchA=None,
+                                           patchB=None,
+                                           relpos=(0.1, 1.0),
+                                           connectionstyle='arc3,rad=0'))
+            else:
+                t = None
+            
+            # Shift the color of the flow to highlight it.
+            
+            color_o = cm.YlOrBr(i / len(self.data))
+            color = (color_o[1], color_o[2], color_o[0], color_o[3])
+            
+            m = axis.fill_between(xs, bottoms, heights + bottoms, color=color,
+                                  edgecolor=(0.0, 0.0, 0.0, 0.0))
             self.drawnAnnotations[annote.id] = (t, m)
             self.axis.figure.canvas.draw()
 

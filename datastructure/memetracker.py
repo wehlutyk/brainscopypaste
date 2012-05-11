@@ -115,9 +115,9 @@ class Timeline(object):
         """Plot the Timeline."""
         v_mt.plot_timeline(self, smooth_res=smooth_res)
     
-    def bar(self, bins=25):
+    def barflow(self, bins=25):
         """Plot the bar-chart of the Timeline."""
-        return v_mt.bar_timeline(self, bins)
+        return v_mt.barflow_timeline(self, bins)
 
 
 class Quote(Timeline):
@@ -228,9 +228,9 @@ class Quote(Timeline):
         v_mt.plot_timeline(self, label=self.__unicode__(),
                            smooth_res=smooth_res)
     
-    def bar(self, bins=25):
+    def barflow(self, bins=25):
         """Plot the bar-chart of the Quote."""
-        return v_mt.bar_timeline(self, bins)
+        return v_mt.barflow_timeline(self, bins)
 
 
 class Cluster(object):
@@ -415,31 +415,36 @@ class Cluster(object):
         v_mt.plot_timeline(self.timeline, label=self.__unicode__(),
                            smooth_res=smooth_res)
     
-    def bar(self, bins=25):
+    def barflow(self, bins=25):
         """Plot the bar-chart of the Cluster Timeline."""
         self.build_timeline()
-        return self.timeline.bar(bins)
+        return self.timeline.barflow(bins)
     
-    def bar_quotes(self, bins=25):
+    def bar_quotes(self, bins=25, drawtext=True):
         """Plot the stacked bar-chart of the Quotes in the Cluster, with
         annotations."""
-        return v_mt.bar_cluster(self, bins)
+        return v_mt.bar_cluster(self, bins, drawtext)
     
-    def bar_quotes_norm(self, bins=25):
+    def flow_quotes(self, bins=25, drawtext=True):
+        """Plot the flow of the stacked bar-chart of Quotes in a Cluster, with
+        added annotations."""
+        return v_mt.flow_cluster(self, bins, drawtext)
+    
+    def bar_quotes_norm(self, bins=25, drawtext=True):
         """Plot the stacked bar-chart of the Quotes in the Cluster, all
         normalized to one, with text-less annotations."""
-        return v_mt.bar_cluster_norm(self, bins)
+        return v_mt.bar_cluster_norm(self, bins, drawtext)
     
-    def bar_all(self, bins=25):
-        """Plot the bar-plot, stacked bar-plot, and normalized stacked bar-
+    def barflow_all(self, bins=25):
+        """Plot the bar-plot, stacked bar-plot, and flow of the stacked bar-
         plot for the cluster, with annotations."""
         pl.subplot(311)
         pl.title(self)
-        self.bar(bins)
+        self.barflow(bins)
         pl.subplot(312)
-        af1 = self.bar_quotes(bins)[1]
+        af1 = self.bar_quotes(bins, drawtext=False)[1]
         pl.subplot(313)
-        af2 = self.bar_quotes_norm(bins)[1]
+        af2 = self.flow_quotes(bins)[1]
         v_an.linkAnnotationFinders([af1, af2])
 
 
