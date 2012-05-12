@@ -16,10 +16,13 @@ if __name__ == '__main__':
     # Parameters for testing, not doing the full-blown loading.
     #picklefile = st.memetracker_test_pickle
     #picklefile_framed = st.memetracker_test_framed_pickle
+    #clusters_filtered_pickle = st.memetracker_test_filtered_pickle
+    #clusters_ff_pickle = st.memetracker_test_ff_pickle
     
     clusters_pickle = st.memetracker_full_pickle
     clusters_framed_pickle = st.memetracker_full_framed_pickle
-    clusters_f_filtered_pickle = st.memetracker_full_framed_filtered_pickle
+    clusters_filtered_pickle = st.memetracker_full_filtered_pickle
+    clusters_ff_pickle = st.memetracker_full_ff_pickle
     
     # The redis connection
     
@@ -62,24 +65,44 @@ if __name__ == '__main__':
     assert rserver.save()
     print 'OK'
     
+    # Clean up before going to the filtered clusters
+    
+    print 'Garbage collecting before doing the filtered clusters...',
+    del clusters_framed
+    gc.collect()
+    print 'OK'
+    
+    # Load and save the filtered clusters
+    
+    print 'Loading filtered clusters from pickle...',
+    clusters_filtered = ps.load(clusters_filtered_pickle)
+    print 'OK'
+    
+    print 'Storing filtered clusters to redis...',
+    
+    for cl_id, cl in clusters_filtered.iteritems():
+        assert rserver.pset(st.redis_mt_clusters_filtered_pref, cl_id, cl)
+    
+    assert rserver.save()
+    print 'OK'
+    
     # Clean up before going to the framed-filtered clusters
     
     print 'Garbage collecting before doing the framed-filtered clusters...',
-    del clusters_framed
+    del clusters_filtered
     gc.collect()
     print 'OK'
     
     # Load and save the framed-filtered clusters
     
     print 'Loading framed-filtered clusters from pickle...',
-    clusters_f_filtered = ps.load(clusters_f_filtered_pickle)
+    clusters_ff = ps.load(clusters_ff_pickle)
     print 'OK'
     
     print 'Storing framed-filtered clusters to redis...',
     
-    for cl_id, cl in clusters_f_filtered.iteritems():
-        assert rserver.pset(st.redis_mt_clusters_framed_filtered_pref,
-                            cl_id, cl)
+    for cl_id, cl in clusters_ff.iteritems():
+        assert rserver.pset(st.redis_mt_clusters_ff_pref, cl_id, cl)
     
     assert rserver.save()
     print 'OK'

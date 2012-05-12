@@ -19,24 +19,31 @@ if __name__ == '__main__':
     #filename = st.memetracker_test
     #picklefile = st.memetracker_test_pickle
     #picklefile_framed = st.memetracker_test_framed_pickle
+    #picklefile_filtered = st.memetracker_test_filtered_pickle
+    #picklefile_ff = st.memetracker_test_ff_pickle
     
     filename = st.memetracker_full
     picklefile = st.memetracker_full_pickle
     picklefile_framed = st.memetracker_full_framed_pickle
-    picklefile_f_filtered = st.memetracker_full_framed_filtered_pickle
+    picklefile_filtered = st.memetracker_full_filtered_pickle
+    picklefile_ff = st.memetracker_full_ff_pickle
     
     
     # Check that the destination doesn't already exist.
     
     st.check_file(picklefile)
     st.check_file(picklefile_framed)
-    st.check_file(picklefile_f_filtered)
+    st.check_file(picklefile_filtered)
+    st.check_file(picklefile_ff)
     
-    
-    # Load the data.
+    # Load the data. Set some parameters.
     
     MT = di_mt.MT_dataset(filename)
     MT.load_clusters()
+    
+    l = len(MT.clusters)
+    info_step = max(int(round(l/100)), 1)
+    min_tokens = 5
     
     
     # And save it.
@@ -48,12 +55,9 @@ if __name__ == '__main__':
     
     # Frame the clusters.
     
-    print 'Computing framed Clusters...',
-    
+    print 'Computing framed Clusters...'
     framed_clusters = {}
     i = 0
-    l = len(MT.clusters)
-    info_step = max(int(round(l/100)), 1)
     
     for cl_id, cl in MT.clusters.iteritems():
         
@@ -68,30 +72,59 @@ if __name__ == '__main__':
     
     print 'OK'
     
-    # Clean up before saving, this stuff is hard on memory.
     
-    print 'Cleaning up before saving framed Clusters to pickle file...',
+    # Filter the clusters.
     
-    del MT
-    gc.collect()
+    print 'Computing filtered Clusters (min_tokens={})...'.format(min_tokens)
+    filtered_clusters = {}
+    i = 0
+    
+    for cl_id, cl in MT.clusters.iteritems():
+        
+        i += 1
+        if i % info_step == 0:
+            print '  {} % ({} / {} clusters)'.format(int(round(100 * i / l)),
+                                                     i, l)
+        
+        filtered_cl = a_mt.filter_cluster(cl, min_tokens)
+        if filtered_cl != None:
+            filtered_clusters[cl_id] = filtered_cl
     
     print 'OK'
-        
-    # And save the framed clusters.
     
-    print ('Saving Framed Clusters to pickle file (this might take quite '
+    
+    # Clean up before saving, this stuff is hard on memory.
+    
+    print ('Cleaning up before saving framed and filtered Clusters to pickle '
+           'files...'),
+    del MT
+    gc.collect()
+    print 'OK'
+        
+    # And save the framed an filtered clusters.
+    
+    print ('Saving framed Clusters to pickle file (this might take quite '
            'some time, e.g. up to 30 minutes)...'),
     ps.save(framed_clusters, picklefile_framed)
     print 'OK'
     
+    print ('Saving filtered Clusters to pickle file (this might take quite '
+           'some time, e.g. up to 30 minutes)...'),
+    ps.save(filtered_clusters, picklefile_filtered)
+    print 'OK'
     
-    # Filter the clusters.
     
-    min_tokens = 5
+    print ('Cleaning up before doing the framed-filtered clusters...'),
+    del filtered_clusters
+    gc.collect()
+    print 'OK'
+    
+    
+    # Frame-Filter the clusters.
+    
     print ('Computing framed-filtered Clusters '
-           '(min_tokens={})...').format(min_tokens),
-    
-    f_filtered_clusters = {}
+           '(min_tokens={})...').format(min_tokens)
+    ff_clusters = {}
     i = 0
     
     for cl_id, cl in framed_clusters.iteritems():
@@ -101,9 +134,9 @@ if __name__ == '__main__':
             print '  {} % ({} / {} clusters)'.format(int(round(100 * i / l)),
                                                      i, l)
         
-        f_filtered_cl = a_mt.filter_cluster(cl, 5)
-        if f_filtered_cl != None:
-            f_filtered_clusters[cl_id] = f_filtered_cl
+        ff_cl = a_mt.filter_cluster(cl, min_tokens)
+        if ff_cl != None:
+            ff_clusters[cl_id] = ff_cl
     
     print 'OK'
     
@@ -111,14 +144,12 @@ if __name__ == '__main__':
     
     print ('Cleaning up before saving framed-filtered '
            'Clusters to pickle file...'),
-    
     del framed_clusters
     gc.collect()
-    
     print 'OK'
     
     # And save the filtered clusters.
     
-    print 'Saving Framed-Filtered Clusters to pickle file...',
-    ps.save(f_filtered_clusters, picklefile_f_filtered)
+    print 'Saving framed-filtered Clusters to pickle file...',
+    ps.save(ff_clusters, picklefile_ff)
     print 'OK'

@@ -32,8 +32,11 @@ def get_args_from_cmdline():
                                        'in the MemeTracker dataset.'))
     
     p.add_argument('--ff', action='store', nargs=1, required=True,
-                   help=('1: analyze framed-filtered clusters; '
-                         '0: analyse non-framed non-filtered clusters.'))
+                   help=('Specify on what dataset the analysis is done: '
+                         "'full': the full clusters; "
+                         "'framed': the framed clusters; "
+                         "'filtered': the filtered clusters; "
+                         "'ff': the framed-filtered clusters."))
     p.add_argument('--lemmatizing', action='store', nargs=1, required=True,
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
@@ -59,7 +62,7 @@ def get_args_from_cmdline():
     
     args = p.parse_args()
     
-    ff = int(args.ff[0])
+    ff = args.ff[0]
     lemmatizing = int(args.lemmatizing[0])
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
@@ -74,8 +77,9 @@ def get_args_from_cmdline():
         raise Exception(('Wrong bag transitions, according to the '
                          'number of timebags requested'))
     
-    if ff != 0 and ff != 1:
-        raise Exception('Wrong value for --ff. Expected 1 or 0.')
+    if ff not in ['full', 'framed', 'filtered', 'ff']:
+        raise Exception('Wrong value for --ff. Expected one of '
+                        "'full', 'framed', 'filtered', or 'ff'.")
     
     if lemmatizing != 0 and lemmatizing != 1:
         raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
@@ -84,7 +88,7 @@ def get_args_from_cmdline():
         raise Exception(('Wrong value for --POS. Expected one '
                          'of {}.').format(st.memetracker_subst_POSs))
     
-    return {'ff': bool(ff),
+    return {'ff': ff,
             'lemmatizing': bool(lemmatizing),
             'POS': POS,
             'verbose': args.verbose,

@@ -16,7 +16,7 @@ import settings as st
 
 
 if __name__ == '__main__':
-    base_prefix = '{ff}Ff_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
+    base_prefix = 'F{ff}_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
     N = {0: 'N', 1: ''}
     
     parameters = []
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     fa_PR_scores_r_stds = []
     fa_PR_scores_r_lens = []
     
-    for ff in [0, 1]:
+    for ff in ['full', 'framed', 'filtered', 'ff']:
         
         for lemmatizing in [0, 1]:
             

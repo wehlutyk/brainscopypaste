@@ -21,6 +21,7 @@ from __future__ import division
 
 from datetime import datetime
 from warnings import warn
+import textwrap
 
 import numpy as np
 import pylab as pl
@@ -439,7 +440,7 @@ class Cluster(object):
         """Plot the bar-plot, stacked bar-plot, and flow of the stacked bar-
         plot for the cluster, with annotations."""
         pl.subplot(311)
-        pl.title(self)
+        pl.title(textwrap.fill('{}'.format(self), 70))
         self.barflow(bins)
         pl.subplot(312)
         af1 = self.bar_quotes(bins, drawtext=False)[1]

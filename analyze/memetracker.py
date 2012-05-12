@@ -464,10 +464,7 @@ class SubstitutionAnalysis(object):
         
         file_prefix = ''
         
-        if not args['ff']:
-            file_prefix += 'N'
-        
-        file_prefix += 'Ff_'
+        file_prefix += 'F{}_'.format(args['ff'])
         
         if not args['lemmatizing']:
             file_prefix += 'N'
@@ -538,12 +535,12 @@ class SubstitutionAnalysis(object):
         print ('Connecting to redis server for cluster data, '
                'loading PageRank and degree data from pickle...'),
         
-        if args['ff']:
-            clusters = \
-                rt.RedisReader(st.redis_mt_clusters_framed_filtered_pref)
-        else:
-            clusters = rt.RedisReader(st.redis_mt_clusters_pref)
+        ff_dict = {'full': st.redis_mt_clusters_pref,
+                   'framed': st.redis_mt_clusters_framed_pref,
+                   'filtered': st.redis_mt_clusters_filtered_pref,
+                   'ff': st.redis_mt_clusters_ff_pref}
         
+        clusters = rt.RedisReader(ff_dict[args['ff']])
         wn_PR = ps.load(st.wordnet_PR_scores_pickle.format(args['POS']))
         wn_degrees = ps.load(st.wordnet_degrees_pickle.format(args['POS']))
         fa_PR = ps.load(st.freeassociation_norms_PR_scores_pickle)
@@ -884,7 +881,7 @@ class SubstitutionAnalysis(object):
     
         print 'OK'
     
-    def create_args_list(self, n_timebags_list, POSs):
+    def create_args_list(self, n_timebags_list, POSs, ff):
         """Create a list of possible args dicts, according to requested
         timebag slicings and POS tags.
         
@@ -898,6 +895,8 @@ class SubstitutionAnalysis(object):
           * POSs: a list of Wordnet POS tags, indicating which words to
                   examine depending on their POS tag (see
                   memetracker_substitution_analysis_analyze.py for more info)
+          * ff: specifies on what dataset the analysis is done. Must be one of
+                'full', 'framed', 'filtered', or 'ff'.
         
         Returns:
           * args_list: a list of dicts, each one corresponding to a specific
@@ -916,7 +915,7 @@ class SubstitutionAnalysis(object):
                 
                 for pos in POSs:
                     
-                    args_list.append({'ff': True,
+                    args_list.append({'ff': ff,
                                       'lemmatizing': True,
                                       'POS': pos,
                                       'verbose': False,
@@ -939,7 +938,7 @@ class SubstitutionAnalysis(object):
         results = self.examine_substitutions(args, data)
         self.save_results(files, results)
     
-    def analyze_all(self, n_timebags_list, POSs):
+    def analyze_all(self, n_timebags_list, POSs, ff):
         """Run 'analyze' with various timebag slicings and POS tags.
         
         The analysis is always done with framing-filtering and lemmatizing
@@ -951,14 +950,17 @@ class SubstitutionAnalysis(object):
           * POSs: a list of Wordnet POS tags, indicating which words to
                   examine depending on their POS tag (see
                   memetracker_substitution_analysis_analyze.py for more info)
+          * ff: specifies on what dataset the analysis is done. Must be one of
+                'full', 'framed', 'filtered', or 'ff'.
         
         """
         
         print
         print ('Starting substitution analysis, for timebag '
-               'slicings {}, POS {}').format(n_timebags_list, POSs)
+               'slicings {}, POS {}, dataset {}').format(n_timebags_list,
+                                                         POSs, ff)
         
-        args_list = self.create_args_list(n_timebags_list, POSs)
+        args_list = self.create_args_list(n_timebags_list, POSs, ff)
         
         for args in args_list:
             self.analyze(args)
@@ -967,14 +969,15 @@ class SubstitutionAnalysis(object):
         """Put an analysis job in the queue."""
         Q.put(self.analyze(args))
     
-    def analyze_all_mt(self, n_timebags_list, POSs):
+    def analyze_all_mt(self, n_timebags_list, POSs, ff):
         """Run 'analyze' with various timebag slicings, multi-threaded."""
         
         print
         print ('Starting multi-threaded substitution analysis, for timebag '
-               'slicings {}, POS {}').format(n_timebags_list, POSs)
+               'slicings {}, POS {}, dataset {}').format(n_timebags_list,
+                                                         POSs, ff)
         
-        args_list = self.create_args_list(n_timebags_list, POSs)
+        args_list = self.create_args_list(n_timebags_list, POSs, ff)
         n_jobs = len(args_list)
         n_groups = int(np.ceil(n_jobs / self.n_proc))
         Q = Queue()
