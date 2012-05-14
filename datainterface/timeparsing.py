@@ -42,22 +42,22 @@ def isostr_to_epoch_linkfluence(isostr):
     
     # Get the timezone offset and strip it from the 'tzisostr'.
     
-    try:
-        
-        if len(tzisostr) >= 20:
-            
-            tzoffset = int(tzisostr[-6:-3])
-            offsetstr = tzisostr[:-6]
-        
-        else:
-            
-            tzoffset = 0
-            offsetstr = tzisostr
+#    try:
     
-    except:
+    if len(tzisostr) >= 20:
         
-        print 'Exception caught in int()'
-        print 'isostr =', isostr
+        tzoffset = int(tzisostr[-6:-3])
+        offsetstr = tzisostr[:-6]
+    
+    else:
+        
+        tzoffset = 0
+        offsetstr = tzisostr
+
+#    except:
+#        
+#        print 'Exception caught in int()'
+#        print 'isostr =', isostr
     
     # Convert the offsetstr to a datetime.
     

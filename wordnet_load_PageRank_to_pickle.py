@@ -20,7 +20,7 @@ if __name__ == '__main__':
         
         try:
             st.check_file(picklefile)
-        except:
+        except Exception:
             
             print picklefile + 'already exists, not overwriting it.'
             continue

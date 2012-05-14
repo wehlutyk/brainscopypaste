@@ -43,7 +43,7 @@ if __name__ == '__main__':
                         
                         # Create the corresponding file names.
                         
-                        file_prefix = base_prefix.format(ff=N[ff],
+                        file_prefix = base_prefix.format(ff=ff,
                                                          lem=N[lemmatizing],
                                                          pos=pos,
                                                          ntb=n_timebags,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                             wn_degrees = ps.load(pickle_wn_degrees)
                             fa_PR_scores = ps.load(pickle_fa_PR_scores)
                         
-                        except:
+                        except IOError:
                             warn(("Files for parameters '{}' "
                                   'not found.').format(file_prefix))
                             continue
