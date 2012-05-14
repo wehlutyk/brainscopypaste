@@ -174,7 +174,7 @@ class AnnoteFinder(object):
             t = axis.annotate('({}, {})\n{}'.format(x, y ,annote),
                               xy=(x, y),
                               xycoords='data',
-                              xytext=(0, -200),
+                              xytext=(0, -100),
                               textcoords='offset points',
                               bbox=dict(boxstyle='round',
                                         fc=(0.95, 0.8, 1.0, 0.8),
@@ -186,7 +186,8 @@ class AnnoteFinder(object):
                                              patchB=None,
                                              relpos=(0.1, 1.0),
                                              connectionstyle='arc3,rad=0'))
-            m = axis.scatter([x], [y], marker='d', c='r', zorder=100)
+            m = axis.plot([x], [y], marker='o', color='yellow', zorder=100,
+                          markersize=10)[0]
             self.drawnAnnotations[(x, y)] = (t, m)
             self.axis.figure.canvas.draw()
     
@@ -707,3 +708,53 @@ def linkAnnotationFinders(afs):
         
         allButSelfAfs = afs[:i] + afs[i + 1:]
         afs[i].links.extend(allButSelfAfs)
+
+
+class AnnoteFinderPlot(object):
+    
+    """Display a plot when clicking a data point in another Matplotlib plot.
+    
+    This class defines drawSpecificAnnote function, to be called by other
+    AnnoteFinders when clicked on.
+      
+    Register this function like this:
+      
+    >>> scatter(xdata, ydata)
+    >>> af = AnnoteFinder(xdata, ydata, annotes)
+    >>> connect('button_press_event', af)
+    >>> af2 = AnnoteFinderPlot(second_annotes, second_fig, second_axis,
+                               second_plot)
+    >>> af.links.append(af2)
+    
+    Methods:
+      * __init__: initialize the annotator
+      * drawSpecificAnnote: draw a plot, corresponding to an annote from
+                            another AnnoteFinder
+    
+    """
+    
+    def __init__(self, annotes, second_fig, second_axis, second_plot,
+                  axis=None, xtol=None, ytol=None):
+        """Initialize the annotator.
+        
+        Arguments:
+          * annotes: a dict of parameters; keys are (x, y) tuples, and values
+                     are parameters passed to the second_plot function
+          * second_axis: the axes where the auxiliary plotting is to be done
+          * second_plot: the plotting function for the auxiliary axis
+        
+        """
+        
+        self.annotes = annotes
+        
+        # Set the axes.
+        
+        self.second_fig = second_fig
+        self.second_axis = second_axis
+        self.second_plot = second_plot
+    
+    def drawSpecificAnnote(self, annote):
+        """Draw a plot, corresponding to an annote from another
+        AnnoteFinder."""
+        self.second_plot(self.second_axis, self.annotes[annote])
+        self.second_fig.canvas.draw()
