@@ -15,6 +15,40 @@ import visualize.annotations as an
 import settings as st
 
 
+def list_to_dict(list):
+    """Convert a list of items to a dict associating each item to an array of
+    its coordinates."""
+    out = {}
+    
+    for i, item in enumerate(list):
+        
+        if out.has_key(item):
+            out[item].append(i)
+        else:
+            out[item] = [i]
+    
+    for k, v in out.iteritems():
+        out[k] = array(v)
+    
+    return out
+
+
+def clids(details):
+    """Get the coordinates of clusters from a list of details of results."""
+    return list_to_dict([detail['cl_id'] for detail in details])
+
+
+def cl_means(values, clids):
+    """Compute the means of values for clusters in a list, using provided
+    grouping of values according to cluster ids."""
+    means = []
+    
+    for idx in clids.itervalues():
+        means.append(values[idx].mean())
+    
+    return array(means)
+
+
 if __name__ == '__main__':
     base_prefix = 'F{ff}_{lem}L_P{pos}_{ntb}_{b1}-{b2}_'
     N = {0: 'N', 1: ''}
@@ -56,11 +90,20 @@ if __name__ == '__main__':
                         pickle_wn_PR_scores = \
                             st.memetracker_subst_wn_PR_scores_pickle.\
                             format(file_prefix)
+                        pickle_wn_PR_scores_d = \
+                            st.memetracker_subst_wn_PR_scores_d_pickle.\
+                            format(file_prefix)
                         pickle_wn_degrees = \
                             st.memetracker_subst_wn_degrees_pickle.\
                             format(file_prefix)
+                        pickle_wn_degrees_d = \
+                            st.memetracker_subst_wn_degrees_d_pickle.\
+                            format(file_prefix)
                         pickle_fa_PR_scores = \
                             st.memetracker_subst_fa_PR_scores_pickle.\
+                            format(file_prefix)
+                        pickle_fa_PR_scores_d = \
+                            st.memetracker_subst_fa_PR_scores_d_pickle.\
                             format(file_prefix)
                         
                         # Load the data.
@@ -68,10 +111,14 @@ if __name__ == '__main__':
                         try:
                             
                             wn_PR_scores = ps.load(pickle_wn_PR_scores)
+                            wn_PR_scores_d = ps.load(pickle_wn_PR_scores_d)
                             wn_degrees = ps.load(pickle_wn_degrees)
+                            wn_degrees_d = ps.load(pickle_wn_degrees_d)
                             fa_PR_scores = ps.load(pickle_fa_PR_scores)
+                            fa_PR_scores_d = ps.load(pickle_fa_PR_scores_d)
                         
                         except IOError:
+                            
                             warn(("Files for parameters '{}' "
                                   'not found.').format(file_prefix))
                             continue
@@ -83,11 +130,18 @@ if __name__ == '__main__':
                                   '{}.'.format(file_prefix)))
                             continue
                         
-                        # Compute ratios and differences.
+                        # Compute ratios, correct them to represent the means
+                        # by clusters.
                         
-                        wn_PR_scores_r = wn_PR_scores[:,1] / wn_PR_scores[:,0]
-                        wn_degrees_r = wn_degrees[:,1] / wn_degrees[:,0]
-                        fa_PR_scores_r = fa_PR_scores[:,1] / fa_PR_scores[:,0]
+                        wn_PR_scores_r = cl_means(wn_PR_scores[:,1] /
+                                                  wn_PR_scores[:,0],
+                                                  clids(wn_PR_scores_d))
+                        wn_degrees_r = cl_means(wn_degrees[:,1] /
+                                                wn_degrees[:,0],
+                                                clids(wn_degrees_d))
+                        fa_PR_scores_r = cl_means(fa_PR_scores[:,1] /
+                                                  fa_PR_scores[:,0],
+                                                  clids(fa_PR_scores_d))
                         
                         # Store results.
                         
