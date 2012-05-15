@@ -641,26 +641,40 @@ class SubstitutionAnalysis(object):
                 # (sphere of hamming_word distance =1)
                 
 ##############################################################################
-#                # THIS
+#                # THIS A1
 #                smax = tbgs[i].max_freq_string.lower()
 ##############################################################################
-                # OR THIS
+                # OR THIS A2
                 smax = cl.root
 ##############################################################################
-                
+
                 smax_pos = tagger.Tags(smax)
                 smax_tok = tagger.Tokenize(smax)
+                
 ##############################################################################
-#                # THIS
-#                daughters = [tbgs[j].strings[k].lower()
-#                             for k in tbgs[j].hamming_word_sphere(smax, 1)]
-##############################################################################
-                # OR THIS
+                # THIS B1
+                smot = smax
+                smot_pos = smax_pos
+                smot_tok = smax_tok
                 daughters = [tbgs[j].strings[k].lower()
-                             for k in tbgs[j].subhamming_word_sphere(smax, 1)]
-##############################################################################
+                             for k in tbgs[j].hamming_word_sphere(smot, 1)]
                 
                 for s in daughters:
+                    
+##############################################################################
+#                # OR THIS B2
+#                daughters_mums = [(tbgs[j].strings[k].lower(), mum)
+#                                  for k, mum
+#                                  in tbgs[j].subhamming_word_sphere(smax, 1)]
+#                
+#                for s, mum in daughters_mums:
+#                    
+#                    # Rebuild the mother thanks to info from subhamming
+#                    
+#                    smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
+#                    smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
+#                    smot = ' '.join(smot_tok)
+##############################################################################
                     
                     # Pause to read verbose info.
                     
@@ -675,8 +689,7 @@ class SubstitutionAnalysis(object):
                     s_pos = tagger.Tags(s)
                     s_tok = tagger.Tokenize(s)
                     idx = np.where([w1 != w2 for (w1, w2) in
-                                    zip(s_tok, smax_tok)])[0]
-                    
+                                    zip(s_tok, smot_tok)])[0]
                     
                     # Verbose info
                     
@@ -684,10 +697,10 @@ class SubstitutionAnalysis(object):
                         
                         print
                         print ("***** SUBST (cl #{}) ***** '".format(cl.id) +
-                               '{}/{}'.format(smax_tok[idx], smax_pos[idx]) +
+                               '{}/{}'.format(smot_tok[idx], smot_pos[idx]) +
                                "' -> '" + '{}/{}'.format(s_tok[idx],
                                                          s_pos[idx]) + "'")
-                        print smax
+                        print smot
                         print '=>'
                         print s
                         print
@@ -697,7 +710,7 @@ class SubstitutionAnalysis(object):
                     
                     if args['POS'] == 'all':
                         
-                        if s_pos[idx][:2] != smax_pos[idx][:2]:
+                        if s_pos[idx][:2] != smot_pos[idx][:2]:
                             
                             if args['verbose']:
                                 print 'Stored: NONE (different POS)'
@@ -707,7 +720,7 @@ class SubstitutionAnalysis(object):
                     else:
                         
                         if (s_pos[idx][:2] != pos_wn_to_tt[args['POS']] or
-                            smax_pos[idx][:2] != pos_wn_to_tt[args['POS']]):
+                            smot_pos[idx][:2] != pos_wn_to_tt[args['POS']]):
                             
                             if args['verbose']:
                                 print 'Stored: NONE (wrong POS)'
@@ -719,11 +732,11 @@ class SubstitutionAnalysis(object):
                     
                     if args['lemmatizing']:
                         
-                        m1 = wn.morphy(smax_tok[idx])
+                        m1 = wn.morphy(smot_tok[idx])
                         if m1 != None:
                             lem1 = m1
                         else:
-                            lem1 = smax_tok[idx]
+                            lem1 = smot_tok[idx]
                         
                         m2 = wn.morphy(s_tok[idx])
                         if m2 != None:
@@ -739,7 +752,7 @@ class SubstitutionAnalysis(object):
                         
                     else:
                         
-                        lem1 = smax_tok[idx]
+                        lem1 = smot_tok[idx]
                         lem2 = s_tok[idx]
                     
                     
@@ -758,12 +771,12 @@ class SubstitutionAnalysis(object):
                     # The details to be saved about the substitution
                     
                     details = {'cl_id': cl.id,
-                               'smax': smax,
+                               'smot': smot,
                                's': s,
                                'idx': idx,
                                'lem1': lem1,
                                'lem2': lem2,
-                               'POS1': smax_pos[idx],
+                               'POS1': smot_pos[idx],
                                'POS2': s_pos[idx],
                                'bag_tr': (i, j),
                                'n_tbgs': args['n_timebags']}

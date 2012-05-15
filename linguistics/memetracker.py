@@ -7,13 +7,6 @@ Methods:
   * levenshtein: compute levenshtein distance between s1 and s2
   * levenshtein_word: compute levenshtein distance between s1 and s2, taking
                       words as the editing unit
-  * timebag_levenshtein_closedball: get the indexes of the strings in a
-                                    TimeBag that are at levenshtein-distance
-                                    <= d from a string
-  * timebag_levenshtein_word_closedball: get the indexes of the strings in a
-                                         TimeBag that are at
-                                         levenshtein_word-distance <= d from a
-                                         string
   * timebag_levenshtein_sphere: get the indexes of the strings in a TimeBag
                                 that are at levenshtein-distance == d from a
                                 string
@@ -24,12 +17,6 @@ Methods:
   * hamming: compute hamming distance between s1 and s2
   * hamming_word: compute hamming distance between s1 and s2, taking words as
                   the editing unit
-  * timebag_hamming_closedball: get the indexes of the strings in a TimeBag
-                                that are at hamming-distance <= d from a
-                                string
-  * timebag_hamming_word_closedball: get the indexes of the strings in a
-                                     TimeBag that are at hamming_word-distance
-                                     <= d from a string
   * timebag_hamming_sphere: get the indexes of the strings in a TimeBag that
                             are at hamming-distance == d from a string
   * timebag_hamming_word_sphere: get the indexes of the strings in a TimeBag
@@ -40,18 +27,11 @@ Methods:
                 sublists of s1
   * subhamming_word: compute subhamming distance between s1 and s2, taking
                      words as the editing unit
-  * timebag_subhamming_closedball: get the indexes of the strings in a TimeBag
-                                   that are at subhamming-distance <= d from a
-                                   string
-  * timebag_subhamming_word_closedball: get the indexes of the strings in a
-                                        TimeBag that are at
-                                        subhamming_word-distance <= d from a
-                                        string
-  * timebag_subhamming_sphere: get the indexes of the strings in a TimeBag
-                               that are at subhamming-distance == d from a
-                               string
-  * timebag_subhamming_word_sphere: get the indexes of the strings in a
-                                    TimeBag that are at
+  * timebag_subhamming_sphere: get the indices and motherstrings of the
+                               substrings in a TimeBag that are at
+                               subhamming-distance == d from a string
+  * timebag_subhamming_word_sphere: get the indices and motherstrings of the
+                                    substrings in a TimeBag that are at
                                     subhamming_word-distance == d from a
                                     string
 
@@ -104,34 +84,6 @@ def levenshtein_word(s1, s2):
     return levenshtein(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
-def timebag_levenshtein_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    levenshtein-distance <= d from a string."""
-    distances = np.array([levenshtein(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances <= d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
-def timebag_levenshtein_word_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    levenshtein_word-distance <= d from a string."""
-    distances = np.array([levenshtein_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances <= d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
 def timebag_levenshtein_sphere(timebag, center_string, d):
     """Get the indexes of the strings in a TimeBag that are at
     levenshtein-distance == d from a string."""
@@ -174,33 +126,6 @@ def hamming_word(s1, s2):
     return hamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
-def timebag_hamming_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    hamming-distance <= d from a string."""
-    distances = np.array([hamming(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where((0 <= distances) * (distances <= d))
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
-def timebag_hamming_word_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    hamming_word-distance <= d from a string."""
-    distances = np.array([hamming_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    idx = np.where((0 <= distances) * (distances <= d))
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
 def timebag_hamming_sphere(timebag, center_string, d):
     """Get the indexes of the strings in a TimeBag that are at
     hamming-distance == d from a string."""
@@ -237,19 +162,22 @@ def sublists(s, l):
 def subhamming(s1, s2):
     """Compute the minimum hamming distance between s2 and all sublists of
     s1."""
-    if len(s1) < len(s2):
-        return -1
-    if len(s1) == len(s2):
-        return hamming(s1, s2)
     
     l1 = len(s1)
     l2 = len(s2)
+    
+    if l1 < l2:
+        return (-1, -1, -1)
+    if l1 == l2:
+        return (hamming(s1, s2), 0, l2)
+    
     distances = np.zeros(l1 - l2 + 1)
     
-    for i, subs in enumerate(sublists(s1, len(s2))):
+    for i, subs in enumerate(sublists(s1, l2)):
         distances[i] = hamming(subs, s2)
     
-    return min(distances)
+    amin = np.argmin(distances)
+    return (distances[amin], amin, l2)
 
 
 def subhamming_word(s1, s2):
@@ -258,56 +186,41 @@ def subhamming_word(s1, s2):
     return subhamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
-def timebag_subhamming_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    subhamming-distance <= d from a string."""
-    distances = np.array([subhamming(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where((0 <= distances) * (distances <= d))
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
-def timebag_subhamming_word_closedball(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    subhamming_word-distance <= d from a string."""
-    distances = np.array([subhamming_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    idx = np.where((0 <= distances) * (distances <= d))
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
-
-
 def timebag_subhamming_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    subhamming-distance == d from a string."""
-    distances = np.array([subhamming(center_string, bag_string)
-                          for bag_string in timebag.strings])
+    """Get the indices and motherstrings of the substrings in a TimeBag that
+    are at subhamming-distance == d from a string."""
+    subhs = [subhamming(center_string, bag_string)
+             for bag_string in timebag.strings]
+    distances = np.array([subh[0] for subh in subhs])
+    subindices = np.array([subh[1] for subh in subhs])
+    lens = np.array([subh[2] for subh in subhs])
     
     idx = np.where(distances == d)
     
     if len(idx) > 0:
-        return idx[0].tolist()
+        
+        motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
+        return zip(idx[0].tolist(), motherstrings)
+    
     else:
         return []
 
 
 def timebag_subhamming_word_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    subhamming_word-distance == d from a string."""
-    distances = np.array([subhamming_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
+    """Get the indices and motherstrings of the substrings in a TimeBag that
+    are at subhamming_word-distance == d from a string."""
+    subhs = [subhamming_word(center_string, bag_string)
+             for bag_string in timebag.strings]
+    distances = np.array([subh[0] for subh in subhs])
+    subindices = np.array([subh[1] for subh in subhs])
+    lens = np.array([subh[2] for subh in subhs])
     
     idx = np.where(distances == d)
     
     if len(idx) > 0:
-        return idx[0].tolist()
+        
+        motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
+        return zip(idx[0].tolist(), motherstrings)
+    
     else:
         return []
