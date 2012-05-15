@@ -465,19 +465,28 @@ class TimeBag(object):
       * levenshtein_word_closedball: get the strings in the TimeBag that are
                                      at levenshtein_word-distance d from a
                                      string
-      * hamming_closedball: get the strings in the TimeBag that are at
-                            hamming-distance d from a string
-      * hamming_word_closedball: get the strings in the TimeBag that are at
-                                 hamming_word-distance d from a string
       * levenshtein_sphere: get the strings in the TimeBag that are exactly at
                             levenshtein-distance d from a string
       * levenshtein_word_sphere: get the strings in the TimeBag that are
                                  exactly at levenshtein_word-distance d from a
                                  string
+      * hamming_closedball: get the strings in the TimeBag that are at
+                            hamming-distance d from a string
+      * hamming_word_closedball: get the strings in the TimeBag that are at
+                                 hamming_word-distance d from a string
       * hamming_sphere: get the strings in the TimeBag that are exactly at
                         hamming-distance d from a string
       * hamming_word_sphere: get the strings in the TimeBag that are exactly
                              at hamming_word-distance d from a string
+      * subhamming_closedball: get the strings in the TimeBag that are at
+                               subhamming-distance d from a string
+      * subhamming_word_closedball: get the strings in the TimeBag that are at
+                                    subhamming_word-distance d from a string
+      * subhamming_sphere: get the strings in the TimeBag that are exactly at
+                           subhamming-distance d from a string
+      * subhamming_word_sphere: get the strings in the TimeBag that are
+                                exactly at subhamming_word-distance d from a
+                                string
 
     
     """
@@ -572,3 +581,23 @@ class TimeBag(object):
         """Get the strings in the TimeBag that are exactly at
         hamming_word-distance d from a string."""
         return l_mt.timebag_hamming_word_sphere(self, center_string, d)
+    
+    def subhamming_closedball(self, center_string, d):
+        """Get the strings in the TimeBag that are at subhamming-distance d
+        from a string."""
+        return l_mt.timebag_subhamming_closedball(self, center_string, d)
+    
+    def subhamming_word_closedball(self, center_string, d):
+        """Get the strings in the TimeBag that are at subhamming_word-distance
+        d from a string."""
+        return l_mt.timebag_subhamming_word_closedball(self, center_string, d)
+    
+    def subhamming_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at
+        subhamming-distance d from a string."""
+        return l_mt.timebag_subhamming_sphere(self, center_string, d)
+    
+    def subhamming_word_sphere(self, center_string, d):
+        """Get the strings in the TimeBag that are exactly at
+        subhamming_word-distance d from a string."""
+        return l_mt.timebag_subhamming_word_sphere(self, center_string, d)

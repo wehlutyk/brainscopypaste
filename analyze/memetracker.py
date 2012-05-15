@@ -650,8 +650,15 @@ class SubstitutionAnalysis(object):
                 
                 smax_pos = tagger.Tags(smax)
                 smax_tok = tagger.Tokenize(smax)
+##############################################################################
+#                # THIS
+#                daughters = [tbgs[j].strings[k].lower()
+#                             for k in tbgs[j].hamming_word_sphere(smax, 1)]
+##############################################################################
+                # OR THIS
                 daughters = [tbgs[j].strings[k].lower()
-                             for k in tbgs[j].hamming_word_sphere(smax, 1)]
+                             for k in tbgs[j].subhamming_word_sphere(smax, 1)]
+##############################################################################
                 
                 for s in daughters:
                     
