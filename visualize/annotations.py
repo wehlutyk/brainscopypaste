@@ -6,6 +6,9 @@
 Classes:
   * AnnoteFinder: display annotations in a Matplotlib plot
   * AnnoteFinderBar: display annotations in a Matplotlib bar-plot
+  * AnnoteFinderFlow: display annotations in a Matplotlib flow bar-plot
+  * AnnoteFinderPlot: display a plot when clicking a data point in another
+                      Matplotlib plot
 
 Methods:
   * linkAnnotationFinders: link a list of AnnoteFinder|AnnoteFinderBar objects
@@ -94,6 +97,7 @@ class AnnoteFinder(object):
         
         self.drawnAnnotations = {}
         self.links = []
+        self.plotlinks = []
     
     def distance(self, x1, x2, y1, y2):
         """Compute the distance between two points."""
@@ -163,13 +167,28 @@ class AnnoteFinder(object):
             markers = self.drawnAnnotations[(x, y)]
             
             for m in markers:
+                
+                hiding = m.get_visible()
                 m.set_visible(not m.get_visible())
+            
+            if hiding:
+                
+                for plotlink in self.plotlinks:
+                    plotlink.cla()
+            
+            else:
+                
+                for plotlink in self.plotlinks:
+                    plotlink.drawSpecificAnnote(annote)
             
             self.axis.figure.canvas.draw()
         
         # Else create the annotation, store it, and display it.
         
         else:
+            
+            for plotlink in self.plotlinks:
+                plotlink.drawSpecificAnnote(annote)
             
             t = axis.annotate('({}, {})\n{}'.format(x, y ,annote),
                               xy=(x, y),
@@ -730,6 +749,7 @@ class AnnoteFinderPlot(object):
       * __init__: initialize the annotator
       * drawSpecificAnnote: draw a plot, corresponding to an annote from
                             another AnnoteFinder
+      * cla: clear the axes
     
     """
     
@@ -758,3 +778,11 @@ class AnnoteFinderPlot(object):
         AnnoteFinder."""
         self.second_plot(self.second_axis, self.annotes[annote])
         self.second_fig.canvas.draw()
+    
+    def cla(self):
+        """Clear the axes."""
+        if type(self.second_axis) == list:
+            for ax in self.second_axis:
+                ax.cla()
+        else:
+            self.second_axis.cla()

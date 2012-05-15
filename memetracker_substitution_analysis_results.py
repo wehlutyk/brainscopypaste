@@ -167,8 +167,8 @@ if __name__ == '__main__':
                                'mes_new': fa_PR_scores_a[i][:, 1]}
                                for i in range(len(fa_PR_scores_a))]))
     
-    def plotter(ax_tuple, annotedict):
-        ax1, ax2 = ax_tuple
+    def plotter(ax_list, annotedict):
+        ax1, ax2 = ax_list
         
         ax1.cla()
         ax1.hist(annotedict['ref'], 50, color='blue', label='Score pool',
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     af2_wn_sra_ax1 = pl.subplot(223)
     af2_wn_sra_ax2 = pl.subplot(224)
     af2_wn_sra = an.AnnoteFinderPlot(wn_PR_annotes, fig_wn_sra,
-                                     (af2_wn_sra_ax1, af2_wn_sra_ax2),
+                                     [af2_wn_sra_ax1, af2_wn_sra_ax2],
                                      plotter)
     pl.connect('button_press_event', af_wn_sra)
     
@@ -234,7 +234,7 @@ if __name__ == '__main__':
     af2_wn_dra_ax1 = pl.subplot(223)
     af2_wn_dra_ax2 = pl.subplot(224)
     af2_wn_dra = an.AnnoteFinderPlot(wn_DEG_annotes, fig_wn_dra,
-                                     (af2_wn_dra_ax1, af2_wn_dra_ax2),
+                                     [af2_wn_dra_ax1, af2_wn_dra_ax2],
                                      plotter)
     pl.connect('button_press_event', af_wn_dra)
     
@@ -261,13 +261,13 @@ if __name__ == '__main__':
     af2_fa_sra_ax1 = pl.subplot(223)
     af2_fa_sra_ax2 = pl.subplot(224)
     af2_fa_sra = an.AnnoteFinderPlot(fa_PR_annotes, fig_fa_sra,
-                                     (af2_fa_sra_ax1, af2_fa_sra_ax2),
+                                     [af2_fa_sra_ax1, af2_fa_sra_ax2],
                                      plotter)
     pl.connect('button_press_event', af_fa_sra)
     
     
     an.linkAnnotationFinders([af_wn_sra, af_fa_sra, af_wn_dra])
-    af_wn_sra.links.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
-    af_wn_dra.links.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
-    af_fa_sra.links.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
+    af_wn_sra.plotlinks.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
+    af_wn_dra.plotlinks.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
+    af_fa_sra.plotlinks.extend([af2_wn_sra, af2_wn_dra, af2_fa_sra])
     pl.show()
