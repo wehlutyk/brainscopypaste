@@ -404,13 +404,13 @@ def build_timebag_transitions(n_timebags):
     """
     
 ##############################################################################
-#    # THIS
+#    # THIS A1
 #    transitions = []
 #    _build_timebag_transitions(range(n_timebags), transitions)
 #    
 #    return transitions
 ##############################################################################
-    # OR THIS
+    # OR THIS A2
     return [(0, i) for i in range(1, n_timebags)]
 ##############################################################################
 
@@ -652,28 +652,28 @@ class SubstitutionAnalysis(object):
                 smax_tok = tagger.Tokenize(smax)
                 
 ##############################################################################
-                # THIS B1
-                smot = smax
-                smot_pos = smax_pos
-                smot_tok = smax_tok
-                daughters = [tbgs[j].strings[k].lower()
-                             for k in tbgs[j].hamming_word_sphere(smot, 1)]
-                
-                for s in daughters:
-                    
-##############################################################################
-#                # OR THIS B2
-#                daughters_mums = [(tbgs[j].strings[k].lower(), mum)
-#                                  for k, mum
-#                                  in tbgs[j].subhamming_word_sphere(smax, 1)]
+#                # THIS B1
+#                smot = smax
+#                smot_pos = smax_pos
+#                smot_tok = smax_tok
+#                daughters = [tbgs[j].strings[k].lower()
+#                             for k in tbgs[j].hamming_word_sphere(smot, 1)]
 #                
-#                for s, mum in daughters_mums:
+#                for s in daughters:
 #                    
-#                    # Rebuild the mother thanks to info from subhamming
-#                    
-#                    smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
-#                    smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
-#                    smot = ' '.join(smot_tok)
+##############################################################################
+                # OR THIS B2
+                daughters_mums = [(tbgs[j].strings[k].lower(), mum)
+                                  for k, mum
+                                  in tbgs[j].subhamming_word_sphere(smax, 1)]
+                
+                for s, mum in daughters_mums:
+                    
+                    # Rebuild the mother thanks to info from subhamming
+                    
+                    smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
+                    smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
+                    smot = ' '.join(smot_tok)
 ##############################################################################
                     
                     # Pause to read verbose info.

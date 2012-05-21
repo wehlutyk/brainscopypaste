@@ -52,7 +52,7 @@ def check_file(filename):
 # '~/Code/cogmaster-stage/data', or even better '../data'.
 # But we should check that it works...
 
-data_root = '/home/sebastien/Code/cogmaster-stage/data'
+data_root = '/home/sebastien/Code/cogmaster/stage/data'
 if not os.path.exists(data_root):
     os.makedirs(data_root)
 
