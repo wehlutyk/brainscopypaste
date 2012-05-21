@@ -53,13 +53,15 @@ def build_wn_coords(pos):
     
     for syn in wn.all_synsets(pos):
         
-        if len(syn.lemma_names) > 1:
+        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names])
+        
+        if len(lemma_names_lower) > 1:
             
-            for lem in syn.lemma_names:
+            for lem in lemma_names_lower:
                 
-                if not lem_coords.has_key(lem.lower()):
+                if not lem_coords.has_key(lem):
                     
-                    lem_coords[lem.lower()] = i
+                    lem_coords[lem] = i
                     i += 1
     
     print 'OK'
@@ -90,16 +92,18 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
     
     for syn in wn.all_synsets(pos):
         
-        if len(syn.lemma_names) > 1:
+        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names])
+        
+        if len(lemma_names_lower) > 1:
             
-            for lem1 in syn.lemma_names:
+            for lem1 in lemma_names_lower:
                 
-                for lem2 in syn.lemma_names:
+                for lem2 in lemma_names_lower:
                     
-                    if lem1.lower() != lem2.lower():
+                    if lem1 != lem2:
                         
-                        ij[0].append(lem_coords[lem1.lower()])
-                        ij[1].append(lem_coords[lem2.lower()])
+                        ij[0].append(lem_coords[lem1])
+                        ij[1].append(lem_coords[lem2])
     
     # Create the Scipy CSC/CSR matrix.
     
