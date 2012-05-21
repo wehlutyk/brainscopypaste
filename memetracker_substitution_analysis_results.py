@@ -70,14 +70,17 @@ if __name__ == '__main__':
     wn_PR_scores_r_avgs = []
     wn_PR_scores_r_stds = []
     wn_PR_scores_r_lens = []
+    wn_PR_scores_r_clids = []
     wn_degrees_a = []
     wn_degrees_r_avgs = []
     wn_degrees_r_stds = []
     wn_degrees_r_lens = []
+    wn_degrees_r_clids = []
     fa_PR_scores_a = []
     fa_PR_scores_r_avgs = []
     fa_PR_scores_r_stds = []
     fa_PR_scores_r_lens = []
+    fa_PR_scores_r_clids = []
     
     for ff in ['filtered', 'ff']:#['full', 'framed', 'filtered', 'ff']:
         
@@ -141,15 +144,18 @@ if __name__ == '__main__':
                         # Compute ratios, correct them to represent the means
                         # by clusters.
                         
+                        wn_PR_scores_clids = clids(wn_PR_scores_d)
                         wn_PR_scores_r = cl_means(wn_PR_scores[:,1] /
                                                   wn_PR_scores[:,0],
-                                                  clids(wn_PR_scores_d))
+                                                  wn_PR_scores_clids)
+                        wn_degrees_clids = clids(wn_degrees_d)
                         wn_degrees_r = cl_means(wn_degrees[:,1] /
                                                 wn_degrees[:,0],
-                                                clids(wn_degrees_d))
+                                                wn_degrees_clids)
+                        fa_PR_scores_clids = clids(fa_PR_scores_d)
                         fa_PR_scores_r = cl_means(fa_PR_scores[:,1] /
                                                   fa_PR_scores[:,0],
-                                                  clids(fa_PR_scores_d))
+                                                  fa_PR_scores_clids)
                         
                         # Store results.
                         
@@ -164,14 +170,17 @@ if __name__ == '__main__':
                         wn_PR_scores_r_avgs.append(wn_PR_scores_r.mean())
                         wn_PR_scores_r_stds.append(wn_PR_scores_r.std())
                         wn_PR_scores_r_lens.append(len(wn_PR_scores_r))
+                        wn_PR_scores_r_clids.append(wn_PR_scores_clids)
                         wn_degrees_a.append(wn_degrees)
                         wn_degrees_r_avgs.append(wn_degrees_r.mean())
                         wn_degrees_r_stds.append(wn_degrees_r.std())
                         wn_degrees_r_lens.append(len(wn_degrees_r))
+                        wn_degrees_r_clids.append(wn_degrees_clids)
                         fa_PR_scores_a.append(fa_PR_scores)
                         fa_PR_scores_r_avgs.append(fa_PR_scores_r.mean())
                         fa_PR_scores_r_stds.append(fa_PR_scores_r.std())
                         fa_PR_scores_r_lens.append(len(fa_PR_scores_r))
+                        fa_PR_scores_r_clids.append(fa_PR_scores_clids)
     
     
     # Convert the results to Numpy arrays and compute confidence intervals.
@@ -193,7 +202,7 @@ if __name__ == '__main__':
                           pl.sqrt(fa_PR_scores_r_lens - 1))
     
     
-    # Build annotations
+    # Build annotations.
     
     wn_PR_v = {}
     wn_DEG_v = {}
@@ -245,6 +254,8 @@ if __name__ == '__main__':
         ax2.legend()
     
     
+    # Build data for plotting.
+    
     POS_series = []
     cur_POS = None
     ff_series = []
@@ -273,27 +284,50 @@ if __name__ == '__main__':
             cur_ntb = p['n_timebags']
     
     
-    def plot_dataseries(r_avgs, r_ics, annotes, title):
+    wn_PR_v = {}
+    wn_DEG_v = {}
+    fa_PR_v = {}
+    
+    fa_PR0 = ps.load(st.freeassociation_norms_PR_scores_pickle)
+    fa_PR_v0 = array(fa_PR0.values())
+    
+    for pos in st.memetracker_subst_POSs:
+        
+        wn_PR = ps.load(st.wordnet_PR_scores_pickle.format(pos))
+        wn_DEG = ps.load(st.wordnet_degrees_pickle.format(pos))
+        
+        wn_PR_v[pos] = array(wn_PR.values())
+        wn_DEG_v[pos] = array(wn_DEG.values())
+        fa_PR_v[pos] = fa_PR_v0
+    
+    
+    # The plotting function.
+    
+    def plot_dataseries(ref_scores, r_avgs, r_ics, annotes, title):
         fig = pl.figure()
         ax = pl.subplot(111)
         #ax = pl.subplot(211)
         l = len(r_avgs)
-        pl.plot(r_avgs, 'b-', linewidth=2)
-        pl.plot(pl.ones(l), 'g--')
-        pl.plot(r_avgs - r_ics, 'm-', linewidth=1)
-        pl.plot(r_avgs + r_ics, 'm-', linewidth=1)
-        pl.plot(r_avgs, 'bo', linewidth=2)
-        pl.plot(r_avgs - r_ics, 'm.', linewidth=1)
-        pl.plot(r_avgs + r_ics, 'm.', linewidth=1)
         
-        ybot, ytop2 = ax.get_ylim()
+        xleft, xright = - 0.5, l - 0.5
+        yrange = pl.amax(r_avgs + r_ics) - pl.amin(r_avgs - r_ics)
+        ybot, ytop2 = 1 - yrange / 5, pl.amax(r_avgs + r_ics) + yrange / 5
         ytop0 = ytop2 - (ytop2 - ybot) * 0.1
         ytop1 = ytop2 - (ytop2 - ybot) * 0.05
         ytop3 = ytop2 + (ytop2 - ybot) * 0.05
         ytop4 = ytop2 + (ytop2 - ybot) * 0.1
         
         for pos, xpos in POS_series:
-        
+            
+            pl.plot(xpos, r_avgs[xpos], 'b-', linewidth=2)
+            h0 = ref_scores[pos].mean() * (1 / ref_scores[pos]).mean()
+            pl.plot(xpos, pl.ones(len(xpos)) * h0, 'g--', linewidth=2)
+            pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm-', linewidth=1)
+            pl.plot(xpos, r_avgs[xpos] + r_ics[xpos], 'm-', linewidth=1)
+            pl.plot(xpos, r_avgs[xpos], 'bo', linewidth=2)
+            pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm.', linewidth=1)
+            pl.plot(xpos, r_avgs[xpos] + r_ics[xpos], 'm.', linewidth=1)
+            
             pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
                             color=col_POS[pos], edgecolor=(0, 0, 0, 0))
             pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
@@ -323,9 +357,9 @@ if __name__ == '__main__':
                               alpha=0.8),
                     ha='center', va='center')
         
-        ax.set_xlim(POS_series[0][1][0] - 0.5, POS_series[-1][1][-1] + 0.5)
+        ax.set_xlim(xleft, xright)
         ax.set_ylim(ybot, ytop4)
-        pl.legend(['averages', '1', 'av +/- IC-95%'])
+        pl.legend(['averages', 'H0', 'av +/- IC-95%'])
         pl.title(title)
         
         ax.set_xticks(range(l))
@@ -349,13 +383,13 @@ if __name__ == '__main__':
     
     # Plot everything
     
-    af_wn_sra, af2_wn_sra = plot_dataseries(wn_PR_scores_r_avgs,
+    af_wn_sra, af2_wn_sra = plot_dataseries(wn_PR_v, wn_PR_scores_r_avgs,
                                             wn_PR_scores_r_ics, wn_PR_annotes,
                                             'WN PR scores ratio')
-    af_wn_dra, af2_wn_dra = plot_dataseries(wn_degrees_r_avgs,
+    af_wn_dra, af2_wn_dra = plot_dataseries(wn_DEG_v, wn_degrees_r_avgs,
                                             wn_degrees_r_ics, wn_DEG_annotes,
                                             'WN Degrees ratio')
-    af_fa_sra, af2_fa_sra = plot_dataseries(fa_PR_scores_r_avgs,
+    af_fa_sra, af2_fa_sra = plot_dataseries(fa_PR_v, fa_PR_scores_r_avgs,
                                             fa_PR_scores_r_ics, fa_PR_annotes,
                                             'FA PR scores ratio')
     

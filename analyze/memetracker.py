@@ -594,7 +594,7 @@ class SubstitutionAnalysis(object):
         
         tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
                                 TAGINENC='utf-8', TAGOUTENC='utf-8')
-        pos_wn_to_tt = {'a': 'JJ', 'n': 'NN', 'v': 'VB', 'r': 'RB'}
+        pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
         
         # Results of the analysis
         
@@ -710,7 +710,7 @@ class SubstitutionAnalysis(object):
                     
                     if args['POS'] == 'all':
                         
-                        if s_pos[idx][:2] != smot_pos[idx][:2]:
+                        if s_pos[idx][0] != smot_pos[idx][0]:
                             
                             if args['verbose']:
                                 print 'Stored: NONE (different POS)'
@@ -719,8 +719,8 @@ class SubstitutionAnalysis(object):
                     
                     else:
                         
-                        if (s_pos[idx][:2] != pos_wn_to_tt[args['POS']] or
-                            smot_pos[idx][:2] != pos_wn_to_tt[args['POS']]):
+                        if (s_pos[idx][0] != pos_wn_to_tt[args['POS']] or
+                            smot_pos[idx][0] != pos_wn_to_tt[args['POS']]):
                             
                             if args['verbose']:
                                 print 'Stored: NONE (wrong POS)'
