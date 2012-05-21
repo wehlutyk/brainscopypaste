@@ -18,6 +18,29 @@ import visualize.annotations as an
 import settings as st
 
 
+def average_POS_ratios(xpos, l_clids, l_scores):
+    """Concatenate score data sets from different parameter sets into a
+    single set of ratios averaged and weighted over the pooled clusters."""
+    cl_avgvalues = {}
+    
+    for x in xpos:
+        
+        for clid, coords in l_clids[x].iteritems():
+            
+            avg = (l_scores[x][coords, 1] / l_scores[x][coords, 0]).mean()
+            
+            if cl_avgvalues.has_key(clid):
+                cl_avgvalues[clid][0].append(avg)
+                cl_avgvalues[clid][1].append(len(coords))
+            else:
+                cl_avgvalues[clid] = ([avg], [len(coords)])
+    
+    means = [pl.average(avgs, weights=weights)
+             for avgs, weights in cl_avgvalues.itervalues()]
+    
+    return array(means)
+
+
 def list_to_dict(l):
     """Convert a list of items to a dict associating each item to an array of
     its coordinates."""
@@ -135,9 +158,9 @@ if __name__ == '__main__':
                             warn('{}: not found'.format(file_prefix))
                             continue
                         
-                        if (len(wn_PR_scores) == 0 or
-                            len(wn_degrees) == 0 or
-                            len(fa_PR_scores) == 0):
+                        if (len(wn_PR_scores) <= 1 or
+                            len(wn_degrees) <= 1 or
+                            len(fa_PR_scores) <= 1):
                             warn('{}: empty data'.format(file_prefix))
                             continue
                         
@@ -284,26 +307,31 @@ if __name__ == '__main__':
             cur_ntb = p['n_timebags']
     
     
-    wn_PR_v = {}
-    wn_DEG_v = {}
-    fa_PR_v = {}
+    wn_PR_h0 = {}
+    wn_DEG_h0 = {}
+    fa_PR_h0 = {}
     
-    fa_PR0 = ps.load(st.freeassociation_norms_PR_scores_pickle)
-    fa_PR_v0 = array(fa_PR0.values())
+    fa_PR = ps.load(st.freeassociation_norms_PR_scores_pickle)
+    fa_PR_v = array(fa_PR.values())
+    fa_PR_h0_tmp = fa_PR_v.mean() * (1 / fa_PR_v).mean()
     
     for pos in st.memetracker_subst_POSs:
         
         wn_PR = ps.load(st.wordnet_PR_scores_pickle.format(pos))
-        wn_DEG = ps.load(st.wordnet_degrees_pickle.format(pos))
+        wn_PR_v = array(wn_PR.values())
+        wn_PR_h0[pos] = wn_PR_v.mean() * (1 / wn_PR_v).mean()
         
-        wn_PR_v[pos] = array(wn_PR.values())
-        wn_DEG_v[pos] = array(wn_DEG.values())
-        fa_PR_v[pos] = fa_PR_v0
+        wn_DEG = ps.load(st.wordnet_degrees_pickle.format(pos))
+        wn_DEG_v = array(wn_DEG.values())
+        wn_DEG_h0[pos] = wn_DEG_v.mean() * (1 / wn_DEG_v).mean()
+        
+        fa_PR_h0[pos] = fa_PR_h0_tmp
     
     
     # The plotting function.
     
-    def plot_dataseries(ref_scores, r_avgs, r_ics, annotes, title):
+    def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
+                          title):
         fig = pl.figure()
         ax = pl.subplot(111)
         #ax = pl.subplot(211)
@@ -319,10 +347,22 @@ if __name__ == '__main__':
         
         for pos, xpos in POS_series:
             
+            POS_r_avgs = average_POS_ratios(xpos, r_clids, scores_all)
+            POS_r_avgs_mean = POS_r_avgs.mean()
+            POS_r_avgs_ic = (1.96 * POS_r_avgs.std() /
+                             pl.sqrt(len(POS_r_avgs) - 1))
+            
+            # The order of the first few is important for the legend
             pl.plot(xpos, r_avgs[xpos], 'b-', linewidth=2)
-            h0 = ref_scores[pos].mean() * (1 / ref_scores[pos]).mean()
-            pl.plot(xpos, pl.ones(len(xpos)) * h0, 'g--', linewidth=2)
+            pl.plot(xpos, pl.ones(len(xpos)) * h0[pos], 'k--', linewidth=2)
             pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm-', linewidth=1)
+            pl.plot(xpos, pl.ones(len(xpos)) * POS_r_avgs_mean, 'c-', lw=2)
+            pl.plot(xpos, pl.ones(len(xpos)) * (POS_r_avgs_mean
+                                                - POS_r_avgs_ic), 'm-')
+            
+            # The order for the rest isn't important
+            pl.plot(xpos, pl.ones(len(xpos)) * (POS_r_avgs_mean
+                                                + POS_r_avgs_ic), 'm-')
             pl.plot(xpos, r_avgs[xpos] + r_ics[xpos], 'm-', linewidth=1)
             pl.plot(xpos, r_avgs[xpos], 'bo', linewidth=2)
             pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm.', linewidth=1)
@@ -359,7 +399,8 @@ if __name__ == '__main__':
         
         ax.set_xlim(xleft, xright)
         ax.set_ylim(ybot, ytop4)
-        pl.legend(['averages', 'H0', 'av +/- IC-95%'])
+        pl.legend(['averages', 'H0', 'avg +/- IC-95%', 'avg_POS',
+                   'avg_POS +/- IC-95%'], loc='best', prop=dict(size='small'))
         pl.title(title)
         
         ax.set_xticks(range(l))
@@ -383,14 +424,23 @@ if __name__ == '__main__':
     
     # Plot everything
     
-    af_wn_sra, af2_wn_sra = plot_dataseries(wn_PR_v, wn_PR_scores_r_avgs,
-                                            wn_PR_scores_r_ics, wn_PR_annotes,
+    af_wn_sra, af2_wn_sra = plot_dataseries(wn_PR_h0, wn_PR_scores_r_avgs,
+                                            wn_PR_scores_r_ics,
+                                            wn_PR_scores_a,
+                                            wn_PR_scores_r_clids,
+                                            wn_PR_annotes,
                                             'WN PR scores ratio')
-    af_wn_dra, af2_wn_dra = plot_dataseries(wn_DEG_v, wn_degrees_r_avgs,
-                                            wn_degrees_r_ics, wn_DEG_annotes,
+    af_wn_dra, af2_wn_dra = plot_dataseries(wn_DEG_h0, wn_degrees_r_avgs,
+                                            wn_degrees_r_ics,
+                                            wn_degrees_a,
+                                            wn_degrees_r_clids,
+                                            wn_DEG_annotes,
                                             'WN Degrees ratio')
-    af_fa_sra, af2_fa_sra = plot_dataseries(fa_PR_v, fa_PR_scores_r_avgs,
-                                            fa_PR_scores_r_ics, fa_PR_annotes,
+    af_fa_sra, af2_fa_sra = plot_dataseries(fa_PR_h0, fa_PR_scores_r_avgs,
+                                            fa_PR_scores_r_ics,
+                                            fa_PR_scores_a,
+                                            fa_PR_scores_r_clids,
+                                            fa_PR_annotes,
                                             'FA PR scores ratio')
     
     an.linkAnnotationFinders([af_wn_sra, af_fa_sra, af_wn_dra])
