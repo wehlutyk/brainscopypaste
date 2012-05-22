@@ -36,27 +36,44 @@ def get_args_from_cmdline():
                          "'full': the full clusters; "
                          "'framed': the framed clusters; "
                          "'filtered': the filtered clusters; "
-                         "'ff': the framed-filtered clusters."))
+                         "'ff': the framed-filtered clusters."),
+                   choices=['full', 'framed', 'filtered', 'ff'])
     p.add_argument('--lemmatizing', action='store', nargs=1, required=True,
                    help=('1: lemmatize words before searching for them '
                          'in the features lists; '
-                         "0: don't lemmatize them."))
+                         "0: don't lemmatize them."),
+                   choices=['0', '1'])
+    p.add_argument('--substitutions', action='store', nargs=1, required=True,
+                   help=('analyze substitutions from the root quote, or from '
+                         "successive timebags. 'root': from root; 'tbg': "
+                         'from successive timebags.'),
+                   choices=['root', 'tbg'])
+    p.add_argument('--substrings', action='store', nargs=1, required=True,
+                   help=('1: include substrings as accepted substitutions'
+                         "0: don't include substrings (i.e. only strings of "
+                         'the same length.'),
+                   choices=['0', '1'])
     p.add_argument('--POS', action='store', nargs=1, required=True,
                    help=('select what POS to analyze. Valid values are '
                          "'a', 'n', 'v', 'r', or 'all' (in which case only "
                          'substitutions where words have the same POS are '
-                         'taken into account).'))
+                         'taken into account).'),
+                   choices=st.memetracker_subst_POSs)
     p.add_argument('--verbose', dest='verbose', action='store_const',
                    const=True, default=False,
                    help=('print out the transitions compared, their '
                          'processing, and if they are stored of not'))
     p.add_argument('--n_timebags', action='store', nargs=1, required=True,
                    help='number of timebags to cut the clusters into')
-    p.add_argument('transitions', action='store', nargs='+',
-                   help=('space-separated list of transitions between '
+    p.add_argument('transitions_or_bags', action='store', nargs='+',
+                   help=("if 'substitutions' is set to 'tbg', this should be "
+                         'a space-separated list of transitions between '
                          'timebags that are to be examined, in format '
                          "'n1-n2' where n1 and n2 are the indices of "
-                         "the timebags (starting at 0); e.g. '0-1 1-2'."))
+                         "the timebags (starting at 0); e.g. '0-1 1-2'."
+                         "If 'substitutions is set to 'root', this should be "
+                         'a space-separated list of timebag indices with '
+                         'which the root quote is to be compared.'))
     
     # Get the actual arguments.
     
@@ -64,36 +81,36 @@ def get_args_from_cmdline():
     
     ff = args.ff[0]
     lemmatizing = int(args.lemmatizing[0])
+    substitutions = args.substitutions[0]
+    substrings = args.substrings[0]
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
-    bag_transitions = [(int(s.split('-')[0]), int(s.split('-')[1]))
-                       for s in args.transitions]
     
     # Run a few checks on the arguments.
     
-    all_idx = [i for tr in bag_transitions for i in tr]
+    if substitutions == 'tbg':
+        
+        bags = [(int(s.split('-')[0]), int(s.split('-')[1]))
+                for s in args.transitions_or_bags]
+        all_idx = [i for tr in bags for i in tr]
+    
+    else:
+        
+        bags = [int(s) for s in args.transitions_or_bags]
+        all_idx = bags
     
     if max(all_idx) >= n_timebags or min(all_idx) < 0:
-        raise Exception(('Wrong bag transitions, according to the '
+        raise Exception(('Wrong bag transitions or indices, according to the '
                          'number of timebags requested'))
-    
-    if ff not in ['full', 'framed', 'filtered', 'ff']:
-        raise Exception('Wrong value for --ff. Expected one of '
-                        "'full', 'framed', 'filtered', or 'ff'.")
-    
-    if lemmatizing != 0 and lemmatizing != 1:
-        raise Exception('Wrong value for --lemmatizing. Expected 1 or 0.')
-    
-    if POS not in st.memetracker_subst_POSs:
-        raise Exception(('Wrong value for --POS. Expected one '
-                         'of {}.').format(st.memetracker_subst_POSs))
     
     return {'ff': ff,
             'lemmatizing': bool(lemmatizing),
+            'substitutions': substitutions,
+            'substrings': bool(substrings),
             'POS': POS,
             'verbose': args.verbose,
             'n_timebags': n_timebags,
-            'bag_transitions': bag_transitions}
+            'bags': bags}
 
 
 if __name__ == '__main__':

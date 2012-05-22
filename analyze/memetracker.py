@@ -35,6 +35,7 @@ Classes:
 from __future__ import division
 
 from multiprocessing import Process, Queue, cpu_count
+from warnings import warn
 
 from nltk.corpus import wordnet as wn
 import numpy as np
@@ -403,16 +404,10 @@ def build_timebag_transitions(n_timebags):
     
     """
     
-##############################################################################
-#    # THIS A1
-#    transitions = []
-#    _build_timebag_transitions(range(n_timebags), transitions)
-#    
-#    return transitions
-##############################################################################
-    # OR THIS A2
-    return [(0, i) for i in range(1, n_timebags)]
-##############################################################################
+    transitions = []
+    _build_timebag_transitions(range(n_timebags), transitions)
+    
+    return transitions
 
 
 class SubstitutionAnalysis(object):
@@ -471,12 +466,22 @@ class SubstitutionAnalysis(object):
         
         file_prefix += 'L_'
         
+        file_prefix += 'S{}_'.format(args['substitutions'])
+        
+        if not args['substrings']:
+            file_prefix += 'N'
+        
+        file_prefix += 'sub_'
+        
         file_prefix += 'P{}_'.format(args['POS'])
         
         file_prefix += str(args['n_timebags']) + '_'
         
-        for (i, j) in args['bag_transitions']:
-            file_prefix += '{}-{}_'.format(i, j)
+        if args['substitutions'] == 'tbg':
+            file_prefix += ''.join(['{}-{}_'.format(i, j)
+                                    for i, j in args['bags']])
+        else:
+            file_prefix += ''.join(['{}_'.format(i) for i in args['bags']])
         
         pickle_wn_PR_scores = \
             st.memetracker_subst_wn_PR_scores_pickle.format(file_prefix)
@@ -495,13 +500,26 @@ class SubstitutionAnalysis(object):
         
         # Check that the destinations don't already exist.
         
-        st.check_file(pickle_wn_PR_scores)
-        st.check_file(pickle_wn_degrees)
-        st.check_file(pickle_fa_PR_scores)
+        try:
+            
+            st.check_file(pickle_wn_PR_scores)
+            st.check_file(pickle_wn_degrees)
+            st.check_file(pickle_fa_PR_scores)
+            st.check_file(pickle_wn_PR_scores_d)
+            st.check_file(pickle_wn_degrees_d)
+            st.check_file(pickle_fa_PR_scores_d)
         
-        st.check_file(pickle_wn_PR_scores_d)
-        st.check_file(pickle_wn_degrees_d)
-        st.check_file(pickle_fa_PR_scores_d)
+        except Exception, msg:
+            
+            if args['resume']:
+                
+                warn(('*** A file for parameters {} already exists, not '
+                      'overwriting it. Skipping the whole '
+                      'argset. ***').format(file_prefix))
+                return None
+            
+            else:
+                raise Exception(msg)
         
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,
@@ -516,10 +534,12 @@ class SubstitutionAnalysis(object):
         print 'Doing analysis with the following parameters:'
         print '  ff = {}'.format(args['ff'])
         print '  lemmatizing = {}'.format(args['lemmatizing'])
+        print '  substitutions = {}'.format(args['substitutions'])
+        print '  substrings = {}'.format(args['substrings'])
         print '  POS = {}'.format(args['POS'])
         print '  verbose = {}'.format(args['verbose'])
         print '  n_timebags = {}'.format(args['n_timebags'])
-        print '  transitions = {}'.format(args['bag_transitions'])
+        print '  bags = {}'.format(args['bags'])
     
     def load_data(self, args):
         """Load the data from pickle files.
@@ -596,6 +616,14 @@ class SubstitutionAnalysis(object):
                                 TAGINENC='utf-8', TAGOUTENC='utf-8')
         pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
         
+        # If we're looking at substitutions from root, build fake transitions
+        # that will be ignored further on.
+        
+        if args['substitutions'] == 'tbg':
+            bag_transitions = args['bags']
+        else:
+            bag_transitions = [(0, i) for i in args['bags']]
+        
         # Results of the analysis
         
         wn_PR_scores = []
@@ -606,7 +634,6 @@ class SubstitutionAnalysis(object):
         wn_degrees_d = []
         fa_PR_scores_d = []
         
-        fa_len = len(data['fa_PR'])
         n_stored_wn_PR = 0
         n_stored_wn_deg = 0
         n_stored_fa_PR = 0
@@ -635,46 +662,44 @@ class SubstitutionAnalysis(object):
             
             tbgs = cl.build_timebags(args['n_timebags'])
             
-            for i, j in args['bag_transitions']:
+            for i, j in bag_transitions:
                 
                 # Highest freq string and its daughters
                 # (sphere of hamming_word distance =1)
                 
-##############################################################################
-#                # THIS A1
-#                smax = tbgs[i].max_freq_string.lower()
-##############################################################################
-                # OR THIS A2
-                smax = cl.root
-##############################################################################
+                # Substitutions from timebags or from root
+                
+                if args['substitutions'] == 'tbg':
+                    smax = tbgs[i].max_freq_string.lower()
+                else:
+                    smax = cl.root
 
                 smax_pos = tagger.Tags(smax)
                 smax_tok = tagger.Tokenize(smax)
                 
-##############################################################################
-#                # THIS B1
-#                smot = smax
-#                smot_pos = smax_pos
-#                smot_tok = smax_tok
-#                daughters = [tbgs[j].strings[k].lower()
-#                             for k in tbgs[j].hamming_word_sphere(smot, 1)]
-#                
-#                for s in daughters:
-#                    
-##############################################################################
-                # OR THIS B2
-                daughters_mums = [(tbgs[j].strings[k].lower(), mum)
-                                  for k, mum
-                                  in tbgs[j].subhamming_word_sphere(smax, 1)]
+                # Substrings included or not
+                
+                if args['substrings']:
+                    daughters_mums = [(tbgs[j].strings[k].lower(), mum)
+                                      for k, mum in
+                                      tbgs[j].subhamming_word_sphere(smax, 1)]
+                else:
+                    smot = smax
+                    smot_pos = smax_pos
+                    smot_tok = smax_tok
+                    daughters_mums = [(tbgs[j].strings[k].lower(), None)
+                                      for k in
+                                      tbgs[j].hamming_word_sphere(smot, 1)]
                 
                 for s, mum in daughters_mums:
                     
                     # Rebuild the mother thanks to info from subhamming
                     
-                    smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
-                    smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
-                    smot = ' '.join(smot_tok)
-##############################################################################
+                    if args['substrings']:
+                        
+                        smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
+                        smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
+                        smot = ' '.join(smot_tok)
                     
                     # Pause to read verbose info.
                     
@@ -796,12 +821,6 @@ class SubstitutionAnalysis(object):
                         if args['verbose']:
                             print 'Stored: wordnet PR YES'
                         
-#                        # Wordnet Degrees: exclude if deg <= 2.
-#                        
-#                        if (data['wn_degrees'][lem1] <= 2 or
-#                            data['wn_degrees'][lem2] <= 2):
-#                            raise Exception()
-                        
                         wn_degrees.append([data['wn_degrees'][lem1],
                                            data['wn_degrees'][lem2]])
                         wn_degrees_d.append(details)
@@ -830,13 +849,6 @@ class SubstitutionAnalysis(object):
                     # Look the words up in the FA features lists.
                     
                     try:
-                        
-#                        # Free Association PageRank: exclude if lower than
-#                        # threshold.
-#                        
-#                        if (abs(data['fa_PR'][lem1] - 0.1 / fa_len) < 1e-15 or
-#                            abs(data['fa_PR'][lem2] - 0.1 / fa_len) < 1e-15):
-#                            raise Exception()
                         
                         fa_PR_scores.append([data['fa_PR'][lem1],
                                              data['fa_PR'][lem2]])
@@ -901,46 +913,49 @@ class SubstitutionAnalysis(object):
     
         print 'OK'
     
-    def create_args_list(self, n_timebags_list, POSs, ff):
+    def create_args_list(self, args):
         """Create a list of possible args dicts, according to requested
         timebag slicings and POS tags.
         
-        The resulting args all have framing-filtering and lemmatizing, set to
-        True. They only differ in the number of timebags to slice the clusters
-        into, which transition to examine, and which POSs to compare.
-        
         Arguments:
-          * n_timebags_list: a list of integers, each one indicating how many
-                             timebags the clusters are to be sliced into
-          * POSs: a list of Wordnet POS tags, indicating which words to
-                  examine depending on their POS tag (see
-                  memetracker_substitution_analysis_analyze.py for more info)
-          * ff: specifies on what dataset the analysis is done. Must be one of
-                'full', 'framed', 'filtered', or 'ff'.
+          * args: the dict of args passed in from the command line
         
         Returns:
-          * args_list: a list of dicts, each one corresponding to a specific
-                       n_timebags value, a specific transition between
-                       timebags among those n_timebags, and a specific POS
-                       tag. All possible combinations (and transition
-                       possibilities) are included.
+          * args_list: a list of dicts, each one being an acceptable dict for
+                       self.analyze.
         
         """
         
         args_list = []
         
-        for n_timebags in n_timebags_list:
+        for n_timebags in args.n_timebagss:
             
-            for tr in build_timebag_transitions(n_timebags):
+            for subsgs in args.substringss:
                 
-                for pos in POSs:
+                for subtions in args.substitutionss:
+                
+                    if subtions == 'tbg':
+                        transitions = \
+                            build_timebag_transitions(int(n_timebags))
+                    else:
+                        transitions = [(0, i) for i
+                                       in range(1, int(n_timebags))]
                     
-                    args_list.append({'ff': ff,
-                                      'lemmatizing': True,
-                                      'POS': pos,
-                                      'verbose': False,
-                                      'n_timebags': n_timebags,
-                                      'bag_transitions': [tr]})
+                    for tr in transitions:
+                        
+                        for pos in args.POSs:
+                            
+                            for ff in args.ffs:
+                                
+                                args_list.append({'ff': ff,
+                                                  'lemmatizing': True,
+                                                  'substitutions': subtions,
+                                                  'substrings': bool(int(subsgs)),
+                                                  'POS': pos,
+                                                  'verbose': False,
+                                                  'n_timebags': int(n_timebags),
+                                                  'bags': [tr],
+                                                  'resume': args.resume})
         
         return args_list
     
@@ -954,50 +969,52 @@ class SubstitutionAnalysis(object):
         
         self.print_args(args)
         files = self.get_save_files(args)
+        
+        if files == None:
+            return
+        
         data = self.load_data(args)
         results = self.examine_substitutions(args, data)
         self.save_results(files, results)
     
-    def analyze_all(self, n_timebags_list, POSs, ff):
+    def analyze_all(self, args):
         """Run 'analyze' with various timebag slicings and POS tags.
         
         The analysis is always done with framing-filtering and lemmatizing
         activated.
         
         Arguments:
-          * n_timebags_list: a list of integers, each one indicating how many
-                             timebags the clusters are to be sliced into
-          * POSs: a list of Wordnet POS tags, indicating which words to
-                  examine depending on their POS tag (see
-                  memetracker_substitution_analysis_analyze.py for more info)
-          * ff: specifies on what dataset the analysis is done. Must be one of
-                'full', 'framed', 'filtered', or 'ff'.
+          * args: the dict of args passed in from the command line
         
         """
         
         print
         print ('Starting substitution analysis, for timebag '
-               'slicings {}, POS {}, dataset {}').format(n_timebags_list,
-                                                         POSs, ff)
+               'slicings {}, POSs {}, datasets {}, substitutionss {}, and '
+               'substringss {} ...').format(args.n_timebagss, args.POSs,
+                                            args.ffs, args.substitutionss,
+                                            args.substringss)
         
-        args_list = self.create_args_list(n_timebags_list, POSs, ff)
+        args_list = self.create_args_list(args)
         
-        for args in args_list:
-            self.analyze(args)
+        for argset in args_list:
+            self.analyze(argset)
     
     def put_analyze(self, Q, args):
         """Put an analysis job in the queue."""
         Q.put(self.analyze(args))
     
-    def analyze_all_mt(self, n_timebags_list, POSs, ff):
+    def analyze_all_mt(self, args):
         """Run 'analyze' with various timebag slicings, multi-threaded."""
         
         print
         print ('Starting multi-threaded substitution analysis, for timebag '
-               'slicings {}, POS {}, dataset {}').format(n_timebags_list,
-                                                         POSs, ff)
+               'slicings {}, POSs {}, datasets {}, substitutionss {}, and '
+               'substringss {} ...').format(args.n_timebagss, args.POSs,
+                                            args.ffs, args.substitutionss,
+                                            args.substringss)
         
-        args_list = self.create_args_list(n_timebags_list, POSs, ff)
+        args_list = self.create_args_list(args)
         n_jobs = len(args_list)
         n_groups = int(np.ceil(n_jobs / self.n_proc))
         Q = Queue()
