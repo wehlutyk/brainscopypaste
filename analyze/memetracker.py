@@ -938,8 +938,7 @@ class SubstitutionAnalysis(object):
                         transitions = \
                             build_timebag_transitions(int(n_timebags))
                     else:
-                        transitions = [(0, i) for i
-                                       in range(1, int(n_timebags))]
+                        transitions = range(1, int(n_timebags))
                     
                     for tr in transitions:
                         
