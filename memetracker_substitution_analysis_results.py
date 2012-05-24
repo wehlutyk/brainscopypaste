@@ -18,7 +18,7 @@ import visualize.annotations as an
 import settings as st
 
 
-def average_POS_ratios(xpos, l_clids, l_scores):
+def average_ntb_ratios(xpos, l_clids, l_scores):
     """Concatenate score data sets from different parameter sets into a
     single set of ratios averaged and weighted over the pooled clusters."""
     cl_avgvalues = {}
@@ -98,45 +98,56 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
     ytop3 = ytop2 + (ytop2 - ybot) * 0.05
     ytop4 = ytop2 + (ytop2 - ybot) * 0.1
     
+    setlabel = True
     for pos, xpos in POS_series:
         
-        POS_r_avgs = average_POS_ratios(xpos, r_clids, scores_all)
-        POS_r_avgs_mean = POS_r_avgs.mean()
-        POS_r_avgs_ic = (1.96 * POS_r_avgs.std() /
-                         pl.sqrt(len(POS_r_avgs) - 1))
-        
-        # The order of the first few is important for the legend
-        pl.plot(xpos, r_avgs[xpos], 'b-', linewidth=2)
-        pl.plot(xpos, pl.ones(len(xpos)) * h0[pos], 'k--', linewidth=2)
-        pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm-', linewidth=1)
-        pl.plot(xpos, pl.ones(len(xpos)) * POS_r_avgs_mean, 'c-', lw=2)
-        pl.plot(xpos, pl.ones(len(xpos)) * (POS_r_avgs_mean
-                                            - POS_r_avgs_ic), 'm-')
-        
-        # The order for the rest isn't important
-        pl.plot(xpos, pl.ones(len(xpos)) * (POS_r_avgs_mean
-                                            + POS_r_avgs_ic), 'm-')
-        pl.plot(xpos, r_avgs[xpos] + r_ics[xpos], 'm-', linewidth=1)
-        pl.plot(xpos, r_avgs[xpos], 'bo', linewidth=2)
-        pl.plot(xpos, r_avgs[xpos] - r_ics[xpos], 'm.', linewidth=1)
-        pl.plot(xpos, r_avgs[xpos] + r_ics[xpos], 'm.', linewidth=1)
-        
+        lbl = 'H0' if setlabel else None
+        setlabel = False
+        pl.plot(xpos, pl.ones(len(xpos)) * h0[pos], 'k--', linewidth=2,
+                label=lbl)
         pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
                         color=col_POS[pos], edgecolor=(0, 0, 0, 0))
         pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
-                bbox=dict(facecolor='white', edgecolor='white',
-                          alpha=0.8),
+                bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
+    
+    setlabel = True
+    for ntb, xntb in ntb_series:
+        
+        ntb_r_avgs = average_ntb_ratios(xntb, r_clids, scores_all)
+        ntb_r_avgs_mean = ntb_r_avgs.mean()
+        ntb_r_avgs_ic = (1.96 * ntb_r_avgs.std() /
+                         pl.sqrt(len(ntb_r_avgs) - 1))
+        
+        lbl = 'averages' if setlabel else None
+        pl.plot(xntb, r_avgs[xntb], 'b-', linewidth=2, label=lbl)
+        lbl = 'avgs +/- IC-95%' if setlabel else None
+        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'm-', linewidth=1,
+                label=lbl)
+        lbl = 'avgs_ntb' if setlabel else None
+        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'c-', lw=2,
+                label=lbl)
+        lbl = 'avgs_ntb +/- IC-95%' if setlabel else None
+        pl.plot(xntb,
+                pl.ones(len(xntb)) * (ntb_r_avgs_mean - ntb_r_avgs_ic),
+                'm-', label=lbl)
+        setlabel = False
+        
+        pl.plot(xntb,
+                pl.ones(len(xntb)) * (ntb_r_avgs_mean + ntb_r_avgs_ic),
+                'm-')
+        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'm-', linewidth=1)
+        pl.plot(xntb, r_avgs[xntb], 'bo', linewidth=2)
+        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'm.', linewidth=1)
+        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'm.', linewidth=1)
     
     for ff, xff in ff_series:
         
-        pl.fill([xff[0] - 0.5, xff[0] - 0.5,
-                 xff[-1] + 0.5, xff[-1] + 0.5],
+        pl.fill([xff[0] - 0.5, xff[0] - 0.5, xff[-1] + 0.5, xff[-1] + 0.5],
                 [ytop4, ytop2, ytop2, ytop4], color=col_ff[ff],
                 edgecolor = (0, 0, 0, 0), hatch=hatch_ff[ff])
         pl.text((min(xff) + max(xff)) / 2, ytop3, ff,
-                bbox=dict(facecolor='white', edgecolor='white',
-                          alpha=0.8),
+                bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
     
     for ntb, xntb in ntb_series:
@@ -146,24 +157,20 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
         pl.plot([xntb[-1] + 0.5, xntb[-1] + 0.5], [ybot, ytop0],
                 color=(0.5, 0.5, 0.5, 0.3))
         pl.text((min(xntb) + max(xntb)) / 2, ytop0, '{}'.format(ntb),
-                bbox=dict(facecolor='white', edgecolor='white',
-                          alpha=0.8),
+                bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
     
     ax.set_xlim(xleft, xright)
     ax.set_ylim(ybot, ytop4)
-    pl.legend(['averages', 'H0', 'avg +/- IC-95%', 'avg_POS',
-               'avg_POS +/- IC-95%'], loc='best', prop=dict(size='small'))
+    pl.legend(loc='best', prop=dict(size='small'))
     pl.title(title)
     
     ax.set_xticks(range(l))
-    labels = ax.set_xticklabels(['{}: {}'.format(p['n_timebags'],
-                                                 p['tr'])
+    labels = ax.set_xticklabels(['{}: {}'.format(p['n_timebags'], p['tr'])
                                  for p in parameters_d])
     pl.setp(labels, rotation=60, fontsize=10)
     
-    af = an.AnnoteFinder(pl.arange(l), r_avgs,
-                         annotes, ytol=0.5)
+    af = an.AnnoteFinder(pl.arange(l), r_avgs, annotes, ytol=0.5)
     pl.connect('button_press_event', af)
 #    af2_ax1 = pl.subplot(223)
 #    af2_ax2 = pl.subplot(224)

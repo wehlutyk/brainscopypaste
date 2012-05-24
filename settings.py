@@ -147,17 +147,25 @@ treetagger_TAGDIR = '/usr/share/treetagger'
 # WORDNET DATA #
 ################
 #
-# Pickle file for the Wordnet PageRank scores, relative to data_root.
+# Root folder for Wordnet scores data, relative to data_root
+
+wordnet_root_rel = 'Wordnet'
+wordnet_root = os.path.join(data_root, wordnet_root_rel)
+check_folder(wordnet_root)
+
+#
+# Pickle file for the Wordnet PageRank scores, relative to wordnet root.
 
 wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
-wordnet_PR_scores_pickle = os.path.join(data_root,
+wordnet_PR_scores_pickle = os.path.join(wordnet_root,
                                         wordnet_PR_scores_pickle_rel)
 
 
-# Pickle file for the Wordnet degrees, relative to data root.
+# Pickle file for the Wordnet degrees, relative to wordnet root.
 
 wordnet_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
-wordnet_degrees_pickle = os.path.join(data_root, wordnet_degrees_pickle_rel)
+wordnet_degrees_pickle = os.path.join(wordnet_root,
+                                      wordnet_degrees_pickle_rel)
 
 
 ##############################################################################
