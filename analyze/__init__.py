@@ -12,6 +12,8 @@ details).
 Modules:
   * linalg: linear algebra tools, specifically to compute the PageRank
             algorithm
+  * combinatorials: combinatorial tools, used particularly when working with
+                    quote transitions
   * memetracker: analyze data from the MemeTracker dataset
 
 """

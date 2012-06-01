@@ -50,8 +50,11 @@ Methods:
 """
 
 
+from datetime import datetime
+
 import numpy as np
 
+from analyze.combinatorials import build_ordered_tuples
 from linguistics.treetagger import TreeTaggerTags
 import settings as st
 
@@ -278,7 +281,7 @@ def cluster_iter_substitutions_root(cl, argset):
     
     from datastructure.memetracker import QtString
     
-    base = QtString(cl.root, cl.id, 0)
+    base = QtString(cl.root.lower(), cl.id, 0)
     tbgs = cl.build_timebags(argset['n_timebags'])
     
     for j in argset['bags']:
@@ -299,3 +302,41 @@ def cluster_iter_substitutions_tbgs(cl, argset):
         for mother, daughter in tbgs[j].iter_sphere[
                                     argset['substrings']](base):
             yield (mother, daughter, {'bag1': i, 'bag2': j})
+
+
+def cluster_iter_substitutions_time(cl, argset):
+    """Iterate through substitutions taken as transitions from earlier quotes
+    to older quotes (in order of appearance in time)."""
+    
+    distance_word = {False: hamming_word,
+                     True: lambda s1, s2: subhamming_word(s1, s2)[0]}
+    qt_list = []
+    qt_starts = np.zeros(cl.n_quotes)
+    
+    for i, qt in enumerate(cl.quotes.itervalues()):
+        
+        qt.compute_attrs()
+        qt_list.append(qt)
+        qt_starts[i] = qt.start
+    
+    order = np.argsort(qt_starts)
+    qt_starts = qt_starts[order]
+    qt_list = [qt_list[order[i]] for i in range(cl.n_quotes)]
+    tuples = build_ordered_tuples(cl.n_quotes)
+    
+    for i, j in tuples:
+        
+        mother = qt_list[i].to_qt_string_lower(cl.id)
+        mother_start = qt_starts[i]
+        daughter = qt_list[j].to_qt_string_lower(cl.id)
+        daughter_start = qt_starts[j]
+        
+        if distance_word[argset['substrings']](mother, daughter) == 1:
+            
+            mother_d = datetime.fromtimestamp(
+                                mother_start).strftime('%Y-%m-%d %H:%m:%S')
+            daughter_d = datetime.fromtimestamp(
+                                daughter_start).strftime('%Y-%m-%d %H:%m:%S')
+            yield (mother, daughter,
+                   {'mother_start': mother_d,
+                    'daughter_start': daughter_d})

@@ -115,7 +115,7 @@ if __name__ == '__main__':
     print ('Computing framed-filtered Clusters '
            '(min_tokens={})...').format(min_tokens)
     ff_clusters = {}
-    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
+    progress = a_mt.ProgressInfo(len(framed_clusters), 100, 'clusters')
     
     for cl_id, cl in framed_clusters.iteritems():
         

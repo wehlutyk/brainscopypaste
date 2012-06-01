@@ -61,11 +61,13 @@ def get_args_from_cmdline():
                    choices=['full', 'framed', 'filtered', 'ff'])
     p.add_argument('--substitutionss', action='store', nargs='+',
                    required=True,
-                   help=('analyze substitutions from the root quote, or from '
-                         "successive timebags. 'root': from root; 'tbg': "
-                         'from successive timebags. This should be a space-'
+                   help=('analyze substitutions from the root quote, from '
+                         'successive timebags, or based on the appearance '
+                         "times of quotes. 'root': from root; 'tbg': "
+                         "from successive timebags; 'time': based on "
+                         'appearance times. This should be a space-'
                          'separated list of such arguments.'),
-                   choices=['root', 'tbg'])
+                   choices=['root', 'tbg', 'time'])
     p.add_argument('--substringss', action='store', nargs='+', required=True,
                    help=('1: include substrings as accepted substitutions'
                          "0: don't include substrings (i.e. only strings of "

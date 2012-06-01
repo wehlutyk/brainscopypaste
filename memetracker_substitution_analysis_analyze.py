@@ -44,10 +44,12 @@ def get_args_from_cmdline():
                          "0: don't lemmatize them."),
                    choices=['0', '1'])
     p.add_argument('--substitutions', action='store', nargs=1, required=True,
-                   help=('analyze substitutions from the root quote, or from '
-                         "successive timebags. 'root': from root; 'tbg': "
-                         'from successive timebags.'),
-                   choices=['root', 'tbg'])
+                   help=('analyze substitutions from the root quote, from '
+                         'successive timebags, or based on the appearance '
+                         "times of quotes. 'root': from root; 'tbg': "
+                         "from successive timebags; 'time': based on "
+                         'appearance times.'),
+                   choices=['root', 'tbg', 'time'])
     p.add_argument('--substrings', action='store', nargs=1, required=True,
                    help=('1: include substrings as accepted substitutions'
                          "0: don't include substrings (i.e. only strings of "
@@ -80,9 +82,9 @@ def get_args_from_cmdline():
     args = p.parse_args()
     
     ff = args.ff[0]
-    lemmatizing = int(args.lemmatizing[0])
+    lemmatizing = bool(int(args.lemmatizing[0]))
     substitutions = args.substitutions[0]
-    substrings = args.substrings[0]
+    substrings = bool(int(args.substrings[0]))
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
     
@@ -94,19 +96,24 @@ def get_args_from_cmdline():
                 for s in args.transitions_or_bags]
         all_idx = [i for tr in bags for i in tr]
     
-    else:
+    elif substitutions == 'root':
         
         bags = [int(s) for s in args.transitions_or_bags]
         all_idx = bags
+    
+    else:
+        
+        bags = [None]
+        all_idx = [0]
     
     if max(all_idx) >= n_timebags or min(all_idx) < 0:
         raise Exception(('Wrong bag transitions or indices, according to the '
                          'number of timebags requested'))
     
     return {'ff': ff,
-            'lemmatizing': bool(lemmatizing),
+            'lemmatizing': lemmatizing,
             'substitutions': substitutions,
-            'substrings': bool(substrings),
+            'substrings': substrings,
             'POS': POS,
             'verbose': args.verbose,
             'n_timebags': n_timebags,

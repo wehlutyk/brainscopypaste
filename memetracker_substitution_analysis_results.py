@@ -13,7 +13,7 @@ import pylab as pl
 import matplotlib.cm as cm
 
 import datainterface.picklesaver as ps
-from analyze.memetracker import build_timebag_transitions
+from analyze.memetracker import build_ordered_tuples
 import visualize.annotations as an
 import settings as st
 
@@ -237,7 +237,7 @@ def plot_all_results(substitutions, substrings):
                         bag_transitions = \
                             ['-'.join([str(b1), str(b2)])
                              for b1, b2
-                             in build_timebag_transitions(n_timebags)]
+                             in build_ordered_tuples(n_timebags)]
                     else:
                         bag_transitions = range(1, n_timebags)
                     

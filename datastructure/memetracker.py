@@ -140,6 +140,8 @@ class Quote(Timeline):
       * __str__: see __unicode__
       * __unicode__: define how we see a Quote object when printed with print
                      (e.g. >>> print myquote)
+      * to_qt_string_lower: return a QtString built from this Quote, in
+                            lowercase
       * plot: plot the time evolution of the Quote (with a legend)
       * bar: plot the bar-chart of the Quote
     
@@ -218,6 +220,10 @@ class Quote(Timeline):
         return ('"' + self.string + '" (quote #{} ; '
                 'tot_freq={})').format(self.id, self.tot_freq)
     
+    def to_qt_string_lower(self, cl_id, parse=True):
+        """Return a QtString built from this Quote, in lowercase."""
+        return QtString(self.string.lower(), cl_id, self.id, parse=parse)
+    
     def plot(self, smooth_res=5):
         """Plot the time evolution of the Quote (with a legend).
         
@@ -277,11 +283,14 @@ class Cluster(object):
       * iter_substitutions_tbgs: iterate through substitutions taken as
                                  changes between timebags. Yield (mother,
                                  string or substring, bag info) tuples.
+      * iter_substitutions_time: iterate through substitutions taken as
+                                 transitions from earlier quotes to older
+                                 quotes (in order of appearance in time).
     
     """
     
     def __init__(self, line_fields=None, n_quotes=None, tot_freq=None,
-                 root=None, cl_id=None):
+                  root=None, cl_id=None):
         """Initialize the cluster based on a line from the dataset, or
         explicit attributes.
         
@@ -341,7 +350,8 @@ class Cluster(object):
         self.quotes = {}
         self.timeline_built = False
         self.iter_substitutions = {'root': self.iter_substitutions_root,
-                                   'tbgs': self.iter_substitutions_tbgs}
+                                   'tbgs': self.iter_substitutions_tbgs,
+                                   'time': self.iter_substitutions_time}
     
     def __repr__(self):
         """Define how we see a Cluster object when printed in a terminal
@@ -468,6 +478,11 @@ class Cluster(object):
         """Iterate through substitutions taken as changes between timebags.
         Yield (mother, string or substring, bag info) tuples."""
         return l_mt.cluster_iter_substitutions_tbgs(self, argset)
+    
+    def iter_substitutions_time(self, argset):
+        """Iterate through substitutions taken as transitions from earlier
+        quotes to older quotes (in order of appearance in time)."""
+        return l_mt.cluster_iter_substitutions_time(self, argset)
 
 
 class QtString(str):

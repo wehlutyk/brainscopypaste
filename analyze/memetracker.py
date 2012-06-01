@@ -19,13 +19,9 @@ Methods:
   * build_quoteslengths_to_quoteids: build a dict associating Quote string
                                      lengths to the number of Quotes having
                                      that string length
-  * _build_timebag_transitions: recursively build the list of possible
-                                transitions from a number of TimeBags (private
-                                method, used by 'build_timebag_transitions')
-  * build_timebag_transitions: build the list of possible transitions from a
-                               number of TimeBags
 
 Classes:
+  * ProgressInfo: print progress information
   * SubstitutionAnalysis: analyze the 1-word changes in the MemeTracker
                           dataset
 
@@ -40,6 +36,7 @@ from warnings import warn
 from nltk.corpus import wordnet as wn
 import numpy as np
 
+from analyze.combinatorials import build_ordered_tuples
 import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
 from linguistics.treetagger import TreeTaggerTags
@@ -364,50 +361,6 @@ def build_quotelengths_to_n_quote(clusters):
                 inv_qt_lengths[n_words] = 1
     
     return inv_qt_lengths
-
-
-def _build_timebag_transitions(bag_indices, transitions):
-    """Recursively build the list of possible transitions from a number of
-    TimeBags.
-    
-    Arguments:
-      * bag_indices: the indices of the TimeBags between which to build
-                     transitions
-      * transitions: the list passed on to the recursive instances of the
-                     method, containing what transitions have already been
-                     generated
-    
-    Returns: a list of tuples, each tuple representing a transition from one
-             TimeBag to a later one.
-    
-    """
-    
-    if len(bag_indices) > 1:
-        
-        transitions.extend([(bag_indices[0], idx) for idx in bag_indices[1:]])
-        _build_timebag_transitions(bag_indices[1:], transitions)
-        
-    else:
-        return []
-
-
-def build_timebag_transitions(n_timebags):
-    """Build the list of possible transitions from a number of TimeBags.
-    
-    The real work is done by the '_build_timebag_transitions' method.
-    
-    Arguments:
-      * the number of TimeBags
-    
-    Returns: a list of tuples, each tuple representing a transition from one
-             TimeBag to a later one.
-    
-    """
-    
-    transitions = []
-    _build_timebag_transitions(range(n_timebags), transitions)
-    
-    return transitions
 
 
 class ProgressInfo(object):
@@ -882,13 +835,14 @@ class SubstitutionAnalysis(object):
             
             for subsgs in args.substringss:
                 
-                for subtions in args.substitutionss:
+                for substitutions in args.substitutionss:
                 
-                    if subtions == 'tbg':
-                        transitions = \
-                            build_timebag_transitions(int(n_timebags))
-                    else:
+                    if substitutions == 'tbg':
+                        transitions = build_ordered_tuples(int(n_timebags))
+                    elif substitutions == 'root':
                         transitions = range(1, int(n_timebags))
+                    else:
+                        transitions = [None]
                     
                     for tr in transitions:
                         
@@ -897,14 +851,14 @@ class SubstitutionAnalysis(object):
                             for ff in args.ffs:
                                 
                                 argsets.append({'ff': ff,
-                                            'lemmatizing': True,
-                                            'substitutions': subtions,
-                                            'substrings': bool(int(subsgs)),
-                                            'POS': pos,
-                                            'verbose': False,
-                                            'n_timebags': int(n_timebags),
-                                            'bags': [tr],
-                                            'resume': args.resume})
+                                        'lemmatizing': True,
+                                        'substitutions': substitutions,
+                                        'substrings': bool(int(subsgs)),
+                                        'POS': pos,
+                                        'verbose': False,
+                                        'n_timebags': int(n_timebags),
+                                        'bags': [tr],
+                                        'resume': args.resume})
         
         return argsets
     
