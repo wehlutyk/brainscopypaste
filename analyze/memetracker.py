@@ -446,7 +446,7 @@ class ProgressInfo(object):
             print '  {} % ({} / {} {})'.format(
                 int(round(100 * self.progress / self.n_tot)), self.progress,
                 self.n_tot, self.label)
-        
+
 
 class SubstitutionAnalysis(object):
     
@@ -463,6 +463,8 @@ class SubstitutionAnalysis(object):
                         they don't already exist
       * print_argset: print an argset to stdout
       * load_data: load the data from pickle files
+      * itersubstitutions_all: iterate through all substitutions according to the
+                               given argset
       * examine_substitutions: examine substitutions and retain only those we
                                want
       * save_results: save the analysis results to pickle files
@@ -607,6 +609,17 @@ class SubstitutionAnalysis(object):
         return {'clusters': clusters, 'wn_PR': wn_PR,
                 'wn_degrees': wn_degrees, 'fa_PR': fa_PR}
     
+    def itersubstitutions_all(self, argset, data):
+        """Iterate through all substitutions according to the given argset."""
+        progress = ProgressInfo(len(data['clusters']), 100, 'clusters')
+        
+        for cl in data['clusters'].itervalues():
+            
+            progress.next_step()
+            for daughter, mother in cl.iter_substitutions[\
+                                        argset['substitutions']](argset):
+                yield (daughter, mother)
+    
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
         
@@ -630,8 +643,6 @@ class SubstitutionAnalysis(object):
         
         # Preliminary tools
         
-        tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                                TAGINENC='utf-8', TAGOUTENC='utf-8')
         pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
         progress = ProgressInfo(len(data['clusters']), 100, 'clusters')
         

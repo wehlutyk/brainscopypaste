@@ -224,3 +224,66 @@ def timebag_subhamming_word_sphere(timebag, center_string, d):
     
     else:
         return []
+
+
+class LingString(str):
+    
+    """Augment a string with POS tags and a tokenized version.
+    
+    Methods:
+      * __init__: initialized the instance, if asked to
+    
+    """
+    
+    def __init__(self, string, init=True):
+        """Initialize the instance, if asked to ('init' argument)."""
+        str.__init__(string)
+        
+        if init:
+            
+            self.POS_tags = tagger.Tags(string)
+            self.tokens = tagger.Tokenize(string)
+
+
+def timebag_iter_sphere_nosub(tbg, root):
+    """Iterate through strings in timebag in a sphere centered at 'root'.
+    Yield the (substring, mother) tuples."""
+    for k in tbg.hamming_word_sphere(root, 1):
+        yield (LingString(tbg.strings[k].lower()), root)
+
+
+def timebag_iter_sphere_sub(tbg, root):
+    """Iterate through strings in timebag in a subsphere centered at
+    'root'. Yield the (substring, effective mother) tuples."""
+    for k, m in tbg.subhamming_word_sphere(root, 1):
+        
+        mother_tok = root.tokens[m[0]:m[0] + m[1]]
+        mother_pos = root.POS_tags[m[0]:m[0] + m[1]]
+        mother = LingString(' '.join(mother_tok), init=False)
+        mother.tokens = mother_tok
+        mother.POS_tags = mother_pos
+        yield (LingString(tbg.strings[k].lower()), mother)
+
+
+def cluster_iter_substitutions_root(cl, argset):
+    """Iterate through substitutions taken as changes from root string."""
+    root = LingString(cl.root)
+    tbgs = cl.build_timebags(argset['n_timebags'])
+    
+    for j in argset['bags']:
+        
+        for daughter, mother in tbgs[j].iter_sphere[\
+                                    argset['substrings']](root):
+            yield (daughter, mother)
+
+
+def cluster_iter_substitutions_tbgs(cl, argset):
+    """Iterate through substitutions taken as changes between timebags."""
+    tbgs = cl.build_timebags(argset['n_timebags'])
+    
+    for i, j in argset['bags']:
+        
+        root = LingString(tbgs[i].max_freq_string.lower())
+        for daughter, mother in tbgs[j].iter_sphere[\
+                                    argset['substrings']](root):
+            yield (daughter, mother)

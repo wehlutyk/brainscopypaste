@@ -268,6 +268,10 @@ class Cluster(object):
                          annotations
       * bar_all: plot the bar-plot, stacked bar-plot, and normalized stacked
                  bar-plot for the cluster, with annotations
+      * iter_substitutions_root: iterate through substitutions taken as
+                                 changes from root string
+      * iter_substitutions_tbgs: iterate through substitutions taken as
+                                 changes between timebags
     
     """
     
@@ -331,6 +335,8 @@ class Cluster(object):
         
         self.quotes = {}
         self.timeline_built = False
+        self.iter_substitutions = {'root': self.iter_substitutions_root,
+                                   'tbgs': self.iter_substitutions_tbgs}
     
     def __repr__(self):
         """Define how we see a Cluster object when printed in a terminal
@@ -447,6 +453,14 @@ class Cluster(object):
         pl.subplot(313)
         af2 = self.flow_quotes(bins)[1]
         v_an.linkAnnotationFinders([af1, af2])
+    
+    def iter_substitutions_root(self, argset):
+        """Iterate through substitutions taken as changes from root string."""
+        return l_mt.cluster_iter_substitutions_root(self, argset)
+    
+    def iter_substitutions_tbgs(self, argset):
+        """Iterate through substitutions taken as changes between timebags."""
+        return l_mt.cluster_iter_substitutions_tbgs(self, argset)
 
 
 class TimeBag(object):
@@ -474,7 +488,12 @@ class TimeBag(object):
       * subhamming_word_sphere: get the strings in the TimeBag that are
                                 exactly at subhamming_word-distance d from a
                                 string
-
+      * iter_sphere_nosub: iterate through strings in the Timebag in a sphere
+                           centered at 'root'. Yield the (substring, mother)
+                           tuples
+      * iter_sphere_sub: iterate through strings in the Timebag in a subsphere
+                         centered at 'root'. Yield the (substring,
+                         effective mother) tuples
     
     """
     
@@ -501,6 +520,8 @@ class TimeBag(object):
         
         framed_cluster = a_mt.frame_cluster(cluster, start, end)
         
+        self.iter_sphere = {False: self.iter_sphere_nosub,
+                            True: self.iter_sphere_sub}
         self.id_fromcluster = cluster.id
         self.strings = []
         
@@ -557,3 +578,13 @@ class TimeBag(object):
         """Get the strings in the TimeBag that are exactly at
         subhamming_word-distance d from a string."""
         return l_mt.timebag_subhamming_word_sphere(self, center_string, d)
+    
+    def iter_sphere_nosub(self, root):
+        """Iterate through strings in the Timebag in a sphere centered at
+        'root'. Yield the (substring, mother) tuples."""
+        return l_mt.timebag_iter_sphere_nosub(self, root)
+    
+    def iter_sphere_sub(self, root):
+        """Iterate through strings in the Timebag in a subsphere centered at
+        'root'. Yield the (substring, effective mother) tuples."""
+        return l_mt.timebag_iter_sphere_sub(self, root)
