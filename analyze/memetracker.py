@@ -465,6 +465,16 @@ class SubstitutionAnalysis(object):
       * load_data: load the data from pickle files
       * itersubstitutions_all: iterate through all substitutions according to the
                                given argset
+      * subst_print_info: print information about the substitution if argset
+                          asks for it
+      * subst_test_POS: test for correspondence of POS tags in a substitution
+      * subst_lemmatize: lemmatize a substitution if argset asks for it
+      * subst_test_real: test if two words really form a substitution, or are
+                         in fact only variations of the same root
+      * subst_try_save_wn: save a substitution if it is referenced in the WN
+                           feature list
+      * subst_try_save_fa: save a substitution if it is referenced in the FA
+                           feature list
       * examine_substitutions: examine substitutions and retain only those we
                                want
       * save_results: save the analysis results to pickle files
@@ -481,6 +491,7 @@ class SubstitutionAnalysis(object):
         """Set the number of processes for multi-threading."""
         self.n_cpu = cpu_count()
         self.n_proc = self.n_cpu - 1
+        self.pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
     
     def get_save_files(self, argset):
         """Get the filenames where data is to be saved; check they don't
@@ -616,9 +627,136 @@ class SubstitutionAnalysis(object):
         for cl in data['clusters'].itervalues():
             
             progress.next_step()
-            for mother, daughter in cl.iter_substitutions[\
-                                        argset['substitutions']](argset):
-                yield (mother, daughter, cl.id)
+            for mother, daughter, subst_info in cl.iter_substitutions[
+                                            argset['substitutions']](argset):
+                yield (mother, daughter, subst_info)
+    
+    def subst_print_info(self, argset, mother, daughter, idx, subst_info):
+        """Print information about the substitution if argset asks for it."""
+        if argset['verbose']:
+            
+            raw_input()
+            print
+            print ("***** SUBST (cl #{} / {}) ***** '".format(mother.cl_id,
+                                                              subst_info) +
+                   '{}/{}'.format(mother.tokens[idx],
+                                  mother.POS_tags[idx]) +
+                   "' -> '" +
+                   '{}/{}'.format(daughter.tokens[idx],
+                                  daughter.POS_tags[idx]) +
+                   "'")
+            print mother
+            print '=>'
+            print daughter
+            print
+    
+    def subst_test_POS(self, argset, mother, daughter, idx):
+        """Test for correspondence of POS tags in a substitution."""
+        ret = True
+        
+        if argset['POS'] == 'all':
+            
+            if daughter.POS_tags[idx][0] != mother.POS_tags[idx][0]:
+                if argset['verbose']:
+                    print 'Stored: NONE (different POS)'
+                ret = False
+        
+        else:
+            
+            if (daughter.POS_tags[idx][0] !=
+                self.pos_wn_to_tt[argset['POS']] or
+                mother.POS_tags[idx][0] != self.pos_wn_to_tt[argset['POS']]):
+                if argset['verbose']:
+                    print 'Stored: NONE (wrong POS)'
+                ret = False
+        
+        return ret
+    
+    def subst_lemmatize(self, argset, mother, daughter, idx):
+        """Lemmatize a substitution if argset asks for it."""
+        if argset['lemmatizing']:
+            
+            m1 = wn.morphy(mother.tokens[idx])
+            if m1 != None:
+                lem1 = m1
+            else:
+                lem1 = mother.tokens[idx]
+            
+            m2 = wn.morphy(daughter.tokens[idx])
+            if m2 != None:
+                lem2 = m2
+            else:
+                lem2 = daughter.tokens[idx]
+            
+            if argset['verbose']:
+                print ("Lemmatized: '" + lem1 + "' -> '" +
+                       lem2 + "'")
+            
+        else:
+            
+            lem1 = mother.tokens[idx]
+            lem2 = daughter.tokens[idx]
+        
+        return (lem1, lem2)
+    
+    def subst_test_real(self, argset, lem1, lem2):
+        """Test if two words really form a substitution, or are in fact only
+        variations of the same root."""
+        ret = True
+        
+        if levenshtein(lem1, lem2) <= 1:
+            if argset['verbose']:
+                print 'Stored: NONE (not substitution)'
+            ret = False
+        
+        return ret
+    
+    def subst_try_save_wn(self, argset, data, lem1, lem2, details,
+                             wn_PR_scores, wn_PR_scores_d,
+                             wn_degrees, wn_degrees_d):
+        """Save a substitution if it is referenced in the WN feature list."""
+        try:
+            
+            wn_PR_scores.append([data['wn_PR'][lem1], data['wn_PR'][lem2]])
+            wn_PR_scores_d.append(details)
+            if argset['verbose']:
+                print 'Stored: wordnet PR YES'
+            
+            wn_degrees.append([data['wn_degrees'][lem1],
+                               data['wn_degrees'][lem2]])
+            wn_degrees_d.append(details)
+            if argset['verbose']:
+                print 'Stored: wordnet deg YES'
+            
+            ret = True
+            
+        except KeyError:
+            
+            if argset['verbose']:
+                print 'Stored: wordnet PR NO (not referenced)'
+                print 'Stored: wordnet deg NO (not referenced)'
+            ret = False
+        
+        return ret
+    
+    def subst_try_save_fa(self, argset, data, lem1, lem2, details,
+                          fa_PR_scores, fa_PR_scores_d):
+        """Save a substitution if it is referenced in the FA feature list."""
+        try:
+            
+            fa_PR_scores.append([data['fa_PR'][lem1], data['fa_PR'][lem2]])
+            fa_PR_scores_d.append(details)
+            if argset['verbose']:
+                print 'Stored: freeass YES'
+            ret = True
+            
+        except KeyError:
+            
+            if argset['verbose']:
+                print 'Stored: freeass NO (not referenced)'
+            ret = False
+        
+        return ret
     
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
@@ -641,10 +779,6 @@ class SubstitutionAnalysis(object):
         print
         print 'Doing substitution analysis:'
         
-        # Preliminary tools
-        
-        pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
-        
         # Results of the analysis
         
         wn_PR_scores = []
@@ -660,184 +794,36 @@ class SubstitutionAnalysis(object):
         n_stored_fa_PR = 0
         n_all = 0
         
-        for mother, daughter, cl_id in self.itersubstitutions_all(argset,
-                                                                  data):
-            
-            # Pause to read verbose info.
-            
-            if argset['verbose']:
-                raw_input()
+        for mother, daughter, subst_info in self.itersubstitutions_all(argset,
+                                                                       data):
             
             n_all += 1
-            
-            
-            # Find the word that was changed.
-            
             idx = np.where([w1 != w2 for (w1, w2) in
                             zip(daughter.tokens, mother.tokens)])[0]
             
-            # Verbose info
-            
-            if argset['verbose']:
-                
-                print
-                print ("***** SUBST (cl #{}) ***** '".format(cl_id) +
-                       '{}/{}'.format(mother.tokens[idx],
-                                      mother.POS_tags[idx]) +
-                       "' -> '" +
-                       '{}/{}'.format(daughter.tokens[idx],
-                                      daughter.POS_tags[idx]) +
-                       "'")
-                print mother
-                print '=>'
-                print daughter
-                print
-            
-            
-            # Check the POS tags.
-            
-            if argset['POS'] == 'all':
-                
-                if daughter.POS_tags[idx][0] != mother.POS_tags[idx][0]:
-                    
-                    if argset['verbose']:
-                        print 'Stored: NONE (different POS)'
-                    
-                    continue
-            
-            else:
-                
-                if (daughter.POS_tags[idx][0] != pos_wn_to_tt[argset['POS']] or
-                    mother.POS_tags[idx][0] != pos_wn_to_tt[argset['POS']]):
-                    
-                    if argset['verbose']:
-                        print 'Stored: NONE (wrong POS)'
-                    
-                    continue
-            
-            
-            # Lemmatize the words if asked to.
-            
-            if argset['lemmatizing']:
-                
-                m1 = wn.morphy(mother.tokens[idx])
-                if m1 != None:
-                    lem1 = m1
-                else:
-                    lem1 = mother.tokens[idx]
-                
-                m2 = wn.morphy(daughter.tokens[idx])
-                if m2 != None:
-                    lem2 = m2
-                else:
-                    lem2 = daughter.tokens[idx]
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print ("Lemmatized: '" + lem1 + "' -> '" +
-                           lem2 + "'")
-                
-            else:
-                
-                lem1 = mother.tokens[idx]
-                lem2 = daughter.tokens[idx]
-            
-            
-            # Exclude if this isn't really a substitution.
-            
-            if levenshtein(lem1, lem2) <= 1:
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print 'Stored: NONE (not substitution)'
-                
+            self.subst_print_info(argset, mother, daughter, idx, subst_info)
+            if not self.subst_test_POS(argset, mother, daughter, idx):
+                continue
+            lem1, lem2 = self.subst_lemmatize(argset, mother, daughter, idx)
+            if not self.subst_test_real(argset, lem1, lem2):
                 continue
             
-            
-            # The details to be saved about the substitution
-            
-            details = {'cl_id': cl_id,
-                       'mother': mother,
+            details = {'mother': mother,
                        'daughter': daughter,
                        'idx': idx,
                        'lem1': lem1,
                        'lem2': lem2,
-                       'POS1': mother.POS_tags[idx],
-                       'POS2': daughter.POS_tags[idx],
-    #                               'bag_tr': (i, j),
-    #                               'n_tbgs': argset['n_timebags']
-                        }
+                       'subst_info': subst_info}
             
-            
-            # Look the words up in the WN features lists.
-            
-            try:
-                
-                # Wordnet PageRank: take everything.
-                
-                wn_PR_scores.append([data['wn_PR'][lem1],
-                                     data['wn_PR'][lem2]])
-                wn_PR_scores_d.append(details)
+            if self.subst_try_save_wn(argset, data, lem1, lem2, details,
+                                      wn_PR_scores, wn_PR_scores_d,
+                                      wn_degrees, wn_degrees_d):
                 n_stored_wn_PR += 1
-                
-                if argset['verbose']:
-                    print 'Stored: wordnet PR YES'
-                
-                wn_degrees.append([data['wn_degrees'][lem1],
-                                   data['wn_degrees'][lem2]])
-                wn_degrees_d.append(details)
                 n_stored_wn_deg += 1
-                
-                if argset['verbose']:
-                    print 'Stored: wordnet deg YES'
-                
-            except KeyError:
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    
-                    print 'Stored: wordnet PR NO (not referenced)'
-                    print 'Stored: wordnet deg NO (not referenced)'
             
-            except Exception:
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print 'Stored: wordnet deg NO (<= 2)'
-            
-            
-            # Look the words up in the FA features lists.
-            
-            try:
-                
-                fa_PR_scores.append([data['fa_PR'][lem1],
-                                     data['fa_PR'][lem2]])
-                fa_PR_scores_d.append(details)
+            if self.subst_try_save_fa(argset, data, lem1, lem2, details,
+                                      fa_PR_scores, fa_PR_scores_d):
                 n_stored_fa_PR += 1
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print 'Stored: freeass YES'
-                
-            except KeyError:
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print 'Stored: freeass NO (not referenced)'
-            
-            except Exception:
-                
-                # Verbose info
-                
-                if argset['verbose']:
-                    print 'Stored: freeass NO (<= damping)'
-        
         
         print
         print 'Examined {} substitutions.'.format(n_all)

@@ -11,6 +11,7 @@ Classes:
            of Timeline)
   * Cluster: hold a cluster, its attributes, its quotes, and if necessary its
              Timeline
+  * QtString: augment a string with POS tags, tokens, cluster id and quote id
   * TimeBag: a bag of strings with some attributes, resulting from the
              splitting of a Cluster (or Quote) into time windows
 
@@ -30,6 +31,8 @@ from datainterface.timeparsing import isostr_to_epoch_mt
 import visualize.memetracker as v_mt
 import visualize.annotations as v_an
 import linguistics.memetracker as l_mt
+from linguistics.treetagger import TreeTaggerTags
+import settings as st
 
 # "import analyze.memetracker as a_mt" has been moved into TimeBag.__init__
 # to prevent a circular import problem
@@ -270,10 +273,10 @@ class Cluster(object):
                  bar-plot for the cluster, with annotations
       * iter_substitutions_root: iterate through substitutions taken as
                                  changes from root string. Yield (mother,
-                                 substring) tuples.
+                                 string or substring, bag info) tuples.
       * iter_substitutions_tbgs: iterate through substitutions taken as
                                  changes between timebags. Yield (mother,
-                                 substring) tuples.
+                                 string or substring, bag info) tuples.
     
     """
     
@@ -458,13 +461,38 @@ class Cluster(object):
     
     def iter_substitutions_root(self, argset):
         """Iterate through substitutions taken as changes from root string.
-        Yield (mother, substring) tuples."""
+        Yield (mother, string or substring, bag info) tuples."""
         return l_mt.cluster_iter_substitutions_root(self, argset)
     
     def iter_substitutions_tbgs(self, argset):
         """Iterate through substitutions taken as changes between timebags.
-        Yield (mother, substring) tuples."""
+        Yield (mother, string or substring, bag info) tuples."""
         return l_mt.cluster_iter_substitutions_tbgs(self, argset)
+
+
+class QtString(str):
+    
+    """Augment a string with POS tags, tokens, cluster id and quote id.
+    
+    Methods:
+      * __init__: parse the string for POS tags and tokens, if asked to
+    
+    """
+    
+    tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                            TAGINENC='utf-8', TAGOUTENC='utf-8')
+    
+    def __new__(cls, string, cl_id, qt_id, parse=True):
+        return super(QtString, cls).__new__(cls, string)
+    
+    def __init__(self, string, cl_id, qt_id, parse=True):
+        """Parse the string for POS tags and tokens, if asked to ('parse'
+        argument)."""
+        self.cl_id = cl_id
+        self.qt_id = qt_id
+        if parse:
+            self.POS_tags = self.tagger.Tags(string)
+            self.tokens = self.tagger.Tokenize(string)
 
 
 class TimeBag(object):
@@ -493,11 +521,12 @@ class TimeBag(object):
                                 exactly at subhamming_word-distance d from a
                                 string
       * iter_sphere_nosub: iterate through strings in timebag in a sphere
-                           centered at 'root'. Yield the (mother, substring)
-                           tuples.
+                           centered at 'base'. Yield (mother, string) tuples.
       * iter_sphere_sub: iterate through strings in timebag in a subsphere
-                         centered at 'root'. Yield the (effective mother,
+                         centered at 'base'. Yield the (effective mother,
                          substring) tuples.
+      * qt_string_lower: return a QtString corresponding to string number k of
+                         the Timebag, in lowercase
     
     """
     
@@ -543,7 +572,8 @@ class TimeBag(object):
                 self.n_urlss[i] = qt.n_urls
                 self.ids[i] = qt.id
             
-            self.max_freq_string = self.strings[np.argmax(self.tot_freqs)]
+            self.argmax_freq_string = np.argmax(self.tot_freqs)
+            self.max_freq_string = self.strings[self.argmax_freq_string]
         
         else:
             
@@ -552,6 +582,12 @@ class TimeBag(object):
             self.n_urlss = []
             self.ids = []
             self.max_freq_string = ''
+    
+    def qt_string_lower(self, k, parse=True):
+        """Return a QtString corresponding to string number k of the Timebag,
+        in lowercase."""
+        return QtString(self.strings[k].lower(), self.id_fromcluster,
+                        self.ids[k], parse=parse)
     
     def levenshtein_sphere(self, center_string, d):
         """Get the strings in the TimeBag that are exactly at
@@ -584,11 +620,11 @@ class TimeBag(object):
         return l_mt.timebag_subhamming_word_sphere(self, center_string, d)
     
     def iter_sphere_nosub(self, root):
-        """Iterate through strings in timebag in a sphere centered at 'root'.
-        Yield the (mother, substring) tuples."""
+        """Iterate through strings in timebag in a sphere centered at 'base'.
+        Yield (mother, string) tuples."""
         return l_mt.timebag_iter_sphere_nosub(self, root)
     
     def iter_sphere_sub(self, root):
         """Iterate through strings in timebag in a subsphere centered at
-        'root'. Yield the (effective mother, substring) tuples."""
+        'base'. Yield the (effective mother, substring) tuples."""
         return l_mt.timebag_iter_sphere_sub(self, root)

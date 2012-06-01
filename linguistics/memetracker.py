@@ -55,6 +55,12 @@ import numpy as np
 from linguistics.treetagger import TreeTaggerTags
 import settings as st
 
+# "from datastructure.memetracker import QtString" has been moved into
+# timebag_iter_sphere_sub and cluster_iter_substitutions_root
+# to prevent a circular import problem
+# see http://docs.python.org/faq/programming.html#what-are-the-best-practices-
+# for-using-import-in-a-module for more details.
+
 
 def levenshtein(s1, s2):
     """Compute levenshtein distance between s1 and s2."""
@@ -238,66 +244,58 @@ def timebag_subhamming_word_sphere(timebag, center_string, d):
         return []
 
 
-class LingString(str):
-    
-    """Augment a string with POS tags and a tokenized version.
-    
-    Methods:
-      * __init__: initialized the instance, if asked to
-    
-    """
-    
-    def __new__(cls, string, init=True):
-        return super(LingString, cls).__new__(cls, string)
-    
-    def __init__(self, string, init=True):
-        """Initialize the instance, if asked to ('init' argument)."""
-        if init:
-            self.POS_tags = tagger.Tags(string)
-            self.tokens = tagger.Tokenize(string)
+def timebag_iter_sphere_nosub(tbg, base):
+    """Iterate through strings in timebag in a sphere centered at 'base'.
+    Yield (mother, string) tuples."""
+    for k in tbg.hamming_word_sphere(base, 1):
+        yield (base, tbg.qt_string_lower(k))
 
 
-def timebag_iter_sphere_nosub(tbg, root):
-    """Iterate through strings in timebag in a sphere centered at 'root'.
-    Yield the (mother, substring) tuples."""
-    for k in tbg.hamming_word_sphere(root, 1):
-        yield (root, LingString(tbg.strings[k].lower()))
-
-
-def timebag_iter_sphere_sub(tbg, root):
+def timebag_iter_sphere_sub(tbg, base):
     """Iterate through strings in timebag in a subsphere centered at
-    'root'. Yield the (effective mother, substring) tuples."""
-    for k, m in tbg.subhamming_word_sphere(root, 1):
+    'base'. Yield the (effective mother, substring) tuples."""
+    
+    # This import goes here to prevent a circular import problem.
+    
+    from datastructure.memetracker import QtString
+    
+    for k, m in tbg.subhamming_word_sphere(base, 1):
         
-        mother_tok = root.tokens[m[0]:m[0] + m[1]]
-        mother_pos = root.POS_tags[m[0]:m[0] + m[1]]
-        mother = LingString(' '.join(mother_tok), init=False)
+        mother_tok = base.tokens[m[0]:m[0] + m[1]]
+        mother_pos = base.POS_tags[m[0]:m[0] + m[1]]
+        mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
+                          parse=False)
         mother.tokens = mother_tok
         mother.POS_tags = mother_pos
-        yield (mother, LingString(tbg.strings[k].lower()))
+        yield (mother, tbg.qt_string_lower(k))
 
 
 def cluster_iter_substitutions_root(cl, argset):
     """Iterate through substitutions taken as changes from root string. Yield
-    (mother, substring) tuples."""
-    root = LingString(cl.root)
+    (mother, string or substring, bag info) tuples."""
+    
+    # This import goes here to prevent a circular import problem.
+    
+    from datastructure.memetracker import QtString
+    
+    base = QtString(cl.root, cl.id, 0)
     tbgs = cl.build_timebags(argset['n_timebags'])
     
     for j in argset['bags']:
         
-        for mother, daughter in tbgs[j].iter_sphere[\
-                                    argset['substrings']](root):
-            yield (mother, daughter)
+        for mother, daughter in tbgs[j].iter_sphere[
+                                    argset['substrings']](base):
+            yield (mother, daughter, {'tobag': j})
 
 
 def cluster_iter_substitutions_tbgs(cl, argset):
     """Iterate through substitutions taken as changes between timebags. Yield
-    (mother, substring) tuples."""
+    (mother, string or substring, bag info) tuples."""
     tbgs = cl.build_timebags(argset['n_timebags'])
     
     for i, j in argset['bags']:
         
-        root = LingString(tbgs[i].max_freq_string.lower())
-        for mother, daughter in tbgs[j].iter_sphere[\
-                                    argset['substrings']](root):
-            yield (mother, daughter)
+        base = tbgs[i].qt_string_lower(tbgs[i].argmax_freq_string)
+        for mother, daughter in tbgs[j].iter_sphere[
+                                    argset['substrings']](base):
+            yield (mother, daughter, {'bag1': i, 'bag2': j})
