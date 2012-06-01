@@ -616,9 +616,9 @@ class SubstitutionAnalysis(object):
         for cl in data['clusters'].itervalues():
             
             progress.next_step()
-            for daughter, mother in cl.iter_substitutions[\
+            for mother, daughter in cl.iter_substitutions[\
                                         argset['substitutions']](argset):
-                yield (daughter, mother)
+                yield (mother, daughter, cl.id)
     
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
@@ -644,7 +644,6 @@ class SubstitutionAnalysis(object):
         # Preliminary tools
         
         pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
-        progress = ProgressInfo(len(data['clusters']), 100, 'clusters')
         
         # Results of the analysis
         
@@ -661,233 +660,183 @@ class SubstitutionAnalysis(object):
         n_stored_fa_PR = 0
         n_all = 0
         
-        # If we're looking at substitutions from root, build fake transitions
-        # that will be ignored further on.
-        
-        if argset['substitutions'] == 'tbg':
-            bag_transitions = argset['bags']
-        else:
-            bag_transitions = [(0, i) for i in argset['bags']]
-        
-        for cl in data['clusters'].itervalues():
+        for mother, daughter, cl_id in self.itersubstitutions_all(argset,
+                                                                  data):
             
-            progress.next_step()
+            # Pause to read verbose info.
             
-            # Get timebags and examine transitions.
+            if argset['verbose']:
+                raw_input()
             
-            tbgs = cl.build_timebags(argset['n_timebags'])
+            n_all += 1
             
-            for i, j in bag_transitions:
+            
+            # Find the word that was changed.
+            
+            idx = np.where([w1 != w2 for (w1, w2) in
+                            zip(daughter.tokens, mother.tokens)])[0]
+            
+            # Verbose info
+            
+            if argset['verbose']:
                 
-                # Highest freq string and its daughters
-                # (sphere of hamming_word distance =1)
+                print
+                print ("***** SUBST (cl #{}) ***** '".format(cl_id) +
+                       '{}/{}'.format(mother.tokens[idx],
+                                      mother.POS_tags[idx]) +
+                       "' -> '" +
+                       '{}/{}'.format(daughter.tokens[idx],
+                                      daughter.POS_tags[idx]) +
+                       "'")
+                print mother
+                print '=>'
+                print daughter
+                print
+            
+            
+            # Check the POS tags.
+            
+            if argset['POS'] == 'all':
                 
-                # Substitutions from timebags or from root
-                
-                if argset['substitutions'] == 'tbg':
-                    smax = tbgs[i].max_freq_string.lower()
-                else:
-                    smax = cl.root
-
-                smax_pos = tagger.Tags(smax)
-                smax_tok = tagger.Tokenize(smax)
-                
-                # Substrings included or not
-                
-                if argset['substrings']:
-                    daughters_mums = [(tbgs[j].strings[k].lower(), mum)
-                                      for k, mum in
-                                      tbgs[j].subhamming_word_sphere(smax, 1)]
-                else:
-                    smot = smax
-                    smot_pos = smax_pos
-                    smot_tok = smax_tok
-                    daughters_mums = [(tbgs[j].strings[k].lower(), None)
-                                      for k in
-                                      tbgs[j].hamming_word_sphere(smot, 1)]
-                
-                for s, mum in daughters_mums:
-                    
-                    # Rebuild the mother thanks to info from subhamming
-                    
-                    if argset['substrings']:
-                        
-                        smot_tok = smax_tok[mum[0]:mum[0] + mum[1]]
-                        smot_pos = smax_pos[mum[0]:mum[0] + mum[1]]
-                        smot = ' '.join(smot_tok)
-                    
-                    # Pause to read verbose info.
+                if daughter.POS_tags[idx][0] != mother.POS_tags[idx][0]:
                     
                     if argset['verbose']:
-                        raw_input()
+                        print 'Stored: NONE (different POS)'
                     
-                    n_all += 1
-                    
-                    
-                    # Find the word that was changed.
-                    
-                    s_pos = tagger.Tags(s)
-                    s_tok = tagger.Tokenize(s)
-                    idx = np.where([w1 != w2 for (w1, w2) in
-                                    zip(s_tok, smot_tok)])[0]
-                    
-                    # Verbose info
+                    continue
+            
+            else:
+                
+                if (daughter.POS_tags[idx][0] != pos_wn_to_tt[argset['POS']] or
+                    mother.POS_tags[idx][0] != pos_wn_to_tt[argset['POS']]):
                     
                     if argset['verbose']:
-                        
-                        print
-                        print ("***** SUBST (cl #{}) ***** '".format(cl.id) +
-                               '{}/{}'.format(smot_tok[idx], smot_pos[idx]) +
-                               "' -> '" + '{}/{}'.format(s_tok[idx],
-                                                         s_pos[idx]) + "'")
-                        print smot
-                        print '=>'
-                        print s
-                        print
+                        print 'Stored: NONE (wrong POS)'
                     
+                    continue
+            
+            
+            # Lemmatize the words if asked to.
+            
+            if argset['lemmatizing']:
+                
+                m1 = wn.morphy(mother.tokens[idx])
+                if m1 != None:
+                    lem1 = m1
+                else:
+                    lem1 = mother.tokens[idx]
+                
+                m2 = wn.morphy(daughter.tokens[idx])
+                if m2 != None:
+                    lem2 = m2
+                else:
+                    lem2 = daughter.tokens[idx]
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print ("Lemmatized: '" + lem1 + "' -> '" +
+                           lem2 + "'")
+                
+            else:
+                
+                lem1 = mother.tokens[idx]
+                lem2 = daughter.tokens[idx]
+            
+            
+            # Exclude if this isn't really a substitution.
+            
+            if levenshtein(lem1, lem2) <= 1:
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print 'Stored: NONE (not substitution)'
+                
+                continue
+            
+            
+            # The details to be saved about the substitution
+            
+            details = {'cl_id': cl_id,
+                       'mother': mother,
+                       'daughter': daughter,
+                       'idx': idx,
+                       'lem1': lem1,
+                       'lem2': lem2,
+                       'POS1': mother.POS_tags[idx],
+                       'POS2': daughter.POS_tags[idx],
+    #                               'bag_tr': (i, j),
+    #                               'n_tbgs': argset['n_timebags']
+                        }
+            
+            
+            # Look the words up in the WN features lists.
+            
+            try:
+                
+                # Wordnet PageRank: take everything.
+                
+                wn_PR_scores.append([data['wn_PR'][lem1],
+                                     data['wn_PR'][lem2]])
+                wn_PR_scores_d.append(details)
+                n_stored_wn_PR += 1
+                
+                if argset['verbose']:
+                    print 'Stored: wordnet PR YES'
+                
+                wn_degrees.append([data['wn_degrees'][lem1],
+                                   data['wn_degrees'][lem2]])
+                wn_degrees_d.append(details)
+                n_stored_wn_deg += 1
+                
+                if argset['verbose']:
+                    print 'Stored: wordnet deg YES'
+                
+            except KeyError:
+                
+                # Verbose info
+                
+                if argset['verbose']:
                     
-                    # Check the POS tags.
-                    
-                    if argset['POS'] == 'all':
-                        
-                        if s_pos[idx][0] != smot_pos[idx][0]:
-                            
-                            if argset['verbose']:
-                                print 'Stored: NONE (different POS)'
-                            
-                            continue
-                    
-                    else:
-                        
-                        if (s_pos[idx][0] != pos_wn_to_tt[argset['POS']] or
-                            smot_pos[idx][0] != pos_wn_to_tt[argset['POS']]):
-                            
-                            if argset['verbose']:
-                                print 'Stored: NONE (wrong POS)'
-                            
-                            continue
-                    
-                    
-                    # Lemmatize the words if asked to.
-                    
-                    if argset['lemmatizing']:
-                        
-                        m1 = wn.morphy(smot_tok[idx])
-                        if m1 != None:
-                            lem1 = m1
-                        else:
-                            lem1 = smot_tok[idx]
-                        
-                        m2 = wn.morphy(s_tok[idx])
-                        if m2 != None:
-                            lem2 = m2
-                        else:
-                            lem2 = s_tok[idx]
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print ("Lemmatized: '" + lem1 + "' -> '" +
-                                   lem2 + "'")
-                        
-                    else:
-                        
-                        lem1 = smot_tok[idx]
-                        lem2 = s_tok[idx]
-                    
-                    
-                    # Exclude if this isn't really a substitution.
-                    
-                    if levenshtein(lem1, lem2) <= 1:
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print 'Stored: NONE (not substitution)'
-                        
-                        continue
-                    
-                    
-                    # The details to be saved about the substitution
-                    
-                    details = {'cl_id': cl.id,
-                               'smot': smot,
-                               's': s,
-                               'idx': idx,
-                               'lem1': lem1,
-                               'lem2': lem2,
-                               'POS1': smot_pos[idx],
-                               'POS2': s_pos[idx],
-                               'bag_tr': (i, j),
-                               'n_tbgs': argset['n_timebags']}
-                    
-                    
-                    # Look the words up in the WN features lists.
-                    
-                    try:
-                        
-                        # Wordnet PageRank: take everything.
-                        
-                        wn_PR_scores.append([data['wn_PR'][lem1],
-                                             data['wn_PR'][lem2]])
-                        wn_PR_scores_d.append(details)
-                        n_stored_wn_PR += 1
-                        
-                        if argset['verbose']:
-                            print 'Stored: wordnet PR YES'
-                        
-                        wn_degrees.append([data['wn_degrees'][lem1],
-                                           data['wn_degrees'][lem2]])
-                        wn_degrees_d.append(details)
-                        n_stored_wn_deg += 1
-                        
-                        if argset['verbose']:
-                            print 'Stored: wordnet deg YES'
-                        
-                    except KeyError:
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            
-                            print 'Stored: wordnet PR NO (not referenced)'
-                            print 'Stored: wordnet deg NO (not referenced)'
-                    
-                    except Exception:
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print 'Stored: wordnet deg NO (<= 2)'
-                    
-                    
-                    # Look the words up in the FA features lists.
-                    
-                    try:
-                        
-                        fa_PR_scores.append([data['fa_PR'][lem1],
-                                             data['fa_PR'][lem2]])
-                        fa_PR_scores_d.append(details)
-                        n_stored_fa_PR += 1
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print 'Stored: freeass YES'
-                        
-                    except KeyError:
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print 'Stored: freeass NO (not referenced)'
-                    
-                    except Exception:
-                        
-                        # Verbose info
-                        
-                        if argset['verbose']:
-                            print 'Stored: freeass NO (<= damping)'
+                    print 'Stored: wordnet PR NO (not referenced)'
+                    print 'Stored: wordnet deg NO (not referenced)'
+            
+            except Exception:
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print 'Stored: wordnet deg NO (<= 2)'
+            
+            
+            # Look the words up in the FA features lists.
+            
+            try:
+                
+                fa_PR_scores.append([data['fa_PR'][lem1],
+                                     data['fa_PR'][lem2]])
+                fa_PR_scores_d.append(details)
+                n_stored_fa_PR += 1
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print 'Stored: freeass YES'
+                
+            except KeyError:
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print 'Stored: freeass NO (not referenced)'
+            
+            except Exception:
+                
+                # Verbose info
+                
+                if argset['verbose']:
+                    print 'Stored: freeass NO (<= damping)'
         
         
         print

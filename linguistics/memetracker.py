@@ -34,6 +34,18 @@ Methods:
                                     substrings in a TimeBag that are at
                                     subhamming_word-distance == d from a
                                     string
+  * timebag_iter_sphere_nosub: iterate through strings in timebag in a sphere
+                               centered at 'root'. Yield the (mother,
+                               substring) tuples.
+  * timebag_iter_sphere_sub: iterate through strings in timebag in a subsphere
+                             centered at 'root'. Yield the (effective mother,
+                             substring) tuples.
+  * cluster_iter_substitutions_root: iterate through substitutions taken as
+                                     changes from root string. Yield (mother,
+                                     substring) tuples.
+  * cluster_iter_substitutions_tbgs: iterate through substitutions taken as
+                                     changes between timebags. Yield (mother,
+                                     substring) tuples.
 
 """
 
@@ -247,14 +259,14 @@ class LingString(str):
 
 def timebag_iter_sphere_nosub(tbg, root):
     """Iterate through strings in timebag in a sphere centered at 'root'.
-    Yield the (substring, mother) tuples."""
+    Yield the (mother, substring) tuples."""
     for k in tbg.hamming_word_sphere(root, 1):
-        yield (LingString(tbg.strings[k].lower()), root)
+        yield (root, LingString(tbg.strings[k].lower()))
 
 
 def timebag_iter_sphere_sub(tbg, root):
     """Iterate through strings in timebag in a subsphere centered at
-    'root'. Yield the (substring, effective mother) tuples."""
+    'root'. Yield the (effective mother, substring) tuples."""
     for k, m in tbg.subhamming_word_sphere(root, 1):
         
         mother_tok = root.tokens[m[0]:m[0] + m[1]]
@@ -262,28 +274,30 @@ def timebag_iter_sphere_sub(tbg, root):
         mother = LingString(' '.join(mother_tok), init=False)
         mother.tokens = mother_tok
         mother.POS_tags = mother_pos
-        yield (LingString(tbg.strings[k].lower()), mother)
+        yield (mother, LingString(tbg.strings[k].lower()))
 
 
 def cluster_iter_substitutions_root(cl, argset):
-    """Iterate through substitutions taken as changes from root string."""
+    """Iterate through substitutions taken as changes from root string. Yield
+    (mother, substring) tuples."""
     root = LingString(cl.root)
     tbgs = cl.build_timebags(argset['n_timebags'])
     
     for j in argset['bags']:
         
-        for daughter, mother in tbgs[j].iter_sphere[\
+        for mother, daughter in tbgs[j].iter_sphere[\
                                     argset['substrings']](root):
-            yield (daughter, mother)
+            yield (mother, daughter)
 
 
 def cluster_iter_substitutions_tbgs(cl, argset):
-    """Iterate through substitutions taken as changes between timebags."""
+    """Iterate through substitutions taken as changes between timebags. Yield
+    (mother, substring) tuples."""
     tbgs = cl.build_timebags(argset['n_timebags'])
     
     for i, j in argset['bags']:
         
         root = LingString(tbgs[i].max_freq_string.lower())
-        for daughter, mother in tbgs[j].iter_sphere[\
+        for mother, daughter in tbgs[j].iter_sphere[\
                                     argset['substrings']](root):
-            yield (daughter, mother)
+            yield (mother, daughter)
