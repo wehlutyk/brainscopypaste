@@ -410,6 +410,44 @@ def build_timebag_transitions(n_timebags):
     return transitions
 
 
+class ProgressInfo(object):
+    
+    """Print progress information.
+    
+    Methods:
+      * __init__: initialize the instance
+      * next_step: increase progress counter and print info if needed
+    
+    """
+    
+    def __init__(self, n_tot, n_info, label='objects'):
+        """Initialize the instance.
+        
+        Arguments:
+          * n_tot: the total number of items through which we are making
+                   progress
+          * n_info: the number of informations messages to be displayed
+        
+        Keyword arguments:
+          * label: a label for printing information (i.e. what kind of objects
+                   are we making progress through?). Defaults to 'objects'.
+        
+        """
+        
+        self.progress = 0
+        self.n_tot = n_tot
+        self.info_step = max(int(round(n_tot / n_info)), 1)
+        self.label = label
+    
+    def next_step(self):
+        """Increase progress counter and print info if needed."""
+        self.progress += 1
+        if self.progress % self.info_step == 0:
+            print '  {} % ({} / {} {})'.format(
+                int(round(100 * self.progress / self.n_tot)), self.progress,
+                self.n_tot, self.label)
+        
+
 class SubstitutionAnalysis(object):
     
     """Analyze the 1-word changes in the MemeTracker dataset.
@@ -590,17 +628,12 @@ class SubstitutionAnalysis(object):
         print
         print 'Doing substitution analysis:'
         
+        # Preliminary tools
+        
         tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
                                 TAGINENC='utf-8', TAGOUTENC='utf-8')
         pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
-        
-        # If we're looking at substitutions from root, build fake transitions
-        # that will be ignored further on.
-        
-        if argset['substitutions'] == 'tbg':
-            bag_transitions = argset['bags']
-        else:
-            bag_transitions = [(0, i) for i in argset['bags']]
+        progress = ProgressInfo(len(data['clusters']), 100, 'clusters')
         
         # Results of the analysis
         
@@ -617,24 +650,17 @@ class SubstitutionAnalysis(object):
         n_stored_fa_PR = 0
         n_all = 0
         
-        # Progress info
+        # If we're looking at substitutions from root, build fake transitions
+        # that will be ignored further on.
         
-        progress = 0
-        n_clusters = len(data['clusters'])
-        info_step = max(int(round(n_clusters / 100)), 1)
+        if argset['substitutions'] == 'tbg':
+            bag_transitions = argset['bags']
+        else:
+            bag_transitions = [(0, i) for i in argset['bags']]
         
         for cl in data['clusters'].itervalues():
             
-            # Progress info
-            
-            progress += 1
-            
-            if progress % info_step == 0:
-                
-                print '  {} % ({} / {} clusters)'.format(
-                    int(round(100 * progress / n_clusters)),
-                    progress, n_clusters)
-            
+            progress.next_step()
             
             # Get timebags and examine transitions.
             
