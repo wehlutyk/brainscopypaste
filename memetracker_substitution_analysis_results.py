@@ -122,24 +122,24 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
         lbl = 'averages' if setlabel else None
         pl.plot(xntb, r_avgs[xntb], 'b-', linewidth=2, label=lbl)
         lbl = 'avgs +/- IC-95%' if setlabel else None
-        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'm-', linewidth=1,
+        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c-', linewidth=1,
                 label=lbl)
         lbl = 'avgs_ntb' if setlabel else None
-        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'c-', lw=2,
-                label=lbl)
+        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'r-', lw=2,
+                label=lbl, zorder=100)
         lbl = 'avgs_ntb +/- IC-95%' if setlabel else None
         pl.plot(xntb,
                 pl.ones(len(xntb)) * (ntb_r_avgs_mean - ntb_r_avgs_ic),
-                'm-', label=lbl)
+                'm-', label=lbl, zorder=100)
         setlabel = False
         
         pl.plot(xntb,
                 pl.ones(len(xntb)) * (ntb_r_avgs_mean + ntb_r_avgs_ic),
-                'm-')
-        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'm-', linewidth=1)
+                'm-', zorder=100)
+        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'c-', linewidth=1)
         pl.plot(xntb, r_avgs[xntb], 'bo', linewidth=2)
-        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'm.', linewidth=1)
-        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'm.', linewidth=1)
+        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c.', linewidth=1)
+        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'c.', linewidth=1)
     
     for ff, xff in ff_series:
         
@@ -489,6 +489,9 @@ if __name__ == '__main__':
     for substitutions in ['root', 'tbg']:
         
         for substrings in [0, 1]:
+            print ('Creating plots for substitutions={}, '
+                   'substrings={} ...').format(substitutions, substrings),
             plot_all_results(substitutions, substrings)
+            print 'OK'
     
     pl.show()
