@@ -247,12 +247,12 @@ class LingString(str):
     
     """
     
+    def __new__(cls, string, init=True):
+        return super(LingString, cls).__new__(cls, string)
+    
     def __init__(self, string, init=True):
         """Initialize the instance, if asked to ('init' argument)."""
-        str.__init__(string)
-        
         if init:
-            
             self.POS_tags = tagger.Tags(string)
             self.tokens = tagger.Tokenize(string)
 

@@ -41,8 +41,6 @@ if __name__ == '__main__':
     MT = di_mt.MT_dataset(filename)
     MT.load_clusters()
     
-    l = len(MT.clusters)
-    info_step = max(int(round(l/100)), 1)
     min_tokens = 5
     
     
@@ -57,15 +55,11 @@ if __name__ == '__main__':
     
     print 'Computing framed Clusters...'
     framed_clusters = {}
-    i = 0
+    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
     
     for cl_id, cl in MT.clusters.iteritems():
         
-        i += 1
-        if i % info_step == 0:
-            print '  {} % ({} / {} clusters)'.format(int(round(100 * i / l)),
-                                                     i, l)
-        
+        progress.next_step()
         framed_cl = a_mt.frame_cluster_around_peak(cl)
         if framed_cl != None:
             framed_clusters[cl_id] = framed_cl
@@ -77,15 +71,11 @@ if __name__ == '__main__':
     
     print 'Computing filtered Clusters (min_tokens={})...'.format(min_tokens)
     filtered_clusters = {}
-    i = 0
+    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
     
     for cl_id, cl in MT.clusters.iteritems():
         
-        i += 1
-        if i % info_step == 0:
-            print '  {} % ({} / {} clusters)'.format(int(round(100 * i / l)),
-                                                     i, l)
-        
+        progress.next_step()
         filtered_cl = a_mt.filter_cluster(cl, min_tokens)
         if filtered_cl != None:
             filtered_clusters[cl_id] = filtered_cl
@@ -125,15 +115,11 @@ if __name__ == '__main__':
     print ('Computing framed-filtered Clusters '
            '(min_tokens={})...').format(min_tokens)
     ff_clusters = {}
-    i = 0
+    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
     
     for cl_id, cl in framed_clusters.iteritems():
         
-        i += 1
-        if i % info_step == 0:
-            print '  {} % ({} / {} clusters)'.format(int(round(100 * i / l)),
-                                                     i, l)
-        
+        progress.next_step()
         ff_cl = a_mt.filter_cluster(cl, min_tokens)
         if ff_cl != None:
             ff_clusters[cl_id] = ff_cl
