@@ -40,6 +40,12 @@ Methods:
   * timebag_iter_sphere_sub: iterate through strings in timebag in a subsphere
                              centered at 'root'. Yield the (effective mother,
                              substring) tuples.
+  * distance_word_mother_nosub: get distance between two strings (without
+                                substrings), and return the (distance, mother)
+                                tuple
+  * distance_word_mother_sub: get distance between two strings (with
+                              substrings), and return the (distance, effective
+                              mother) tuple
   * cluster_iter_substitutions_root: iterate through substitutions taken as
                                      changes from root string. Yield (mother,
                                      substring) tuples.
@@ -304,12 +310,36 @@ def cluster_iter_substitutions_tbgs(cl, argset):
             yield (mother, daughter, {'bag1': i, 'bag2': j})
 
 
+def distance_word_mother_nosub(base, daughter):
+    """Get distance between two strings (without substrings), and return the
+    (distance, mother) tuple."""
+    return (hamming_word(base, daughter), base)
+
+
+def distance_word_mother_sub(base, daughter):
+    """Get distance between two strings (with substrings), and return the
+    (distance, effective mother) tuple."""
+    
+    # This import goes here to prevent a circular import problem.
+    
+    from datastructure.memetracker import QtString
+    
+    d, k, l = subhamming_word(base, daughter)
+    mother_tok = base.tokens[k:k + l]
+    mother_pos = base.POS_tags[k:k + l]
+    mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
+                      parse=False)
+    mother.tokens = mother_tok
+    mother.POS_tags = mother_pos
+    return (d, mother)
+
+
 def cluster_iter_substitutions_time(cl, argset):
     """Iterate through substitutions taken as transitions from earlier quotes
     to older quotes (in order of appearance in time)."""
     
-    distance_word = {False: hamming_word,
-                     True: lambda s1, s2: subhamming_word(s1, s2)[0]}
+    distance_word_mother = {False: distance_word_mother_nosub,
+                            True: distance_word_mother_sub}
     qt_list = []
     qt_starts = np.zeros(cl.n_quotes)
     
@@ -326,13 +356,14 @@ def cluster_iter_substitutions_time(cl, argset):
     
     for i, j in tuples:
         
-        mother = qt_list[i].to_qt_string_lower(cl.id)
-        mother_start = qt_starts[i]
+        base = qt_list[i].to_qt_string_lower(cl.id)
         daughter = qt_list[j].to_qt_string_lower(cl.id)
-        daughter_start = qt_starts[j]
+        d, mother = distance_word_mother[argset['substrings']](base, daughter)
         
-        if distance_word[argset['substrings']](mother, daughter) == 1:
+        if d == 1:
             
+            mother_start = qt_starts[i]
+            daughter_start = qt_starts[j]
             mother_d = datetime.fromtimestamp(
                                 mother_start).strftime('%Y-%m-%d %H:%m:%S')
             daughter_d = datetime.fromtimestamp(

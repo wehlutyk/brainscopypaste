@@ -41,7 +41,7 @@ if __name__ == '__main__':
     for cl_id, cl in clusters.iteritems():
         assert rserver.pset(st.redis_mt_clusters_pref, cl_id, cl)
     
-    assert rserver.save()
+    rserver.bgsave_wait()
     print 'OK'
     
     # Clean up before going to the framed clusters
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     for cl_id, cl in clusters_framed.iteritems():
         assert rserver.pset(st.redis_mt_clusters_framed_pref, cl_id, cl)
     
-    assert rserver.save()
+    rserver.bgsave_wait()
     print 'OK'
     
     # Clean up before going to the filtered clusters
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     for cl_id, cl in clusters_filtered.iteritems():
         assert rserver.pset(st.redis_mt_clusters_filtered_pref, cl_id, cl)
     
-    assert rserver.save()
+    rserver.bgsave_wait()
     print 'OK'
     
     # Clean up before going to the framed-filtered clusters
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     for cl_id, cl in clusters_ff.iteritems():
         assert rserver.pset(st.redis_mt_clusters_ff_pref, cl_id, cl)
     
-    assert rserver.save()
+    rserver.bgsave_wait()
     print 'OK'
     
     print 'All done, exiting.'

@@ -4,8 +4,8 @@
 """Load and save python objects to redis.
 
 Classes:
-  * PRedis: add two methods to redis.Redis load and save python objects to a
-            redis instance
+  * PRedis: add methods to redis.Redis load and save python objects to a redis
+            instance
 
 """
 
@@ -14,6 +14,7 @@ import re
 import cPickle
 import copy_reg
 import types
+from time import sleep
 
 import redis
 
@@ -43,14 +44,16 @@ copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 class PRedis(redis.Redis):
     
-    """Add two methods to redis.Redis to load and save python objects to
-    a redis instance.
+    """Add methods to redis.Redis to load and save python objects to a redis
+    instance.
     
     This is a subclass of redis.Redis.
     
     Methods:
       * pset: store an object under key 'pref + name', serialized by pickle
       * pget: load an object at key 'pref + name', unserialized by pickle
+      * bgsave_wait: save the db to disk in the background, but wait for it to
+                     finish
     
     """
     
@@ -62,6 +65,23 @@ class PRedis(redis.Redis):
     def pget(self, pref, name):
         """Load an object at key 'pref + name', unserialized by pickle."""
         return cPickle.loads(self.get(pref + str(name)))
+    
+    def bgsave_wait(self):
+        """Save the db to disk in the background, but wait for it to
+        finish."""
+        print 'Saving the redis DB to disk ... (seconds elapsed:',
+        
+        lastsave = self.lastsave()
+        self.bgsave()
+        i = 0
+        
+        while self.lastsave() == lastsave:
+            
+            i += 1
+            sleep(1)
+            print i,
+        
+        print ') OK'
 
 
 class RedisReader(object):
