@@ -478,13 +478,8 @@ class SubstitutionAnalysis(object):
         
         file_prefix += 'P{}_'.format(argset['POS'])
         
-        file_prefix += str(argset['n_timebags']) + '_'
-        
-        if argset['substitutions'] == 'tbg':
-            file_prefix += ''.join(['{}-{}_'.format(i, j)
-                                    for i, j in argset['bags']])
-        else:
-            file_prefix += ''.join(['{}_'.format(i) for i in argset['bags']])
+        if argset['substitutions'] != 'time':
+            file_prefix += str(argset['n_timebags']) + '_'
         
         pickle_wn_PR_scores = \
             st.memetracker_subst_wn_PR_scores_pickle.format(file_prefix)
@@ -542,7 +537,6 @@ class SubstitutionAnalysis(object):
         print '  POS = {}'.format(argset['POS'])
         print '  verbose = {}'.format(argset['verbose'])
         print '  n_timebags = {}'.format(argset['n_timebags'])
-        print '  bags = {}'.format(argset['bags'])
     
     def load_data(self, argset):
         """Load the data from pickle files.
@@ -831,34 +825,37 @@ class SubstitutionAnalysis(object):
         
         argsets = []
         
-        for n_timebags in args.n_timebagss:
+        for substitutions in args.substitutionss:
             
             for subsgs in args.substringss:
                 
-                for substitutions in args.substitutionss:
-                
-                    if substitutions == 'tbg':
-                        transitions = build_ordered_tuples(int(n_timebags))
-                    elif substitutions == 'root':
-                        transitions = range(1, int(n_timebags))
-                    else:
-                        transitions = [None]
+                for pos in args.POSs:
                     
-                    for tr in transitions:
+                    for ff in args.ffs:
                         
-                        for pos in args.POSs:
+                        if substitutions == 'time':
                             
-                            for ff in args.ffs:
+                            argsets.append({'ff': ff,
+                                            'lemmatizing': True,
+                                            'substitutions': substitutions,
+                                            'substrings': bool(int(subsgs)),
+                                            'POS': pos,
+                                            'verbose': False,
+                                            'n_timebags': 0,
+                                            'resume': args.resume})
+                            
+                        else:
+                            
+                            for n_timebags in args.n_timebagss:
                                 
                                 argsets.append({'ff': ff,
-                                        'lemmatizing': True,
-                                        'substitutions': substitutions,
-                                        'substrings': bool(int(subsgs)),
-                                        'POS': pos,
-                                        'verbose': False,
-                                        'n_timebags': int(n_timebags),
-                                        'bags': [tr],
-                                        'resume': args.resume})
+                                            'lemmatizing': True,
+                                            'substitutions': substitutions,
+                                            'substrings': bool(int(subsgs)),
+                                            'POS': pos,
+                                            'verbose': False,
+                                            'n_timebags': int(n_timebags),
+                                            'resume': args.resume})
         
         return argsets
     

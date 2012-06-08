@@ -67,15 +67,6 @@ def get_args_from_cmdline():
                          'processing, and if they are stored of not'))
     p.add_argument('--n_timebags', action='store', nargs=1, required=True,
                    help='number of timebags to cut the clusters into')
-    p.add_argument('transitions_or_bags', action='store', nargs='+',
-                   help=("if 'substitutions' is set to 'tbg', this should be "
-                         'a space-separated list of transitions between '
-                         'timebags that are to be examined, in format '
-                         "'n1-n2' where n1 and n2 are the indices of "
-                         "the timebags (starting at 0); e.g. '0-1 1-2'."
-                         "If 'substitutions is set to 'root', this should be "
-                         'a space-separated list of timebag indices with '
-                         'which the root quote is to be compared.'))
     
     # Get the actual arguments.
     
@@ -88,36 +79,13 @@ def get_args_from_cmdline():
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
     
-    # Run a few checks on the arguments.
-    
-    if substitutions == 'tbg':
-        
-        bags = [(int(s.split('-')[0]), int(s.split('-')[1]))
-                for s in args.transitions_or_bags]
-        all_idx = [i for tr in bags for i in tr]
-    
-    elif substitutions == 'root':
-        
-        bags = [int(s) for s in args.transitions_or_bags]
-        all_idx = bags
-    
-    else:
-        
-        bags = [None]
-        all_idx = [0]
-    
-    if max(all_idx) >= n_timebags or min(all_idx) < 0:
-        raise Exception(('Wrong bag transitions or indices, according to the '
-                         'number of timebags requested'))
-    
     return {'ff': ff,
             'lemmatizing': lemmatizing,
             'substitutions': substitutions,
             'substrings': substrings,
             'POS': POS,
             'verbose': args.verbose,
-            'n_timebags': n_timebags,
-            'bags': bags}
+            'n_timebags': n_timebags}
 
 
 if __name__ == '__main__':

@@ -290,7 +290,7 @@ def cluster_iter_substitutions_root(cl, argset):
     base = QtString(cl.root.lower(), cl.id, 0)
     tbgs = cl.build_timebags(argset['n_timebags'])
     
-    for j in argset['bags']:
+    for j in range(1, argset['n_timebags']):
         
         for mother, daughter in tbgs[j].iter_sphere[
                                     argset['substrings']](base):
@@ -302,7 +302,8 @@ def cluster_iter_substitutions_tbgs(cl, argset):
     (mother, string or substring, bag info) tuples."""
     tbgs = cl.build_timebags(argset['n_timebags'])
     
-    for i, j in argset['bags']:
+    for i, j in zip(range(argset['n_timebags'] - 1),
+                    range(1, argset['n_timebags'])):
         
         base = tbgs[i].qt_string_lower(tbgs[i].argmax_freq_string)
         for mother, daughter in tbgs[j].iter_sphere[
