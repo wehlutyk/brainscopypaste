@@ -13,7 +13,7 @@ import pylab as pl
 import matplotlib.cm as cm
 
 import datainterface.picklesaver as ps
-from analyze.memetracker import build_ordered_tuples
+from analyze.memetracker import SubstitutionAnalysis
 import visualize.annotations as an
 import settings as st
 
@@ -197,16 +197,17 @@ def side_plotter(ax_list, annotedict):
     ax2.legend()
 
 
+class DictNS(object):
+    
+    """A dummy class to turn a dict into a namespace."""
+    
+    def __init__(self, d):
+        self.__dict__.update(d)
+
+
 def plot_all_results(substitutions, substrings):
     """Plot results for given parameters for 'substitutions' and
     'substrings'."""
-    N = {0: 'N', 1: ''}
-    base_prefix = \
-        'F{{ff}}_{{lem}}L_S{fro}_{sub}sub_P{{pos}}_{{ntb}}_{{tr}}_'.format(
-                                                        fro=substitutions,
-                                                        sub=N[substrings])
-    
-    parameters = []
     parameters_d = []
     
     wn_PR_scores_a = []
@@ -225,112 +226,72 @@ def plot_all_results(substitutions, substrings):
     fa_PR_scores_r_lens = []
     fa_PR_scores_r_clids = []
     
-    for ff in ['filtered', 'ff']:#['full', 'framed', 'filtered', 'ff']:
+    sa = SubstitutionAnalysis()
+    args = DictNS({'n_timebagss': ['2', '3', '4', '5'],
+                   'POSs': st.memetracker_subst_POSs,
+                   'ffs': ['filtered', 'ff'],
+                   'substringss': ['1', '0'],
+                   'substitutionss': ['root', 'tbg', 'time']})
+    argsets = sa.create_argsets(args)
+    
+    for argset in argsets:
         
-        for lemmatizing in [1]:#[0, 1]:
+        # Load the data.
+        
+        pickle_files = sa.get_save_files(argset)
+        
+        try:
             
-            for pos in st.memetracker_subst_POSs:
-                
-                for n_timebags in [2, 3, 4, 5]:
-                    
-                    if substitutions == 'tbg':
-                        bag_transitions = \
-                            ['-'.join([str(b1), str(b2)])
-                             for b1, b2
-                             in build_ordered_tuples(n_timebags)]
-                    else:
-                        bag_transitions = range(1, n_timebags)
-                    
-                    for tr in bag_transitions:
-                        
-                        # Create the corresponding file names.
-                        
-                        file_prefix = base_prefix.format(ff=ff,
-                                                         lem=N[lemmatizing],
-                                                         pos=pos,
-                                                         ntb=n_timebags,
-                                                         tr=tr)
-                        pickle_wn_PR_scores = \
-                            st.memetracker_subst_wn_PR_scores_pickle.\
-                            format(file_prefix)
-                        pickle_wn_PR_scores_d = \
-                            st.memetracker_subst_wn_PR_scores_d_pickle.\
-                            format(file_prefix)
-                        pickle_wn_degrees = \
-                            st.memetracker_subst_wn_degrees_pickle.\
-                            format(file_prefix)
-                        pickle_wn_degrees_d = \
-                            st.memetracker_subst_wn_degrees_d_pickle.\
-                            format(file_prefix)
-                        pickle_fa_PR_scores = \
-                            st.memetracker_subst_fa_PR_scores_pickle.\
-                            format(file_prefix)
-                        pickle_fa_PR_scores_d = \
-                            st.memetracker_subst_fa_PR_scores_d_pickle.\
-                            format(file_prefix)
-                        
-                        # Load the data.
-                        
-                        try:
-                            
-                            wn_PR_scores = ps.load(pickle_wn_PR_scores)
-                            wn_PR_scores_d = ps.load(pickle_wn_PR_scores_d)
-                            wn_degrees = ps.load(pickle_wn_degrees)
-                            wn_degrees_d = ps.load(pickle_wn_degrees_d)
-                            fa_PR_scores = ps.load(pickle_fa_PR_scores)
-                            fa_PR_scores_d = ps.load(pickle_fa_PR_scores_d)
-                        
-                        except IOError:
-                            
-                            warn('{}: not found'.format(file_prefix))
-                            continue
-                        
-                        if (len(wn_PR_scores) <= 1 or
-                            len(wn_degrees) <= 1 or
-                            len(fa_PR_scores) <= 1):
-                            warn('{}: empty data'.format(file_prefix))
-                            continue
-                        
-                        # Compute ratios, correct them to represent the means
-                        # by clusters.
-                        
-                        wn_PR_scores_clids = clids(wn_PR_scores_d)
-                        wn_PR_scores_r = cl_means(wn_PR_scores[:,1] /
-                                                  wn_PR_scores[:,0],
-                                                  wn_PR_scores_clids)
-                        wn_degrees_clids = clids(wn_degrees_d)
-                        wn_degrees_r = cl_means(wn_degrees[:,1] /
-                                                wn_degrees[:,0],
-                                                wn_degrees_clids)
-                        fa_PR_scores_clids = clids(fa_PR_scores_d)
-                        fa_PR_scores_r = cl_means(fa_PR_scores[:,1] /
-                                                  fa_PR_scores[:,0],
-                                                  fa_PR_scores_clids)
-                        
-                        # Store results.
-                        
-                        parameters.append(file_prefix[:-1])
-                        parameters_d.append({'ff': ff,
-                                             'lemmatizing': lemmatizing,
-                                             'POS': pos,
-                                             'n_timebags': n_timebags,
-                                             'tr': tr})
-                        
-                        wn_PR_scores_a.append(wn_PR_scores)
-                        wn_PR_scores_r_avgs.append(wn_PR_scores_r.mean())
-                        wn_PR_scores_r_stds.append(wn_PR_scores_r.std())
-                        wn_PR_scores_r_lens.append(len(wn_PR_scores_r))
-                        wn_PR_scores_r_clids.append(wn_PR_scores_clids)
-                        wn_degrees_a.append(wn_degrees)
-                        wn_degrees_r_avgs.append(wn_degrees_r.mean())
-                        wn_degrees_r_stds.append(wn_degrees_r.std())
-                        wn_degrees_r_lens.append(len(wn_degrees_r))
-                        wn_degrees_r_clids.append(wn_degrees_clids)
-                        fa_PR_scores_a.append(fa_PR_scores)
-                        fa_PR_scores_r_avgs.append(fa_PR_scores_r.mean())
-                        fa_PR_scores_r_stds.append(fa_PR_scores_r.std())
-                        fa_PR_scores_r_lens.append(len(fa_PR_scores_r))
-                        fa_PR_scores_r_clids.append(fa_PR_scores_clids)
+            wn_PR_scores = ps.load(pickle_files['wn_PR_scores'])
+            wn_PR_scores_d = ps.load(pickle_files['wn_PR_scores_d'])
+            wn_degrees = ps.load(pickle_files['wn_degrees'])
+            wn_degrees_d = ps.load(pickle_files['wn_degrees_d'])
+            fa_PR_scores = ps.load(pickle_files['fa_PR_scores'])
+            fa_PR_scores_d = ps.load(pickle_files['fa_PR_scores_d'])
+        
+        except IOError:
+            
+            warn('{}: not found'.format(argset))
+            continue
+        
+        if (len(wn_PR_scores) <= 1 or
+            len(wn_degrees) <= 1 or
+            len(fa_PR_scores) <= 1):
+            warn('{}: empty data'.format(argset))
+            continue
+        
+        # Compute ratios, correct them to represent the means
+        # by clusters.
+        
+        wn_PR_scores_clids = clids(wn_PR_scores_d)
+        wn_PR_scores_r = cl_means(wn_PR_scores[:,1] / wn_PR_scores[:,0],
+                                  wn_PR_scores_clids)
+        wn_degrees_clids = clids(wn_degrees_d)
+        wn_degrees_r = cl_means(wn_degrees[:,1] / wn_degrees[:,0],
+                                wn_degrees_clids)
+        fa_PR_scores_clids = clids(fa_PR_scores_d)
+        fa_PR_scores_r = cl_means(fa_PR_scores[:,1] / fa_PR_scores[:,0],
+                                  fa_PR_scores_clids)
+        
+        # Store results.
+        
+        parameters_d.append(argset)
+        
+        wn_PR_scores_a.append(wn_PR_scores)
+        wn_PR_scores_r_avgs.append(wn_PR_scores_r.mean())
+        wn_PR_scores_r_stds.append(wn_PR_scores_r.std())
+        wn_PR_scores_r_lens.append(len(wn_PR_scores_r))
+        wn_PR_scores_r_clids.append(wn_PR_scores_clids)
+        wn_degrees_a.append(wn_degrees)
+        wn_degrees_r_avgs.append(wn_degrees_r.mean())
+        wn_degrees_r_stds.append(wn_degrees_r.std())
+        wn_degrees_r_lens.append(len(wn_degrees_r))
+        wn_degrees_r_clids.append(wn_degrees_clids)
+        fa_PR_scores_a.append(fa_PR_scores)
+        fa_PR_scores_r_avgs.append(fa_PR_scores_r.mean())
+        fa_PR_scores_r_stds.append(fa_PR_scores_r.std())
+        fa_PR_scores_r_lens.append(len(fa_PR_scores_r))
+        fa_PR_scores_r_clids.append(fa_PR_scores_clids)
     
     
     # Convert the results to Numpy arrays and compute confidence intervals.
@@ -486,7 +447,7 @@ def plot_all_results(substitutions, substrings):
 
 if __name__ == '__main__':
     
-    for substitutions in ['root', 'tbg']:
+    for substitutions in ['root', 'tbg', 'time']:
         
         for substrings in [0, 1]:
             print ('Creating plots for substitutions={}, '
