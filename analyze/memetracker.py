@@ -30,13 +30,12 @@ Classes:
 
 from __future__ import division
 
-from multiprocessing import Process, Queue, cpu_count
+from multiprocessing import cpu_count, Pool
 from warnings import warn
 
 from nltk.corpus import wordnet as wn
 import numpy as np
 
-from analyze.combinatorials import build_ordered_tuples
 import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
 from linguistics.treetagger import TreeTaggerTags
@@ -917,24 +916,14 @@ class SubstitutionAnalysis(object):
         
         argsets = self.create_argsets(args)
         n_jobs = len(argsets)
-        n_groups = int(np.ceil(n_jobs / self.n_proc))
-        Q = Queue()
         
         print
-        print ('Grouping {} jobs into {} groups of {} processes (except '
-               'maybe for the last group).').format(n_jobs, n_groups,
-                                                    self.n_proc)
+        print 'Using {} workers to do {} jobs.'.format(self.n_proc, n_jobs)
         
-        for i in range(n_groups):
-            
-            for j in range(i * self.n_proc,
-                           min((i + 1) * self.n_proc, n_jobs)):
-                
-                thread = Process(target=self.put_analyze,
-                                 args=(Q, argsets[j]))
-                thread.daemon = True
-                thread.start()
-                
-            for j in range(i * self.n_proc,
-                           min((i + 1) * self.n_proc, n_jobs)):
-                Q.get()
+        pool = Pool(processes=self.n_proc)
+        res = pool.map_async(self.analyze, argsets)
+        
+        # The timeout here is to be able to keyboard-interrupt.
+        # See http://bugs.python.org/issue8296 for details.
+        
+        res.wait(1e12)
