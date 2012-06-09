@@ -114,28 +114,28 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
     setlabel = True
     for ntb, xntb in ntb_series:
         
-        ntb_r_avgs = average_ntb_ratios(xntb, r_clids, scores_all)
-        ntb_r_avgs_mean = ntb_r_avgs.mean()
-        ntb_r_avgs_ic = (1.96 * ntb_r_avgs.std() /
-                         pl.sqrt(len(ntb_r_avgs) - 1))
+#        ntb_r_avgs = average_ntb_ratios(xntb, r_clids, scores_all)
+#        ntb_r_avgs_mean = ntb_r_avgs.mean()
+#        ntb_r_avgs_ic = (1.96 * ntb_r_avgs.std() /
+#                         pl.sqrt(len(ntb_r_avgs) - 1))
         
         lbl = 'averages' if setlabel else None
         pl.plot(xntb, r_avgs[xntb], 'b-', linewidth=2, label=lbl)
         lbl = 'avgs +/- IC-95%' if setlabel else None
         pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c-', linewidth=1,
                 label=lbl)
-        lbl = 'avgs_ntb' if setlabel else None
-        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'r-', lw=2,
-                label=lbl, zorder=100)
-        lbl = 'avgs_ntb +/- IC-95%' if setlabel else None
-        pl.plot(xntb,
-                pl.ones(len(xntb)) * (ntb_r_avgs_mean - ntb_r_avgs_ic),
-                'm-', label=lbl, zorder=100)
+#        lbl = 'avgs_ntb' if setlabel else None
+#        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'r-', lw=2,
+#                label=lbl, zorder=100)
+#        lbl = 'avgs_ntb +/- IC-95%' if setlabel else None
+#        pl.plot(xntb,
+#                pl.ones(len(xntb)) * (ntb_r_avgs_mean - ntb_r_avgs_ic),
+#                'm-', label=lbl, zorder=100)
         setlabel = False
         
-        pl.plot(xntb,
-                pl.ones(len(xntb)) * (ntb_r_avgs_mean + ntb_r_avgs_ic),
-                'm-', zorder=100)
+#        pl.plot(xntb,
+#                pl.ones(len(xntb)) * (ntb_r_avgs_mean + ntb_r_avgs_ic),
+#                'm-', zorder=100)
         pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'c-', linewidth=1)
         pl.plot(xntb, r_avgs[xntb], 'bo', linewidth=2)
         pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c.', linewidth=1)
@@ -166,7 +166,7 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
     pl.title(title)
     
     ax.set_xticks(range(l))
-    labels = ax.set_xticklabels(['{}: {}'.format(p['n_timebags'], p['tr'])
+    labels = ax.set_xticklabels(['{}'.format(p['n_timebags'])
                                  for p in parameters_d])
     pl.setp(labels, rotation=60, fontsize=10)
     
@@ -230,8 +230,8 @@ def plot_all_results(substitutions, substrings):
     args = DictNS({'n_timebagss': ['2', '3', '4', '5'],
                    'POSs': st.memetracker_subst_POSs,
                    'ffs': ['filtered', 'ff'],
-                   'substringss': ['1', '0'],
-                   'substitutionss': ['root', 'tbg', 'time']})
+                   'substringss': [substrings],
+                   'substitutionss': [substitutions]})
     argsets = sa.create_argsets(args)
     
     for argset in argsets:
@@ -447,9 +447,9 @@ def plot_all_results(substitutions, substrings):
 
 if __name__ == '__main__':
     
-    for substitutions in ['root', 'tbg', 'time']:
+    for substitutions in ['root', 'tbgs', 'time']:
         
-        for substrings in [0, 1]:
+        for substrings in ['0', '1']:
             print ('Creating plots for substitutions={}, '
                    'substrings={} ...').format(substitutions, substrings),
             plot_all_results(substitutions, substrings)

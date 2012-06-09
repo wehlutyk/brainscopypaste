@@ -825,13 +825,13 @@ class SubstitutionAnalysis(object):
         
         argsets = []
         
-        for substitutions in args.substitutionss:
+        for ff in args.ffs:
             
-            for subsgs in args.substringss:
+            for pos in args.POSs:
                 
-                for pos in args.POSs:
+                for substitutions in args.substitutionss:
                     
-                    for ff in args.ffs:
+                    for subsgs in args.substringss:
                         
                         if substitutions == 'time':
                             

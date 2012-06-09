@@ -46,10 +46,10 @@ def get_args_from_cmdline():
     p.add_argument('--substitutions', action='store', nargs=1, required=True,
                    help=('analyze substitutions from the root quote, from '
                          'successive timebags, or based on the appearance '
-                         "times of quotes. 'root': from root; 'tbg': "
+                         "times of quotes. 'root': from root; 'tbgs': "
                          "from successive timebags; 'time': based on "
                          'appearance times.'),
-                   choices=['root', 'tbg', 'time'])
+                   choices=['root', 'tbgs', 'time'])
     p.add_argument('--substrings', action='store', nargs=1, required=True,
                    help=('1: include substrings as accepted substitutions'
                          "0: don't include substrings (i.e. only strings of "
