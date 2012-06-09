@@ -497,7 +497,7 @@ class QtString(str):
     tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
                             TAGINENC='utf-8', TAGOUTENC='utf-8')
     
-    def __new__(cls, string, cl_id, qt_id, parse=True):
+    def __new__(cls, string, cl_id=-1, qt_id=-1, parse=True):
         return super(QtString, cls).__new__(cls, string)
     
     def __init__(self, string, cl_id, qt_id, parse=True):

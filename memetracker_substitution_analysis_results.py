@@ -61,7 +61,7 @@ def list_to_dict(l):
 
 def clids(details):
     """Get the coordinates of clusters from a list of details of results."""
-    return list_to_dict([detail['cl_id'] for detail in details])
+    return list_to_dict([detail['mother'].cl_id for detail in details])
 
 
 def cl_means(values, clids):
@@ -75,8 +75,8 @@ def cl_means(values, clids):
     return array(means)
 
 
-def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
-                      title, POS_series, ff_series, ntb_series, parameters_d):
+def plot_dataseries(h0, r_avgs, r_ics, r_clids, annotes,
+                      title, POS_series, ff_series, parameters_d):
     cmap = cm.jet
     n_POSs = len(st.memetracker_subst_POSs)
     col_POS = dict([(pos, cmap(i / n_POSs, alpha=0.3))
@@ -103,8 +103,8 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
         
         lbl = 'H0' if setlabel else None
         setlabel = False
-        pl.plot(xpos, pl.ones(len(xpos)) * h0[pos], 'k--', linewidth=2,
-                label=lbl)
+        pl.plot([min(xpos) - 0.5, max(xpos) + 0.5], [h0[pos], h0[pos]], 'k--',
+                linewidth=2, label=lbl)
         pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
                         color=col_POS[pos], edgecolor=(0, 0, 0, 0))
         pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
@@ -112,34 +112,26 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
                 ha='center', va='center')
     
     setlabel = True
-    for ntb, xntb in ntb_series:
+    for i in range(len(r_avgs)):
         
-#        ntb_r_avgs = average_ntb_ratios(xntb, r_clids, scores_all)
-#        ntb_r_avgs_mean = ntb_r_avgs.mean()
-#        ntb_r_avgs_ic = (1.96 * ntb_r_avgs.std() /
-#                         pl.sqrt(len(ntb_r_avgs) - 1))
+        # The real results
         
         lbl = 'averages' if setlabel else None
-        pl.plot(xntb, r_avgs[xntb], 'b-', linewidth=2, label=lbl)
+        pl.plot(i, r_avgs[i], 'bo', linewidth=2, label=lbl)
         lbl = 'avgs +/- IC-95%' if setlabel else None
-        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c-', linewidth=1,
-                label=lbl)
-#        lbl = 'avgs_ntb' if setlabel else None
-#        pl.plot(xntb, pl.ones(len(xntb)) * ntb_r_avgs_mean, 'r-', lw=2,
-#                label=lbl, zorder=100)
-#        lbl = 'avgs_ntb +/- IC-95%' if setlabel else None
-#        pl.plot(xntb,
-#                pl.ones(len(xntb)) * (ntb_r_avgs_mean - ntb_r_avgs_ic),
-#                'm-', label=lbl, zorder=100)
+        pl.plot(i, r_avgs[i] - r_ics[i], 'c.', linewidth=1, label=lbl)
         setlabel = False
+        pl.plot(i, r_avgs[i] + r_ics[i], 'c.', linewidth=1)
         
-#        pl.plot(xntb,
-#                pl.ones(len(xntb)) * (ntb_r_avgs_mean + ntb_r_avgs_ic),
-#                'm-', zorder=100)
-        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'c-', linewidth=1)
-        pl.plot(xntb, r_avgs[xntb], 'bo', linewidth=2)
-        pl.plot(xntb, r_avgs[xntb] - r_ics[xntb], 'c.', linewidth=1)
-        pl.plot(xntb, r_avgs[xntb] + r_ics[xntb], 'c.', linewidth=1)
+        # The vertical lines and text
+        
+        pl.plot([i - 0.5, i - 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
+        pl.plot([i + 0.5, i + 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
+        if parameters_d[i]['n_timebags'] != 0:
+            pl.text(i, ytop0, '{}'.format(parameters_d[i]['n_timebags']),
+                    bbox=dict(facecolor='white', edgecolor='white',
+                              alpha=0.8),
+                    ha='center', va='center')
     
     for ff, xff in ff_series:
         
@@ -150,16 +142,6 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
                 bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
     
-    for ntb, xntb in ntb_series:
-        
-        pl.plot([xntb[0] - 0.5, xntb[0] - 0.5], [ybot, ytop0],
-                color=(0.5, 0.5, 0.5, 0.3))
-        pl.plot([xntb[-1] + 0.5, xntb[-1] + 0.5], [ybot, ytop0],
-                color=(0.5, 0.5, 0.5, 0.3))
-        pl.text((min(xntb) + max(xntb)) / 2, ytop0, '{}'.format(ntb),
-                bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
-                ha='center', va='center')
-    
     ax.set_xlim(xleft, xright)
     ax.set_ylim(ybot, ytop4)
     pl.legend(loc='best', prop=dict(size='small'))
@@ -167,7 +149,8 @@ def plot_dataseries(h0, r_avgs, r_ics, scores_all, r_clids, annotes,
     
     ax.set_xticks(range(l))
     labels = ax.set_xticklabels(['{}'.format(p['n_timebags'])
-                                 for p in parameters_d])
+                                 for p in parameters_d
+                                 if p['n_timebags'] != 0])
     pl.setp(labels, rotation=60, fontsize=10)
     
     af = an.AnnoteFinder(pl.arange(l), r_avgs, annotes, ytol=0.5)
@@ -232,7 +215,7 @@ def plot_all_results(substitutions, substrings):
                    'ffs': ['filtered', 'ff'],
                    'substringss': [substrings],
                    'substitutionss': [substitutions],
-                  'resume': False})
+                   'resume': False})
     argsets = sa.create_argsets(args)
     
     for argset in argsets:
@@ -397,19 +380,18 @@ def plot_all_results(substitutions, substrings):
         fa_PR_h0[pos] = fa_PR_h0_tmp
     
     
-    
     # Plot everything
+    
     title_wn_sra = \
         'WN PR scores ratio [substitutions={}, substrings={}]'.format(
                                                                 substitutions,
                                                                 substrings)
     af_wn_sra, af2_wn_sra = plot_dataseries(wn_PR_h0, wn_PR_scores_r_avgs,
                                             wn_PR_scores_r_ics,
-                                            wn_PR_scores_a,
                                             wn_PR_scores_r_clids,
                                             wn_PR_annotes,
                                             title_wn_sra,
-                                            POS_series, ff_series, ntb_series,
+                                            POS_series, ff_series,
                                             parameters_d)
     title_wn_dra = \
         'WN Degrees ratio [substitutions={}, substrings={}]'.format(
@@ -417,11 +399,10 @@ def plot_all_results(substitutions, substrings):
                                                                 substrings)
     af_wn_dra, af2_wn_dra = plot_dataseries(wn_DEG_h0, wn_degrees_r_avgs,
                                             wn_degrees_r_ics,
-                                            wn_degrees_a,
                                             wn_degrees_r_clids,
                                             wn_DEG_annotes,
                                             title_wn_dra,
-                                            POS_series, ff_series, ntb_series,
+                                            POS_series, ff_series,
                                             parameters_d)
     title_fa_sra = \
         'FA PR scores ratio [substitutions={}, substrings={}]'.format(
@@ -429,11 +410,10 @@ def plot_all_results(substitutions, substrings):
                                                                 substrings)
     af_fa_sra, af2_fa_sra = plot_dataseries(fa_PR_h0, fa_PR_scores_r_avgs,
                                             fa_PR_scores_r_ics,
-                                            fa_PR_scores_a,
                                             fa_PR_scores_r_clids,
                                             fa_PR_annotes,
                                             title_fa_sra,
-                                            POS_series, ff_series, ntb_series,
+                                            POS_series, ff_series,
                                             parameters_d)
     
     an.linkAnnotationFinders([af_wn_sra, af_fa_sra, af_wn_dra])

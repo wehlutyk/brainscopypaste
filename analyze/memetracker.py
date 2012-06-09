@@ -515,13 +515,8 @@ class SubstitutionAnalysis(object):
         
         except Exception, msg:
             
-            if readonly:
-                
-                warn('{}: not found'.format(argset))
-                return None
+            if not readonly:
             
-            else:
-                
                 if argset['resume']:
                     
                     warn(('*** A file for parameters {} already exists, not '
@@ -530,7 +525,15 @@ class SubstitutionAnalysis(object):
                     return None
                 
                 else:
+                    
                     raise Exception(msg)
+            
+        else:
+            
+            if readonly:
+                    
+                warn('{}: not found'.format(argset))
+                return None
         
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,
