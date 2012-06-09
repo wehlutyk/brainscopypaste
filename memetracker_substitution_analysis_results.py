@@ -231,28 +231,25 @@ def plot_all_results(substitutions, substrings):
                    'POSs': st.memetracker_subst_POSs,
                    'ffs': ['filtered', 'ff'],
                    'substringss': [substrings],
-                   'substitutionss': [substitutions]})
+                   'substitutionss': [substitutions],
+                  'resume': False})
     argsets = sa.create_argsets(args)
     
     for argset in argsets:
         
         # Load the data.
         
-        pickle_files = sa.get_save_files(argset)
+        pickle_files = sa.get_save_files(argset, readonly=True)
         
-        try:
-            
-            wn_PR_scores = ps.load(pickle_files['wn_PR_scores'])
-            wn_PR_scores_d = ps.load(pickle_files['wn_PR_scores_d'])
-            wn_degrees = ps.load(pickle_files['wn_degrees'])
-            wn_degrees_d = ps.load(pickle_files['wn_degrees_d'])
-            fa_PR_scores = ps.load(pickle_files['fa_PR_scores'])
-            fa_PR_scores_d = ps.load(pickle_files['fa_PR_scores_d'])
-        
-        except IOError:
-            
-            warn('{}: not found'.format(argset))
+        if pickle_files == None:
             continue
+        
+        wn_PR_scores = ps.load(pickle_files['wn_PR_scores'])
+        wn_PR_scores_d = ps.load(pickle_files['wn_PR_scores_d'])
+        wn_degrees = ps.load(pickle_files['wn_degrees'])
+        wn_degrees_d = ps.load(pickle_files['wn_degrees_d'])
+        fa_PR_scores = ps.load(pickle_files['fa_PR_scores'])
+        fa_PR_scores_d = ps.load(pickle_files['fa_PR_scores_d'])
         
         if (len(wn_PR_scores) <= 1 or
             len(wn_degrees) <= 1 or

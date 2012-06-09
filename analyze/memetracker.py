@@ -445,15 +445,22 @@ class SubstitutionAnalysis(object):
         self.n_proc = self.n_cpu - 1
         self.pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
     
-    def get_save_files(self, argset):
-        """Get the filenames where data is to be saved; check they don't
-        already exist.
+    def get_save_files(self, argset, readonly=False):
+        """Get the filenames where data is to be saved to or read from; check
+        either that they don't already exist, or that they do exist.
         
         Arguments:
           * argset: an argset of arguments (= processed arguments from
                     command line)
         
-        Returns: a dict of filenames corresponding to the data to save.
+        Keyword arguments:
+          * readonly: boolean specifying the behaviour of checking of files.
+                      False means we want to be warned if the files already
+                      exist, True means we want to be warned if the files
+                      don't exist. Defaults to False.
+        
+        Returns: a dict of filenames corresponding to the data to save, or
+                 None if a check failed.
         
         """
         
@@ -508,15 +515,22 @@ class SubstitutionAnalysis(object):
         
         except Exception, msg:
             
-            if argset['resume']:
+            if readonly:
                 
-                warn(('*** A file for parameters {} already exists, not '
-                      'overwriting it. Skipping the whole '
-                      'argset. ***').format(file_prefix))
+                warn('{}: not found'.format(argset))
                 return None
             
             else:
-                raise Exception(msg)
+                
+                if argset['resume']:
+                    
+                    warn(('*** A file for parameters {} already exists, not '
+                          'overwriting it. Skipping the whole '
+                          'argset. ***').format(file_prefix))
+                    return None
+                
+                else:
+                    raise Exception(msg)
         
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,

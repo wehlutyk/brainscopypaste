@@ -302,7 +302,7 @@ def cluster_iter_substitutions_tbgs(cl, argset):
     (mother, string or substring, bag info) tuples."""
     tbgs = cl.build_timebags(argset['n_timebags'])
     tot_freqs = [tbg.tot_freq for tbg in tbgs]
-    idx = np.where(tot_freqs != 0)[0]
+    idx = np.where(tot_freqs)[0]
     
     for i, j in zip(range(len(idx) - 1),
                     range(1, len(idx))):
