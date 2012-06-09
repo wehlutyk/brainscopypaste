@@ -12,7 +12,29 @@ import settings as st
 
 if __name__ == '__main__':
     
-    for p in st.memetracker_subst_POSs:
+    # Load or compute the degrees for 'all'
+    
+    picklefile_all = st.wordnet_degrees_pickle.format('all')
+    try:
+        st.check_file(picklefile_all)
+    except Exception:
+        
+        print
+        print "The degree data for 'all' already exists, loading that data."
+        degrees_all = ps.load(picklefile_all)
+    
+    else:
+        
+        print
+        print ('*** Computing degrees for all the lemmas in Wordnet '
+               "(POS = 'all') ***")
+        degrees_all = wnt.build_wn_degrees('all')
+    
+    # Then compute the other POSs
+    
+    POSs = st.memetracker_subst_POSs
+    POSs.remove('all')
+    for p in POSs:
         
         # Get the filename and check the destination doesn't exist.
         
@@ -28,9 +50,8 @@ if __name__ == '__main__':
         # Compute the degrees.
         
         print
-        print ('*** Computing degrees for the lemmas in Wordnet '
-               "(POS = '{}') ***").format(p)
-        degrees = wnt.build_wn_degrees(p)
+        print ("*** Truncating the degrees for 'all' to POS={} ***").format(p)
+        degrees = wnt.truncate_wn_features(degrees_all, p)
         
         # And save them.
         

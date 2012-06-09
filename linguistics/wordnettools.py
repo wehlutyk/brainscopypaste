@@ -203,3 +203,17 @@ def build_wn_degrees(pos):
     print 'OK'
     
     return lem_degrees
+
+
+def truncate_wn_features(features, pos):
+    """Truncate a dict of WN features to the words with POS == pos."""
+    if pos == 'all':
+        return features
+    
+    lem_coords = build_wn_coords(pos)
+    new_features = {}
+    
+    for lem in lem_coords.iterkeys():
+        new_features[lem] = features[lem]
+    
+    return new_features

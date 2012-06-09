@@ -117,11 +117,11 @@ def plot_dataseries(h0, r_avgs, r_ics, r_clids, annotes,
         # The real results
         
         lbl = 'averages' if setlabel else None
-        pl.plot(i, r_avgs[i], 'bo', linewidth=2, label=lbl)
+        pl.plot(i, r_avgs[i], 'bo', linewidth=3, label=lbl)
         lbl = 'avgs +/- IC-95%' if setlabel else None
-        pl.plot(i, r_avgs[i] - r_ics[i], 'c.', linewidth=1, label=lbl)
+        pl.plot(i, r_avgs[i] - r_ics[i], 'm.', linewidth=2, label=lbl)
         setlabel = False
-        pl.plot(i, r_avgs[i] + r_ics[i], 'c.', linewidth=1)
+        pl.plot(i, r_avgs[i] + r_ics[i], 'm.', linewidth=2)
         
         # The vertical lines and text
         
