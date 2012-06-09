@@ -69,10 +69,39 @@ class PRedis(redis.Redis):
     def bgsave_wait(self):
         """Save the db to disk in the background, but wait for it to
         finish."""
-        print 'Saving the redis DB to disk ... (seconds elapsed:',
         
+        try:
+            
+            self.bgsave()
+        
+        except redis.exceptions.ResponseError:
+            
+            print ('Redis is saving the DB in the background... waiting for'
+                   'it to finish before triggering a new save (seconds '
+                   'elapsed:'),
+            isbgsaving = True
+            i = 0
+            
+            while isbgsaving:
+                
+                try:
+                    
+                    self.bgsave()
+                
+                except redis.exceptions.ResponseError:
+                    
+                    i += 1
+                    sleep(1)
+                    print i,
+                    continue
+                
+                else:
+                    
+                    print ') OK'
+                    isbgsaving = False
+        
+        print 'Saving the redis DB to disk ... (seconds elapsed:',
         lastsave = self.lastsave()
-        self.bgsave()
         i = 0
         
         while self.lastsave() == lastsave:

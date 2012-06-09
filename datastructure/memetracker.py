@@ -596,6 +596,7 @@ class TimeBag(object):
             self.tot_freqs = []
             self.n_urlss = []
             self.ids = []
+            self.argmax_freq_string = -1
             self.max_freq_string = ''
     
     def qt_string_lower(self, k, parse=True):
