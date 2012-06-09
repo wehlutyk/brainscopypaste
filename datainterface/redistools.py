@@ -76,7 +76,7 @@ class PRedis(redis.Redis):
         
         except redis.exceptions.ResponseError:
             
-            print ('Redis is saving the DB in the background... waiting for'
+            print ('Redis is saving the DB in the background... waiting for '
                    'it to finish before triggering a new save (seconds '
                    'elapsed:'),
             isbgsaving = True

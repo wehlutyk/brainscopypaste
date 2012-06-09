@@ -301,14 +301,16 @@ def cluster_iter_substitutions_tbgs(cl, argset):
     """Iterate through substitutions taken as changes between timebags. Yield
     (mother, string or substring, bag info) tuples."""
     tbgs = cl.build_timebags(argset['n_timebags'])
+    tot_freqs = [tbg.tot_freq for tbg in tbgs]
+    idx = np.where(tot_freqs != 0)[0]
     
-    for i, j in zip(range(argset['n_timebags'] - 1),
-                    range(1, argset['n_timebags'])):
+    for i, j in zip(range(len(idx) - 1),
+                    range(1, len(idx))):
         
-        base = tbgs[i].qt_string_lower(tbgs[i].argmax_freq_string)
-        for mother, daughter in tbgs[j].iter_sphere[
+        base = tbgs[idx[i]].qt_string_lower(tbgs[idx[i]].argmax_freq_string)
+        for mother, daughter in tbgs[idx[j]].iter_sphere[
                                     argset['substrings']](base):
-            yield (mother, daughter, {'bag1': i, 'bag2': j})
+            yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
 
 
 def distance_word_mother_nosub(base, daughter):
