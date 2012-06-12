@@ -4,6 +4,22 @@
 """Tools for working on results of substitution analysis of the MemeTracker
 dataset.
 
+Methods:
+  * list_to_dict: convert a list of items to a dict associating each single
+                  item to an array of its coordinates
+  * plot_substseries: plot a dataseries resulting from the substitution
+                      analysis
+  * iter_results_all: iterate through all substitution analysis results
+                      corresponding to given args
+  * load_feature_values: get the lists of values of the features. Returns a
+                         dict (for feature names) of dicts (for POS) of
+                         arrays.
+
+Classes:
+  * DictNS: a dummy class to turn a dict into a namespace
+  * ArgsetResults: hold results of substitution analysis for one argset and
+                   one type of feature
+
 """
 
 
@@ -39,21 +55,6 @@ def list_to_dict(l):
     return out
 
 
-def clids(details):
-    """Get the coordinates of clusters in a list of details of results."""
-    return list_to_dict([detail['mother'].cl_id for detail in details])
-
-
-def cl_means(values, clids):
-    """Compute the means of values for clusters in a list, using provided
-    grouping of values according to cluster ids."""
-    means = []
-    
-    for idx in clids.itervalues():
-        means.append(values[idx].mean())
-    
-    return array(means)
-
 
 def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
                        title, POS_series, ff_series, parameters_d):
@@ -66,9 +67,8 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
     col_ff = {'filtered': cmap(0.2, alpha=0.5), 'ff': cmap(0.6, alpha=0.5)}
     hatch_ff = {'filtered': '/', 'ff': '\\'}
     
-    fig = pl.figure()
+    pl.figure()
     ax = pl.subplot(111)
-    #ax = pl.subplot(211)
     l = len(r_avgs)
     
     xleft, xright = - 0.5, l - 0.5
@@ -136,13 +136,8 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
     
     af = an.AnnoteFinder(pl.arange(l), r_avgs, annotes, ytol=0.5)
     pl.connect('button_press_event', af)
-#    af2_ax1 = pl.subplot(223)
-#    af2_ax2 = pl.subplot(224)
-#    af2 = an.AnnoteFinderPlot(wn_PR_annotes, fig, [af2_ax1, af2_ax2],
-#                              plotter)
-#    
-#    return (af, af2)
-    return (af, None)
+    
+    return af
 
 
 class DictNS(object):
@@ -153,8 +148,53 @@ class DictNS(object):
         self.__dict__.update(d)
 
 
-def iter_all_results(args):
-    """Iterate through all substitution analysis results."""
+class ArgsetResults(object):
+    
+    """Hold results of substitution analysis for one argset and one type of
+    feature.
+    
+    Methods:
+      * __init__: initialize the structure with data and details about the
+                  data, as resulting from a substitution analysis
+      * clmeans: compute the means of a list of values, grouped by clusters
+    
+    """
+    
+    def __init__(self, data, details):
+        """Initialize the structure with data and details about the data, as
+        resulting from a substitution analysis."""
+        self.length = len(data[:, 0])
+        
+        if self.length <= 1:
+            return None
+        
+        self.data = data
+        self.details = details
+        
+        # Get the coordinates of clusters in the list of details of results.
+        
+        self.clids = list_to_dict([detail['mother'].cl_id
+                                   for detail in self.details])
+        
+        # Compute ratios, correct them to represent the means
+        # by clusters.
+        
+        self.ratios = data[:, 1] / data[:, 0]
+        self.cl_ratios = self.clmeans(self.ratios)
+    
+    def clmeans(self, values):
+        """Compute the means of a list of values, grouped by clusters."""
+        means = []
+        
+        for idx in self.clids.itervalues():
+            means.append(values[idx].mean())
+        
+        return array(means)
+
+
+def iter_results_all(args):
+    """Iterate through all substitution analysis results corresponding to
+    given args."""
     sa = SubstitutionAnalysis()
     argsets = sa.create_argsets(args)
     
@@ -167,22 +207,40 @@ def iter_all_results(args):
         if pickle_files == None:
             continue
         
-        wn_PR_scores = ps.load(pickle_files['wn_PR_scores'])
-        wn_PR_scores_d = ps.load(pickle_files['wn_PR_scores_d'])
-        wn_degrees = ps.load(pickle_files['wn_degrees'])
-        wn_degrees_d = ps.load(pickle_files['wn_degrees_d'])
-        fa_PR_scores = ps.load(pickle_files['fa_PR_scores'])
-        fa_PR_scores_d = ps.load(pickle_files['fa_PR_scores_d'])
+        wn_PR_scores = ArgsetResults(ps.load(pickle_files['wn_PR_scores']),
+                                    ps.load(pickle_files['wn_PR_scores_d']))
+        wn_degrees = ArgsetResults(ps.load(pickle_files['wn_degrees']),
+                                  ps.load(pickle_files['wn_degrees_d']))
+        fa_PR_scores = ArgsetResults(ps.load(pickle_files['fa_PR_scores']),
+                                    ps.load(pickle_files['fa_PR_scores_d']))
         
-        if (len(wn_PR_scores) <= 1 or
-            len(wn_degrees) <= 1 or
-            len(fa_PR_scores) <= 1):
+        if (wn_PR_scores == None or wn_degrees == None or
+            fa_PR_scores.length == None):
             warn('{}: empty data'.format(argset))
             continue
         
         yield argset, {'wn_PR_scores': wn_PR_scores,
-                       'wn_PR_scores_d': wn_PR_scores_d,
                        'wn_degrees': wn_degrees,
-                       'wn_degrees_d': wn_degrees_d,
-                       'fa_PR_scores': fa_PR_scores,
-                       'fa_PR_scores_d': fa_PR_scores_d}
+                       'fa_PR_scores': fa_PR_scores,}
+
+
+def load_feature_values():
+    """Get the lists of values of the features. Returns a dict (for feature
+    names) of dicts (for POS) of arrays."""
+    wn_PR_scores_v = {}
+    wn_degrees_v = {}
+    
+    for pos in st.memetracker_subst_POSs:
+        
+        wn_PR_scores = ps.load(st.wordnet_PR_scores_pickle.format(pos))
+        wn_degrees = ps.load(st.wordnet_degrees_pickle.format(pos))
+        wn_PR_scores_v[pos] = array(wn_PR_scores.values())
+        wn_degrees_v[pos] = array(wn_degrees.values())
+    
+    fa_PR_scores = ps.load(st.freeassociation_norms_PR_scores_pickle)
+    fa_PR_scores_v0 = array(fa_PR_scores.values())
+    fa_PR_scores_v = dict([(pos, fa_PR_scores_v0)
+                           for pos in st.memetracker_subst_POSs])
+    
+    return {'wn_PR_scores': wn_PR_scores_v, 'wn_degrees': wn_degrees_v,
+            'fa_PR_scores': fa_PR_scores_v}
