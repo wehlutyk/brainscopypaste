@@ -11,6 +11,8 @@ Methods:
                       analysis
   * iter_results_all: iterate through all substitution analysis results
                       corresponding to given args
+  * load_results_all: load all the results of substitution analysis
+                      corresponding to given args
   * load_feature_values: get the lists of values of the features. Returns a
                          dict (for feature names) of dicts (for POS) of
                          arrays.
@@ -156,7 +158,11 @@ class ArgsetResults(object):
     Methods:
       * __init__: initialize the structure with data and details about the
                   data, as resulting from a substitution analysis
-      * clmeans: compute the means of a list of values, grouped by clusters
+      * build_clids: build a dict associating cluster ids to the lists of the
+                     coordinates of their appearance in 'details'
+      * clmeans: compute the means of a list of values, grouped by cluster ids
+      * destination_features: get the feature values that were jumped to,
+                              coming from feature values in start_range
     
     """
     
@@ -173,23 +179,57 @@ class ArgsetResults(object):
         
         # Get the coordinates of clusters in the list of details of results.
         
-        self.clids = list_to_dict([detail['mother'].cl_id
-                                   for detail in self.details])
+        self.clids = self.build_clids(details)
         
         # Compute ratios, correct them to represent the means
         # by clusters.
         
         self.ratios = data[:, 1] / data[:, 0]
-        self.cl_ratios = self.clmeans(self.ratios)
+        self.ratios_cl = self.clmeans(self.ratios, self.clids)
     
-    def clmeans(self, values):
-        """Compute the means of a list of values, grouped by clusters."""
+    def build_clids(self, details):
+        """Build a dict associating cluster ids to the lists of the
+        coordinates of their appearance in 'details'."""
+        return list_to_dict([detail['mother'].cl_id for detail in details])
+    
+    def clmeans(self, values, clids):
+        """Compute the means of a list of values, grouped by cluster ids."""
         means = []
         
-        for idx in self.clids.itervalues():
+        for idx in clids.itervalues():
             means.append(values[idx].mean())
         
         return array(means)
+    
+    def destination_features(self, start_range):
+        """Get the feature values that were jumped to, coming from feature
+        values in start_range."""
+        idx = pl.where((start_range[0] <= self.data[:, 0])
+                       * (self.data[:, 0] <= start_range[1]))[0]
+        
+        # Check we got something.
+        
+        if len(idx) == 0:
+            return None
+        
+        return self.data[idx, 1]
+    
+    def feature_range_ratio(self, start_range):
+        """Compute the mean substitution ratio for starting features with
+        values in 'start_range'."""
+        idx = pl.where((start_range[0] <= self.data[:, 0])
+                       * (self.data[:, 0] <= start_range[1]))[0]
+        
+        # Check we got something.
+        
+        if len(idx) == 0:
+            return None
+        
+        clids = self.build_clids([self.details[i] for i in idx])
+        ratios = self.data[idx, 1] / self.data[idx, 0]
+        ratios_cl = self.clmeans(ratios, clids)
+        
+        return ratios_cl.mean()
 
 
 def iter_results_all(args):
@@ -222,6 +262,29 @@ def iter_results_all(args):
         yield argset, {'wn_PR_scores': wn_PR_scores,
                        'wn_degrees': wn_degrees,
                        'fa_PR_scores': fa_PR_scores,}
+
+
+def load_results_all(args):
+    """Load all the results of substitution analysis corresponding to given
+    args."""
+    
+    argsets = []
+    results = dict([(fname, {'raw': [], 'r_avgs': [], 'r_stds': [],
+                             'r_lens': [], 'r_clids': [], 'r_ics': None})
+                    for fname in st.memetracker_subst_fnames])
+    
+    for argset, res in iter_results_all(args):
+        
+        argsets.append(argset)
+        
+        for fname in st.memetracker_subst_fnames:
+            results[fname]['raw'].append(res[fname])
+            results[fname]['r_avgs'].append(res[fname].ratios_cl.mean())
+            results[fname]['r_stds'].append(res[fname].ratios_cl.std())
+            results[fname]['r_lens'].append(res[fname].length)
+            results[fname]['r_clids'].append(res[fname].clids)
+    
+    return argsets, results
 
 
 def load_feature_values():

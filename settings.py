@@ -103,6 +103,11 @@ memetracker_subst_root = os.path.join(memetracker_root,
 check_folder(memetracker_subst_root)
 
 
+# List of available features.
+
+memetracker_subst_fnames = ['wn_PR_scores', 'wn_degrees', 'fa_PR_scores']
+
+
 # Pickle files for the MemeTracker substitution analysis, relative to
 # memetracker_subst_root.
 

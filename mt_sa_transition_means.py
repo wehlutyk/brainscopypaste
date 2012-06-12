@@ -9,8 +9,7 @@ from __future__ import division
 from numpy import array
 import pylab as pl
 
-import results.memetracker as rmt
-import visualize.annotations as an
+import results.memetracker as r_mt
 import settings as st
 
 
@@ -20,51 +19,37 @@ def plot_results(substitutions, substrings):
     
     # Prepare some parameters
     
-    fnames = ['wn_PR_scores', 'wn_degrees', 'fa_PR_scores']
-    features = dict([(fname, {'raw': [], 'r_avgs': [], 'r_stds': [],
-                              'r_lens': [], 'r_clids': [], 'r_ics': None})
-                     for fname in fnames])
-    argsets = []
-    args = rmt.DictNS({'n_timebagss': ['2', '3', '4', '5'],
-                       'POSs': st.memetracker_subst_POSs,
-                       'ffs': ['filtered', 'ff'],
-                       'substringss': [substrings],
-                       'substitutionss': [substitutions],
-                       'resume': False})
+    args = r_mt.DictNS({'n_timebagss': ['2', '3', '4', '5'],
+                        'POSs': st.memetracker_subst_POSs,
+                        'ffs': ['filtered', 'ff'],
+                        'substringss': [substrings],
+                        'substitutionss': [substitutions],
+                        'resume': False})
     
     # Get the results corresponding to args.
     
-    for argset, results in rmt.iter_results_all(args):
-        
-        argsets.append(argset)
-        
-        for fname in fnames:
-            features[fname]['raw'].append(results[fname])
-            features[fname]['r_avgs'].append(results[fname].cl_ratios.mean())
-            features[fname]['r_stds'].append(results[fname].cl_ratios.std())
-            features[fname]['r_lens'].append(results[fname].length)
-            features[fname]['r_clids'].append(results[fname].clids)
+    argsets, results = r_mt.load_results_all(args)
     
     # Reformat the data and build annotations and H0s.
     
     annotes = {}
-    H0s = dict([(fname, {}) for fname in fnames])
-    fvalues = rmt.load_feature_values()
+    H0s = dict([(fname, {}) for fname in st.memetracker_subst_fnames])
+    fvalues = r_mt.load_feature_values()
     
-    for fname in fnames:
+    for fname in st.memetracker_subst_fnames:
         
         # Convert the results to Numpy arrays and compute confidence intervals
         
-        features[fname]['r_avgs'] = array(features[fname]['r_avgs'])
-        features[fname]['r_stds'] = array(features[fname]['r_stds'])
-        features[fname]['r_lens'] = array(features[fname]['r_lens'])
-        features[fname]['r_ics'] = (1.96 * features[fname]['r_stds'] /
-                                    pl.sqrt(features[fname]['r_lens'] - 1))
+        results[fname]['r_avgs'] = array(results[fname]['r_avgs'])
+        results[fname]['r_stds'] = array(results[fname]['r_stds'])
+        results[fname]['r_lens'] = array(results[fname]['r_lens'])
+        results[fname]['r_ics'] = (1.96 * results[fname]['r_stds'] /
+                                   pl.sqrt(results[fname]['r_lens'] - 1))
         
         # Build annotations.
         
         annotes[fname] = [fname + ': {}'.format(l)
-                          for l in features[fname]['r_lens']]
+                          for l in results[fname]['r_lens']]
         
         # Build the H0 values for comparison.
         
@@ -105,16 +90,16 @@ def plot_results(substitutions, substrings):
     
     # Plot everything
     
-    for fname in fnames:
+    for fname in st.memetracker_subst_fnames:
         
         title = (fname + ' ratio [substitutions={}, '.format(substitutions)
                  + 'substrings={}]'.format(substrings))
         
-        rmt.plot_substseries(H0s[fname], features[fname]['r_avgs'],
-                             features[fname]['r_ics'],
-                             features[fname]['r_clids'],
-                             annotes[fname], title,
-                             POS_series, ff_series, argsets)
+        r_mt.plot_substseries(H0s[fname], results[fname]['r_avgs'],
+                              results[fname]['r_ics'],
+                              results[fname]['r_clids'],
+                              annotes[fname], title,
+                              POS_series, ff_series, argsets)
 
 
 if __name__ == '__main__':
