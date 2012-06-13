@@ -28,7 +28,7 @@ def plot_results(substitutions, substrings):
     
     # Get the results corresponding to args.
     
-    argsets, results = r_mt.load_results_all(args)
+    argsets, results = r_mt.load_ratio_results(args)
     
     # Reformat the data and build annotations and H0s.
     
@@ -104,9 +104,10 @@ def plot_results(substitutions, substrings):
 
 if __name__ == '__main__':
     
-    for substitutions in ['root', 'tbgs', 'time']:
+    for substitutions in ['time']:#'root', 'tbgs', 'time']:
         
-        for substrings in ['0', '1']:
+        for substrings in ['0']:#, '1']:
+            
             print ('Creating plots for substitutions={}, '
                    'substrings={} ...').format(substitutions, substrings),
             plot_results(substitutions, substrings)

@@ -9,9 +9,9 @@ Methods:
                   item to an array of its coordinates
   * plot_substseries: plot a dataseries resulting from the substitution
                       analysis
-  * iter_results_all: iterate through all substitution analysis results
+  * iter_argsets_results: iterate through all substitution analysis results
                       corresponding to given args
-  * load_results_all: load all the results of substitution analysis
+  * load_ratio_results: load all the results of substitution analysis
                       corresponding to given args
   * load_feature_values: get the lists of values of the features. Returns a
                          dict (for feature names) of dicts (for POS) of
@@ -163,6 +163,9 @@ class ArgsetResults(object):
       * clmeans: compute the means of a list of values, grouped by cluster ids
       * destination_features: get the feature values that were jumped to,
                               coming from feature values in start_range
+      * feature_range_ratio: compute the mean substitution ratio for starting
+                             features with values in 'start_range', together
+                             with IC-95% half-width
     
     """
     
@@ -216,7 +219,7 @@ class ArgsetResults(object):
     
     def feature_range_ratio(self, start_range):
         """Compute the mean substitution ratio for starting features with
-        values in 'start_range'."""
+        values in 'start_range', together with IC-95% half-width."""
         idx = pl.where((start_range[0] <= self.data[:, 0])
                        * (self.data[:, 0] <= start_range[1]))[0]
         
@@ -228,11 +231,12 @@ class ArgsetResults(object):
         clids = self.build_clids([self.details[i] for i in idx])
         ratios = self.data[idx, 1] / self.data[idx, 0]
         ratios_cl = self.clmeans(ratios, clids)
+        ic = (1.96 * ratios_cl.std() / pl.sqrt(len(ratios_cl) - 1))
         
-        return ratios_cl.mean()
+        return ratios_cl.mean(), ic
 
 
-def iter_results_all(args):
+def iter_argsets_results(args):
     """Iterate through all substitution analysis results corresponding to
     given args."""
     sa = SubstitutionAnalysis()
@@ -248,11 +252,11 @@ def iter_results_all(args):
             continue
         
         wn_PR_scores = ArgsetResults(ps.load(pickle_files['wn_PR_scores']),
-                                    ps.load(pickle_files['wn_PR_scores_d']))
+                                     ps.load(pickle_files['wn_PR_scores_d']))
         wn_degrees = ArgsetResults(ps.load(pickle_files['wn_degrees']),
-                                  ps.load(pickle_files['wn_degrees_d']))
+                                   ps.load(pickle_files['wn_degrees_d']))
         fa_PR_scores = ArgsetResults(ps.load(pickle_files['fa_PR_scores']),
-                                    ps.load(pickle_files['fa_PR_scores_d']))
+                                     ps.load(pickle_files['fa_PR_scores_d']))
         
         if (wn_PR_scores == None or wn_degrees == None or
             fa_PR_scores.length == None):
@@ -264,21 +268,20 @@ def iter_results_all(args):
                        'fa_PR_scores': fa_PR_scores,}
 
 
-def load_results_all(args):
+def load_ratio_results(args):
     """Load all the results of substitution analysis corresponding to given
     args."""
     
     argsets = []
-    results = dict([(fname, {'raw': [], 'r_avgs': [], 'r_stds': [],
-                             'r_lens': [], 'r_clids': [], 'r_ics': None})
+    results = dict([(fname, {'r_avgs': [], 'r_stds': [], 'r_lens': [],
+                             'r_clids': [], 'r_ics': None})
                     for fname in st.memetracker_subst_fnames])
     
-    for argset, res in iter_results_all(args):
+    for argset, res in iter_argsets_results(args):
         
         argsets.append(argset)
         
         for fname in st.memetracker_subst_fnames:
-            results[fname]['raw'].append(res[fname])
             results[fname]['r_avgs'].append(res[fname].ratios_cl.mean())
             results[fname]['r_stds'].append(res[fname].ratios_cl.std())
             results[fname]['r_lens'].append(res[fname].length)
