@@ -35,7 +35,7 @@ import matplotlib.cm as cm
 
 import datainterface.picklesaver as ps
 from analyze.memetracker import SubstitutionAnalysis
-import visualize.annotations as an
+import visualize.annotations_new as an
 import settings as st
 
 
@@ -136,7 +136,8 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
                                  if p['n_timebags'] != 0])
     pl.setp(labels, rotation=60, fontsize=10)
     
-    af = an.AnnoteFinder(pl.arange(l), r_avgs, annotes, ytol=0.5)
+    af = an.AnnoteFinderPoint(pl.arange(l), r_avgs, annotes, ytol=0.5,
+                              unique=True)
     pl.connect('button_press_event', af)
     
     return af

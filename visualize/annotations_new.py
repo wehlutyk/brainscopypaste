@@ -56,9 +56,15 @@ class BaseAnnoteFinder(object):
                 
                 for action, an, params in self.iter_annotes_actions((xc, yc)):
                     action(an, params)
+        
+        self.update_graphs()
     
     @abstractmethod
     def iter_annotes_actions(self, (xc, yc)):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def update_graphs(self):
         raise NotImplementedError
 
 
@@ -82,6 +88,9 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
         super(AnnoteFinderPoint, self).__init__(zip(xdata, ydata), annotes,
                                                 axis)
     
+    def update_graphs(self):
+        self.axis.figure.canvas.draw()
+    
     def iter_annotes_actions(self, (xc, yc)):
         
         # Find if an annote was caught by the click.
@@ -102,16 +111,12 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
             annote_idx = idx[pl.argmin(distances)]
             yield self.toggle_annote, annote_idx, self.data[annote_idx]
         
-        else:
+            # If asked to, remove all other annotes
             
-            annote_idx = None
-        
-        # If asked to, remove all other annotes
-        
-        if self.unique:
-            
-            for an_idx in self.drawn_annotes.difference(annote_idx):
-                yield self.toggle_annote, an_idx, (None, None)
+            if self.unique:
+                
+                for an_idx in self.drawn_annotes.difference([annote_idx]):
+                    yield self.toggle_annote, an_idx, (None, None)
     
     def toggle_annote(self, an_idx, (xd, yd)):
         
@@ -141,5 +146,3 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
                                zorder=100, markersize=10)[0]
             self.annotes_markers[an_idx] = [t, p]
             self.drawn_annotes.add(an_idx)
-        
-        self.axis.figure.canvas.draw()
