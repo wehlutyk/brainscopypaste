@@ -56,8 +56,8 @@ class BaseAnnoteFinder(object):
                 
                 for action, params in self.iter_actions((xc, yc)):
                     action(**params)
-        
-        self.update_graphs()
+                
+                self.update_graphs()
     
     @abstractmethod
     def iter_actions(self, (xc, yc)):
@@ -170,16 +170,22 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
     
     def update_graphs(self):
         super(AnnoteFinderPointPlot, self).update_graphs()
-        
-        if self.side_fig:
+        if self.side_fig and pl.fignum_exists(self.side_fig.number):
             self.side_fig.canvas.draw()
     
-    def _toggle_fig_ax(self, fig, ax):
+    def _toggle_side_fig_ax(self, ax):
         
-        if ax in fig.axes:
-            fig.delaxes(ax)
+        if ax in self.side_fig.axes:
+            self.side_fig.delaxes(ax)
+        
         else:
-            fig.add_axes(ax)
+            
+            if not pl.fignum_exists(self.side_fig.number):
+                self.side_fig = pl.figure()
+                self.side_fig.show()
+            
+            ax.set_figure(self.side_fig)
+            self.side_fig.add_axes(ax)
     
     def toggle_annote(self, an_idx, xyd):
         
@@ -197,10 +203,14 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
             for ax in self.annotes_markers[an_idx]['side_axes']:
                 
                 ax.set_visible(not ax.get_visible())
-                self._toggle_fig_ax(self.side_fig, ax)
+                self._toggle_side_fig_ax(ax)
             
             self.toggle_indrawn(an_idx)
             return
+        
+        if not pl.fignum_exists(self.side_fig.number):
+            self.side_fig = pl.figure()
+            self.side_fig.show()
         
         t = self.axis.annotate('({}, {})\n{}'.format(xd, yd,
                                      self.formatter(self.annotes[an_idx])),
