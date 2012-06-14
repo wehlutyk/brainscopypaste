@@ -49,7 +49,7 @@ def plot_results(substitutions, substrings):
         # Build annotations.
         
         annotes[fname] = [{'text': fname + ': {}'.format(l),
-                           'argset': argset}
+                           'argset': argset, 'fname': fname}
                           for l, argset
                           in zip(results[fname]['r_lens'], argsets)]
         
@@ -97,7 +97,8 @@ def plot_results(substitutions, substrings):
         title = (fname + ' ratio [substitutions={}, '.format(substitutions)
                  + 'substrings={}]'.format(substrings))
         
-        r_mt.plot_substseries(H0s[fname], results[fname]['r_avgs'],
+        r_mt.plot_substseries(H0s[fname], fvalues[fname],
+                              results[fname]['r_avgs'],
                               results[fname]['r_ics'],
                               results[fname]['r_clids'],
                               annotes[fname], title,

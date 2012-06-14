@@ -43,6 +43,8 @@ class BaseAnnoteFinder(object):
     
     def __call__(self, event):
         
+        self.check_init()
+        
         # Only if we're in the axes, and we're not zooming or in another mode.
         
         if event.inaxes and pl.get_current_fig_manager().toolbar.mode == '':
@@ -59,6 +61,9 @@ class BaseAnnoteFinder(object):
                 
                 self.update_graphs()
     
+    @abstractmethod
+    def check_init(self):
+        raise NotImplementedError
     @abstractmethod
     def iter_actions(self, (xc, yc)):
         raise NotImplementedError
@@ -89,6 +94,9 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
         super(AnnoteFinderPoint, self).__init__(zip(xdata, ydata), annotes,
                                                 axis)
     
+    def check_init(self):
+        pass
+    
     def update_graphs(self):
         self.axis.figure.canvas.draw()
     
@@ -118,24 +126,29 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
             if self.unique:
                 
                 for an_idx in self.drawn_annotes.difference([annote_idx]):
-                    yield self.toggle_annote, {'an_idx': an_idx,
-                                               'xyd': (None, None)}
+                    yield self.hide_annote, {'an_idx': an_idx}
             
             yield self.toggle_annote, {'an_idx': annote_idx,
                                        'xyd': self.data[annote_idx]}
     
-    def toggle_annote(self, an_idx, xyd):
+    def hide_annote(self, an_idx):
         
-        xd, yd = xyd
+        for m in self.annotes_markers[an_idx]:
+            m.set_visible(False)
+        
+        self.drawn_annotes.remove(an_idx)
+    
+    def show_annote(self, an_idx, xyd):
         
         if self.annotes_markers.has_key(an_idx):
             
             for m in self.annotes_markers[an_idx]:
-                m.set_visible(not m.get_visible())
+                m.set_visible(True)
             
-            self.toggle_indrawn(an_idx)
+            self.drawn_annotes.add(an_idx)
             return
         
+        xd, yd = xyd
         t = self.axis.annotate('({}, {})\n{}'.format(xd, yd,
                                      self.formatter(self.annotes[an_idx])),
                            xy=(xd, yd), xycoords='data', xytext=(0, -100),
@@ -153,6 +166,12 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
                            zorder=100, markersize=10)[0]
         self.annotes_markers[an_idx] = [t, p]
         self.drawn_annotes.add(an_idx)
+    
+    def toggle_annote(self, an_idx, xyd):
+        if an_idx in self.drawn_annotes:
+            self.hide_annote(an_idx)
+        else:
+            self.show_annote(an_idx, xyd)
 
 
 class AnnoteFinderPointPlot(AnnoteFinderPoint):
@@ -162,79 +181,52 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
         
         self.side_fig = None
         self.side_plotter = side_plotter
+        self.annotes_axes = {}
+        self.oldfigure = True
+        self.isshowing = False
         
         super(AnnoteFinderPointPlot, self).__init__(xdata, ydata, annotes,
                                                     formatter, xtol=xtol,
                                                     ytol=ytol, unique=True,
                                                     axis=axis)
     
-    def update_graphs(self):
-        super(AnnoteFinderPointPlot, self).update_graphs()
-        if self.side_fig and pl.fignum_exists(self.side_fig.number):
-            self.side_fig.canvas.draw()
-    
-    def _toggle_side_fig_ax(self, ax):
-        
-        if ax in self.side_fig.axes:
-            self.side_fig.delaxes(ax)
-        
-        else:
-            
-            if not pl.fignum_exists(self.side_fig.number):
-                self.side_fig = pl.figure()
-                self.side_fig.show()
-            
-            ax.set_figure(self.side_fig)
-            self.side_fig.add_axes(ax)
-    
-    def toggle_annote(self, an_idx, xyd):
-        
-        xd, yd = xyd
-        
-        if self.side_fig == None:
+    def check_init(self):
+        if (self.side_fig == None or
+            not pl.fignum_exists(self.side_fig.number)):
+            self.oldfigure = False
+            self.annotes_axes = {}
             self.side_fig = pl.figure()
+    
+    def update_graphs(self):
+        if self.oldfigure or self.isshowing:
             self.side_fig.show()
+            self.side_fig.canvas.draw()
+        self.newfigure = True
+        self.isshowing = False
+        super(AnnoteFinderPointPlot, self).update_graphs()
+    
+    def hide_annote(self, an_idx):
+        if self.side_fig:
+            
+            for ax in self.side_fig.axes:
+                self.side_fig.delaxes(ax)
         
-        if self.annotes_markers.has_key(an_idx):
+        super(AnnoteFinderPointPlot, self).hide_annote(an_idx)
+    
+    def show_annote(self, an_idx, xyd):
+        self.isshowing = True
+        if self.annotes_axes.has_key(an_idx):
             
-            for m in self.annotes_markers[an_idx]['main_markers']:
-                m.set_visible(not m.get_visible())
+            for ax in self.annotes_axes[an_idx]:
+                self.side_fig.add_axes(ax)
             
-            for ax in self.annotes_markers[an_idx]['side_axes']:
-                
-                ax.set_visible(not ax.get_visible())
-                self._toggle_side_fig_ax(ax)
-            
-            self.toggle_indrawn(an_idx)
+            super(AnnoteFinderPointPlot, self).show_annote(an_idx, xyd)
             return
         
-        if not pl.fignum_exists(self.side_fig.number):
-            self.side_fig = pl.figure()
-            self.side_fig.show()
-        
-        t = self.axis.annotate('({}, {})\n{}'.format(xd, yd,
-                                     self.formatter(self.annotes[an_idx])),
-                           xy=(xd, yd), xycoords='data', xytext=(0, -100),
-                           textcoords='offset points',
-                           bbox=dict(boxstyle='round',
-                                     fc=(0.95, 0.8, 1.0, 0.8),
-                                     ec=(0.85, 0.4, 1.0, 0.8)),
-                           arrowprops=dict(arrowstyle='wedge,tail_width=1.',
-                                           fc=(0.95, 0.8, 1.0, 0.8),
-                                           ec=(0.85, 0.4, 1.0, 0.8),
-                                           patchA=None, patchB=None,
-                                           relpos=(0.1, 1.0),
-                                           connectionstyle='arc3,rad=0'))
-        p = self.axis.plot([xd], [yd], marker='o', color='yellow',
-                           zorder=100, markersize=10)[0]
-        
-        # This will create _new_ axes for self.side_fig only if self.side_fig
-        # has no axes attached, that is if all previous axes have been cleaned
-        # beforehand. This works because removing other annotes is done before
-        # adding new annotes in AnnoteFinderPoint.iter_actions.
+        for ax in self.side_fig.axes:
+            self.side_fig.delaxes(ax)
         
         axes = self.side_plotter(self.side_fig, self.annotes[an_idx])
+        self.annotes_axes[an_idx] = axes
         
-        self.annotes_markers[an_idx] = {'main_markers': [t, p],
-                                        'side_axes': axes}
-        self.drawn_annotes.add(an_idx)
+        super(AnnoteFinderPointPlot, self).show_annote(an_idx, xyd)

@@ -57,9 +57,8 @@ def list_to_dict(l):
     return out
 
 
-
-def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
-                       title, POS_series, ff_series, parameters_d):
+def plot_substseries(h0, fv, r_avgs, r_ics, r_clids, annotes,
+                       title, POS_series, ff_series, argsets):
     """Plot a dataseries resulting from the substitution analysis."""
     cmap = cm.jet
     n_POSs = len(st.memetracker_subst_POSs)
@@ -110,8 +109,8 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
         
         pl.plot([i - 0.5, i - 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
         pl.plot([i + 0.5, i + 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
-        if parameters_d[i]['n_timebags'] != 0:
-            pl.text(i, ytop0, '{}'.format(parameters_d[i]['n_timebags']),
+        if argsets[i]['n_timebags'] != 0:
+            pl.text(i, ytop0, '{}'.format(argsets[i]['n_timebags']),
                     bbox=dict(facecolor='white', edgecolor='white',
                               alpha=0.8),
                     ha='center', va='center')
@@ -132,17 +131,41 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
     
     ax.set_xticks(range(l))
     labels = ax.set_xticklabels(['{}'.format(p['n_timebags'])
-                                 for p in parameters_d
-                                 if p['n_timebags'] != 0])
+                                 for p in argsets if p['n_timebags'] != 0])
     pl.setp(labels, rotation=60, fontsize=10)
     
     def formatter(an):
         return an['text']
     
     def side_plotter(fig, annote):
-        ax = fig.add_subplot(111)
-        ax.plot(range(5), pl.random(5))
-        return [ax]
+        axes = []
+        pos = annote['argset']['POS']
+        
+        picklefiles = SubstitutionAnalysis.get_save_files(annote['argset'],
+                                                          readonly=True)
+        res = ps.load(picklefiles[annote['fname']])
+        
+        ax = fig.add_subplot(311)
+        axes.append(ax)
+        ax.set_title('Base feature / Start / Arrival distribution')
+        bins = ax.hist(fv[pos], bins=30, color='r', alpha=0.5,
+                       label='Base features')[1]
+        ax.legend()
+        xlim = ax.get_xlim()
+        
+        ax = fig.add_subplot(312)
+        axes.append(ax)
+        ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts')
+        ax.legend()
+        ax.set_xlim(xlim)
+        
+        ax = fig.add_subplot(313)
+        axes.append(ax)
+        ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals')
+        ax.legend()
+        ax.set_xlim(xlim)
+        
+        return axes
     
     af = an.AnnoteFinderPointPlot(pl.arange(l), r_avgs, annotes, formatter,
                                   side_plotter, ytol=0.5)
