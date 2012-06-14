@@ -48,8 +48,10 @@ def plot_results(substitutions, substrings):
         
         # Build annotations.
         
-        annotes[fname] = [fname + ': {}'.format(l)
-                          for l in results[fname]['r_lens']]
+        annotes[fname] = [{'text': fname + ': {}'.format(l),
+                           'argset': argset}
+                          for l, argset
+                          in zip(results[fname]['r_lens'], argsets)]
         
         # Build the H0 values for comparison.
         

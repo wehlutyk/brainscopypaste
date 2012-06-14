@@ -445,7 +445,8 @@ class SubstitutionAnalysis(object):
         self.n_proc = self.n_cpu - 1
         self.pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
     
-    def get_save_files(self, argset, readonly=False):
+    @classmethod
+    def get_save_files(cls, argset, readonly=False):
         """Get the filenames where data is to be saved to or read from; check
         either that they don't already exist, or that they do exist.
         
@@ -826,6 +827,7 @@ class SubstitutionAnalysis(object):
     
         print 'OK'
     
+    @classmethod
     def create_argsets(self, args):
         """Create a list of possible argset dicts, according to args from the
         command line.

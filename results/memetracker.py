@@ -136,8 +136,16 @@ def plot_substseries(h0, r_avgs, r_ics, r_clids, annotes,
                                  if p['n_timebags'] != 0])
     pl.setp(labels, rotation=60, fontsize=10)
     
-    af = an.AnnoteFinderPoint(pl.arange(l), r_avgs, annotes, ytol=0.5,
-                              unique=True)
+    def formatter(an):
+        return an['text']
+    
+    def side_plotter(fig, annote):
+        ax = fig.add_subplot(111)
+        ax.plot(range(5), pl.random(5))
+        return [ax]
+    
+    af = an.AnnoteFinderPointPlot(pl.arange(l), r_avgs, annotes, formatter,
+                                  side_plotter, ytol=0.5)
     pl.connect('button_press_event', af)
     
     return af
@@ -240,14 +248,14 @@ class ArgsetResults(object):
 def iter_argsets_results(args):
     """Iterate through all substitution analysis results corresponding to
     given args."""
-    sa = SubstitutionAnalysis()
-    argsets = sa.create_argsets(args)
+    argsets = SubstitutionAnalysis.create_argsets(args)
     
     for argset in argsets:
         
         # Load the data.
         
-        pickle_files = sa.get_save_files(argset, readonly=True)
+        pickle_files = SubstitutionAnalysis.get_save_files(argset,
+                                                           readonly=True)
         
         if pickle_files == None:
             continue
