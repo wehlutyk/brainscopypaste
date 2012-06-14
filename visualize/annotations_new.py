@@ -200,9 +200,9 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
     def update_graphs(self):
         if self.oldfigure or self.isshowing:
             self.side_fig.show()
-            self.side_fig.canvas.draw()
-        self.newfigure = True
+        self.oldfigure = True
         self.isshowing = False
+        self.side_fig.canvas.draw()
         super(AnnoteFinderPointPlot, self).update_graphs()
     
     def hide_annote(self, an_idx):
