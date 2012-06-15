@@ -6,11 +6,27 @@
 
 from __future__ import division
 
+import argparse as ap
+
 from numpy import array
 import pylab as pl
 
 import results.memetracker as r_mt
 import settings as st
+
+
+
+def get_args_from_cmdline():
+    
+    p = ap.ArgumentParser(description=('Needs doc.'))
+    p.add_argument('--substitutionss', action='store', nargs='+',
+                   required=True,
+                   help=('Needs doc.'),
+                   choices=['root', 'tbgs', 'time'])
+    p.add_argument('--substringss', action='store', nargs='+', required=True,
+                   help=('Needs doc.'),
+                   choices=['0', '1'])
+    return p.parse_args()
 
 
 def plot_results(substitutions, substrings):
@@ -34,7 +50,8 @@ def plot_results(substitutions, substrings):
     
     annotes = {}
     H0s = dict([(fname, {}) for fname in st.memetracker_subst_fnames])
-    fvalues = r_mt.load_feature_values()
+    features = r_mt.load_features()
+    fvalues = r_mt.features_to_values(features)
     
     for fname in st.memetracker_subst_fnames:
         
@@ -49,7 +66,8 @@ def plot_results(substitutions, substrings):
         # Build annotations.
         
         annotes[fname] = [{'text': fname + ': {}'.format(l),
-                           'argset': argset, 'fname': fname}
+                           'argset': argset, 'fname': fname,
+                           'fname_d': fname + '_d'}
                           for l, argset
                           in zip(results[fname]['r_lens'], argsets)]
         
@@ -97,7 +115,7 @@ def plot_results(substitutions, substrings):
         title = (fname + ' ratio [substitutions={}, '.format(substitutions)
                  + 'substrings={}]'.format(substrings))
         
-        r_mt.plot_substseries(H0s[fname], fvalues[fname],
+        r_mt.plot_substseries(H0s[fname], fvalues[fname], features[fname],
                               results[fname]['r_avgs'],
                               results[fname]['r_ics'],
                               results[fname]['r_clids'],
@@ -107,9 +125,11 @@ def plot_results(substitutions, substrings):
 
 if __name__ == '__main__':
     
-    for substitutions in ['time']:#'root', 'tbgs', 'time']:
+    args = get_args_from_cmdline()
+    
+    for substitutions in args.substitutionss:
         
-        for substrings in ['0']:#, '1']:
+        for substrings in args.substringss:
             
             print ('Creating plots for substitutions={}, '
                    'substrings={} ...').format(substitutions, substrings),

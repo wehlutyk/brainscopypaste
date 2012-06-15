@@ -32,6 +32,7 @@ from warnings import warn
 from numpy import array
 import pylab as pl
 import matplotlib.cm as cm
+from matplotlib.colors import Normalize
 
 import datainterface.picklesaver as ps
 from analyze.memetracker import SubstitutionAnalysis
@@ -57,7 +58,7 @@ def list_to_dict(l):
     return out
 
 
-def plot_substseries(h0, fv, r_avgs, r_ics, r_clids, annotes,
+def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
                        title, POS_series, ff_series, argsets):
     """Plot a dataseries resulting from the substitution analysis."""
     cmap = cm.jet
@@ -88,7 +89,7 @@ def plot_substseries(h0, fv, r_avgs, r_ics, r_clids, annotes,
         pl.plot([min(xpos) - 0.5, max(xpos) + 0.5], [h0[pos], h0[pos]], 'k--',
                 linewidth=2, label=lbl)
         pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
-                        color=col_POS[pos], edgecolor=(0, 0, 0, 0))
+                         color=col_POS[pos], edgecolor=(0, 0, 0, 0))
         pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
                 bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
@@ -144,8 +145,11 @@ def plot_substseries(h0, fv, r_avgs, r_ics, r_clids, annotes,
         picklefiles = SubstitutionAnalysis.get_save_files(annote['argset'],
                                                           readonly=True)
         res = ps.load(picklefiles[annote['fname']])
+        details = ps.load(picklefiles[annote['fname_d']])
         
-        ax = fig.add_subplot(311)
+        # The Base features / Starts / Arrivals
+        
+        ax = fig.add_subplot(321)
         axes.append(ax)
         ax.set_title('Base feature / Start / Arrival distribution')
         bins = ax.hist(fv[pos], bins=30, color='r', alpha=0.5,
@@ -153,17 +157,107 @@ def plot_substseries(h0, fv, r_avgs, r_ics, r_clids, annotes,
         ax.legend()
         xlim = ax.get_xlim()
         
-        ax = fig.add_subplot(312)
+        ax = fig.add_subplot(323)
         axes.append(ax)
         ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts')
         ax.legend()
         ax.set_xlim(xlim)
         
-        ax = fig.add_subplot(313)
+        ax = fig.add_subplot(325)
         axes.append(ax)
         ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals')
         ax.legend()
         ax.set_xlim(xlim)
+        
+        # The mean ratio for different start features
+        
+        nbins = 15
+        f = ArgsetResults(res, details)
+        rng = (pl.amin(f.data), pl.amax(f.data))
+        bins = pl.linspace(rng[0], rng[1], nbins + 1)
+        x = (bins[1:] + bins[:-1]) / 2
+        
+        fv_idxs = [pl.where((bins[j] <= fv[pos]) * (fv[pos] <= bins[j + 1]))
+                   for j in range(nbins)]
+        h0 = fv[pos].mean() * array([(1 / fv[pos][fv_idxs[j]]).mean()
+                                     for j in range(nbins)])
+        
+        ratios_ics = [f.feature_range_ratio([bins[j], bins[j + 1]])
+                      for j in range(nbins)]
+        ratios = []
+        ratios_p_ics = []
+        ratios_m_ics = []
+        
+        for ric in ratios_ics:
+            
+            if ric != None:
+                
+                ratios.append(ric[0])
+                ratios_p_ics.append(ric[0] + ric[1])
+                ratios_m_ics.append(ric[0] - ric[1])
+            
+            else:
+                
+                ratios.append(None)
+                ratios_p_ics.append(None)
+                ratios_m_ics.append(None)
+        
+        ax = fig.add_subplot(322)
+        axes.append(ax)
+        ax.set_title(u'Ratio moyen pour des départs différents')
+        ax.plot(x, ratios, 'b-', label='Measured')
+        ax.plot(x, ratios_p_ics, 'm-', label='IC-95%')
+        ax.plot(x, ratios_m_ics, 'm-')
+        ax.plot(x, h0, 'k-', label='H0')
+        ax.legend()
+        
+        # Mots de départ / arrviée font quelle proportion du pool
+        
+        nbins = 15
+        
+        ax = fig.add_subplot(324)
+        axes.append(ax)
+        cmap = cm.YlGnBu
+        
+        ax.set_title(u'Mots de départ / arrivée en proportion des features')
+        bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
+                                label='Start words')[1:]
+        
+        lem_list = [d['lem1'] for d in f.details]
+        props = pl.array([get_feature_prop(lem_list, fd[pos],
+                                           [bins[i], bins[i + 1]])
+                          for i in range(nbins)])
+        propsn = (props - props.min()) / (props.max() - props.min())
+        
+        for i in range(nbins):
+            patches[i].set_color(cmap(propsn[i]))
+        
+        sm = cm.ScalarMappable(Normalize(props.min(), props.max()), cmap)
+        sm.set_array(props)
+        cb = fig.colorbar(sm, ax=ax)
+        axes.append(cb.ax)
+        ax.legend()
+        
+        ax = fig.add_subplot(326)
+        axes.append(ax)
+        cmap = cm.YlGn
+        
+        bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
+                                label='Arrival words')[1:]
+        
+        lem_list = [d['lem2'] for d in f.details]
+        props = pl.array([get_feature_prop(lem_list, fd[pos],
+                                           [bins[i], bins[i + 1]])
+                          for i in range(nbins)])
+        propsn = (props - props.min()) / (props.max() - props.min())
+        for i in range(nbins):
+            patches[i].set_color(cmap(propsn[i]))
+        
+        sm = cm.ScalarMappable(Normalize(props.min(), props.max()), cmap)
+        sm.set_array(props)
+        cb = fig.colorbar(sm, ax=ax)
+        axes.append(cb.ax)
+        pl.legend()
         
         return axes
     
@@ -322,23 +416,40 @@ def load_ratio_results(args):
     return argsets, results
 
 
-def load_feature_values():
-    """Get the lists of values of the features. Returns a dict (for feature
-    names) of dicts (for POS) of arrays."""
-    wn_PR_scores_v = {}
-    wn_degrees_v = {}
+def features_to_values(features):
+    values = {}
+    
+    for fname in st.memetracker_subst_fnames:
+        
+        values[fname] = {}
+        
+        for pos in st.memetracker_subst_POSs:
+            values[fname][pos] = array(features[fname][pos].values())
+    
+    return values
+
+
+def load_features():
+    wn_PR_scores = {}
+    wn_degrees = {}
     
     for pos in st.memetracker_subst_POSs:
         
-        wn_PR_scores = ps.load(st.wordnet_PR_scores_pickle.format(pos))
-        wn_degrees = ps.load(st.wordnet_degrees_pickle.format(pos))
-        wn_PR_scores_v[pos] = array(wn_PR_scores.values())
-        wn_degrees_v[pos] = array(wn_degrees.values())
+        wn_PR_scores[pos] = ps.load(st.wordnet_PR_scores_pickle.format(pos))
+        wn_degrees[pos] = ps.load(st.wordnet_degrees_pickle.format(pos))
     
-    fa_PR_scores = ps.load(st.freeassociation_norms_PR_scores_pickle)
-    fa_PR_scores_v0 = array(fa_PR_scores.values())
-    fa_PR_scores_v = dict([(pos, fa_PR_scores_v0)
-                           for pos in st.memetracker_subst_POSs])
+    fa_PR_scores0 = ps.load(st.freeassociation_norms_PR_scores_pickle)
+    fa_PR_scores = dict([(pos, fa_PR_scores0)
+                         for pos in st.memetracker_subst_POSs])
     
-    return {'wn_PR_scores': wn_PR_scores_v, 'wn_degrees': wn_degrees_v,
-            'fa_PR_scores': fa_PR_scores_v}
+    return {'wn_PR_scores': wn_PR_scores, 'wn_degrees': wn_degrees,
+            'fa_PR_scores': fa_PR_scores}
+
+
+def get_feature_prop(lem_list, fd, rng):
+    flems_rng = set([lem for lem, v in fd.iteritems()
+                     if rng[0] <= v and v <= rng[1]])
+    if len(flems_rng) == 0:
+        return 0
+    intersect = flems_rng.intersection(lem_list)
+    return len(intersect) / len(flems_rng)
