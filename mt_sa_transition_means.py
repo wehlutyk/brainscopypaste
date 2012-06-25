@@ -22,7 +22,7 @@ def get_args_from_cmdline():
     p.add_argument('--substitutionss', action='store', nargs='+',
                    required=True,
                    help=('Needs doc.'),
-                   choices=['root', 'tbgs', 'time'])
+                   choices=['root', 'tbgs', 'cumtbgs', 'time'])
     p.add_argument('--substringss', action='store', nargs='+', required=True,
                    help=('Needs doc.'),
                    choices=['0', '1'])
