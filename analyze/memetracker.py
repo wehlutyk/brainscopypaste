@@ -368,7 +368,7 @@ def build_quotelengths_to_n_quote(clusters):
     return inv_qt_lengths
 
 
-def dict_plusone(self, d, key):
+def dict_plusone(d, key):
     """Add one to d[key] or set it to one if non-existent."""
     if d.has_key(key):
         d[key] += 1
