@@ -15,7 +15,6 @@ import results.memetracker as r_mt
 import settings as st
 
 
-
 def get_args_from_cmdline():
     
     p = ap.ArgumentParser(description=('Needs doc.'))

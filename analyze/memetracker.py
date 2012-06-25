@@ -984,9 +984,4 @@ class SubstitutionAnalysis(object):
         print 'Using {} workers to do {} jobs.'.format(self.n_proc, n_jobs)
         
         pool = Pool(processes=self.n_proc)
-        res = pool.map_async(self.analyze, argsets)
-        
-        # The timeout here is to be able to keyboard-interrupt.
-        # See http://bugs.python.org/issue8296 for details.
-        
-        res.wait(1e12)
+        res = pool.map(self.analyze, argsets)
