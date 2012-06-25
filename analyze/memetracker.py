@@ -983,5 +983,5 @@ class SubstitutionAnalysis(object):
         print
         print 'Using {} workers to do {} jobs.'.format(self.n_proc, n_jobs)
         
-        pool = Pool(processes=self.n_proc)
+        pool = Pool(processes=self.n_proc, maxtasksperchild=1)
         res = pool.map(self.analyze, argsets)
