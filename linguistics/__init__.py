@@ -11,6 +11,6 @@ Modules:
   * lang_detection: detect the language in a text
   * memetracker: linguistic analysis tools for the MemeTracker dataset
   * wordnettools: compute PageRank scores and adjacency matrices corresponding
-                  to the Wordnet synonyms graph
+                  to the Wordnet synonyms graph. Other tools with it.
 
 """

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Compute PageRank scores and adjacency matrices corresponding to the Wordnet
-synonyms graph.
+synonyms graph. Other tools with it.
 
 Methods:
   * build_wn_coords: build a dictionary associating each lemma (in lowercase)
@@ -13,6 +13,7 @@ Methods:
                         synonyms graph
   * build_wn_degrees: compute the degrees of lemmas in the WN graph (excluding
                       lemmas not connected to other lemmas)
+  * lemmatize: lemmatize a word
 
 The PageRank scores computed depend on the following details:
   * The adjacency matrix is built for the lemmas in WN, with zeros on the
@@ -217,3 +218,9 @@ def truncate_wn_features(features, pos):
         new_features[lem] = features[lem]
     
     return new_features
+
+
+def lemmatize(word):
+    """Lemmatize a word."""
+    morph = wn.morphy(word)
+    return morph if morph != None else word

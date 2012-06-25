@@ -119,6 +119,9 @@ memetracker_subst_wn_PR_scores_d_pickle_rel = '{}wn_PR_scores_d.pickle'
 memetracker_subst_wn_degrees_d_pickle_rel = '{}wn_degrees_d.pickle'
 memetracker_subst_fa_PR_scores_d_pickle_rel = '{}fa_PR_scores_d.pickle'
 
+memetracker_subst_wn_suscept_data_rel = '{}wn_suscept_data.pickle'
+memetracker_subst_fa_suscept_data_rel = '{}fa_suscept_data.pickle'
+
 memetracker_subst_wn_PR_scores_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_wn_PR_scores_pickle_rel)
 memetracker_subst_wn_degrees_pickle = os.path.join(
@@ -132,6 +135,11 @@ memetracker_subst_wn_degrees_d_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_wn_degrees_d_pickle_rel)
 memetracker_subst_fa_PR_scores_d_pickle = os.path.join(
     memetracker_subst_root, memetracker_subst_fa_PR_scores_d_pickle_rel)
+
+memetracker_subst_wn_suscept_data = os.path.join(
+    memetracker_subst_root, memetracker_subst_wn_suscept_data_rel)
+memetracker_subst_fa_suscept_data = os.path.join(
+    memetracker_subst_root, memetracker_subst_fa_suscept_data_rel)
 
 
 # List of available POS tags, taken as options for the analysis scripts.

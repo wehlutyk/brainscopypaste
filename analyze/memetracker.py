@@ -19,6 +19,7 @@ Methods:
   * build_quoteslengths_to_quoteids: build a dict associating Quote string
                                      lengths to the number of Quotes having
                                      that string length
+  * dict_plusone: add one to d[key] or set it to one if non-existent
 
 Classes:
   * ProgressInfo: print progress information
@@ -33,13 +34,13 @@ from __future__ import division
 from multiprocessing import cpu_count, Pool
 from warnings import warn
 
-from nltk.corpus import wordnet as wn
 import numpy as np
 
 import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
 from linguistics.treetagger import TreeTaggerTags
 from linguistics.lang_detection import LangDetect
+from linguistics.wordnettools import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import settings as st
@@ -367,6 +368,14 @@ def build_quotelengths_to_n_quote(clusters):
     return inv_qt_lengths
 
 
+def dict_plusone(self, d, key):
+    """Add one to d[key] or set it to one if non-existent."""
+    if d.has_key(key):
+        d[key] += 1
+    else:
+        d[key] = 1
+
+
 class ProgressInfo(object):
     
     """Print progress information.
@@ -432,6 +441,8 @@ class SubstitutionAnalysis(object):
                            feature list
       * subst_try_save_fa: save a substitution if it is referenced in the FA
                            feature list
+      * subst_update_possibilities: update the counts of what words can be
+                                    substituted
       * examine_substitutions: examine substitutions and retain only those we
                                want
       * save_results: save the analysis results to pickle files
@@ -507,6 +518,10 @@ class SubstitutionAnalysis(object):
         pickle_fa_PR_scores_d = \
             st.memetracker_subst_fa_PR_scores_d_pickle.format(file_prefix)
         
+        pickle_wn_suscept_data = \
+            st.memetracker_subst_wn_suscept_data.format(file_prefix)
+        pickle_fa_suscept_data = \
+            st.memetracker_subst_fa_suscept_data.format(file_prefix)
         
         # Check that the destinations don't already exist.
         
@@ -518,6 +533,8 @@ class SubstitutionAnalysis(object):
             st.check_file(pickle_wn_PR_scores_d)
             st.check_file(pickle_wn_degrees_d)
             st.check_file(pickle_fa_PR_scores_d)
+            st.check_file(pickle_wn_suscept_data)
+            st.check_file(pickle_fa_suscept_data)
         
         except Exception, msg:
             
@@ -546,7 +563,9 @@ class SubstitutionAnalysis(object):
                 'fa_PR_scores': pickle_fa_PR_scores,
                 'wn_PR_scores_d': pickle_wn_PR_scores_d,
                 'wn_degrees_d': pickle_wn_degrees_d,
-                'fa_PR_scores_d': pickle_fa_PR_scores_d}
+                'fa_PR_scores_d': pickle_fa_PR_scores_d,
+                'wn_suscept_data': pickle_wn_suscept_data,
+                'fa_suscept_data': pickle_fa_suscept_data}
     
     def print_argset(self, argset):
         """Print an argset to stdout."""
@@ -645,17 +664,8 @@ class SubstitutionAnalysis(object):
         """Lemmatize a substitution if argset asks for it."""
         if argset['lemmatizing']:
             
-            m1 = wn.morphy(mother.tokens[idx])
-            if m1 != None:
-                lem1 = m1
-            else:
-                lem1 = mother.tokens[idx]
-            
-            m2 = wn.morphy(daughter.tokens[idx])
-            if m2 != None:
-                lem2 = m2
-            else:
-                lem2 = daughter.tokens[idx]
+            lem1 = lemmatize(mother.tokens[idx])
+            lem2 = lemmatize(daughter.tokens[idx])
             
             if argset['verbose']:
                 print ("Lemmatized: '" + lem1 + "' -> '" +
@@ -727,6 +737,15 @@ class SubstitutionAnalysis(object):
         
         return ret
     
+    def subst_update_possibilities(self, data, feature_set, mother,
+                                       possibilities):
+        """Update the counts of what words can be substituted."""
+        for word in mother.tokens:
+            
+            lem = lemmatize(word)
+            if data[feature_set].has_key(lem):
+                dict_plusone(possibilities, lem)
+    
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
         
@@ -758,6 +777,12 @@ class SubstitutionAnalysis(object):
         wn_degrees_d = []
         fa_PR_scores_d = []
         
+        wn_possibilities = {}
+        fa_possibilities = {}
+        
+        wn_realised = {}
+        fa_realised = {}
+        
         n_stored_wn_PR = 0
         n_stored_wn_deg = 0
         n_stored_fa_PR = 0
@@ -765,6 +790,11 @@ class SubstitutionAnalysis(object):
         
         for mother, daughter, subst_info in self.itersubstitutions_all(argset,
                                                                        data):
+            
+            self.subst_update_possibilities(data, 'wn_PR', mother,
+                                            wn_possibilities)
+            self.subst_update_possibilities(data, 'fa_PR', mother,
+                                            fa_possibilities)
             
             n_all += 1
             idx = np.where([w1 != w2 for (w1, w2) in
@@ -789,10 +819,12 @@ class SubstitutionAnalysis(object):
                                       wn_degrees, wn_degrees_d):
                 n_stored_wn_PR += 1
                 n_stored_wn_deg += 1
+                dict_plusone(wn_realised, lem1)
             
             if self.subst_try_save_fa(argset, data, lem1, lem2, details,
                                       fa_PR_scores, fa_PR_scores_d):
                 n_stored_fa_PR += 1
+                dict_plusone(fa_realised, lem1)
         
         print
         print 'Examined {} substitutions.'.format(n_all)
@@ -808,7 +840,11 @@ class SubstitutionAnalysis(object):
                 'fa_PR_scores': fa_PR_scores,
                 'wn_PR_scores_d': wn_PR_scores_d,
                 'wn_degrees_d': wn_degrees_d,
-                'fa_PR_scores_d': fa_PR_scores_d}
+                'fa_PR_scores_d': fa_PR_scores_d,
+                'wn_suscept_data': {'wn_possibilities': wn_possibilities,
+                                    'wn_realised': wn_realised},
+                'fa_suscept_data': {'fa_possibilities': fa_possibilities,
+                                    'fa_realised': fa_realised}}
     
     def save_results(self, files, results):
         """Save the analysis results to pickle files.
@@ -829,7 +865,10 @@ class SubstitutionAnalysis(object):
         ps.save(np.array(results['wn_PR_scores_d']), files['wn_PR_scores_d'])
         ps.save(np.array(results['wn_degrees_d']), files['wn_degrees_d'])
         ps.save(np.array(results['fa_PR_scores_d']), files['fa_PR_scores_d'])
-    
+        
+        ps.save(results['wn_suscept_data'], files['wn_suscept_data'])
+        ps.save(results['fa_suscept_data'], files['fa_suscept_data'])
+        
         print 'OK'
     
     @classmethod
