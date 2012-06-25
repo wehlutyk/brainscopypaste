@@ -40,18 +40,24 @@ Methods:
   * timebag_iter_sphere_sub: iterate through strings in timebag in a subsphere
                              centered at 'root'. Yield the (effective mother,
                              substring) tuples.
-  * distance_word_mother_nosub: get distance between two strings (without
-                                substrings), and return the (distance, mother)
-                                tuple
-  * distance_word_mother_sub: get distance between two strings (with
-                              substrings), and return the (distance, effective
-                              mother) tuple
   * cluster_iter_substitutions_root: iterate through substitutions taken as
                                      changes from root string. Yield (mother,
                                      substring) tuples.
   * cluster_iter_substitutions_tbgs: iterate through substitutions taken as
                                      changes between timebags. Yield (mother,
                                      substring) tuples.
+  * cluster_iter_substitutions_cumtbgs: iterate through substitutions taken as
+                                        changes between cumulated timebags.
+                                        Yield (mother, substring) tuples.
+  * distance_word_mother_nosub: get distance between two strings (without
+                                substrings), and return the (distance, mother)
+                                tuple
+  * distance_word_mother_sub: get distance between two strings (with
+                              substrings), and return the (distance, effective
+                              mother) tuple
+  * cluster_iter_substitutions_time: iterate through substitutions taken as
+                                     transitions from earlier quotes to older
+                                     quotes (in order of appearance in time)
 
 """
 
@@ -311,6 +317,24 @@ def cluster_iter_substitutions_tbgs(cl, argset):
         for mother, daughter in tbgs[idx[j]].iter_sphere[
                                     argset['substrings']](base):
             yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
+
+
+def cluster_iter_substitutions_cumtbgs(cl, argset):
+    """Iterate through substitutions taken as changes between cumulated
+    timebags. Yield (mother, string or substring, bag info) tuples."""
+    tbgs = cl.build_timebags(argset['n_timebags'])
+    cumtbgs = cl.build_timebags(argset['n_timebags'], cumulative=True)
+    tot_freqs = [tbg.tot_freq for tbg in tbgs]
+    idx = np.where(tot_freqs)[0]
+    
+    for i, j in zip(range(len(idx) - 1),
+                    range(1, len(idx))):
+        
+        base = cumtbgs[idx[i]].qt_string_lower(
+                                        cumtbgs[idx[i]].argmax_freq_string)
+        for mother, daughter in tbgs[idx[j]].iter_sphere[
+                                    argset['substrings']](base):
+            yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
 
 
 def distance_word_mother_nosub(base, daughter):

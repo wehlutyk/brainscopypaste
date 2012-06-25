@@ -280,12 +280,16 @@ def filter_cluster(cl, min_tokens):
     return filtered_cluster
 
 
-def build_timebags(cluster, n_bags):
+def build_timebags(cluster, n_bags, cumulative=False):
     """Build a number of TimeBags from a Cluster.
     
     Arguments:
       * cluster: the Cluster to work on
       * n_bags: the number of TimeBags to chop the Cluster into
+    
+    Keyword arguments:
+      * cumulative: boolean specifying if the timebags built should be
+                    time-cumulative or not. Defaults to False.
     
     Returns: a list of TimeBags.
     
@@ -301,9 +305,10 @@ def build_timebags(cluster, n_bags):
     # Create the sequence of TimeBags.
     
     timebags = []
+    dontcum = not cumulative
     
     for i in xrange(n_bags):
-        timebags.append(ds_mt.TimeBag(cluster, cl_start + i * step,
+        timebags.append(ds_mt.TimeBag(cluster, cl_start + i * step * dontcum,
                                       cl_start + (i + 1) * step))
     
     return timebags

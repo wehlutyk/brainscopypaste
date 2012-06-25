@@ -283,6 +283,10 @@ class Cluster(object):
       * iter_substitutions_tbgs: iterate through substitutions taken as
                                  changes between timebags. Yield (mother,
                                  string or substring, bag info) tuples.
+      * iter_substitutions_cumtbgs: iterate through substitutions taken as
+                                    changes between cumulated timebags. Yield
+                                    (mother, string or substring, bag info)
+                                    tuples.
       * iter_substitutions_time: iterate through substitutions taken as
                                  transitions from earlier quotes to older
                                  quotes (in order of appearance in time).
@@ -351,6 +355,7 @@ class Cluster(object):
         self.timeline_built = False
         self.iter_substitutions = {'root': self.iter_substitutions_root,
                                    'tbgs': self.iter_substitutions_tbgs,
+                                   'cumtbgs': self.iter_substitutions_cumtbgs,
                                    'time': self.iter_substitutions_time}
     
     def __repr__(self):
@@ -389,11 +394,15 @@ class Cluster(object):
             self.timeline.compute_attrs()
             self.timeline_built = True
     
-    def build_timebags(self, n_bags):
+    def build_timebags(self, n_bags, cumulative=False):
         """Build a number of TimeBags from the Cluster.
         
         Arguments:
           * n_bags: the number of TimeBags to build
+        
+        Keyword arguments:
+          * cumulative: boolean specifying if the timebags built should be
+                        time-cumulative or not. Defaults to False.
         
         Returns: a list of TimeBag objects
         
@@ -403,7 +412,7 @@ class Cluster(object):
         
         import analyze.memetracker as a_mt
         
-        return a_mt.build_timebags(self, n_bags)
+        return a_mt.build_timebags(self, n_bags, cumulative=cumulative)
     
     def plot_quotes(self, smooth_res=-1):
         """Plot the individual Quotes of the Cluster.
@@ -478,6 +487,11 @@ class Cluster(object):
         """Iterate through substitutions taken as changes between timebags.
         Yield (mother, string or substring, bag info) tuples."""
         return l_mt.cluster_iter_substitutions_tbgs(self, argset)
+    
+    def iter_substitutions_cumtbgs(self, argset):
+        """Iterate through substitutions taken as changes between cumulated 
+        timebags. Yield (mother, string or substring, bag info) tuples."""
+        return l_mt.cluster_iter_substitutions_cumtbgs(self, argset)
     
     def iter_substitutions_time(self, argset):
         """Iterate through substitutions taken as transitions from earlier
