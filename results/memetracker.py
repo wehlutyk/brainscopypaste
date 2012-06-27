@@ -146,6 +146,9 @@ def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
                                                           readonly=True)
         res = ps.load(picklefiles[annote['fname']])
         details = ps.load(picklefiles[annote['fname_d']])
+        fname_root = annote['fname'][:2]
+        suscept_data = ps.load(picklefiles[fname_root + '_suscept_data'])
+        suscept_dict = compute_susc(suscept_data, fname_root)
         
         # The Base features / Starts / Arrivals
         
@@ -219,21 +222,23 @@ def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes.append(ax)
         cmap = cm.YlGnBu
         
-        ax.set_title(u'Mots de départ / arrivée en proportion des features')
+        ax.set_title(u'Susceptibilité des mots de départ')
         bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
                                 label='Start words')[1:]
         
         lem_list = [d['lem1'] for d in f.details]
-        props = pl.array([get_feature_prop(lem_list, fd[pos],
-                                           [bins[i], bins[i + 1]])
-                          for i in range(nbins)])
-        propsn = (props - props.min()) / (props.max() - props.min())
+        suscepts = pl.array([get_feature_suscept(fd[pos], lem_list,
+                                                 suscept_dict,
+                                                 [bins[i], bins[i + 1]])
+                             for i in range(nbins)])
+        susceptsn = ((suscepts - suscepts.min()) /
+                     (suscepts.max() - suscepts.min()))
         
         for i in range(nbins):
-            patches[i].set_color(cmap(propsn[i]))
+            patches[i].set_color(cmap(susceptsn[i]))
         
-        sm = cm.ScalarMappable(Normalize(props.min(), props.max()), cmap)
-        sm.set_array(props)
+        sm = cm.ScalarMappable(Normalize(suscepts.min(), suscepts.max()), cmap)
+        sm.set_array(suscepts)
         cb = fig.colorbar(sm, ax=ax)
         axes.append(cb.ax)
         ax.legend()
@@ -242,10 +247,11 @@ def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes.append(ax)
         cmap = cm.YlGn
         
+        ax.set_title(u'Proportion des mots de départ dans le pool de features')
         bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
-                                label='Arrival words')[1:]
+                                label='Start words')[1:]
         
-        lem_list = [d['lem2'] for d in f.details]
+        lem_list = [d['lem1'] for d in f.details]
         props = pl.array([get_feature_prop(lem_list, fd[pos],
                                            [bins[i], bins[i + 1]])
                           for i in range(nbins)])
@@ -383,6 +389,9 @@ def iter_argsets_results(args):
                                    ps.load(pickle_files['wn_degrees_d']))
         fa_PR_scores = ArgsetResults(ps.load(pickle_files['fa_PR_scores']),
                                      ps.load(pickle_files['fa_PR_scores_d']))
+        wn_suscept_data = ps.load(pickle_files['wn_suscept_data'])
+        fa_suscept_data = ps.load(pickle_files['fa_suscept_data'])
+        
         
         if (wn_PR_scores == None or wn_degrees == None or
             fa_PR_scores.length == None):
@@ -391,7 +400,25 @@ def iter_argsets_results(args):
         
         yield argset, {'wn_PR_scores': wn_PR_scores,
                        'wn_degrees': wn_degrees,
-                       'fa_PR_scores': fa_PR_scores,}
+                       'fa_PR_scores': fa_PR_scores,
+                       'wn_suscept_data': wn_suscept_data,
+                       'fa_suscept_data': fa_suscept_data}
+
+
+def compute_susc(suscept_data, fname_root):
+    """Compute the susceptitbility of each word according to 'suscept_data'."""
+    poss = suscept_data[fname_root + '_possibilities']
+    real = suscept_data[fname_root + '_realised']
+    susc = {}
+    
+    for word, p in poss.iteritems():
+        
+        if real.has_key(word):
+            susc[word] = real[word] / p
+        else:
+            susc[word] = 0.0
+    
+    return susc
 
 
 def load_ratio_results(args):
@@ -453,3 +480,12 @@ def get_feature_prop(lem_list, fd, rng):
         return 0
     intersect = flems_rng.intersection(lem_list)
     return len(intersect) / len(flems_rng)
+
+
+def get_feature_suscept(fd, start_lems, suscept_dict, rng):
+    start_lems_rng = set([lem for lem in start_lems
+                          if rng[0] <= fd[lem] and fd[lem] <= rng[1]])
+    if len(start_lems_rng) == 0:
+        return 0
+    lem_suscepts = pl.array([suscept_dict[lem] for lem in start_lems_rng])
+    return lem_suscepts.mean()
