@@ -527,18 +527,23 @@ class SubstitutionAnalysis(object):
         
         try:
             
-            st.check_file(pickle_wn_PR_scores)
-            st.check_file(pickle_wn_degrees)
-            st.check_file(pickle_fa_PR_scores)
-            st.check_file(pickle_wn_PR_scores_d)
-            st.check_file(pickle_wn_degrees_d)
-            st.check_file(pickle_fa_PR_scores_d)
-            st.check_file(pickle_wn_suscept_data)
-            st.check_file(pickle_fa_suscept_data)
+            st.check_file(pickle_wn_PR_scores, look_for_absent=readonly)
+            st.check_file(pickle_wn_degrees, look_for_absent=readonly)
+            st.check_file(pickle_fa_PR_scores, look_for_absent=readonly)
+            st.check_file(pickle_wn_PR_scores_d, look_for_absent=readonly)
+            st.check_file(pickle_wn_degrees_d, look_for_absent=readonly)
+            st.check_file(pickle_fa_PR_scores_d, look_for_absent=readonly)
+            st.check_file(pickle_wn_suscept_data, look_for_absent=readonly)
+            st.check_file(pickle_fa_suscept_data, look_for_absent=readonly)
         
         except Exception, msg:
             
-            if not readonly:
+            if readonly:
+                    
+                warn('{}: not found'.format(argset))
+                return None
+            
+            else:
             
                 if argset['resume']:
                     
@@ -550,13 +555,6 @@ class SubstitutionAnalysis(object):
                 else:
                     
                     raise Exception(msg)
-            
-            else:
-                
-                if readonly:
-                        
-                    warn('{}: not found'.format(argset))
-                    return None
         
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,
