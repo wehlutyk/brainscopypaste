@@ -551,12 +551,12 @@ class SubstitutionAnalysis(object):
                     
                     raise Exception(msg)
             
-        else:
-            
-            if readonly:
-                    
-                warn('{}: not found'.format(argset))
-                return None
+            else:
+                
+                if readonly:
+                        
+                    warn('{}: not found'.format(argset))
+                    return None
         
         return {'wn_PR_scores': pickle_wn_PR_scores,
                 'wn_degrees': pickle_wn_degrees,
