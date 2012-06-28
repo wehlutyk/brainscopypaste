@@ -816,9 +816,9 @@ class SubstitutionAnalysis(object):
         for mother, daughter, subst_info in self.itersubstitutions_all(argset,
                                                                        data):
             
-            self.subst_update_possibilities(data, 'wn_PR', mother,
+            self.subst_update_possibilities(argset, data, 'wn_PR', mother,
                                             wn_possibilities)
-            self.subst_update_possibilities(data, 'fa_PR', mother,
+            self.subst_update_possibilities(argset, data, 'fa_PR', mother,
                                             fa_possibilities)
             
             n_all += 1
