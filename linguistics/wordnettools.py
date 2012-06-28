@@ -235,4 +235,4 @@ class Lemmatizer(object):
         return self._cache[word]
 
 
-lematize = Lemmatizer()
+lemmatize = Lemmatizer()
