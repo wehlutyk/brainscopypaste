@@ -67,8 +67,7 @@ from datetime import datetime
 import numpy as np
 
 from analyze.combinatorials import build_ordered_tuples
-from linguistics.treetagger import TreeTaggerTags
-import settings as st
+from linguistics.treetagger import tagger
 
 # "from datastructure.memetracker import QtString" has been moved into
 # timebag_iter_sphere_sub and cluster_iter_substitutions_root
@@ -105,10 +104,6 @@ def levenshtein(s1, s2):
         previous_row = current_row 
     
     return previous_row[-1]
-
-
-tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                        TAGINENC='utf-8', TAGOUTENC='utf-8')
 
 
 def levenshtein_word(s1, s2):

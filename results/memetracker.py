@@ -245,7 +245,6 @@ def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
         
         ax = fig.add_subplot(326)
         axes.append(ax)
-        cmap = cm.YlGn
         
         ax.set_title(u'Proportion des mots de départ dans le pool de features')
         bins, patches = ax.hist(fv[pos], bins=nbins, log=True,

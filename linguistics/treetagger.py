@@ -12,6 +12,8 @@ Classes:
 
 from treetaggerwrapper import TreeTagger
 
+import settings as st
+
 
 class TreeTaggerTags(TreeTagger):
     
@@ -20,15 +22,36 @@ class TreeTaggerTags(TreeTagger):
     This is a subclass of treetaggerwrapper.TreeTagger, for convenience.
     
     Methods:
+      * __init__: prepare caching of tagged strings
+      * _tag_cache: tag a sentence and cache the result
       * Tags: tag a string and return the list of tags.
       * Tokenize: tokenize a string and return the list of tokens
+      * Lemmatize: lemmatize a string a return the list of tokens
     
     """
     
+    def __init__(self):
+        """Prepare caching of tagged strings."""
+        self._cache = {}
+    
+    def _tag_cache(self, s):
+        """Tag a sentence and cache the result."""
+        if s not in self._cache:
+            self._cache[s] = self.TagText(s, notagdns=True)
+        return self._cache[s]
+    
     def Tags(self, s):
         """Tag a string and return the list of tags."""
-        return [t.split('\t')[1] for t in self.TagText(s, notagdns=True)]
+        return [t.split('\t')[1] for t in self._tag_cache(s)]
     
     def Tokenize(self, s):
         """Tokenize a string and return the list of tokens."""
-        return self.TagText(s, notagdns=True, prepronly=True)
+        return [t.split('\t')[0] for t in self._tag_cache(s)]
+    
+    def Lemmatize(self, s):
+        """Lemmatize a string and return the list of tokens."""
+        return [t.split('\t')[2] for t in self._tag_cache(s)]
+
+
+tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
+                        TAGINENC='utf-8', TAGOUTENC='utf-8')

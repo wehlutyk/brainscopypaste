@@ -38,7 +38,7 @@ import numpy as np
 
 import datastructure.memetracker as ds_mt
 from linguistics.memetracker import levenshtein
-from linguistics.treetagger import TreeTaggerTags
+from linguistics.treetagger import tagger
 from linguistics.lang_detection import LangDetect
 from linguistics.wordnettools import lemmatize
 import datainterface.picklesaver as ps
@@ -227,9 +227,6 @@ def find_max_24h_window(timeline, prec=30 * 60):
     return start_times[np.argmax(ipd_all)]
 
 
-tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                        TAGINENC='utf-8', TAGOUTENC='utf-8')
-
 langdetecter = LangDetect()
 
 
@@ -351,8 +348,6 @@ def build_quotelengths_to_n_quote(clusters):
     """
     
     inv_qt_lengths = {}
-    tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                            TAGINENC='utf-8', TAGOUTENC='utf-8')
     
     for cl in clusters.itervalues():
         
@@ -658,12 +653,34 @@ class SubstitutionAnalysis(object):
         
         return ret
     
+#    def subst_lemmatize(self, argset, mother, daughter, idx):
+#        """Lemmatize a substitution if argset asks for it."""
+#        if argset['lemmatizing']:
+#            
+#            lem1 = lemmatize(mother.tokens[idx])
+#            lem2 = lemmatize(daughter.tokens[idx])
+#            
+#            if argset['verbose']:
+#                print ("Lemmatized: '" + lem1 + "' -> '" +
+#                       lem2 + "'")
+#            
+#        else:
+#            
+#            lem1 = mother.tokens[idx]
+#            lem2 = daughter.tokens[idx]
+#        
+#        return (lem1, lem2)
+    
     def subst_lemmatize(self, argset, mother, daughter, idx):
-        """Lemmatize a substitution if argset asks for it."""
+        """Lemmatize a substitution using TreeTagger and Wordnet, if argset
+        asks for it."""
         if argset['lemmatizing']:
             
-            lem1 = lemmatize(mother.tokens[idx])
-            lem2 = lemmatize(daughter.tokens[idx])
+            t1 = tagger.Lemmatize(mother)[idx]
+            t2 = tagger.Lemmatize(daughter)[idx]
+            
+            lem1 = lemmatize(t1)
+            lem2 = lemmatize(t2)
             
             if argset['verbose']:
                 print ("Lemmatized: '" + lem1 + "' -> '" +

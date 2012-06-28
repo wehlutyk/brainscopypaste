@@ -31,8 +31,7 @@ from datainterface.timeparsing import isostr_to_epoch_mt
 import visualize.memetracker as v_mt
 import visualize.annotations as v_an
 import linguistics.memetracker as l_mt
-from linguistics.treetagger import TreeTaggerTags
-import settings as st
+from linguistics.treetagger import tagger
 
 # "import analyze.memetracker as a_mt" has been moved into TimeBag.__init__
 # to prevent a circular import problem
@@ -508,9 +507,6 @@ class QtString(str):
     
     """
     
-    tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                            TAGINENC='utf-8', TAGOUTENC='utf-8')
-    
     def __new__(cls, string, cl_id=-1, qt_id=-1, parse=True):
         return super(QtString, cls).__new__(cls, string)
     
@@ -520,8 +516,8 @@ class QtString(str):
         self.cl_id = cl_id
         self.qt_id = qt_id
         if parse:
-            self.POS_tags = self.tagger.Tags(string)
-            self.tokens = self.tagger.Tokenize(string)
+            self.POS_tags = tagger.Tags(string)
+            self.tokens = tagger.Tokenize(string)
 
 
 class TimeBag(object):
