@@ -752,12 +752,22 @@ class SubstitutionAnalysis(object):
         
         return ret
     
-    def subst_update_possibilities(self, data, feature_set, mother,
+    def subst_update_possibilities(self, argset, data, feature_set, mother,
                                        possibilities):
         """Update the counts of what words can be substituted."""
-        for word in mother.tokens:
+        
+        if argset['lemmatizing']:
+            lem_mother = tagger.Lemmatize(mother)
+        else:
+            lem_mother = mother
+        
+        for tlem in lem_mother:
             
-            lem = lemmatize(word)
+            if argset['lemmatizing']:
+                lem = lemmatize(tlem)
+            else:
+                lem = tlem
+            
             if data[feature_set].has_key(lem):
                 dict_plusone(possibilities, lem)
     
