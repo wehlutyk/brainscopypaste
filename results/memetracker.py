@@ -156,19 +156,21 @@ def plot_substseries(h0, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes.append(ax)
         ax.set_title('Base feature / Start / Arrival distribution')
         bins = ax.hist(fv[pos], bins=30, color='r', alpha=0.5,
-                       label='Base features')[1]
+                       label='Base features', log=True)[1]
         ax.legend()
         xlim = ax.get_xlim()
         
         ax = fig.add_subplot(323)
         axes.append(ax)
-        ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts')
+        ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts',
+                log=True)
         ax.legend()
         ax.set_xlim(xlim)
         
         ax = fig.add_subplot(325)
         axes.append(ax)
-        ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals')
+        ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals',
+                log=True)
         ax.legend()
         ax.set_xlim(xlim)
         

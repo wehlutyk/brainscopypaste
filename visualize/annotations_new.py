@@ -64,6 +64,7 @@ class BaseAnnoteFinder(object):
     @abstractmethod
     def check_init(self):
         raise NotImplementedError
+    
     @abstractmethod
     def iter_actions(self, (xc, yc)):
         raise NotImplementedError
