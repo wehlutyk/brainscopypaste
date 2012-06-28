@@ -220,7 +220,19 @@ def truncate_wn_features(features, pos):
     return new_features
 
 
-def lemmatize(word):
-    """Lemmatize a word."""
-    morph = wn.morphy(word)
-    return morph if morph != None else word
+class Lemmatizer(object):
+    
+    """A helper for caching lemmatizations from Wordnet."""
+    
+    def __init__(self):
+        self._cache = {}
+    
+    def __call__(self, word):
+        """Lemmatize a word."""
+        if word not in self._cache:
+            morph = wn.morphy(word)
+            self._cache[word] = morph if morph != None else word
+        return self._cache[word]
+
+
+lematize = Lemmatizer()
