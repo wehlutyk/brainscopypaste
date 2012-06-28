@@ -32,7 +32,7 @@ class TreeTaggerTags(TreeTagger):
     
     def __init__(self, *args, **kwargs):
         """Prepare caching of tagged strings."""
-        super(TreeTagger, self).__init__(*args, **kwargs)
+        super(TreeTaggerTags, self).__init__(*args, **kwargs)
         self._cache = {}
     
     def _tag_cache(self, s):
