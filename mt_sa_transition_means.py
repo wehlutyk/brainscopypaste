@@ -61,6 +61,7 @@ def plot_results(substitutions, substrings):
         results[fname]['r_lens'] = array(results[fname]['r_lens'])
         results[fname]['r_ics'] = (1.96 * results[fname]['r_stds'] /
                                    pl.sqrt(results[fname]['r_lens'] - 1))
+        results[fname]['r_h0s'] = array(results[fname]['r_h0s'])
         
         # Build annotations.
         
@@ -70,7 +71,7 @@ def plot_results(substitutions, substrings):
                           for l, argset
                           in zip(results[fname]['r_lens'], argsets)]
         
-        # Build the H0 values for comparison.
+        # Build the H0 values for comparison w/ respect to feature sets
         
         for pos in st.memetracker_subst_POSs:
             H0s[fname][pos] = (fvalues[fname][pos].mean()
@@ -114,7 +115,8 @@ def plot_results(substitutions, substrings):
         title = (fname + ' ratio [substitutions={}, '.format(substitutions)
                  + 'substrings={}]'.format(substrings))
         
-        r_mt.plot_substseries(H0s[fname], fvalues[fname], features[fname],
+        r_mt.plot_substseries(H0s[fname], results[fname]['r_h0s'],
+                              fvalues[fname], features[fname],
                               results[fname]['r_avgs'],
                               results[fname]['r_ics'],
                               results[fname]['r_clids'],
