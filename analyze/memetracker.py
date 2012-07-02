@@ -653,24 +653,6 @@ class SubstitutionAnalysis(object):
         
         return ret
     
-#    def subst_lemmatize(self, argset, mother, daughter, idx):
-#        """Lemmatize a substitution if argset asks for it."""
-#        if argset['lemmatizing']:
-#            
-#            lem1 = lemmatize(mother.tokens[idx])
-#            lem2 = lemmatize(daughter.tokens[idx])
-#            
-#            if argset['verbose']:
-#                print ("Lemmatized: '" + lem1 + "' -> '" +
-#                       lem2 + "'")
-#            
-#        else:
-#            
-#            lem1 = mother.tokens[idx]
-#            lem2 = daughter.tokens[idx]
-#        
-#        return (lem1, lem2)
-    
     def subst_lemmatize(self, argset, mother, daughter, idx):
         """Lemmatize a substitution using TreeTagger and Wordnet, if argset
         asks for it."""

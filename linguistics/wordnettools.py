@@ -50,7 +50,7 @@ def build_wn_coords(pos):
     i = 0
     
     # Not using wn.all_lemma_names since it seems some lemmas are not in that
-    # iterator creates a KeyError in the next loop, when filling ij.
+    # iterator.
     
     for syn in wn.all_synsets(pos):
         
