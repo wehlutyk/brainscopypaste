@@ -511,36 +511,12 @@ class SubstitutionAnalysis(object):
         if argset['substitutions'] != 'time':
             file_prefix += str(argset['n_timebags']) + '_'
 
-        filenames = {'transitions': {}, 'transitions_d': {},
-                     'suscept_data': {}}
-        for fdata, ffiles in st.memetracker_subst_features.iteritems():
+        filename = st.memetracker_subst_results_pickle.format(file_prefix)
 
-            filenames['transitions'][fdata] = {}
-            filenames['transitions_d'][fdata] = {}
-            filenames['suscept_data'][fdata] = \
-                    st.memetracker_subst_suscept_data_pickle[fdata].format(file_prefix)
-
-            for fname, ffile in ffiles.iteritems():
-
-                filenames['transitions'][fdata][fname] = \
-                        st.memetracker_subst_transitions_pickle[fdata][fname].format(file_prefix)
-                filenames['transitions_d'][fdata][fname] = \
-                        st.memetracker_subst_transitions_d_pickle[fdata][fname].format(file_prefix)
-
-        # Check that the destinations don't already exist.
+        # Check that the destination doesn't already exist.
 
         try:
-
-            for fdata, ffiles in st.memetracker_subst_features.iteritems():
-
-                st.check_file(filenames['suscept_data'][fdata],
-                              look_for_absent=readonly)
-                for fname in ffiles.iterkeys():
-
-                    st.check_file(filenames['transitions'][fdata][fname],
-                                  look_for_absent=readonly)
-                    st.check_file(filenames['transitions_d'][fdata][fname],
-                                  look_for_absent=readonly)
+            st.check_file(filename, look_for_absent=readonly)
 
         except Exception, msg:
 
@@ -562,7 +538,7 @@ class SubstitutionAnalysis(object):
 
                     raise Exception(msg)
 
-        return filenames
+        return filename
 
     def print_argset(self, argset):
         """Print an argset to stdout."""
@@ -826,17 +802,7 @@ class SubstitutionAnalysis(object):
 
         print
         print 'Done. Saving data...',
-
-        for fdata, ffiles in st.memetracker_subst_features.iteritems():
-
-            for fname in ffiles.iterkeys():
-                ps.save(np.array(results['transitions'][fdata][fname]),
-                                 files['transitions'][fdata][fname])
-                ps.save(results['transitions_d'][fdata][fname],
-                        files['transitions_d'][fdata][fname])
-
-            ps.save(results['suscept_data'][fdata], files['suscept_data'][fdata])
-
+        ps.save(results, files)
         print 'OK'
 
     @classmethod

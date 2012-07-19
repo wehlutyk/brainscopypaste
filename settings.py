@@ -185,44 +185,9 @@ memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
 # Pickle files for the MemeTracker substitution analysis, relative to
 # memetracker_subst_root.
 
-memetracker_subst_wn_PR_scores_pickle_rel = '{}wn_PR_scores.pickle'
-memetracker_subst_wn_degrees_pickle_rel = '{}wn_degrees.pickle'
-memetracker_subst_fa_PR_scores_pickle_rel = '{}fa_PR_scores.pickle'
-
-memetracker_subst_wn_PR_scores_d_pickle_rel = '{}wn_PR_scores_d.pickle'
-memetracker_subst_wn_degrees_d_pickle_rel = '{}wn_degrees_d.pickle'
-memetracker_subst_fa_PR_scores_d_pickle_rel = '{}fa_PR_scores_d.pickle'
-
-memetracker_subst_wn_suscept_data_rel = '{}wn_suscept_data.pickle'
-memetracker_subst_fa_suscept_data_rel = '{}fa_suscept_data.pickle'
-
-memetracker_subst_wn_PR_scores_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_wn_PR_scores_pickle_rel)
-memetracker_subst_wn_degrees_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_wn_degrees_pickle_rel)
-memetracker_subst_fa_PR_scores_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_fa_PR_scores_pickle_rel)
-
-memetracker_subst_wn_PR_scores_d_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_wn_PR_scores_d_pickle_rel)
-memetracker_subst_wn_degrees_d_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_wn_degrees_d_pickle_rel)
-memetracker_subst_fa_PR_scores_d_pickle = os.path.join(
-    memetracker_subst_root, memetracker_subst_fa_PR_scores_d_pickle_rel)
-
-memetracker_subst_wn_suscept_data = os.path.join(
-    memetracker_subst_root, memetracker_subst_wn_suscept_data_rel)
-memetracker_subst_fa_suscept_data = os.path.join(
-    memetracker_subst_root, memetracker_subst_fa_suscept_data_rel)
-
-memetracker_subst_transitions_pickle = {'wn': {'PR_scores': memetracker_subst_wn_PR_scores_pickle,
-                                               'degrees': memetracker_subst_wn_degrees_pickle},
-                                        'fa': {'PR_scores': memetracker_subst_fa_PR_scores_pickle}}
-memetracker_subst_transitions_d_pickle = {'wn': {'PR_scores': memetracker_subst_wn_PR_scores_d_pickle,
-                                                 'degrees': memetracker_subst_wn_degrees_d_pickle},
-                                          'fa': {'PR_scores': memetracker_subst_fa_PR_scores_d_pickle}}
-memetracker_subst_suscept_data_pickle = {'wn': memetracker_subst_wn_suscept_data,
-                                         'fa': memetracker_subst_fa_suscept_data}
+memetracker_subst_results_pickle_rel = '{}results.pickle'
+memetracker_subst_results_pickle = os.path.join(memetracker_subst_root,
+                                                memetracker_subst_results_pickle_rel)
 
 
 # List of available POS tags, taken as options for the analysis scripts.
