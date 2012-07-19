@@ -88,7 +88,8 @@ def get_args_from_cmdline():
             'substrings': substrings,
             'POS': POS,
             'verbose': args.verbose,
-            'n_timebags': n_timebags}
+            'n_timebags': n_timebags,
+            'resume': False}
 
 
 if __name__ == '__main__':

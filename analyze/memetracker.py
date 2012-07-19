@@ -511,10 +511,11 @@ class SubstitutionAnalysis(object):
         if argset['substitutions'] != 'time':
             file_prefix += str(argset['n_timebags']) + '_'
 
-        filenames = {}
+        filenames = {'transitions': {}, 'transitions_d': {},
+                     'suscept_data': {}}
         for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-            filenames['transistions'][fdata] = {}
+            filenames['transitions'][fdata] = {}
             filenames['transitions_d'][fdata] = {}
             filenames['suscept_data'][fdata] = \
                     st.memetracker_subst_suscept_data_pickle[fdata].format(file_prefix)
@@ -522,21 +523,24 @@ class SubstitutionAnalysis(object):
             for fname, ffile in ffiles.iteritems():
 
                 filenames['transitions'][fdata][fname] = \
-                        st.memetracker_subst_transitions_pickle.format(file_prefix)
-                filenames['transistions_d'][fdata][fname] = \
-                        st.memetracker_subst_transitions_d_pickle.format(file_prefix)
+                        st.memetracker_subst_transitions_pickle[fdata][fname].format(file_prefix)
+                filenames['transitions_d'][fdata][fname] = \
+                        st.memetracker_subst_transitions_d_pickle[fdata][fname].format(file_prefix)
 
         # Check that the destinations don't already exist.
 
         try:
 
-            for fdata, sfiles in filenames.iteritems():
+            for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-                st.check_file(sfiles['suscept_data'], look_for_absent=readonly)
-                for fname, sfile in sfiles.iteritems():
+                st.check_file(filenames['suscept_data'][fdata],
+                              look_for_absent=readonly)
+                for fname in ffiles.iterkeys():
 
-                    st.check_file(sfile['transitions'], look_for_absent=readonly)
-                    st.check_file(sfile['transitions_d'], look_for_absent=readonly)
+                    st.check_file(filenames['transitions'][fdata][fname],
+                                  look_for_absent=readonly)
+                    st.check_file(filenames['transitions_d'][fdata][fname],
+                                  look_for_absent=readonly)
 
         except Exception, msg:
 
@@ -715,7 +719,7 @@ class SubstitutionAnalysis(object):
 
         return ret
 
-    def subst_update_possibilities(self, argset, data, mother, possibilities):
+    def subst_update_possibilities(self, argset, data, mother, suscept_data):
         """Update the counts of what words can be substituted."""
 
         if argset['lemmatizing']:
@@ -730,11 +734,11 @@ class SubstitutionAnalysis(object):
             else:
                 lem = tlem
 
-            for fdata, fposs in possibilities.iteritems():
+            for fdata, fsuscept in suscept_data.iteritems():
 
                 firstkey = data['features'][fdata].keys()[0]
                 if data['features'][fdata][firstkey].has_key(lem):
-                    dict_plusone(fposs, lem)
+                    dict_plusone(fsuscept['possibilities'], lem)
 
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
@@ -761,12 +765,9 @@ class SubstitutionAnalysis(object):
 
         transitions = gen_results_dict()
         transitions_d = gen_results_dict()
-        possibilities = dict((fdata, {})
+        suscept_data = dict((fdata, {'possibilities': {}, 'realised': {}})
                              for fdata
                              in st.memetracker_subst_features.iterkeys())
-        realised = dict((fdata, {})
-                        for fdata
-                        in st.memetracker_subst_features.iterkeys())
         n_stored = dict((fdata, 0)
                         for fdata
                         in st.memetracker_subst_features.iterkeys())
@@ -776,7 +777,7 @@ class SubstitutionAnalysis(object):
                                                                        data):
 
             self.subst_update_possibilities(argset, data, mother,
-                                            possibilities)
+                                            suscept_data)
 
             n_all += 1
             idx = np.where([w1 != w2 for (w1, w2) in
@@ -799,21 +800,20 @@ class SubstitutionAnalysis(object):
             for fdata in data['features'].iterkeys():
 
                 if self.subst_try_save(argset, data['features'][fdata],
-                                       lem1, lem2, details,
+                                       lem1, lem2, details, fdata,
                                        transitions[fdata],
                                        transitions_d[fdata]):
                     n_stored[fdata] += 1
-                    dict_plusone(realised[fdata], lem1)
+                    dict_plusone(suscept_data[fdata]['realised'], lem1)
 
         print
         print 'Examined {} substitutions.'.format(n_all)
 
         for fdata, ns in n_stored.iteritems():
-            print 'Stored {} substitutions with {}'.format(n_stored[fdata])
+            print 'Stored {} substitutions with {}'.format(n_stored[fdata], fdata)
 
         return {'transitions': transitions, 'transitions_d': transitions_d,
-                'suscept_data': {'possibilities': possibilities,
-                                 'realised': realised}}
+                'suscept_data': suscept_data}
 
     def save_results(self, files, results):
         """Save the analysis results to pickle files.
@@ -827,15 +827,15 @@ class SubstitutionAnalysis(object):
         print
         print 'Done. Saving data...',
 
-        for fdata, ffiles in files.iteritems():
+        for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-            for fname, ffile in ffiles.iteritems():
-                ps.save(np.array(results['transitions'][fdata][fname],
-                                 files['transitions'][fdata][fname]))
-                ps.save(np.array(results['transitions_d'][fdata][fname],
-                                 files['transitions_d'][fdata][fname]))
+            for fname in ffiles.iterkeys():
+                ps.save(np.array(results['transitions'][fdata][fname]),
+                                 files['transitions'][fdata][fname])
+                ps.save(results['transitions_d'][fdata][fname],
+                        files['transitions_d'][fdata][fname])
 
-            ps.save(results['suscept_data'], files['suscept_data'])
+            ps.save(results['suscept_data'][fdata], files['suscept_data'][fdata])
 
         print 'OK'
 

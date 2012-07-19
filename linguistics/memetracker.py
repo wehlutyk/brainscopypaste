@@ -82,6 +82,13 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
         self.iter_sphere = {False: self.iter_sphere_nosub,
                             True: self.iter_sphere_sub}
 
+    def qt_string_lower(self, k, parse=True):
+        """Return a QtString corresponding to string number k of the Timebag,
+        in lowercase."""
+        from datastructure.memetracker import QtString
+        return QtString(self.strings[k].lower(), self.id_fromcluster,
+                        self.ids[k], parse=parse)
+
     def levenshtein_sphere(self, center_string, d):
         """Get the indexes of the strings in a TimeBag that are at
         levenshtein-distance == d from a string."""
