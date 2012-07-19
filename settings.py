@@ -37,13 +37,13 @@ def check_folder(folder):
 def check_file(filename, look_for_absent=False):
     """Check if filename already exists; if it does, raise an exception."""
     if os.path.exists(filename):
-        
+
         if not look_for_absent:
             raise Exception(("File '" + filename + "' already exists! You should "
                              "sort this out first: I'm not going to overwrite "
                              'it. Aborting.'))
     else:
-        
+
         if look_for_absent:
             raise Exception("File '" + filename + "' not found.")
 

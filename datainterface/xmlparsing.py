@@ -27,20 +27,20 @@ import nltk
 
 
 class TextHtmlParser(HTMLParser):
-    
+
     """Extract links (<a>...</a> tags) from HTML strings (subclass of
     HTMLParser).
-    
+
     This subclass only defines the starttag handler to catch opening <a> tags,
     and stores whatever attributes if finds in a dictionary for each link. The
     rest of the parsing is implemented by the HTMLParser, and one can use that
     class's interface to parse a string (through the 'feed' method).
-    
+
     Methods:
       * __init__: initialize the parent class, and the future result
       * handle_starttag: handle an opening tag encountered in the HTML string,
                          and store if it's an <a>
-    
+
     Effects: after parsing (use the 'feed' method from HTMLParser for that),
              'self.outlinks' contains a list of dicts, each one representing a
              link encountered in the HTML string. The dict contains one key
@@ -48,51 +48,51 @@ class TextHtmlParser(HTMLParser):
              is specified multiple times in the same <a ...>, the
              corresponding value in the dict is a list containing those
              attribute values.
-    
+
     """
-    
+
     def __init__(self):
         """Initialize the parent class, and the future result."""
-        
+
         HTMLParser.__init__(self)
         self.outlinks = []
-    
+
     def handle_starttag(self, tag, attrs):
         """Handle an opening tag encountered in the HTML string, and store if
         it's an <a>."""
         if tag == 'a':
-            
+
             # Convert the attrs argument to a dictionary with lists if an
             # attribute has multiple instances.
-            
+
             attrsdict = {}
-            
+
             for attr in attrs:
-                
+
                 if attrsdict.has_key(attr[0]):
-                    
+
                     # Found duplicate attribute, force a list.
-                    
+
                     if type(attrsdict[attr[0]]) is type([]):
                         attrsdict[attr[0]].append(attr[1])
                     else:
                         attrsdict[attr[0]] = [attrsdict[attr[0]], attr[1]]
-                
+
                 else:
-                    
+
                     # Only one, directly set the dictionary.
-                    
+
                     attrsdict[attr[0]] = attr[1]
-            
+
             self.outlinks.append(attrsdict)
 
 
 def _ConvertXmlToDictRecurse(node, text_tags):
     """Recursively convert an ElementTree Element to a dict.
-    
+
     This method is wrapped by ConvertXmlToDict, and is not meant to be used
     directly.
-    
+
     Arguments:
       * node: the ElementTree Element to work on
       * text_tags: a list of strings representing which tags contain textual
@@ -100,7 +100,7 @@ def _ConvertXmlToDictRecurse(node, text_tags):
                    addition to storing the text they contain, content of those
                    nodes is also stripped from HTML tags (and stored), and
                    scanned for link declarations (which are stored too)
-    
+
     Returns: if the ElementTree Element had no subnodes, this returns a string
              containing whatever text the Element contained. If the Element
              had subnodes, a dict is returned: each key of the dict is a tag
@@ -119,100 +119,100 @@ def _ConvertXmlToDictRecurse(node, text_tags):
              declarations; if an attribute was declared multiple times in an
              <a ...>, the value under that key is a list of all the declared
              values).
-    
+
     """
-    
+
     # The future result.
-    
+
     nodedict = {}
-    
+
     if len(node.items()) > 0:
-        
+
         # If we have attributes, set them as keys.
-        
+
         nodedict.update(dict(node.items()))
-    
+
     for child in node:
-        
+
         # Recursively add the element's children.
-        
+
         newitem = _ConvertXmlToDictRecurse(child, text_tags)
-        
+
         if nodedict.has_key(child.tag):
-            
+
             # Found duplicate tag, force a list.
-            
+
             if type(nodedict[child.tag]) is type([]):
                 nodedict[child.tag].append(newitem)
             else:
                 nodedict[child.tag] = [nodedict[child.tag], newitem]
-        
+
         else:
-            
+
             # Only one, directly set the dictionary.
-            
+
             nodedict[child.tag] = newitem
 
-    if node.text is None: 
+    if node.text is None:
         text = ''
-    else: 
+    else:
         text = node.text.strip()
-    
+
     # If we don't have unicode, convert to it.
-    
+
     if not isinstance(text, unicode):
         text = unicode(text, 'utf-8')
 
     if node.tag in text_tags:
-        
+
         # If we're in some kind of text node, strip the text from HTML tags
         # and get outward links.
-        
+
         texthtmlparser = TextHtmlParser()
-        
+
         # Convert the HTML entities to unicode characters (e.g. '&lt;' to '<'
         # and '&gt;' to '>').
-        
+
         text = texthtmlparser.unescape(text)
-        
+
         # Get stripped text and links.
-        
+
         text_stripped = nltk.clean_html(text)
         texthtmlparser.feed(text)
         text_outlinks = texthtmlparser.outlinks
-        
+
         # Check that we have unicode.
-        
+
         if not isinstance(text, unicode):
             text = unicode(text, 'utf-8')
-        
+
         if not isinstance(text_stripped, unicode):
             text_stripped = unicode(text_stripped, 'utf-8')
-        
+
         for link in text_outlinks:
-            
+
             for attr in link:
-                
+
                 if not isinstance(link[attr], unicode):
                     link[attr] = unicode(link[attr], 'utf--8')
 
         nodedict['_text'] = text
         nodedict['_text_stripped'] = text_stripped
         nodedict['_text_outlinks'] = text_outlinks
-    
+
     elif len(nodedict) > 0:
-        
+
         # If we're not in a text node, if we have a dictionary add the text
         # as a dictionary key (if there is any).
-        
+
         if len(text) > 0:
             nodedict['_text'] = text
-    
+
     else:
-        
+
         # If we don't have child nodes or attributes (and we're not in a
         # textual node), just set the text.
-        
+
         nodedict = text
 
     return nodedict
@@ -220,10 +220,10 @@ def _ConvertXmlToDictRecurse(node, text_tags):
 
 def ConvertXmlToDict(root, text_tags):
     """Convert an XML file or an ElementTree Element to a dict.
-    
+
     This is a wrapper for _ConvertXmlToDictRecurse and is meant to be used by
     the end user.
-    
+
     Arguments:
       * root: either the full path to the file to parse, or an ElementTree
               Element to be parsed
@@ -232,14 +232,14 @@ def ConvertXmlToDict(root, text_tags):
                    addition to storing the text they contain, content of those
                    nodes is also stripped from HTML tags (and stored), and
                    scanned for link declarations (which are stored too)
-    
+
     Returns: a dict representing the parsed XML; see the doc for
              '_ConvertXmlToDictRecurse' for details on the exact format.
-    
+
     """
 
     # If a string is passed in, try to open it as a file.
-    
+
     if type(root) == type(''):
         root = ElementTree.parse(root).getroot()
     elif not isinstance(root, ElementTree.Element):

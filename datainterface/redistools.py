@@ -43,73 +43,73 @@ copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 
 class PRedis(redis.Redis):
-    
+
     """Add methods to redis.Redis to load and save python objects to a redis
     instance.
-    
+
     This is a subclass of redis.Redis.
-    
+
     Methods:
       * pset: store an object under key 'pref + name', serialized by pickle
       * pget: load an object at key 'pref + name', unserialized by pickle
       * bgsave_wait: save the db to disk in the background, but wait for it to
                      finish
-    
+
     """
-    
+
     def pset(self, pref, name, obj):
         """Store an object under key 'pref + name', serialized by pickle."""
         return self.set(pref + str(name),
                         cPickle.dumps(obj, protocol=cPickle.HIGHEST_PROTOCOL))
-    
+
     def pget(self, pref, name):
         """Load an object at key 'pref + name', unserialized by pickle."""
         return cPickle.loads(self.get(pref + str(name)))
-    
+
     def bgsave_wait(self):
         """Save the db to disk in the background, but wait for it to
         finish."""
-        
+
         try:
-            
+
             self.bgsave()
-        
+
         except redis.exceptions.ResponseError:
-            
+
             print ('Redis is saving the DB in the background... waiting for '
                    'it to finish before triggering a new save (seconds '
                    'elapsed:'),
             isbgsaving = True
             i = 0
-            
+
             while isbgsaving:
-                
+
                 try:
-                    
+
                     self.bgsave()
-                
+
                 except redis.exceptions.ResponseError:
-                    
+
                     i += 1
                     sleep(1)
                     print i,
                     continue
-                
+
                 else:
-                    
+
                     print ') OK'
                     isbgsaving = False
-        
+
         print 'Saving the redis DB to disk ... (seconds elapsed:',
         lastsave = self.lastsave()
         i = 0
-        
+
         while self.lastsave() == lastsave:
-            
+
             i += 1
             sleep(1)
             print i,
-        
+
         print ') OK'
 
 
@@ -119,25 +119,25 @@ class RedisReader(object):
         self._rserver = PRedis('localhost')
         self._keys = [int(re.sub(pref, '', s)) for s in
                       self._rserver.keys(pref + '*')]
-    
+
     def iteritems(self):
         for k in self._keys:
             yield (k, self._rserver.pget(self._pref, k))
-    
+
     def itervalues(self):
         for k in self._keys:
             yield self._rserver.pget(self._pref, k)
-    
+
     def iterkeys(self):
         for k in self._keys:
             yield k
-    
+
     def __iter__(self):
         for k in self._keys:
             yield k
-    
+
     def __len__(self):
         return len(self._keys)
-    
+
     def __getitem__(self, name):
         return self._rserver.pget(self._pref, name)

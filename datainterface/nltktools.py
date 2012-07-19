@@ -20,27 +20,27 @@ from warnings import warn
 
 
 class DictNltk(object):
-    
+
     """Save an imported datasource (in a list of dicts) to NLTK files, for
     later importing by an NLTK reader.
-    
+
     Methods:
       * __init__: initialize the class with file path info, the data, and what
                   keys represent text in the list of dicts
       * save_files: save the imported data (in a list of dicts) to NLTK files
-    
+
     """
-    
+
     def __init__(self, nltkfolder, dictitems, tkey):
         """Initialize the class with file path info, the data, and what keys
         represent text in the dict.
-        
+
         Arguments:
           * nltkfolder: the folder where the NLTK files will later be created
           * dictitmes: a list of dicts representing the imported data items.
                        The dict items must each have an 'nltk_filename' key,
                        which is used as the filename into which any textual
-                       data found in that particular dict is stored. 
+                       data found in that particular dict is stored.
           * tkey: a string which is a key in each of the dicts in dictitems,
                   indicating where, in the dicts, the textual data to be saved
                   to the NLTK files is. The item under the 'tkey' key in the
@@ -49,27 +49,27 @@ class DictNltk(object):
                   '_text_stripped' key containing the text from the '_text'
                   key stripped from any unwanted stuff (e.g. HTML tags). The
                   '_text_stripped' string is what is saved to the NLTK file of
-                  that dict. This format corresponds to what is returned by 
+                  that dict. This format corresponds to what is returned by
                   the 'datainterface.xmlparsing.ConvertXmlToDict' method.
-        
+
         """
-        
+
         # Root folder where the data is to be stored.
-        
+
         self.nltkfolder = nltkfolder
-        
+
         # The dictionary that holds the data.
-        
+
         self.dictitems = dictitems
-        
+
         # The key saying where the relevant text is in the dictitems
         # dictionary.
-        
+
         self.tkey = tkey
-    
+
     def save_files(self):
         """Save the imported data (in a dict) to NLTK files.
-        
+
         Effects:
           * looks at the self.tkey key in each dict of dictitem (this will
             fail if one dict does not have the self.tkey key). The item under
@@ -80,32 +80,32 @@ class DictNltk(object):
           * it will not overwrite an existing nltkfolder: if the nltkfolder
             already exists, it is moved to a backup, (printed to stdout) and
             the rest of the processing goes on
-        
+
         """
-        
+
         if os.path.exists(self.nltkfolder):
-            
+
             oldnltkfolder = self.nltkfolder + '.' + sub(r' +', '-', ctime())
             warn("'" + self.nltkfolder + "' already exists! Moving it to '" +
                  oldnltkfolder + "'", stacklevel=2)
             os.rename(self.nltkfolder, oldnltkfolder)
-        
+
         for it in self.dictitems:
-            
+
             # Create the directories.
-            
+
             fullpath = os.path.join(self.nltkfolder, it['nltk_filename'])
             folder = os.path.split(fullpath)[0]
-            
+
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            
+
             with c_open(fullpath, 'wb', encoding='utf-8') as f:
-                
+
                 if type(it[self.tkey]) == type([]):
-                    
+
                     for d in it[self.tkey]:
-                        
+
                         if len(d['_text']) > 0:
                             f.write(d['_text_stripped'])
                 else:
