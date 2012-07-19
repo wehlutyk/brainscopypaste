@@ -253,8 +253,8 @@ class QuoteVisualize(ds_mtb.QuoteBase,TimelineVisualize):
 
         """
 
-        super(QuoteVisualize, self).plot(self, label=self.__unicode__(),
-                                          smooth_res=smooth_res)
+        super(QuoteVisualize, self).plot(label=self.__unicode__(),
+                                         smooth_res=smooth_res)
 
 
 class ClusterVisualize(ds_mtb.ClusterBase):

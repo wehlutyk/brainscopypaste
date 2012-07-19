@@ -11,20 +11,22 @@ Methods:
 
 import argparse as ap
 
+from datastructure.memetracker_base import list_attributes_trunc
+from datastructure.memetracker import Cluster
 from analyze.memetracker import SubstitutionAnalysis
 import settings as st
 
 
 def get_args_from_cmdline():
     """Get the timebag slicings from the command line.
-    
+
     The syntax is defined by the 'add_argument' statement. Run this script
     with the '-h' option for help on the exact syntax.
-    
+
     """
-    
+
     # Create the arguments parser.
-    
+
     p = ap.ArgumentParser(description=('run the substitution analysis '
                                        'with a number timebag slicings and '
                                        'POS tags to compare, specified at '
@@ -68,39 +70,39 @@ def get_args_from_cmdline():
                          "cumulated timebags; 'time': based on "
                          'appearance times. This should be a space-'
                          'separated list of such arguments.'),
-                   choices=['root', 'tbgs', 'cumtbgs', 'time'])
+                   choices=list_attributes_trunc(Cluster, 'iter_substitutions_'))
     p.add_argument('--substringss', action='store', nargs='+', required=True,
                    help=('1: include substrings as accepted substitutions'
                          "0: don't include substrings (i.e. only strings of "
                          'the same length. This should be a space-separated '
                          'list of such arguments.'),
                    choices=['0', '1'])
-    
+
     # Get the actual arguments.
-    
+
     args = p.parse_args()
     n_timebags_list = [int(ntb) for ntb in args.n_timebagss]
-    
+
     # Run a few checks on the arguments.
-    
+
     if min(n_timebags_list) <= 1:
         raise Exception(('The number of timebags requested must be at least '
                          '2!'))
-    
+
     return args
 
 
 if __name__ == '__main__':
-    
+
     args = get_args_from_cmdline()
     sa = SubstitutionAnalysis()
-    
+
     if args.multi_thread:
-        
+
         sa.analyze_all_mt(args)
-    
+
     else:
-        
+
         print
         print 'Deactivating multi-threading.'
         sa.analyze_all(args)

@@ -13,24 +13,26 @@ Methods:
 
 import argparse as ap
 
+from datastructure.memetracker_base import list_attributes_trunc
+from datastructure.memetracker import Cluster
 from analyze.memetracker import SubstitutionAnalysis
 import settings as st
 
 
 def get_args_from_cmdline():
     """Get arguments from the command line.
-    
+
     The arguments are defined by the 'add_argument' statements. Run this
     script with the '-h' option for help on the arguments.
-    
+
     """
-    
+
     # Create the arguments parser.
-    
+
     p = ap.ArgumentParser(description=('analyze the 1-word changes '
                                        '(hamming_word-distance == 1) '
                                        'in the MemeTracker dataset.'))
-    
+
     p.add_argument('--ff', action='store', nargs=1, required=True,
                    help=('Specify on what dataset the analysis is done: '
                          "'full': the full clusters; "
@@ -50,7 +52,7 @@ def get_args_from_cmdline():
                          "from successive timebags; 'cumtbgs': from "
                          "cumulated timebags; 'time': based on "
                          'appearance times.'),
-                   choices=['root', 'tbgs', 'cumtbgs', 'time'])
+                   choices=list_attributes_trunc(Cluster, 'iter_substitutions_'))
     p.add_argument('--substrings', action='store', nargs=1, required=True,
                    help=('1: include substrings as accepted substitutions'
                          "0: don't include substrings (i.e. only strings of "
@@ -68,18 +70,18 @@ def get_args_from_cmdline():
                          'processing, and if they are stored of not'))
     p.add_argument('--n_timebags', action='store', nargs=1, required=True,
                    help='number of timebags to cut the clusters into')
-    
+
     # Get the actual arguments.
-    
+
     args = p.parse_args()
-    
+
     ff = args.ff[0]
     lemmatizing = bool(int(args.lemmatizing[0]))
     substitutions = args.substitutions[0]
     substrings = bool(int(args.substrings[0]))
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
-    
+
     return {'ff': ff,
             'lemmatizing': lemmatizing,
             'substitutions': substitutions,

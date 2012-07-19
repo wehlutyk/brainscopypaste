@@ -201,10 +201,10 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
 
     def __init__(self, *args, **kwargs):
         super(ClusterLinguistics, self).__init__(*args, **kwargs)
-        self.iter_substitutions = {'root': self.iter_substitutions_root,
-                                   'tbgs': self.iter_substitutions_tbgs,
-                                   'cumtbgs': self.iter_substitutions_cumtbgs,
-                                   'time': self.iter_substitutions_time}
+
+    @property
+    def iter_substitutions(self):
+        return ds_mtb.dictionarize_attributes(self, 'iter_substitutions_')
 
     def iter_substitutions_root(self, argset):
         """Iterate through substitutions taken as changes from root string. Yield

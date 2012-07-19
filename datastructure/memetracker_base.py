@@ -5,6 +5,7 @@ from __future__ import division
 
 from datetime import datetime
 from warnings import warn
+import re
 
 import numpy as np
 import pylab as pl
@@ -15,6 +16,22 @@ from datainterface.timeparsing import isostr_to_epoch_mt
 # to prevent a circular import problem
 # see http://docs.python.org/faq/programming.html#what-are-the-best-practices-
 # for-using-import-in-a-module for more details.
+
+
+def list_attributes(cls, prefix):
+    return set([k for scls in cls.__mro__
+                for k in scls.__dict__.iterkeys()
+                if re.search('^' + prefix, k)])
+
+
+def list_attributes_trunc(cls, prefix):
+    return set([k[len(prefix):] for k in list_attributes(cls, prefix)])
+
+
+def dictionarize_attributes(inst, prefix):
+    keys = list_attributes(inst.__class__, prefix)
+    return dict([(k[len(prefix):], inst.__getattribute__(k))
+                 for k in keys])
 
 
 class TimelineBase(object):
