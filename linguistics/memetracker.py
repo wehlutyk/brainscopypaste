@@ -204,6 +204,14 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
             yield (mother, tbg.qt_string_lower(k))
 
 
+class QuoteLinguistics(ds_mtb.QuotesBase):
+
+        def to_qt_string_lower(self, cl_id, parse=True):
+            """Return a QtString built from this Quote, in lowercase."""
+            from datastructure.memetracker import QtString
+            return QtString(self.string.lower(), cl_id, self.id, parse=parse)
+
+
 class ClusterLinguistics(ds_mtb.ClusterBase):
 
     def __init__(self, *args, **kwargs):

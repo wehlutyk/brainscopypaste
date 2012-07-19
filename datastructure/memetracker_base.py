@@ -6,6 +6,7 @@ from __future__ import division
 from datetime import datetime
 from warnings import warn
 import re
+from textwrap import dedent
 
 import numpy as np
 import pylab as pl
@@ -32,6 +33,36 @@ def dictionarize_attributes(inst, prefix):
     keys = list_attributes(inst.__class__, prefix)
     return dict([(k[len(prefix):], inst.__getattribute__(k))
                  for k in keys])
+
+
+class ArgsetBase(object):
+
+    def __init__(self, clargs):
+        self.ff = clargs[0]
+        self.lemmatizing = bool(int(clargs.lemmatizing[0]))
+        self.substitutions = clargs.substitutions[0]
+        self.substrings = bool(int(clargs.substrings[0]))
+        self.POS = clargs.POS[0]
+        self.n_timebags = int(clargs.n_timebags[0])
+        self.verbose = clargs.verbose
+        self.resume = clargs.resume
+
+    def __str__(self):
+        return self.__unicode__()
+
+    def __unicode__(self):
+        return dedent('''
+                      ArgsetBase:
+                          ff = {}
+                          lemmatizing = {}
+                          substitutions = {}
+                          substrings = {}
+                          POS = {}
+                          n_timebags = {}
+                          verbose = {}
+                     '''.format(self.ff, self.lemmatizing,
+                                 self.substitutions, self.substrings,
+                                 self.POS, self.verbose, self.n_timebags))
 
 
 class TimelineBase(object):

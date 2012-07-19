@@ -27,7 +27,7 @@ class Timeline(v_mt.TimelineVisualize):
     pass
 
 
-class Quote(v_mt.QuoteVisualize):
+class Quote(v_mt.QuoteVisualize,l_mt.QuoteLinguistics):
 
     pass
 
