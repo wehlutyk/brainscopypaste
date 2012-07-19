@@ -377,6 +377,12 @@ def dict_plusone(d, key):
         d[key] = 1
 
 
+def gen_results_dict():
+    return dict((fdata, dict((fname, []) for fname in ffiles.iterkeys()))
+                for fdata, ffiles
+                in st.memetracker_subst_features.iteritems())
+
+
 class ProgressInfo(object):
 
     """Print progress information.
@@ -505,37 +511,32 @@ class SubstitutionAnalysis(object):
         if argset['substitutions'] != 'time':
             file_prefix += str(argset['n_timebags']) + '_'
 
-        pickle_wn_PR_scores = \
-            st.memetracker_subst_wn_PR_scores_pickle.format(file_prefix)
-        pickle_wn_degrees = \
-            st.memetracker_subst_wn_degrees_pickle.format(file_prefix)
-        pickle_fa_PR_scores = \
-            st.memetracker_subst_fa_PR_scores_pickle.format(file_prefix)
+        filenames = {}
+        for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-        pickle_wn_PR_scores_d = \
-            st.memetracker_subst_wn_PR_scores_d_pickle.format(file_prefix)
-        pickle_wn_degrees_d = \
-            st.memetracker_subst_wn_degrees_d_pickle.format(file_prefix)
-        pickle_fa_PR_scores_d = \
-            st.memetracker_subst_fa_PR_scores_d_pickle.format(file_prefix)
+            filenames['transistions'][fdata] = {}
+            filenames['transitions_d'][fdata] = {}
+            filenames['suscept_data'][fdata] = \
+                    st.memetracker_subst_suscept_data_pickle[fdata].format(file_prefix)
 
-        pickle_wn_suscept_data = \
-            st.memetracker_subst_wn_suscept_data.format(file_prefix)
-        pickle_fa_suscept_data = \
-            st.memetracker_subst_fa_suscept_data.format(file_prefix)
+            for fname, ffile in ffiles.iteritems():
+
+                filenames['transitions'][fdata][fname] = \
+                        st.memetracker_subst_transitions_pickle.format(file_prefix)
+                filenames['transistions_d'][fdata][fname] = \
+                        st.memetracker_subst_transitions_d_pickle.format(file_prefix)
 
         # Check that the destinations don't already exist.
 
         try:
 
-            st.check_file(pickle_wn_PR_scores, look_for_absent=readonly)
-            st.check_file(pickle_wn_degrees, look_for_absent=readonly)
-            st.check_file(pickle_fa_PR_scores, look_for_absent=readonly)
-            st.check_file(pickle_wn_PR_scores_d, look_for_absent=readonly)
-            st.check_file(pickle_wn_degrees_d, look_for_absent=readonly)
-            st.check_file(pickle_fa_PR_scores_d, look_for_absent=readonly)
-            st.check_file(pickle_wn_suscept_data, look_for_absent=readonly)
-            st.check_file(pickle_fa_suscept_data, look_for_absent=readonly)
+            for fdata, sfiles in filenames.iteritems():
+
+                st.check_file(sfiles['suscept_data'], look_for_absent=readonly)
+                for fname, sfile in sfiles.iteritems():
+
+                    st.check_file(sfile['transitions'], look_for_absent=readonly)
+                    st.check_file(sfile['transitions_d'], look_for_absent=readonly)
 
         except Exception, msg:
 
@@ -557,14 +558,7 @@ class SubstitutionAnalysis(object):
 
                     raise Exception(msg)
 
-        return {'wn_PR_scores': pickle_wn_PR_scores,
-                'wn_degrees': pickle_wn_degrees,
-                'fa_PR_scores': pickle_fa_PR_scores,
-                'wn_PR_scores_d': pickle_wn_PR_scores_d,
-                'wn_degrees_d': pickle_wn_degrees_d,
-                'fa_PR_scores_d': pickle_fa_PR_scores_d,
-                'wn_suscept_data': pickle_wn_suscept_data,
-                'fa_suscept_data': pickle_fa_suscept_data}
+        return filenames
 
     def print_argset(self, argset):
         """Print an argset to stdout."""
@@ -598,14 +592,19 @@ class SubstitutionAnalysis(object):
                    'ff': st.redis_mt_clusters_ff_pref}
 
         clusters = rt.RedisReader(ff_dict[argset['ff']])
-        wn_PR = ps.load(st.wordnet_PR_scores_pickle.format(argset['POS']))
-        wn_degrees = ps.load(st.wordnet_degrees_pickle.format(argset['POS']))
-        fa_PR = ps.load(st.freeassociation_norms_PR_scores_pickle)
+        features = {}
+
+        for fdata, ffiles in st.memetracker_subst_features.iteritems():
+
+            features[fdata] = {}
+
+            for fname, filename in ffiles.iteritems():
+                features[fdata][fname] = \
+                        ps.load(filename.format(argset['POS']))
 
         print 'OK'
 
-        return {'clusters': clusters, 'wn_PR': wn_PR,
-                'wn_degrees': wn_degrees, 'fa_PR': fa_PR}
+        return {'clusters': clusters, 'features': features }
 
     def itersubstitutions_all(self, argset, data):
         """Iterate through all substitutions according to the given argset."""
@@ -693,55 +692,30 @@ class SubstitutionAnalysis(object):
 
         return ret
 
-    def subst_try_save_wn(self, argset, data, lem1, lem2, details,
-                             wn_PR_scores, wn_PR_scores_d,
-                             wn_degrees, wn_degrees_d):
-        """Save a substitution if it is referenced in the WN feature list."""
+    def subst_try_save(self, argset, features, lem1, lem2, details,
+                       fdata, tdata, tdata_d):
+        """Save a substitution if it is referenced in the feature list."""
         try:
 
-            wn_PR_scores.append([data['wn_PR'][lem1], data['wn_PR'][lem2]])
-            wn_PR_scores_d.append(details)
-            if argset['verbose']:
-                print 'Stored: wordnet PR YES'
+            for fname in features.iterkeys():
+                tdata[fname].append([features[fname][lem1],
+                                     features[fname][lem2]])
+                tdata_d[fname].append(details)
 
-            wn_degrees.append([data['wn_degrees'][lem1],
-                               data['wn_degrees'][lem2]])
-            wn_degrees_d.append(details)
             if argset['verbose']:
-                print 'Stored: wordnet deg YES'
+                print 'Stored: %s YES' % fdata
 
             ret = True
 
         except KeyError:
 
             if argset['verbose']:
-                print 'Stored: wordnet PR NO (not referenced)'
-                print 'Stored: wordnet deg NO (not referenced)'
+                print 'Stored: %s NO (not referenced)' % fdata
             ret = False
 
         return ret
 
-    def subst_try_save_fa(self, argset, data, lem1, lem2, details,
-                          fa_PR_scores, fa_PR_scores_d):
-        """Save a substitution if it is referenced in the FA feature list."""
-        try:
-
-            fa_PR_scores.append([data['fa_PR'][lem1], data['fa_PR'][lem2]])
-            fa_PR_scores_d.append(details)
-            if argset['verbose']:
-                print 'Stored: freeass YES'
-            ret = True
-
-        except KeyError:
-
-            if argset['verbose']:
-                print 'Stored: freeass NO (not referenced)'
-            ret = False
-
-        return ret
-
-    def subst_update_possibilities(self, argset, data, feature_set, mother,
-                                       possibilities):
+    def subst_update_possibilities(self, argset, data, mother, possibilities):
         """Update the counts of what words can be substituted."""
 
         if argset['lemmatizing']:
@@ -756,8 +730,11 @@ class SubstitutionAnalysis(object):
             else:
                 lem = tlem
 
-            if data[feature_set].has_key(lem):
-                dict_plusone(possibilities, lem)
+            for fdata, fposs in possibilities.iteritems():
+
+                firstkey = data['features'][fdata].keys()[0]
+                if data['features'][fdata][firstkey].has_key(lem):
+                    dict_plusone(fposs, lem)
 
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.
@@ -782,32 +759,24 @@ class SubstitutionAnalysis(object):
 
         # Results of the analysis
 
-        wn_PR_scores = []
-        wn_degrees = []
-        fa_PR_scores = []
-
-        wn_PR_scores_d = []
-        wn_degrees_d = []
-        fa_PR_scores_d = []
-
-        wn_possibilities = {}
-        fa_possibilities = {}
-
-        wn_realised = {}
-        fa_realised = {}
-
-        n_stored_wn_PR = 0
-        n_stored_wn_deg = 0
-        n_stored_fa_PR = 0
+        transitions = gen_results_dict()
+        transitions_d = gen_results_dict()
+        possibilities = dict((fdata, {})
+                             for fdata
+                             in st.memetracker_subst_features.iterkeys())
+        realised = dict((fdata, {})
+                        for fdata
+                        in st.memetracker_subst_features.iterkeys())
+        n_stored = dict((fdata, 0)
+                        for fdata
+                        in st.memetracker_subst_features.iterkeys())
         n_all = 0
 
         for mother, daughter, subst_info in self.itersubstitutions_all(argset,
                                                                        data):
 
-            self.subst_update_possibilities(argset, data, 'wn_PR', mother,
-                                            wn_possibilities)
-            self.subst_update_possibilities(argset, data, 'fa_PR', mother,
-                                            fa_possibilities)
+            self.subst_update_possibilities(argset, data, mother,
+                                            possibilities)
 
             n_all += 1
             idx = np.where([w1 != w2 for (w1, w2) in
@@ -827,37 +796,24 @@ class SubstitutionAnalysis(object):
                        'lem2': lem2,
                        'subst_info': subst_info}
 
-            if self.subst_try_save_wn(argset, data, lem1, lem2, details,
-                                      wn_PR_scores, wn_PR_scores_d,
-                                      wn_degrees, wn_degrees_d):
-                n_stored_wn_PR += 1
-                n_stored_wn_deg += 1
-                dict_plusone(wn_realised, lem1)
+            for fdata in data['features'].iterkeys():
 
-            if self.subst_try_save_fa(argset, data, lem1, lem2, details,
-                                      fa_PR_scores, fa_PR_scores_d):
-                n_stored_fa_PR += 1
-                dict_plusone(fa_realised, lem1)
+                if self.subst_try_save(argset, data['features'][fdata],
+                                       lem1, lem2, details,
+                                       transitions[fdata],
+                                       transitions_d[fdata]):
+                    n_stored[fdata] += 1
+                    dict_plusone(realised[fdata], lem1)
 
         print
         print 'Examined {} substitutions.'.format(n_all)
-        print ('Stored {} substitutions with Wordnet PageRank '
-               'scores').format(n_stored_wn_PR)
-        print ('Stored {} substitutions with Wordnet degree '
-               'scores').format(n_stored_wn_deg)
-        print ('Stored {} substitutions with Free Association PageRank '
-               'scores').format(n_stored_fa_PR)
 
-        return {'wn_PR_scores': wn_PR_scores,
-                'wn_degrees': wn_degrees,
-                'fa_PR_scores': fa_PR_scores,
-                'wn_PR_scores_d': wn_PR_scores_d,
-                'wn_degrees_d': wn_degrees_d,
-                'fa_PR_scores_d': fa_PR_scores_d,
-                'wn_suscept_data': {'wn_possibilities': wn_possibilities,
-                                    'wn_realised': wn_realised},
-                'fa_suscept_data': {'fa_possibilities': fa_possibilities,
-                                    'fa_realised': fa_realised}}
+        for fdata, ns in n_stored.iteritems():
+            print 'Stored {} substitutions with {}'.format(n_stored[fdata])
+
+        return {'transitions': transitions, 'transitions_d': transitions_d,
+                'suscept_data': {'possibilities': possibilities,
+                                 'realised': realised}}
 
     def save_results(self, files, results):
         """Save the analysis results to pickle files.
@@ -871,16 +827,15 @@ class SubstitutionAnalysis(object):
         print
         print 'Done. Saving data...',
 
-        ps.save(np.array(results['wn_PR_scores']), files['wn_PR_scores'])
-        ps.save(np.array(results['wn_degrees']), files['wn_degrees'])
-        ps.save(np.array(results['fa_PR_scores']), files['fa_PR_scores'])
+        for fdata, ffiles in files.iteritems():
 
-        ps.save(np.array(results['wn_PR_scores_d']), files['wn_PR_scores_d'])
-        ps.save(np.array(results['wn_degrees_d']), files['wn_degrees_d'])
-        ps.save(np.array(results['fa_PR_scores_d']), files['fa_PR_scores_d'])
+            for fname, ffile in ffiles.iteritems():
+                ps.save(np.array(results['transitions'][fdata][fname],
+                                 files['transitions'][fdata][fname]))
+                ps.save(np.array(results['transitions_d'][fdata][fname],
+                                 files['transitions_d'][fdata][fname]))
 
-        ps.save(results['wn_suscept_data'], files['wn_suscept_data'])
-        ps.save(results['fa_suscept_data'], files['fa_suscept_data'])
+            ps.save(results['suscept_data'], files['suscept_data'])
 
         print 'OK'
 
