@@ -67,329 +67,254 @@ from datetime import datetime
 import numpy as np
 
 from analyze.combinatorials import build_ordered_tuples
+from linguistics.distance import (levenshtein, levenshtein_word, hamming,
+                                  hamming_word, subhamming, subhamming_word,
+                                  distance_word_mother_nosub,
+                                  distance_word_mother_sub)
 from linguistics.treetagger import tagger
-
-# "from datastructure.memetracker import QtString" has been moved into
-# timebag_iter_sphere_sub and cluster_iter_substitutions_root
-# to prevent a circular import problem
-# see http://docs.python.org/faq/programming.html#what-are-the-best-practices-
-# for-using-import-in-a-module for more details.
+import datastructure.memetracker_base as ds_mtb
 
 
-def levenshtein(s1, s2):
-    """Compute levenshtein distance between s1 and s2."""
+class TimeBagLinguistics(ds_mtb.TimeBagBase):
 
-    if len(s1) < len(s2):
-        return levenshtein(s2, s1)
-    
-    if not s2:
-        return len(s1)
-    
-    previous_row = xrange(len(s2) + 1)
-    
-    for i, c1 in enumerate(s1):
-        
-        current_row = [i + 1]
-        
-        for j, c2 in enumerate(s2):
-            
-            # previous_row and current_row are one character longer than s2,
-            # hence the 'j + 1'
-            
-            insertions = previous_row[j + 1] + 1
-            deletions = current_row[j] + 1
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(min(insertions, deletions, substitutions))
-        
-        previous_row = current_row 
-    
-    return previous_row[-1]
+    def __init__(self, *args, **kwargs):
+        super(TimeBagLinguistics, self).__init__(*args, **kwargs)
+        self.iter_sphere = {False: self.iter_sphere_nosub,
+                            True: self.iter_sphere_sub}
 
+    def levenshtein_sphere(self, center_string, d):
+        """Get the indexes of the strings in a TimeBag that are at
+        levenshtein-distance == d from a string."""
+        distances = np.array([levenshtein(center_string, bag_string)
+                            for bag_string in self.strings])
 
-def levenshtein_word(s1, s2):
-    """Compute levenshtein distance between s1 and s2, taking words as the
-    editing unit."""
-    return levenshtein(tagger.Tokenize(s1), tagger.Tokenize(s2))
+        idx = np.where(distances == d)
 
+        if len(idx) > 0:
+            return idx[0].tolist()
+        else:
+            return []
 
-def timebag_levenshtein_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    levenshtein-distance == d from a string."""
-    distances = np.array([levenshtein(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
+    def levenshtein_word_sphere(self, center_string, d):
+        """Get the indexes of the strings in a TimeBag that are at
+        levenshtein_word-distance == d from a string."""
+        distances = np.array([levenshtein_word(center_string, bag_string)
+                            for bag_string in self.strings])
 
+        idx = np.where(distances == d)
 
-def timebag_levenshtein_word_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    levenshtein_word-distance == d from a string."""
-    distances = np.array([levenshtein_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
+        if len(idx) > 0:
+            return idx[0].tolist()
+        else:
+            return []
 
+    def hamming_sphere(self, center_string, d):
+        """Get the indexes of the strings in a TimeBag that are at
+        hamming-distance == d from a string."""
+        distances = np.array([hamming(center_string, bag_string)
+                            for bag_string in self.strings])
 
-def hamming(s1, s2):
-    """Compute the hamming distance between s1 and s2."""
-    if len(s1) != len(s2):
-        return -1
-    else:
-        return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
+        idx = np.where(distances == d)
 
+        if len(idx) > 0:
+            return idx[0].tolist()
+        else:
+            return []
 
-def hamming_word(s1, s2):
-    """Compute the hamming distance between s1 and s2, taking words as the
-    editing unit."""
-    return hamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
+    def hamming_word_sphere(self, center_string, d):
+        """Get the indexes of the strings in a TimeBag that are at
+        hamming_word-distance == d from a string."""
+        distances = np.array([hamming_word(center_string, bag_string)
+                            for bag_string in self.strings])
 
+        idx = np.where(distances == d)
 
-def timebag_hamming_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    hamming-distance == d from a string."""
-    distances = np.array([hamming(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
+        if len(idx) > 0:
+            return idx[0].tolist()
+        else:
+            return []
 
+    def subhamming_sphere(self, center_string, d):
+        """Get the indices and motherstrings of the substrings in a TimeBag that
+        are at subhamming-distance == d from a string."""
+        subhs = [subhamming(center_string, bag_string)
+                for bag_string in self.strings]
+        distances = np.array([subh[0] for subh in subhs])
+        subindices = np.array([subh[1] for subh in subhs])
+        lens = np.array([subh[2] for subh in subhs])
 
-def timebag_hamming_word_sphere(timebag, center_string, d):
-    """Get the indexes of the strings in a TimeBag that are at
-    hamming_word-distance == d from a string."""
-    distances = np.array([hamming_word(center_string, bag_string)
-                          for bag_string in timebag.strings])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        return idx[0].tolist()
-    else:
-        return []
+        idx = np.where(distances == d)
 
+        if len(idx) > 0:
 
-def sublists(s, l):
-    """Get all sublists of s of length l."""
-    return [s[i:i + l] for i in range(len(s) - l + 1)]
+            motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
+            return zip(idx[0].tolist(), motherstrings)
 
+        else:
+            return []
 
-def subhamming(s1, s2):
-    """Compute the minimum hamming distance between s2 and all sublists of
-    s1."""
-    
-    l1 = len(s1)
-    l2 = len(s2)
-    
-    if l1 < l2:
-        return (-1, -1, -1)
-    if l1 == l2:
-        return (hamming(s1, s2), 0, l2)
-    
-    distances = np.zeros(l1 - l2 + 1)
-    
-    for i, subs in enumerate(sublists(s1, l2)):
-        distances[i] = hamming(subs, s2)
-    
-    amin = np.argmin(distances)
-    return (distances[amin], amin, l2)
+    def subhamming_word_sphere(self, center_string, d):
+        """Get the indices and motherstrings of the substrings in a TimeBag that
+        are at subhamming_word-distance == d from a string."""
+        subhs = [subhamming_word(center_string, bag_string)
+                for bag_string in self.strings]
+        distances = np.array([subh[0] for subh in subhs])
+        subindices = np.array([subh[1] for subh in subhs])
+        lens = np.array([subh[2] for subh in subhs])
+
+        idx = np.where(distances == d)
+
+        if len(idx) > 0:
+
+            motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
+            return zip(idx[0].tolist(), motherstrings)
+
+        else:
+            return []
+
+    def iter_sphere_nosub(tbg, base):
+        """Iterate through strings in timebag in a sphere centered at 'base'.
+        Yield (mother, string) tuples."""
+        for k in tbg.hamming_word_sphere(base, 1):
+            yield (base, tbg.qt_string_lower(k))
+
+    def iter_sphere_sub(tbg, base):
+        """Iterate through strings in timebag in a subsphere centered at
+        'base'. Yield the (effective mother, substring) tuples."""
+
+        # This import goes here to prevent a circular import problem.
+
+        from datastructure.memetracker import QtString
+
+        for k, m in tbg.subhamming_word_sphere(base, 1):
+
+            mother_tok = base.tokens[m[0]:m[0] + m[1]]
+            mother_pos = base.POS_tags[m[0]:m[0] + m[1]]
+            mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
+                            parse=False)
+            mother.tokens = mother_tok
+            mother.POS_tags = mother_pos
+            yield (mother, tbg.qt_string_lower(k))
 
 
-def subhamming_word(s1, s2):
-    """Compute the subhamming distance between s1 and s2, taking words as the
-    editing unit."""
-    return subhamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
+class ClusterLinguistics(ds_mtb.ClusterBase):
+
+    def __init__(self, *args, **kwargs):
+        super(ClusterLinguistics, self).__init__(*args, **kwargs)
+        self.iter_substitutions = {'root': self.iter_substitutions_root,
+                                   'tbgs': self.iter_substitutions_tbgs,
+                                   'cumtbgs': self.iter_substitutions_cumtbgs,
+                                   'time': self.iter_substitutions_time}
+
+    def iter_substitutions_root(self, argset):
+        """Iterate through substitutions taken as changes from root string. Yield
+        (mother, string or substring, bag info) tuples."""
+
+        # This import goes here to prevent a circular import problem.
+
+        from datastructure.memetracker import QtString
+
+        base = QtString(self.root.lower(), self.id, 0)
+        tbgs = self.build_timebags(argset['n_timebags'])
+
+        for j in range(1, argset['n_timebags']):
+
+            for mother, daughter in tbgs[j].iter_sphere[
+                                        argset['substrings']](base):
+                yield (mother, daughter, {'tobag': j})
 
 
-def timebag_subhamming_sphere(timebag, center_string, d):
-    """Get the indices and motherstrings of the substrings in a TimeBag that
-    are at subhamming-distance == d from a string."""
-    subhs = [subhamming(center_string, bag_string)
-             for bag_string in timebag.strings]
-    distances = np.array([subh[0] for subh in subhs])
-    subindices = np.array([subh[1] for subh in subhs])
-    lens = np.array([subh[2] for subh in subhs])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        
-        motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
-        return zip(idx[0].tolist(), motherstrings)
-    
-    else:
-        return []
+    def iter_substitutions_tbgs(self, argset):
+        """Iterate through substitutions taken as changes between timebags. Yield
+        (mother, string or substring, bag info) tuples."""
+        tbgs = self.build_timebags(argset['n_timebags'])
+        tot_freqs = [tbg.tot_freq for tbg in tbgs]
+        idx = np.where(tot_freqs)[0]
+
+        for i, j in zip(range(len(idx) - 1),
+                        range(1, len(idx))):
+
+            base = tbgs[idx[i]].qt_string_lower(tbgs[idx[i]].argmax_freq_string)
+            for mother, daughter in tbgs[idx[j]].iter_sphere[
+                                        argset['substrings']](base):
+                yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
 
 
-def timebag_subhamming_word_sphere(timebag, center_string, d):
-    """Get the indices and motherstrings of the substrings in a TimeBag that
-    are at subhamming_word-distance == d from a string."""
-    subhs = [subhamming_word(center_string, bag_string)
-             for bag_string in timebag.strings]
-    distances = np.array([subh[0] for subh in subhs])
-    subindices = np.array([subh[1] for subh in subhs])
-    lens = np.array([subh[2] for subh in subhs])
-    
-    idx = np.where(distances == d)
-    
-    if len(idx) > 0:
-        
-        motherstrings = [(subindices[i], lens[i]) for i in idx[0]]
-        return zip(idx[0].tolist(), motherstrings)
-    
-    else:
-        return []
+    def iter_substitutions_cumtbgs(self, argset):
+        """Iterate through substitutions taken as changes between cumulated
+        timebags. Yield (mother, string or substring, bag info) tuples."""
+        tbgs = self.build_timebags(argset['n_timebags'])
+        cumtbgs = self.build_timebags(argset['n_timebags'], cumulative=True)
+        tot_freqs = [tbg.tot_freq for tbg in tbgs]
+        idx = np.where(tot_freqs)[0]
+
+        for i, j in zip(range(len(idx) - 1),
+                        range(1, len(idx))):
+
+            base = cumtbgs[idx[i]].qt_string_lower(
+                                            cumtbgs[idx[i]].argmax_freq_string)
+            for mother, daughter in tbgs[idx[j]].iter_sphere[
+                                        argset['substrings']](base):
+                yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
 
 
-def timebag_iter_sphere_nosub(tbg, base):
-    """Iterate through strings in timebag in a sphere centered at 'base'.
-    Yield (mother, string) tuples."""
-    for k in tbg.hamming_word_sphere(base, 1):
-        yield (base, tbg.qt_string_lower(k))
+    def iter_substitutions_time(self, argset):
+        """Iterate through substitutions taken as transitions from earlier quotes
+        to older quotes (in order of appearance in time)."""
+
+        distance_word_mother = {False: distance_word_mother_nosub,
+                                True: distance_word_mother_sub}
+        qt_list = []
+        qt_starts = np.zeros(self.n_quotes)
+
+        for i, qt in enumerate(self.quotes.itervalues()):
+
+            qt.compute_attrs()
+            qt_list.append(qt)
+            qt_starts[i] = qt.start
+
+        order = np.argsort(qt_starts)
+        qt_starts = qt_starts[order]
+        qt_list = [qt_list[order[i]] for i in range(self.n_quotes)]
+        tuples = build_ordered_tuples(self.n_quotes)
+
+        for i, j in tuples:
+
+            base = qt_list[i].to_qt_string_lower(self.id)
+            daughter = qt_list[j].to_qt_string_lower(self.id)
+            d, mother = distance_word_mother[argset['substrings']](base, daughter)
+
+            if d == 1:
+
+                mother_start = qt_starts[i]
+                daughter_start = qt_starts[j]
+                mother_d = datetime.fromtimestamp(
+                                    mother_start).strftime('%Y-%m-%d %H:%m:%S')
+                daughter_d = datetime.fromtimestamp(
+                                    daughter_start).strftime('%Y-%m-%d %H:%m:%S')
+                yield (mother, daughter,
+                    {'mother_start': mother_d,
+                        'daughter_start': daughter_d})
 
 
-def timebag_iter_sphere_sub(tbg, base):
-    """Iterate through strings in timebag in a subsphere centered at
-    'base'. Yield the (effective mother, substring) tuples."""
-    
-    # This import goes here to prevent a circular import problem.
-    
-    from datastructure.memetracker import QtString
-    
-    for k, m in tbg.subhamming_word_sphere(base, 1):
-        
-        mother_tok = base.tokens[m[0]:m[0] + m[1]]
-        mother_pos = base.POS_tags[m[0]:m[0] + m[1]]
-        mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
-                          parse=False)
-        mother.tokens = mother_tok
-        mother.POS_tags = mother_pos
-        yield (mother, tbg.qt_string_lower(k))
+class QtStringLinguistics(str):
 
+    """Augment a string with POS tags, tokens, cluster id and quote id.
 
-def cluster_iter_substitutions_root(cl, argset):
-    """Iterate through substitutions taken as changes from root string. Yield
-    (mother, string or substring, bag info) tuples."""
-    
-    # This import goes here to prevent a circular import problem.
-    
-    from datastructure.memetracker import QtString
-    
-    base = QtString(cl.root.lower(), cl.id, 0)
-    tbgs = cl.build_timebags(argset['n_timebags'])
-    
-    for j in range(1, argset['n_timebags']):
-        
-        for mother, daughter in tbgs[j].iter_sphere[
-                                    argset['substrings']](base):
-            yield (mother, daughter, {'tobag': j})
+    Methods:
+      * __init__: parse the string for POS tags and tokens, if asked to
 
+    """
 
-def cluster_iter_substitutions_tbgs(cl, argset):
-    """Iterate through substitutions taken as changes between timebags. Yield
-    (mother, string or substring, bag info) tuples."""
-    tbgs = cl.build_timebags(argset['n_timebags'])
-    tot_freqs = [tbg.tot_freq for tbg in tbgs]
-    idx = np.where(tot_freqs)[0]
-    
-    for i, j in zip(range(len(idx) - 1),
-                    range(1, len(idx))):
-        
-        base = tbgs[idx[i]].qt_string_lower(tbgs[idx[i]].argmax_freq_string)
-        for mother, daughter in tbgs[idx[j]].iter_sphere[
-                                    argset['substrings']](base):
-            yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
+    def __new__(cls, string, cl_id=-1, qt_id=-1, parse=True):
+        return super(QtStringLinguistics, cls).__new__(cls, string)
 
+    def __init__(self, string, cl_id, qt_id, parse=True):
+        """Parse the string for POS tags and tokens, if asked to ('parse'
+        argument)."""
+        self.cl_id = cl_id
+        self.qt_id = qt_id
+        if parse:
+            self.POS_tags = tagger.Tags(string)
+            self.tokens = tagger.Tokenize(string)
 
-def cluster_iter_substitutions_cumtbgs(cl, argset):
-    """Iterate through substitutions taken as changes between cumulated
-    timebags. Yield (mother, string or substring, bag info) tuples."""
-    tbgs = cl.build_timebags(argset['n_timebags'])
-    cumtbgs = cl.build_timebags(argset['n_timebags'], cumulative=True)
-    tot_freqs = [tbg.tot_freq for tbg in tbgs]
-    idx = np.where(tot_freqs)[0]
-    
-    for i, j in zip(range(len(idx) - 1),
-                    range(1, len(idx))):
-        
-        base = cumtbgs[idx[i]].qt_string_lower(
-                                        cumtbgs[idx[i]].argmax_freq_string)
-        for mother, daughter in tbgs[idx[j]].iter_sphere[
-                                    argset['substrings']](base):
-            yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
-
-
-def distance_word_mother_nosub(base, daughter):
-    """Get distance between two strings (without substrings), and return the
-    (distance, mother) tuple."""
-    return (hamming_word(base, daughter), base)
-
-
-def distance_word_mother_sub(base, daughter):
-    """Get distance between two strings (with substrings), and return the
-    (distance, effective mother) tuple."""
-    
-    # This import goes here to prevent a circular import problem.
-    
-    from datastructure.memetracker import QtString
-    
-    d, k, l = subhamming_word(base, daughter)
-    mother_tok = base.tokens[k:k + l]
-    mother_pos = base.POS_tags[k:k + l]
-    mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
-                      parse=False)
-    mother.tokens = mother_tok
-    mother.POS_tags = mother_pos
-    return (d, mother)
-
-
-def cluster_iter_substitutions_time(cl, argset):
-    """Iterate through substitutions taken as transitions from earlier quotes
-    to older quotes (in order of appearance in time)."""
-    
-    distance_word_mother = {False: distance_word_mother_nosub,
-                            True: distance_word_mother_sub}
-    qt_list = []
-    qt_starts = np.zeros(cl.n_quotes)
-    
-    for i, qt in enumerate(cl.quotes.itervalues()):
-        
-        qt.compute_attrs()
-        qt_list.append(qt)
-        qt_starts[i] = qt.start
-    
-    order = np.argsort(qt_starts)
-    qt_starts = qt_starts[order]
-    qt_list = [qt_list[order[i]] for i in range(cl.n_quotes)]
-    tuples = build_ordered_tuples(cl.n_quotes)
-    
-    for i, j in tuples:
-        
-        base = qt_list[i].to_qt_string_lower(cl.id)
-        daughter = qt_list[j].to_qt_string_lower(cl.id)
-        d, mother = distance_word_mother[argset['substrings']](base, daughter)
-        
-        if d == 1:
-            
-            mother_start = qt_starts[i]
-            daughter_start = qt_starts[j]
-            mother_d = datetime.fromtimestamp(
-                                mother_start).strftime('%Y-%m-%d %H:%m:%S')
-            daughter_d = datetime.fromtimestamp(
-                                daughter_start).strftime('%Y-%m-%d %H:%m:%S')
-            yield (mother, daughter,
-                   {'mother_start': mother_d,
-                    'daughter_start': daughter_d})

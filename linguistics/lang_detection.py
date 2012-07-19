@@ -17,32 +17,32 @@ from nltk.corpus.reader.util import StreamBackedCorpusView, concat
 
 
 class LangIdCorpusReader(CorpusReader):
-    
+
     """LangID corpus reader."""
-    
+
     CorpusView = StreamBackedCorpusView
 
     def _get_trigram_weight(self, line):
         """Split a line in a trigram and its frequency count."""
         data = line.strip().split(' ')
-        
+
         if len(data) == 2:
             return (data[1], int(data[0]))
 
     def _read_trigram_block(self, stream):
         """Read a block of trigram frequencies."""
         freqs = []
-        
+
         # Read 20 lines at a time.
-        
+
         for i in range(20):
             freqs.append(self._get_trigram_weight(stream.readline()))
-        
+
         return filter(lambda x: x != None, freqs)
 
     def freqs(self, fileids=None):
         """Return trigram frequencies for a language from the corpus."""
-        return concat([self.CorpusView(path, self._read_trigram_block) 
+        return concat([self.CorpusView(path, self._read_trigram_block)
                        for path in self.abspaths(fileids=fileids)])
 
 
@@ -52,9 +52,9 @@ class LangDetect(object):
 
     def __init__(self, languages=['nl', 'en', 'fr', 'de', 'es']):
         for lang in languages:
-            
+
             self.language_trigrams[lang] = FreqDist()
-            
+
             for f in self.langid.freqs(fileids=lang + "-3grams.txt"):
                 self.language_trigrams[lang].inc(f[0], f[1])
 
@@ -65,22 +65,22 @@ class LangDetect(object):
         scores = dict([(lang, 0) for lang in self.language_trigrams.keys()])
 
         for match in words:
-            
+
             for trigram in self.get_word_trigrams(match):
-                
+
                 if not trigram in trigrams.keys():
                     trigrams[trigram] = 0
-                
+
                 trigrams[trigram] += 1
 
         total = sum(trigrams.values())
 
         for trigram, count in trigrams.items():
-            
+
             for lang, frequencies in self.language_trigrams.items():
-                
+
                 # Normalize and add to the total score.
-                
+
                 scores[lang] += ((float(frequencies[trigram]) /
                                   float(frequencies.N())) *
                                   (float(count) / float(total)))
@@ -90,3 +90,7 @@ class LangDetect(object):
     def get_word_trigrams(self, match):
         return [''.join(trigram)
                 for trigram in nltk_trigrams(match) if trigram != None]
+
+
+langdetector = LangDetect()
+
