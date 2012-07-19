@@ -377,8 +377,8 @@ def dict_plusone(d, key):
         d[key] = 1
 
 
-def gen_results_dict():
-    return dict((fdata, dict((fname, []) for fname in ffiles.iterkeys()))
+def gen_results_dict(gen=list):
+    return dict((fdata, dict((fname, gen()) for fname in ffiles.iterkeys()))
                 for fdata, ffiles
                 in st.memetracker_subst_features.iteritems())
 
@@ -802,6 +802,12 @@ class SubstitutionAnalysis(object):
 
         print
         print 'Done. Saving data...',
+
+        for fdata, trdict in results['transitions'].iteritems():
+
+            for fname, trs in trdict.iteritems():
+                results['transitions'][fdata][fname] = np.array(trs)
+
         ps.save(results, files)
         print 'OK'
 
@@ -896,10 +902,6 @@ class SubstitutionAnalysis(object):
 
         for argset in argsets:
             self.analyze(argset)
-
-    def put_analyze(self, Q, argset):
-        """Put an analysis job in the queue."""
-        Q.put(self.analyze(argset))
 
     def analyze_all_mt(self, args):
         """Run 'analyze' with various argsets, multi-threaded."""

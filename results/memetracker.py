@@ -35,7 +35,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 
 import datainterface.picklesaver as ps
-from analyze.memetracker import SubstitutionAnalysis
+from analyze.memetracker import SubstitutionAnalysis, gen_results_dict
 import visualize.annotations_new as an
 import settings as st
 
@@ -59,15 +59,12 @@ def list_to_dict(l):
 
 
 def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
-                       title, POS_series, ff_series, argsets):
+                       title, POS_series, argsets):
     """Plot a dataseries resulting from the substitution analysis."""
     cmap = cm.jet
     n_POSs = len(st.memetracker_subst_POSs)
     col_POS = dict([(pos, cmap(i / n_POSs, alpha=0.15))
                     for i, pos in enumerate(st.memetracker_subst_POSs)])
-    cmap = cm.winter
-    col_ff = {'filtered': cmap(0.2, alpha=0.5), 'ff': cmap(0.6, alpha=0.5)}
-    hatch_ff = {'filtered': '/', 'ff': '\\'}
 
     pl.figure()
     ax = pl.subplot(111)
@@ -78,8 +75,6 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
     ybot, ytop2 = 1 - yrange / 5, pl.amax(r_avgs + r_ics) + yrange / 5
     ytop0 = ytop2 - (ytop2 - ybot) * 0.1
     ytop1 = ytop2 - (ytop2 - ybot) * 0.05
-    ytop3 = ytop2 + (ytop2 - ybot) * 0.05
-    ytop4 = ytop2 + (ytop2 - ybot) * 0.1
 
     setlabel = True
     for pos, xpos in POS_series:
@@ -87,7 +82,7 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
         lbl = 'H0 feature' if setlabel else None
         setlabel = False
         pl.plot([min(xpos) - 0.5, max(xpos) + 0.5], [h0[pos], h0[pos]], 'k--',
-                linewidth=2, label=lbl)
+                 linewidth=2, label=lbl)
         pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
                          color=col_POS[pos], edgecolor=(0, 0, 0, 0))
         pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
@@ -101,7 +96,7 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
 
         lbl = 'H0 distrib' if setlabel else None
         pl.plot([i - 0.4, i + 0.4], [r_h0s[i], r_h0s[i]], 'c--',
-                linewidth=2, label=lbl)
+                 linewidth=2, label=lbl)
 
         # The real results
 
@@ -122,17 +117,8 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
                               alpha=0.8),
                     ha='center', va='center')
 
-    for ff, xff in ff_series:
-
-        pl.fill([xff[0] - 0.5, xff[0] - 0.5, xff[-1] + 0.5, xff[-1] + 0.5],
-                [ytop4, ytop2, ytop2, ytop4], color=col_ff[ff],
-                edgecolor = (0, 0, 0, 0), hatch=hatch_ff[ff])
-        pl.text((min(xff) + max(xff)) / 2, ytop3, ff,
-                bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
-                ha='center', va='center')
-
     ax.set_xlim(xleft, xright)
-    ax.set_ylim(ybot, ytop4)
+    ax.set_ylim(ybot, ytop2)
     pl.legend(loc='best', prop=dict(size='small'))
     pl.title(title)
 
@@ -148,13 +134,13 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes = []
         pos = annote['argset']['POS']
 
-        picklefiles = SubstitutionAnalysis.get_save_files(annote['argset'],
+        pickle_files = SubstitutionAnalysis.get_save_files(annote['argset'],
                                                           readonly=True)
-        res = ps.load(picklefiles[annote['fname']])
-        details = ps.load(picklefiles[annote['fname_d']])
-        fname_root = annote['fname'][:2]
-        suscept_data = ps.load(picklefiles[fname_root + '_suscept_data'])
-        suscept_dict = compute_susc(suscept_data, fname_root)
+        results = ps.load(pickle_files)
+        res = results['transitions'][annote['fdata']][annote['fname']]
+        details = results['transitions_d'][annote['fdata']][annote['fname']]
+        suscept_data = results['suscept_data'][annote['fdata']]
+        suscept_dict = compute_susc(suscept_data)
 
         # The Base features / Starts / Arrivals
 
@@ -399,32 +385,29 @@ def iter_argsets_results(args):
         if pickle_files == None:
             continue
 
-        wn_PR_scores = ArgsetResults(ps.load(pickle_files['wn_PR_scores']),
-                                     ps.load(pickle_files['wn_PR_scores_d']))
-        wn_degrees = ArgsetResults(ps.load(pickle_files['wn_degrees']),
-                                   ps.load(pickle_files['wn_degrees_d']))
-        fa_PR_scores = ArgsetResults(ps.load(pickle_files['fa_PR_scores']),
-                                     ps.load(pickle_files['fa_PR_scores_d']))
-        wn_suscept_data = ps.load(pickle_files['wn_suscept_data'])
-        fa_suscept_data = ps.load(pickle_files['fa_suscept_data'])
+        results = ps.load(pickle_files)
 
+        ARresults = dict(
+                (fdata,
+                 dict((fname,
+                       ArgsetResults(results['transitions'][fdata][fname],
+                                     results['transitions_d'][fdata][fname]))))
+                for fdata, ffiles in st.memetracker_subst_features.iteritems()
+                for fname in ffiles.iterkeys())
+        suscept_data = results['suscept_data']
 
-        if (wn_PR_scores == None or wn_degrees == None or
-            fa_PR_scores.length == None):
+        if pl.prod([len(s['realised']) - 1
+                     for s in suscept_data.itervalues()]) == 0:
             warn('{}: empty data'.format(argset))
             continue
 
-        yield argset, {'wn_PR_scores': wn_PR_scores,
-                       'wn_degrees': wn_degrees,
-                       'fa_PR_scores': fa_PR_scores,
-                       'wn_suscept_data': wn_suscept_data,
-                       'fa_suscept_data': fa_suscept_data}
+        yield argset, ARresults, suscept_data
 
 
-def compute_susc(suscept_data, fname_root):
+def compute_susc(suscept_data):
     """Compute the susceptitbility of each word according to 'suscept_data'."""
-    poss = suscept_data[fname_root + '_possibilities']
-    real = suscept_data[fname_root + '_realised']
+    poss = suscept_data['possibilities']
+    real = suscept_data['realised']
     susc = {}
 
     for word, p in poss.iteritems():
@@ -442,52 +425,55 @@ def load_ratio_results(args):
     args."""
 
     argsets = []
-    results = dict([(fname, {'r_avgs': [], 'r_stds': [], 'r_lens': [],
-                             'r_clids': [], 'r_ics': None, 'r_h0s': []})
-                    for fname in st.memetracker_subst_fnames])
+    results = gen_results_dict(lambda: {'r_avgs': [], 'r_stds': [],
+                                        'r_lens': [], 'r_clids': [],
+                                        'r_ics': None, 'r_h0s': []})
+    suscept_data = []
 
-    for argset, res in iter_argsets_results(args):
+    for argset, res, sd in iter_argsets_results(args):
 
         argsets.append(argset)
+        suscept_data.append(sd)
 
-        for fname in st.memetracker_subst_fnames:
-            results[fname]['r_avgs'].append(res[fname].ratios_cl.mean())
-            results[fname]['r_stds'].append(res[fname].ratios_cl.std())
-            results[fname]['r_lens'].append(res[fname].length)
-            results[fname]['r_clids'].append(res[fname].clids)
-            results[fname]['r_h0s'].append(res[fname].h0_cl)
+        for fdata, rdict in results.iteritems():
 
-    return argsets, results
+            for fname, r in rdict.iteritems():
+
+                r['r_avgs'].append(res[fdata][fname].ratios_cl.mean())
+                r['r_stds'].append(res[fdata][fname].ratios_cl.std())
+                r['r_lens'].append(res[fdata][fname].length)
+                r['r_clids'].append(res[fdata][fname].clids)
+                r['r_h0s'].append(res[fdata][fname].h0_cl)
+
+    return argsets, results, suscept_data
 
 
 def features_to_values(features):
-    values = {}
+    values = gen_results_dict(dict)
 
-    for fname in st.memetracker_subst_fnames:
+    for fdata, fdict in features.iteritems():
 
-        values[fname] = {}
+        for fname, f in fdict.iteritems():
 
-        for pos in st.memetracker_subst_POSs:
-            values[fname][pos] = array(features[fname][pos].values())
+            for pos in st.memetracker_subst_POSs:
+                values[fdata][fname][pos] = array(f[pos].values())
 
     return values
 
 
 def load_features():
-    wn_PR_scores = {}
-    wn_degrees = {}
+    features = {}
 
-    for pos in st.memetracker_subst_POSs:
+    for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-        wn_PR_scores[pos] = ps.load(st.wordnet_PR_scores_pickle.format(pos))
-        wn_degrees[pos] = ps.load(st.wordnet_degrees_pickle.format(pos))
+        features[fdata] = {}
+        for fname, ffile in ffiles.iteritems():
 
-    fa_PR_scores0 = ps.load(st.freeassociation_norms_PR_scores_pickle)
-    fa_PR_scores = dict([(pos, fa_PR_scores0)
-                         for pos in st.memetracker_subst_POSs])
+            features[fdata][fname] = {}
+            for pos in st.memetracker_subst_POSs:
+                features[fdata][fname][pos] = ps.load(ffile.format(pos))
 
-    return {'wn_PR_scores': wn_PR_scores, 'wn_degrees': wn_degrees,
-            'fa_PR_scores': fa_PR_scores}
+    return features
 
 
 def get_feature_prop(lem_list, fd, rng):

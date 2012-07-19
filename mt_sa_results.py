@@ -11,6 +11,7 @@ import argparse as ap
 from numpy import array
 import pylab as pl
 
+from analyze.memetracker import gen_results_dict
 import results.memetracker as r_mt
 import settings as st
 
@@ -43,47 +44,47 @@ def plot_results(substitutions, substrings):
 
     # Get the results corresponding to args.
 
-    argsets, results = r_mt.load_ratio_results(args)
+    argsets, results, suscept_data = r_mt.load_ratio_results(args)
 
     # Reformat the data and build annotations and H0s.
 
     annotes = {}
-    H0s = dict([(fname, {}) for fname in st.memetracker_subst_fnames])
+    H0s = gen_results_dict(dict)
     features = r_mt.load_features()
     fvalues = r_mt.features_to_values(features)
 
-    for fname in st.memetracker_subst_fnames:
+    for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-        # Convert the results to Numpy arrays and compute confidence intervals
+        annotes[fdata] = {}
+        for fname in ffiles.iterkeys():
 
-        results[fname]['r_avgs'] = array(results[fname]['r_avgs'])
-        results[fname]['r_stds'] = array(results[fname]['r_stds'])
-        results[fname]['r_lens'] = array(results[fname]['r_lens'])
-        results[fname]['r_ics'] = (1.96 * results[fname]['r_stds'] /
-                                   pl.sqrt(results[fname]['r_lens'] - 1))
-        results[fname]['r_h0s'] = array(results[fname]['r_h0s'])
+            # Convert the results to Numpy arrays and compute confidence intervals
 
-        # Build annotations.
+            results[fdata][fname]['r_avgs'] = array(results[fdata][fname]['r_avgs'])
+            results[fdata][fname]['r_stds'] = array(results[fdata][fname]['r_stds'])
+            results[fdata][fname]['r_lens'] = array(results[fdata][fname]['r_lens'])
+            results[fdata][fname]['r_ics'] = (1.96 * results[fdata][fname]['r_stds'] /
+                                              pl.sqrt(results[fdata][fname]['r_lens'] - 1))
+            results[fdata][fname]['r_h0s'] = array(results[fdata][fname]['r_h0s'])
 
-        annotes[fname] = [{'text': fname + ': {}'.format(l),
-                           'argset': argset, 'fname': fname,
-                           'fname_d': fname + '_d'}
-                          for l, argset
-                          in zip(results[fname]['r_lens'], argsets)]
+            # Build annotations.
 
-        # Build the H0 values for comparison w/ respect to feature sets
+            annotes[fdata][fname] = [{'text': fname + ': {}'.format(l),
+                                      'argset': argset, 'fdata': fdata,
+                                      'fname': fname}
+                                     for l, argset
+                                     in zip(results[fdata][fname]['r_lens'], argsets)]
 
-        for pos in st.memetracker_subst_POSs:
-            H0s[fname][pos] = (fvalues[fname][pos].mean()
-                               * (1 / fvalues[fname][pos]).mean())
+            # Build the H0 values for comparison w/ respect to feature sets
+
+            for pos in st.memetracker_subst_POSs:
+                H0s[fdata][fname][pos] = (fvalues[fdata][fname][pos].mean()
+                                          * (1 / fvalues[fdata][fname][pos]).mean())
 
     # Build categories for plotting the colors of the columns.
 
     POS_series = []
     cur_POS = None
-
-    ff_series = []
-    cur_ff = None
 
     ntb_series = []
     cur_ntb = None
@@ -96,12 +97,6 @@ def plot_results(substitutions, substrings):
             POS_series.append([p['POS'], [x]])
             cur_POS = p['POS']
 
-        if cur_ff == p['ff']:
-            ff_series[-1][1].append(x)
-        else:
-            ff_series.append([p['ff'], [x]])
-            cur_ff = p['ff']
-
         if cur_ntb == p['n_timebags']:
             ntb_series[-1][1].append(x)
         else:
@@ -110,18 +105,23 @@ def plot_results(substitutions, substrings):
 
     # Plot everything
 
-    for fname in st.memetracker_subst_fnames:
+    for fdata, ffiles in st.memetracker_subst_features.iteritems():
 
-        title = (fname + ' ratio [substitutions={}, '.format(substitutions)
-                 + 'substrings={}]'.format(substrings))
+        for fname in ffiles.iterkeys():
 
-        r_mt.plot_substseries(H0s[fname], results[fname]['r_h0s'],
-                              fvalues[fname], features[fname],
-                              results[fname]['r_avgs'],
-                              results[fname]['r_ics'],
-                              results[fname]['r_clids'],
-                              annotes[fname], title,
-                              POS_series, ff_series, argsets)
+            title = (fname + ' ' + fdata
+                     + ' ratio [substitutions={}, '.format(substitutions)
+                     + 'substrings={}]'.format(substrings))
+
+            r_mt.plot_substseries(H0s[fdata][fname],
+                                  results[fdata][fname]['r_h0s'],
+                                  fvalues[fdata][fname],
+                                  features[fdata][fname],
+                                  results[fdata][fname]['r_avgs'],
+                                  results[fdata][fname]['r_ics'],
+                                  results[fdata][fname]['r_clids'],
+                                  annotes[fdata][fname], title,
+                                  POS_series, argsets)
 
 
 if __name__ == '__main__':
