@@ -109,7 +109,7 @@ def plot_results(substitutions, substrings):
 
         for fname in ffiles.iterkeys():
 
-            title = (fname + ' ' + fdata
+            title = (fdata + ' ' + fname
                      + ' ratio [substitutions={}, '.format(substitutions)
                      + 'substrings={}]'.format(substrings))
 

@@ -391,9 +391,9 @@ def iter_argsets_results(args):
                 (fdata,
                  dict((fname,
                        ArgsetResults(results['transitions'][fdata][fname],
-                                     results['transitions_d'][fdata][fname]))))
-                for fdata, ffiles in st.memetracker_subst_features.iteritems()
-                for fname in ffiles.iterkeys())
+                                     results['transitions_d'][fdata][fname]))
+                       for fname in ffiles.iterkeys()))
+                for fdata, ffiles in st.memetracker_subst_features.iteritems())
         suscept_data = results['suscept_data']
 
         if pl.prod([len(s['realised']) - 1
