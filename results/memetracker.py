@@ -312,6 +312,7 @@ class ArgsetResults(object):
         # Get the coordinates of clusters in the list of details of results.
 
         self.clids = self.build_clids(details)
+        self.length_cl = len(self.clids)
 
         # Compute ratios, correct them to represent the means
         # by clusters.
@@ -441,7 +442,7 @@ def load_ratio_results(args):
 
                 r['r_avgs'].append(res[fdata][fname].ratios_cl.mean())
                 r['r_stds'].append(res[fdata][fname].ratios_cl.std())
-                r['r_lens'].append(res[fdata][fname].length)
+                r['r_lens'].append(res[fdata][fname].length_cl)
                 r['r_clids'].append(res[fdata][fname].clids)
                 r['r_h0s'].append(res[fdata][fname].h0_cl)
 

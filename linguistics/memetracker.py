@@ -232,7 +232,7 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
         base = QtString(self.root.lower(), self.id, 0)
         tbgs = self.build_timebags(argset['n_timebags'])
 
-        for j in range(1, argset['n_timebags']):
+        for j in range(0, argset['n_timebags']):
 
             for mother, daughter in tbgs[j].iter_sphere[
                                         argset['substrings']](base):
