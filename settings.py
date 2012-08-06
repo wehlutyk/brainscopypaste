@@ -72,7 +72,7 @@ wordnet_root_rel = 'Wordnet'
 wordnet_root = os.path.join(data_root, wordnet_root_rel)
 check_folder(wordnet_root)
 
-#
+
 # Pickle file for the Wordnet PageRank scores, relative to wordnet root.
 
 wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
@@ -85,6 +85,21 @@ wordnet_PR_scores_pickle = os.path.join(wordnet_root,
 wordnet_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
 wordnet_degrees_pickle = os.path.join(wordnet_root,
                                       wordnet_degrees_pickle_rel)
+
+
+# Pickle file for the Wordnet clusterization coefficients, relative to wordnet
+# root.
+
+wordnet_CCs_pickle_rel = 'wordnet_CCs_{}.pickle'
+wordnet_CCs_pickle = os.path.join(wordnet_root,
+                                 wordnet_CCs_pickle_rel)
+
+
+# Pickle file for the Wordnet betweenness, relative to wordnet root.
+
+wordnet_BCs_pickle_rel = 'wordnet_BCs_{}.pickle'
+wordnet_BCs_pickle = os.path.join(wordnet_root,
+                                  wordnet_BCs_pickle_rel)
 
 
 ##############################################################################
@@ -176,9 +191,11 @@ check_folder(memetracker_subst_root)
 
 # List of available features.
 
-memetracker_subst_fnames = ['wn_PR_scores', 'wn_degrees', 'fa_PR_scores']
+#memetracker_subst_fnames = ['wn_PR_scores', 'wn_degrees', 'fa_PR_scores']
 memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
-                                     'degrees': wordnet_degrees_pickle},
+                                     'degrees': wordnet_degrees_pickle,
+                                     'CCs': wordnet_CCs_pickle,
+                                     'BCs': wordnet_BCs_pickle},
                               'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle}}
 
 

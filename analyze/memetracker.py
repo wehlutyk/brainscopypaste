@@ -689,27 +689,29 @@ class SubstitutionAnalysis(object):
         return ret
 
     def subst_try_save(self, argset, features, lem1, lem2, details,
-                       fdata, tdata, tdata_d):
+                       tdata, tdata_d, n_stored, suscept_data):
         """Save a substitution if it is referenced in the feature list."""
-        try:
 
-            for fname in features.iterkeys():
-                tdata[fname].append([features[fname][lem1],
-                                     features[fname][lem2]])
-                tdata_d[fname].append(details)
+        for fdata in features.iterkeys():
 
-            if argset['verbose']:
-                print 'Stored: %s YES' % fdata
+            for fname in features[fdata].iterkeys():
 
-            ret = True
+                try:
+                    tdata[fdata][fname].append([features[fdata][fname][lem1],
+                                                features[fdata][fname][lem2]])
+                    tdata_d[fdata][fname].append(details)
 
-        except KeyError:
+                    n_stored[fdata][fname] += 1
+                    dict_plusone(suscept_data[fdata][fname]['realised'], lem1)
 
-            if argset['verbose']:
-                print 'Stored: %s NO (not referenced)' % fdata
-            ret = False
+                    if argset['verbose']:
+                        print 'Stored: %s %s YES' % (fdata, fname)
 
-        return ret
+                except KeyError:
+
+                    if argset['verbose']:
+                        print 'Stored: %s %s NO (not referenced)' % (fdata,
+                                                                     fname)
 
     def subst_update_possibilities(self, argset, data, mother, suscept_data):
         """Update the counts of what words can be substituted."""
@@ -757,12 +759,15 @@ class SubstitutionAnalysis(object):
 
         transitions = gen_results_dict()
         transitions_d = gen_results_dict()
-        suscept_data = dict((fdata, {'possibilities': {}, 'realised': {}})
-                             for fdata
-                             in st.memetracker_subst_features.iterkeys())
-        n_stored = dict((fdata, 0)
-                        for fdata
-                        in st.memetracker_subst_features.iterkeys())
+        suscept_data = gen_results_dict(lambda: {'possibilities': {},
+                                                 'realised': {}})
+        n_stored = gen_results_dict(int)
+#        suscept_data = dict((fdata, {'possibilities': {}, 'realised': {}})
+#                             for fdata
+#                             in st.memetracker_subst_features.iterkeys())
+#        n_stored = dict((fdata, 0)
+#                        for fdata
+#                        in st.memetracker_subst_features.iterkeys())
         n_all = 0
 
         for mother, daughter, subst_info in self.itersubstitutions_all(argset,
@@ -789,14 +794,8 @@ class SubstitutionAnalysis(object):
                        'lem2': lem2,
                        'subst_info': subst_info}
 
-            for fdata in data['features'].iterkeys():
-
-                if self.subst_try_save(argset, data['features'][fdata],
-                                       lem1, lem2, details, fdata,
-                                       transitions[fdata],
-                                       transitions_d[fdata]):
-                    n_stored[fdata] += 1
-                    dict_plusone(suscept_data[fdata]['realised'], lem1)
+            self.subst_try_save(argset, data, lem1, lem2, details, transitions,
+                                transitions_d, n_stored, suscept_data)
 
         print
         print 'Examined {} substitutions.'.format(n_all)

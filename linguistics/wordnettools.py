@@ -30,6 +30,7 @@ from nltk.corpus import wordnet as wn
 from scipy.sparse import csc_matrix, csr_matrix
 import numpy as np
 from scipy import random
+import networkx as nx
 
 import analyze.linalg as a_la
 
@@ -198,12 +199,84 @@ def build_wn_degrees(pos):
 
     lem_degrees = {}
 
-    for (w, i) in lem_coords.iteritems():
+    for w, i in lem_coords.iteritems():
         lem_degrees[w] = sum(M.data[M.indptr[i]:M.indptr[i+1]])
 
     print 'OK'
 
     return lem_degrees
+
+
+def build_wn_CCs(pos):
+    """Compute clusterization coefficients of lemmas in the WN graph.
+
+    Returns: a dict associating each lemma to its CC.
+
+    """
+
+    # Build the lemma coordinates.
+
+    if pos == 'all':
+        pos = None
+
+    lem_coords = build_wn_coords(pos)
+
+    # Get the WN adjacency matrix in Scipy CSC format.
+
+    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
+
+    # Compute the CCs of each lemma name.
+
+    print 'Computing the CC of each lemma...',
+
+    G = nx.from_scipy_sparse_matrix(M)
+    CCs = nx.clustering(G)
+
+    lem_CCs = {}
+
+    for w, i in lem_coords.iteritems():
+        if CCs[i] > 0:
+            lem_CCs[w] = CCs[i]
+
+    print 'OK'
+
+    return lem_CCs
+
+
+def build_wn_BCs(pos):
+    """Compute betweenness centrality of lemmas in the WN graph.
+
+    Returns: a dict associating each lemma to its BC.
+
+    """
+
+    # Build the lemma coordinates.
+
+    if pos == 'all':
+        pos = None
+
+    lem_coords = build_wn_coords(pos)
+
+    # Get the WN adjacency matrix in Scipy CSC format.
+
+    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
+
+    # Compute the BCs of each lemma name.
+
+    print 'Computing the BC of each lemma...',
+
+    G = nx.from_scipy_sparse_matrix(M)
+    BCs = nx.betweenness_centrality(G)
+
+    lem_BCs = {}
+
+    for w, i in lem_coords.iteritems():
+        if BCs[i] > 0:
+            lem_BCs[w] = BCs[i]
+
+    print 'OK'
+
+    return lem_BCs
 
 
 def truncate_wn_features(features, pos):
@@ -215,7 +288,8 @@ def truncate_wn_features(features, pos):
     new_features = {}
 
     for lem in lem_coords.iterkeys():
-        new_features[lem] = features[lem]
+        if features.has_key(lem):
+            new_features[lem] = features[lem]
 
     return new_features
 

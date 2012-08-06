@@ -51,7 +51,9 @@ def get_args_from_cmdline():
                          "times of quotes. 'root': from root; 'tbgs': "
                          "from successive timebags; 'cumtbgs': from "
                          "cumulated timebags; 'time': based on "
-                         'appearance times.'),
+                         "appearance times. 'slidetbgs': based on the "
+                         "previous timebag. 'growtbgs': based on the "
+                         'previous cumulated timebag.'),
                    choices=list_attributes_trunc(Cluster, 'iter_substitutions_'))
     p.add_argument('--substrings', action='store', nargs=1, required=True,
                    help=('1: include substrings as accepted substitutions'

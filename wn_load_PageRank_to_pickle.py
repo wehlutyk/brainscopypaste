@@ -30,6 +30,10 @@ if __name__ == '__main__':
                "(POS = 'all') ***")
         PR_scores_all = wnt.build_wn_PR_scores('all')
 
+        print "*** Saving the PR scores to '" + picklefile_all + "'...",
+        ps.save(PR_scores_all, picklefile_all)
+        print 'OK'
+
     # Then compute the other POSs
 
     POSs = st.memetracker_subst_POSs

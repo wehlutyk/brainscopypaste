@@ -30,6 +30,10 @@ if __name__ == '__main__':
                "(POS = 'all') ***")
         degrees_all = wnt.build_wn_degrees('all')
 
+        print "*** Saving the degrees to '" + picklefile_all + "'...",
+        ps.save(degrees_all, picklefile_all)
+        print 'OK'
+
     # Then compute the other POSs
 
     POSs = st.memetracker_subst_POSs
