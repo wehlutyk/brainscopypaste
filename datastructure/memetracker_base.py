@@ -335,13 +335,13 @@ class ClusterBase(object):
         return ('"' + self.root + '" (cluster #{} ; tot_quotes={} ; '
                 'tot_freq={})').format(self.id, self.n_quotes, self.tot_freq)
 
-    def add_quote(self, line_fields):
-        """Add a Quote to the Cluster (used when loading the data into the
-        Cluster object)."""
-
-        from datastructure.memetracker import Quote
-
-        self.quote[int(line_fields[4])] = Quote(line_fields)
+#    def add_quote(self, line_fields):
+#        """Add a Quote to the Cluster (used when loading the data into the
+#        Cluster object)."""
+#
+#        from datastructure.memetracker import Quote
+#
+#        self.quote[int(line_fields[4])] = Quote(line_fields)
 
     def build_timeline(self):
         """Build the Timeline representing the occurrences of the cluster as a

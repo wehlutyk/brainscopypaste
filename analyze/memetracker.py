@@ -232,7 +232,7 @@ def find_max_24h_window(timeline, prec=30 * 60):
 
 
 def filter_cluster(cl, min_tokens):
-    """Filter a cluster to keep only English quotes longer then 'min_tokens'.
+    """Filter a cluster to keep only English quotes longer than 'min_tokens'.
 
     Arguments:
       * cl: the cluster to filter
@@ -316,6 +316,22 @@ class ClusterAnalyze(ds_mtb.ClusterBase):
                                         cl_start + (i + 1) * step))
 
         return timebags
+
+    def build_timebag(self, n_bags, end, cumulative=False):
+        """Build a timebag from Cluster, start at start and ending at end."""
+
+        import datastructure.memetracker as ds_mt
+
+        # Build the timeline for the Cluster, set the parameters for the
+        # TimeBag
+
+        self.build_timeline()
+
+        step = int(round(self.timeline.span.total_seconds() / n_bags))
+        cl_start = self.timeline.start
+        start = cl_start if cumulative else max(cl_start, end - step)
+
+        return ds_mt.TimeBag(self, start, end)
 
 
 def build_n_quotes_to_clusterids(clusters):

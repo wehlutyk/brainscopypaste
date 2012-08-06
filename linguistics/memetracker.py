@@ -81,6 +81,8 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
         super(TimeBagLinguistics, self).__init__(*args, **kwargs)
         self.iter_sphere = {False: self.iter_sphere_nosub,
                             True: self.iter_sphere_sub}
+        self.has_mother = {False: self.has_mother_nosub,
+                           True: self.has_mother_sub}
 
     def qt_string_lower(self, k, parse=True):
         """Return a QtString corresponding to string number k of the Timebag,
@@ -179,13 +181,37 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
         else:
             return []
 
-    def iter_sphere_nosub(tbg, base):
+    def has_mother_nosub(self, dest):
+        """Test if this timebag's max freq string is a nosub mother for dest.
+        If so, yield a (mother, daughter) tuple. Else return."""
+        base = self.qt_string_lower(self.argmax_freq_string)
+        if hamming_word(base, dest) == 1:
+            yield (base, dest)
+
+    def has_mother_sub(self, dest):
+        """Test if this timebag's max freq string is a sub mother for dest.
+        If so, yield an (effective mother, daughter) tuple. Else return."""
+
+        import datastructure.memetracker as ds_mt
+
+        base = self.qt_string_lower(self.argmax_freq_string)
+        (d, idx, l) = subhamming_word(base, dest)
+        if d == 1:
+            mother_tok = base.tokens[idx:idx + l]
+            mother_pos = base.POS_tags[idx:idx + l]
+            mother = ds_mt.QtString(' '.join(mother_tok), base.cl_id,
+                                    base.qt_id, parse=False)
+            mother.tokens = mother_tok
+            mother.POS_tags = mother_pos
+            yield (mother, dest)
+
+    def iter_sphere_nosub(self, base):
         """Iterate through strings in timebag in a sphere centered at 'base'.
         Yield (mother, string) tuples."""
-        for k in tbg.hamming_word_sphere(base, 1):
-            yield (base, tbg.qt_string_lower(k))
+        for k in self.hamming_word_sphere(base, 1):
+            yield (base, self.qt_string_lower(k))
 
-    def iter_sphere_sub(tbg, base):
+    def iter_sphere_sub(self, base):
         """Iterate through strings in timebag in a subsphere centered at
         'base'. Yield the (effective mother, substring) tuples."""
 
@@ -193,7 +219,7 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
 
         from datastructure.memetracker import QtString
 
-        for k, m in tbg.subhamming_word_sphere(base, 1):
+        for k, m in self.subhamming_word_sphere(base, 1):
 
             mother_tok = base.tokens[m[0]:m[0] + m[1]]
             mother_pos = base.POS_tags[m[0]:m[0] + m[1]]
@@ -201,7 +227,7 @@ class TimeBagLinguistics(ds_mtb.TimeBagBase):
                             parse=False)
             mother.tokens = mother_tok
             mother.POS_tags = mother_pos
-            yield (mother, tbg.qt_string_lower(k))
+            yield (mother, self.qt_string_lower(k))
 
 
 class QuoteLinguistics(ds_mtb.QuoteBase):
@@ -238,10 +264,32 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
                                         argset['substrings']](base):
                 yield (mother, daughter, {'tobag': j})
 
+    def iter_substitutions_slidetbgs(self, argset):
+        """Iterate through substitutions taken as changes from the preceding
+        time window. Yield (mother, string or substring, None) tuples."""
+
+        for qt2 in self.quotes.itervalues():
+            dest = qt2.to_qt_string_lower()
+            prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1)
+            for mother, daughter in prevtbg.has_mother[
+                                                argset['substrings']](dest):
+                yield (mother, daughter, None)
+
+    def iter_substitutions_growtbgs(self, argset):
+        """Iterate through substitutions taken as changes from the cumulated
+        previous time window. Yield (mother, string or substring, None)"""
+
+        for qt2 in self.quotes.itervalues():
+            dest = qt2.to_qt_string_lower()
+            prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1,
+                                         True)
+            for mother, daughter in prevtbg.has_mother[
+                                                argset['substrings']](dest):
+                yield (mother, daughter, None)
 
     def iter_substitutions_tbgs(self, argset):
-        """Iterate through substitutions taken as changes between timebags. Yield
-        (mother, string or substring, bag info) tuples."""
+        """Iterate through substitutions taken as changes between timebags.
+        Yield (mother, string or substring, bag info) tuples."""
         tbgs = self.build_timebags(argset['n_timebags'])
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
         idx = np.where(tot_freqs)[0]
@@ -253,7 +301,6 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
             for mother, daughter in tbgs[idx[j]].iter_sphere[
                                         argset['substrings']](base):
                 yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
-
 
     def iter_substitutions_cumtbgs(self, argset):
         """Iterate through substitutions taken as changes between cumulated
@@ -271,7 +318,6 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
             for mother, daughter in tbgs[idx[j]].iter_sphere[
                                         argset['substrings']](base):
                 yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
-
 
     def iter_substitutions_time(self, argset):
         """Iterate through substitutions taken as transitions from earlier quotes
