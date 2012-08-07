@@ -728,11 +728,12 @@ class SubstitutionAnalysis(object):
             else:
                 lem = tlem
 
-            for fdata, fsuscept in suscept_data.iteritems():
+            for fdata in suscept_data.iterkeys():
 
-                firstkey = data['features'][fdata].keys()[0]
-                if data['features'][fdata][firstkey].has_key(lem):
-                    dict_plusone(fsuscept['possibilities'], lem)
+                for fname, fsuscept in suscept_data[fdata].iteritems():
+
+                    if data['features'][fdata][fname].has_key(lem):
+                        dict_plusone(fsuscept['possibilities'], lem)
 
     def examine_substitutions(self, argset, data):
         """Examine substitutions and retain only those we want.

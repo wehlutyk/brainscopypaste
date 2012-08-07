@@ -269,8 +269,12 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
         time window. Yield (mother, string or substring, None) tuples."""
 
         for qt2 in self.quotes.itervalues():
-            dest = qt2.to_qt_string_lower()
+            dest = qt2.to_qt_string_lower(self.id)
             prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1)
+
+            if prevtbg.tot_freq == 0:
+                continue
+
             for mother, daughter in prevtbg.has_mother[
                                                 argset['substrings']](dest):
                 yield (mother, daughter, None)
@@ -280,9 +284,12 @@ class ClusterLinguistics(ds_mtb.ClusterBase):
         previous time window. Yield (mother, string or substring, None)"""
 
         for qt2 in self.quotes.itervalues():
-            dest = qt2.to_qt_string_lower()
+            dest = qt2.to_qt_string_lower(self.id)
             prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1,
                                          True)
+            if prevtbg.tot_freq == 0:
+                continue
+
             for mother, daughter in prevtbg.has_mother[
                                                 argset['substrings']](dest):
                 yield (mother, daughter, None)
