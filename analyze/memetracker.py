@@ -326,10 +326,15 @@ class ClusterAnalyze(ds_mtb.ClusterBase):
         # TimeBag
 
         self.build_timeline()
-
-        step = int(round(self.timeline.span.total_seconds() / n_bags))
         cl_start = self.timeline.start
-        start = cl_start if cumulative else max(cl_start, end - step)
+
+        if not cumulative:
+
+            span = int(round(self.timeline.span.total_seconds() / n_bags))
+            start = max(cl_start, end - span)
+
+        else:
+            start = cl_start
 
         return ds_mt.TimeBag(self, start, end)
 
@@ -852,7 +857,7 @@ class SubstitutionAnalysis(object):
 
                     for subsgs in args.substringss:
 
-                        if substitutions in ['time', 'slidetbgs', 'growtbgs']:
+                        if substitutions in ['time', 'growtbgs']:
 
                             argsets.append({'ff': ff,
                                             'lemmatizing': True,
