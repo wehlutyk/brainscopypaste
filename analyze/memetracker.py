@@ -795,8 +795,9 @@ class SubstitutionAnalysis(object):
                        'lem2': lem2,
                        'subst_info': subst_info}
 
-            self.subst_try_save(argset, data, lem1, lem2, details, transitions,
-                                transitions_d, n_stored, suscept_data)
+            self.subst_try_save(argset, data['features'], lem1, lem2, details,
+                                transitions, transitions_d, n_stored,
+                                suscept_data)
 
         print
         print 'Examined {} substitutions.'.format(n_all)
@@ -851,7 +852,7 @@ class SubstitutionAnalysis(object):
 
                     for subsgs in args.substringss:
 
-                        if substitutions == 'time':
+                        if substitutions in ['time', 'slidetbgs', 'growtbgs']:
 
                             argsets.append({'ff': ff,
                                             'lemmatizing': True,
