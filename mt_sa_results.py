@@ -11,6 +11,8 @@ import argparse as ap
 from numpy import array
 import pylab as pl
 
+from datastructure.memetracker_base import list_attributes_trunc
+from datastructure.memetracker import Cluster
 from analyze.memetracker import gen_results_dict
 import results.memetracker as r_mt
 import settings as st
@@ -22,7 +24,7 @@ def get_args_from_cmdline():
     p.add_argument('--substitutionss', action='store', nargs='+',
                    required=True,
                    help=('Needs doc.'),
-                   choices=['root', 'tbgs', 'cumtbgs', 'time'])
+                   choices=list_attributes_trunc(Cluster, 'iter_substitutions_'))
     p.add_argument('--substringss', action='store', nargs='+', required=True,
                    help=('Needs doc.'),
                    choices=['0', '1'])
@@ -37,7 +39,7 @@ def plot_results(substitutions, substrings):
 
     args = r_mt.DictNS({'n_timebagss': ['2', '3', '4', '5'],
                         'POSs': st.memetracker_subst_POSs,
-                        'ffs': ['filtered', 'ff'],
+                        'ffs': ['filtered'],#, 'ff'],
                         'substringss': [substrings],
                         'substitutionss': [substitutions],
                         'resume': False})

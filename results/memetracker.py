@@ -72,7 +72,8 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
 
     xleft, xright = - 0.5, l - 0.5
     yrange = pl.amax(r_avgs + r_ics) - pl.amin(r_avgs - r_ics)
-    ybot, ytop2 = 1 - yrange / 5, pl.amax(r_avgs + r_ics) + yrange / 5
+    ybot, ytop2 = (min(1, pl.amin(h0.values())) - yrange / 5,
+                   max(pl.amax(r_avgs + r_ics), pl.amax(h0.values())) + yrange / 5)
     ytop0 = ytop2 - (ytop2 - ybot) * 0.1
     ytop1 = ytop2 - (ytop2 - ybot) * 0.05
 
@@ -94,9 +95,9 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
 
         # The h0s w/ respect to observed distributions
 
-        lbl = 'H0 distrib' if setlabel else None
-        pl.plot([i - 0.4, i + 0.4], [r_h0s[i], r_h0s[i]], 'c--',
-                 linewidth=2, label=lbl)
+        #lbl = 'H0 distrib' if setlabel else None
+        #pl.plot([i - 0.4, i + 0.4], [r_h0s[i], r_h0s[i]], 'c--',
+        #         linewidth=2, label=lbl)
 
         # The real results
 
@@ -139,7 +140,7 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
         results = ps.load(pickle_files)
         res = results['transitions'][annote['fdata']][annote['fname']]
         details = results['transitions_d'][annote['fdata']][annote['fname']]
-        suscept_data = results['suscept_data'][annote['fdata']]
+        suscept_data = results['suscept_data'][annote['fdata']][annote['fname']]
         suscept_dict = compute_susc(suscept_data)
 
         # The Base features / Starts / Arrivals
@@ -397,10 +398,14 @@ def iter_argsets_results(args):
                 for fdata, ffiles in st.memetracker_subst_features.iteritems())
         suscept_data = results['suscept_data']
 
-        if pl.prod([len(s['realised']) - 1
-                     for s in suscept_data.itervalues()]) == 0:
-            warn('{}: empty data'.format(argset))
-            continue
+        for sddata in suscept_data.iterkeys():
+
+            for sdname, sd in suscept_data[sddata].iteritems():
+
+                if len(sd['realised']) <= 1:
+                    warn('{} / {} / {}: empty data'.format(argset, sddata, sdname))
+#               Removed to leave only the warning, not the jumping out of loop
+#                continue
 
         yield argset, ARresults, suscept_data
 
