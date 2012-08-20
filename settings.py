@@ -114,7 +114,7 @@ wordnet_NSigns_pickle = os.path.join(wordnet_root,
 
 wordnet_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
 wordnet_MNSyns_pickle = os.path.join(wordnet_root,
-                                     wordnet_NSigns_pickle_rel)
+                                     wordnet_MNSyns_pickle_rel)
 
 
 ##############################################################################
