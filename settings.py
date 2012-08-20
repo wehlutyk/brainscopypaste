@@ -102,6 +102,21 @@ wordnet_BCs_pickle = os.path.join(wordnet_root,
                                   wordnet_BCs_pickle_rel)
 
 
+# Pickle file for the Wordnet Number of significations, relative to wordnet
+# root
+
+wordnet_NSigns_pickle_rel = 'wordnet_NSigns_{}.pickle'
+wordnet_NSigns_pickle = os.path.join(wordnet_root,
+                                     wordnet_NSigns_pickle_rel)
+
+
+# Pickle file for the Wordnet Mean Number of Synonyms, relative to wordnet root
+
+wordnet_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
+wordnet_MNSyns_pickle = os.path.join(wordnet_root,
+                                     wordnet_NSigns_pickle_rel)
+
+
 ##############################################################################
 # FREE ASSOCIATION NORMS DATA #
 ###############################
@@ -195,7 +210,9 @@ check_folder(memetracker_subst_root)
 memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
                                      'degrees': wordnet_degrees_pickle,
                                      'CCs': wordnet_CCs_pickle,
-                                     'BCs': wordnet_BCs_pickle},
+                                     'BCs': wordnet_BCs_pickle,
+                                     'NSigns': wordnet_NSigns_pickle,
+                                     'MNSyns': wordnet_MNSyns_pickle},
                               'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle}}
 
 
