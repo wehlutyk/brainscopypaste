@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python # -*- coding: utf-8 -*-
 
 """Analyze data from the MemeTracker dataset.
 
@@ -13,7 +12,6 @@ Methods:
   * frame_timeline: cut off quote occurrences in a Timeline at the specified
                     boundaries
   * find_max_24h_window: find the 24h window of maximum activity in a Timeline
-  * build_timebags: build a number of TimeBags from a Cluster
   * build_n_quotes_to_clusterids: build a dict associating number of Quotes to
                                   Cluster ids having that number of quotes
   * build_quoteslengths_to_quoteids: build a dict associating Quote string
@@ -25,6 +23,8 @@ Classes:
   * ProgressInfo: print progress information
   * SubstitutionAnalysis: analyze the 1-word changes in the MemeTracker
                           dataset
+  * ClusterAnalyze: mixin class to use in the full Cluster class. Includes
+                    analysis methods.
 
 """
 
@@ -283,6 +283,14 @@ def filter_cluster(cl, min_tokens):
 
 class ClusterAnalyze(ds_mtb.ClusterBase):
 
+    """Mixin class to use in the full Cluster class. Includes analysis methods.
+
+    Methods:
+    * build_timebags: build a number of TimeBags from a Cluster
+    * built_timebag: build a TimeBag from a Cluster
+
+    """
+
     def build_timebags(self, n_bags, cumulative=False):
         """Build a number of TimeBags from a Cluster.
 
@@ -318,7 +326,19 @@ class ClusterAnalyze(ds_mtb.ClusterBase):
         return timebags
 
     def build_timebag(self, n_bags, end, cumulative=False):
-        """Build a timebag from Cluster, start at start and ending at end."""
+        """Build a TimeBag from a Cluster.
+
+        Arguments:
+        * n_bags: the number of TimeBags we're slicing the cluster into
+        * end: the timestamp at which the timebag should end
+
+        Keyword arguments:
+        * cumulative: boolean specifying if the timebag built should be
+                        time-cumulative or not. If True, the timebag built
+                        starts at the beginning of the cluster, else it starts
+                        at `end - cluster_span / n_bags`. Defaults to False.
+
+        """
 
         import datastructure.memetracker as ds_mt
 

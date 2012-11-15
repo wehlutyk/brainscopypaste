@@ -4,19 +4,18 @@
 """Visualize data from the MemeTracker dataset
 
 Methods:
-  * plot_timeline: plot the evolution of a Timeline, with an optional legend
-                   and an optional moving average
   * mean_smooth: compute a moving average of a histogram (used in
                  'plot_timeline')
   * dt_toordinal: convert a datetime object to an ordinal, as used by
                   Matplotlib
-  * bar_timeline: plot the bar-chart of a Timeline
-  * bar_cluster: plot the stacked bar-chart of Quotes in a Cluster, with added
-                 annotations
-  * bar_cluster_norm: plot the normalized stacked bar-chart of Quotes in a
-                      Cluster, with added text-less annotations
+  * fft_smooth: smooth a histogram by taking the first few Fourier frequencies
+  * spline_fft_smooth: smooth a histogram by FFT then splining
+  * timestamps_todt: convert a list of timestamps to a list of datetime object
 
 Classes:
+  * TimelineVisualize: visualizing methods for Timeline
+  * QuoteVisualize: visualizing methods for Quote
+  * ClusterVisualize: visualizing methods for Cluster
   * ordTimeDelta: subclass of timedelta that defines the 'toordinal' method,
                   for use in Matplotlib
 

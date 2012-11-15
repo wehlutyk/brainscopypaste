@@ -37,7 +37,7 @@ def plot_results(substitutions, substrings):
 
     # Prepare some parameters
 
-    args = r_mt.DictNS({'n_timebagss': ['2', '3', '4', '5'],
+    args = r_mt.DictNS({'n_timebagss': ['5'],#['2', '3', '4', '5']
                         'POSs': st.memetracker_subst_POSs,
                         'ffs': ['filtered'],#, 'ff'],
                         'substringss': [substrings],
@@ -114,7 +114,6 @@ def plot_results(substitutions, substrings):
             title = (fdata + ' ' + fname
                      + ' ratio [substitutions={}, '.format(substitutions)
                      + 'substrings={}]'.format(substrings))
-
             r_mt.plot_substseries(H0s[fdata][fname],
                                   results[fdata][fname]['r_h0s'],
                                   fvalues[fdata][fname],

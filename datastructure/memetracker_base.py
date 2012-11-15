@@ -37,6 +37,13 @@ def dictionarize_attributes(inst, prefix):
 
 class ArgsetBase(object):
 
+    """Hold a set of arguments for a memetracker analysis.
+
+    Methods:
+      * __init__: fill in the argset based on command line arguments
+
+    """
+
     def __init__(self, clargs):
         self.ff = clargs[0]
         self.lemmatizing = bool(int(clargs.lemmatizing[0]))
@@ -66,6 +73,7 @@ class ArgsetBase(object):
 
 
 class TimelineBase(object):
+
     """Hold a series of occurrences (e.g. occurrences of a quote, or of quotes
     related to a same cluster).
 

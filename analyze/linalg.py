@@ -22,6 +22,7 @@ def matrix_normalize_columns(M, outfmt):
     """Normalize a CSC or CSR matrix on its columns.
 
     Arguments:
+      * M: the matrix to normalize, in CSR or CSC format.
       * outfmt: the output format for the normalized matrix. Accepted values
                 are 'csc' and 'csr'.
 
@@ -74,7 +75,7 @@ def matrix_eigen_solve(M, v0, max_it, tol, damp_v=0.0, d=1.0):
       * max_it: the maximum number of iterations that will be performed
       * tol: the relative precision requested
 
-    Optional arguments:
+    Keyword arguments:
       * damp_v: the damping vector (normalized); defaults to a vector of zeros
       * d: the damping factor; defaults to 1 (no damping)
 

@@ -4,6 +4,9 @@
 """Compute PageRank scores and adjacency matrices corresponding to the Wordnet
 synonyms graph. Other tools with it.
 
+Variables:
+  * lemmatize: an initizalized instance of Lemmatizer
+
 Methods:
   * build_wn_coords: build a dictionary associating each lemma (in lowercase)
                      in Wordnet to a coordinate
@@ -13,7 +16,9 @@ Methods:
                         synonyms graph
   * build_wn_degrees: compute the degrees of lemmas in the WN graph (excluding
                       lemmas not connected to other lemmas)
-  * lemmatize: lemmatize a word
+
+Classes:
+  * Lemmatizer: a helper for caching lemmatizations from Wordnet
 
 The PageRank scores computed depend on the following details:
   * The adjacency matrix is built for the lemmas in WN, with zeros on the

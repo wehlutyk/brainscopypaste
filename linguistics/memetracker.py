@@ -3,61 +3,11 @@
 
 """Linguistic analysis tools for the MemeTracker dataset.
 
-Methods:
-  * levenshtein: compute levenshtein distance between s1 and s2
-  * levenshtein_word: compute levenshtein distance between s1 and s2, taking
-                      words as the editing unit
-  * timebag_levenshtein_sphere: get the indexes of the strings in a TimeBag
-                                that are at levenshtein-distance == d from a
-                                string
-  * timebag_levenshtein_word_sphere: get the indexes of the strings in a
-                                     TimeBag that are at
-                                     levenshtein_word-distance == d from a
-                                     string
-  * hamming: compute hamming distance between s1 and s2
-  * hamming_word: compute hamming distance between s1 and s2, taking words as
-                  the editing unit
-  * timebag_hamming_sphere: get the indexes of the strings in a TimeBag that
-                            are at hamming-distance == d from a string
-  * timebag_hamming_word_sphere: get the indexes of the strings in a TimeBag
-                                 that are at hamming_word-distance == d from a
-                                 string
-  * sublists: get all sublists of s of length l
-  * subhamming: compute the minimum hamming distance between s2 and all
-                sublists of s1
-  * subhamming_word: compute subhamming distance between s1 and s2, taking
-                     words as the editing unit
-  * timebag_subhamming_sphere: get the indices and motherstrings of the
-                               substrings in a TimeBag that are at
-                               subhamming-distance == d from a string
-  * timebag_subhamming_word_sphere: get the indices and motherstrings of the
-                                    substrings in a TimeBag that are at
-                                    subhamming_word-distance == d from a
-                                    string
-  * timebag_iter_sphere_nosub: iterate through strings in timebag in a sphere
-                               centered at 'root'. Yield the (mother,
-                               substring) tuples.
-  * timebag_iter_sphere_sub: iterate through strings in timebag in a subsphere
-                             centered at 'root'. Yield the (effective mother,
-                             substring) tuples.
-  * cluster_iter_substitutions_root: iterate through substitutions taken as
-                                     changes from root string. Yield (mother,
-                                     substring) tuples.
-  * cluster_iter_substitutions_tbgs: iterate through substitutions taken as
-                                     changes between timebags. Yield (mother,
-                                     substring) tuples.
-  * cluster_iter_substitutions_cumtbgs: iterate through substitutions taken as
-                                        changes between cumulated timebags.
-                                        Yield (mother, substring) tuples.
-  * distance_word_mother_nosub: get distance between two strings (without
-                                substrings), and return the (distance, mother)
-                                tuple
-  * distance_word_mother_sub: get distance between two strings (with
-                              substrings), and return the (distance, effective
-                              mother) tuple
-  * cluster_iter_substitutions_time: iterate through substitutions taken as
-                                     transitions from earlier quotes to older
-                                     quotes (in order of appearance in time)
+Classes:
+  * TimeBagLinguistics: linguistic methods for TimeBag
+  * QuoteLinguistics: linguistic methods for Quote
+  * ClusterLinguistics: linguistic methods for Cluster
+  * QtString: augment a string with POS tags, tokens, cluster id and quote id
 
 """
 

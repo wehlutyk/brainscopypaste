@@ -6,6 +6,7 @@
 Classes:
   * PRedis: add methods to redis.Redis load and save python objects to a redis
             instance
+  * RedisReader:
 
 """
 
@@ -114,7 +115,23 @@ class PRedis(redis.Redis):
 
 
 class RedisReader(object):
+
+    """Mimick the behaviour of a dict for data stored in Redis.
+
+    Methods:
+     * __init__: set the prefix for keys in the datastore
+     * iteritems
+     * itervalues
+     * iterkeys
+     * __iter__
+     * __len__
+     * __getitem__
+
+    """
+
     def __init__(self, pref):
+        """Set the prefix for keys in the datastore."""
+
         self._pref = pref
         self._rserver = PRedis('localhost')
         self._keys = [int(re.sub(pref, '', s)) for s in

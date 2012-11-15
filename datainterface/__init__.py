@@ -13,9 +13,11 @@ everywhere throughout the code.
 
 Modules:
   * memetracker: load data from the MemeTracker dataset
+  * freeassociation: load data from FreeAssociation dataset
   * nltktools: interface NLTK objects and dataset objects
   * picklesaver: save or load any data in pickle format
   * spinn3r: load data from the custom XML Spinn3r data format into an NLTK
+  * redistools: wrappers for Redis data access
              Reader
   * timeparsing: parse and convert strings representing dates and times
   * xmlparsing: parse XML into a dict, extract links from HTML, or strip HTML

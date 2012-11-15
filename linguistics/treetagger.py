@@ -3,6 +3,9 @@
 
 """Tag and tokenize sentences and quotes.
 
+Variables:
+  * tagger: an initialized instance of TreeTaggerTags
+
 Classes:
   * TreeTaggerTags: wrapper for frequently-used functions of the TreeTagger
                     methods

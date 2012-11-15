@@ -61,6 +61,8 @@ def list_to_dict(l):
 def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
                        title, POS_series, argsets):
     """Plot a dataseries resulting from the substitution analysis."""
+    pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R', 'all': 'all'}
+
     cmap = cm.jet
     n_POSs = len(st.memetracker_subst_POSs)
     col_POS = dict([(pos, cmap(i / n_POSs, alpha=0.15))
@@ -80,13 +82,13 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
     setlabel = True
     for pos, xpos in POS_series:
 
-        lbl = 'H0 feature' if setlabel else None
+        lbl = 'H0' if setlabel else None
         setlabel = False
         pl.plot([min(xpos) - 0.5, max(xpos) + 0.5], [h0[pos], h0[pos]], 'k--',
                  linewidth=2, label=lbl)
         pl.fill_between([min(xpos) - 0.5, max(xpos) + 0.5], ytop2, ybot,
                          color=col_POS[pos], edgecolor=(0, 0, 0, 0))
-        pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos,
+        pl.text((min(xpos) + max(xpos)) / 2, ytop1, pos_wn_to_tt[pos],
                 bbox=dict(facecolor='white', edgecolor='white', alpha=0.8),
                 ha='center', va='center')
 
@@ -112,19 +114,19 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
 
         pl.plot([i - 0.5, i - 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
         pl.plot([i + 0.5, i + 0.5], [ybot, ytop0], color=(0.5, 0.5, 0.5, 0.3))
-        if argsets[i]['n_timebags'] != 0:
-            pl.text(i, ytop0, '{}'.format(argsets[i]['n_timebags']),
-                    bbox=dict(facecolor='white', edgecolor='white',
-                              alpha=0.8),
-                    ha='center', va='center')
+#        if argsets[i]['n_timebags'] != 0:
+#            pl.text(i, ytop0, '{}'.format(argsets[i]['n_timebags']),
+#                    bbox=dict(facecolor='white', edgecolor='white',
+#                              alpha=0.8),
+#                    ha='center', va='center')
 
     ax.set_xlim(xleft, xright)
     ax.set_ylim(ybot, ytop2)
-    pl.legend(loc='best', prop=dict(size='small'))
+    pl.legend(loc='lower right', prop=dict(size='small'))
     pl.title(title)
 
-    ax.set_xticks(range(l))
-    labels = ax.set_xticklabels(['{}'.format(p['n_timebags'])
+#    ax.set_xticks(range(l))
+    labels = ax.set_xticklabels([''#{}'.format(p['n_timebags'])
                                  for p in argsets if p['n_timebags'] != 0])
     pl.setp(labels, rotation=60, fontsize=10)
 
@@ -145,28 +147,28 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
 
         # The Base features / Starts / Arrivals
 
-        ax = fig.add_subplot(321)
-        axes.append(ax)
-        ax.set_title('Base feature / Start / Arrival distribution')
-        bins = ax.hist(fv[pos], bins=20, color='r', alpha=0.5,
-                       label='Base features', log=True)[1]
-        ax.legend()
-        xlim = ax.get_xlim()
-
-        ax = fig.add_subplot(323)
-        axes.append(ax)
-        ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts',
-                log=True)
-        ax.legend()
-        ax.set_xlim(xlim)
-
-        ax = fig.add_subplot(325)
-        axes.append(ax)
-        ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals',
-                log=True)
-        ax.legend()
-        ax.set_xlim(xlim)
-
+#        ax = fig.add_subplot(321)
+#        axes.append(ax)
+#        ax.set_title('Base feature / Start / Arrival distribution')
+#        bins = ax.hist(fv[pos], bins=20, color='r', alpha=0.5,
+#                       label='Base features', log=True)[1]
+#        ax.legend()
+#        xlim = ax.get_xlim()
+#
+#        ax = fig.add_subplot(323)
+#        axes.append(ax)
+#        ax.hist(res[:, 0], bins=bins, color='b', alpha=0.5, label='Starts',
+#                log=True)
+#        ax.legend()
+#        ax.set_xlim(xlim)
+#
+#        ax = fig.add_subplot(325)
+#        axes.append(ax)
+#        ax.hist(res[:, 1], bins=bins, color='g', alpha=0.5, label='Arrivals',
+#                log=True)
+#        ax.legend()
+#        ax.set_xlim(xlim)
+#
         # The mean ratio for different start features
 
         nbins = 20
@@ -221,9 +223,10 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes.append(ax)
         cmap = cm.YlGnBu
 
-        ax.set_title(u'Susceptibilité des mots de départ')
+#        ax.set_title(u"Susceptibilité en couleurs sur l'histogramme des caractéristiques sémantiques")
+        ax.set_xlabel(annote['fname'])
         bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
-                                label='Start words')[1:]
+                                label=u'Susceptibilité')[1:]
 
         lem_list = [d['lem1'] for d in f.details]
         suscepts = pl.array([get_feature_suscept(fd[pos], lem_list,
@@ -242,26 +245,34 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
         axes.append(cb.ax)
         ax.legend()
 
-        ax = fig.add_subplot(326)
-        axes.append(ax)
+#        ax = fig.add_subplot(212)
+#        axes.append(ax)
+#        ax.set_xlabel(annote['fname'])
+#        x = (bins[1:] + bins[:-1]) / 2
+#        ax.plot(x, suscepts, label=u'Susceptibilité')
+#        ax.legend()
 
-        ax.set_title(u'Proportion des mots de départ dans le pool de features')
-        bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
-                                label='Start words')[1:]
 
-        lem_list = [d['lem1'] for d in f.details]
-        props = pl.array([get_feature_prop(lem_list, fd[pos],
-                                           [bins[i], bins[i + 1]])
-                          for i in range(nbins)])
-        propsn = (props - props.min()) / (props.max() - props.min())
-        for i in range(nbins):
-            patches[i].set_color(cmap(propsn[i]))
-
-        sm = cm.ScalarMappable(Normalize(props.min(), props.max()), cmap)
-        sm.set_array(props)
-        cb = fig.colorbar(sm, ax=ax)
-        axes.append(cb.ax)
-        ax.legend()
+#        ax = fig.add_subplot(326)
+#        axes.append(ax)
+#
+#        ax.set_title(u'Proportion des mots de départ dans le pool de features')
+#        bins, patches = ax.hist(fv[pos], bins=nbins, log=True,
+#                                label='Start words')[1:]
+#
+#        lem_list = [d['lem1'] for d in f.details]
+#        props = pl.array([get_feature_prop(lem_list, fd[pos],
+#                                           [bins[i], bins[i + 1]])
+#                          for i in range(nbins)])
+#        propsn = (props - props.min()) / (props.max() - props.min())
+#        for i in range(nbins):
+#            patches[i].set_color(cmap(propsn[i]))
+#
+#        sm = cm.ScalarMappable(Normalize(props.min(), props.max()), cmap)
+#        sm.set_array(props)
+#        cb = fig.colorbar(sm, ax=ax)
+#        axes.append(cb.ax)
+#        ax.legend()
 
         return axes
 
