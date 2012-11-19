@@ -252,7 +252,6 @@ check_folder(memetracker_subst_root)
 
 # List of available features.
 
-#memetracker_subst_fnames = ['wn_PR_scores', 'wn_degrees', 'fa_PR_scores']
 memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
                                      'degrees': wordnet_degrees_pickle,
                                      'CCs': wordnet_CCs_pickle,
@@ -263,6 +262,21 @@ memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
                               'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
                                       'MNphonemes': cmu_MNphonemes_pickle},
                               'aoa': {'Kuperman': aoa_Kuperman_pickle}
+                              }
+
+
+# For each feature, boolean telling us if we should lemmatize or not
+
+memetracker_subst_features_lem = {'wn': {'PR_scores': True,
+                                     'degrees': True,
+                                     'CCs': True,
+                                     'BCs': True,
+                                     'NSigns': True,
+                                     'MNSyns': True},
+                              'fa': {'PR_scores': True},
+                              'cmu': {'MNsyllables': False,
+                                      'MNphonemes': False},
+                              'aoa': {'Kuperman': True}
                               }
 
 

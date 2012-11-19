@@ -482,7 +482,7 @@ class SubstitutionAnalysis(object):
       * subst_print_info: print information about the substitution if argset
                           asks for it
       * subst_test_POS: test for correspondence of POS tags in a substitution
-      * subst_lemmatize: lemmatize a substitution if argset asks for it
+      * subst_lemmatize: lemmatize a substitution
       * subst_test_real: test if two words really form a substitution, or are
                          in fact only variations of the same root
       * subst_try_save_wn: save a substitution if it is referenced in the WN
@@ -535,11 +535,6 @@ class SubstitutionAnalysis(object):
 
         file_prefix += 'F{}_'.format(argset['ff'])
 
-        if not argset['lemmatizing']:
-            file_prefix += 'N'
-
-        file_prefix += 'L_'
-
         file_prefix += 'S{}_'.format(argset['substitutions'])
 
         if not argset['substrings']:
@@ -586,7 +581,6 @@ class SubstitutionAnalysis(object):
         print
         print 'Doing analysis with the following argset:'
         print '  ff = {}'.format(argset['ff'])
-        print '  lemmatizing = {}'.format(argset['lemmatizing'])
         print '  substitutions = {}'.format(argset['substitutions'])
         print '  substrings = {}'.format(argset['substrings'])
         print '  POS = {}'.format(argset['POS'])
@@ -680,25 +674,16 @@ class SubstitutionAnalysis(object):
         return ret
 
     def subst_lemmatize(self, argset, mother, daughter, idx):
-        """Lemmatize a substitution using TreeTagger and Wordnet, if argset
-        asks for it."""
-        if argset['lemmatizing']:
+        """Lemmatize a substitution using TreeTagger and Wordnet."""
+        t1 = tagger.Lemmatize(mother)[idx]
+        t2 = tagger.Lemmatize(daughter)[idx]
 
-            t1 = tagger.Lemmatize(mother)[idx]
-            t2 = tagger.Lemmatize(daughter)[idx]
+        lem1 = lemmatize(t1)
+        lem2 = lemmatize(t2)
 
-            lem1 = lemmatize(t1)
-            lem2 = lemmatize(t2)
-
-            if argset['verbose']:
-                print ("Lemmatized: '" + lem1 + "' -> '" +
-                       lem2 + "'")
-
-        else:
-
-            lem1 = mother.tokens[idx]
-            lem2 = daughter.tokens[idx]
-
+        if argset['verbose']:
+            print ("Lemmatized: '" + lem1 + "' -> '" +
+                    lem2 + "'")
         return (lem1, lem2)
 
     def subst_test_real(self, argset, lem1, lem2):
@@ -713,17 +698,23 @@ class SubstitutionAnalysis(object):
 
         return ret
 
-    def subst_try_save(self, argset, features, lem1, lem2, details,
-                       tdata, tdata_d, n_stored, suscept_data):
+    def subst_try_save(self, argset, features, word1, word2, lem1, lem2,
+                       details, tdata, tdata_d, n_stored, suscept_data):
         """Save a substitution if it is referenced in the feature list."""
 
         for fdata in features.iterkeys():
 
             for fname in features[fdata].iterkeys():
 
+                # If the feature uses lemmatizing, then do it.
+                if st.memetracker_subst_features_lem[fdata][fname]:
+                    save1, save2 = lem1, lem2
+                else:
+                    save1, save2 = word1, word2
+
                 try:
-                    tdata[fdata][fname].append([features[fdata][fname][lem1],
-                                                features[fdata][fname][lem2]])
+                    tdata[fdata][fname].append([features[fdata][fname][save1],
+                                                features[fdata][fname][save2]])
                     tdata_d[fdata][fname].append(details)
 
                     n_stored[fdata][fname] += 1
@@ -741,17 +732,11 @@ class SubstitutionAnalysis(object):
     def subst_update_possibilities(self, argset, data, mother, suscept_data):
         """Update the counts of what words can be substituted."""
 
-        if argset['lemmatizing']:
-            lem_mother = tagger.Lemmatize(mother)
-        else:
-            lem_mother = mother
+        lem_mother = tagger.Lemmatize(mother)
 
         for tlem in lem_mother:
 
-            if argset['lemmatizing']:
-                lem = lemmatize(tlem)
-            else:
-                lem = tlem
+            lem = lemmatize(tlem)
 
             for fdata in suscept_data.iterkeys():
 
@@ -798,6 +783,7 @@ class SubstitutionAnalysis(object):
             self.subst_print_info(argset, mother, daughter, idx, subst_info)
             if not self.subst_test_POS(argset, mother, daughter, idx):
                 continue
+            word1, word2 = mother.tokens[idx], daughter.tokens[idx]
             lem1, lem2 = self.subst_lemmatize(argset, mother, daughter, idx)
             if not self.subst_test_real(argset, lem1, lem2):
                 continue
@@ -806,11 +792,14 @@ class SubstitutionAnalysis(object):
                        'daughter': daughter,
                        'idx': idx,
                        'norm_idx': idx / (len(daughter.tokens) - 1),
+                       'word1': word1,
+                       'word2': word2,
                        'lem1': lem1,
                        'lem2': lem2,
                        'subst_info': subst_info}
 
-            self.subst_try_save(argset, data['features'], lem1, lem2, details,
+            self.subst_try_save(argset, data['features'], word1, word2,
+                                lem1, lem2, details,
                                 transitions, transitions_d, n_stored,
                                 suscept_data)
 
@@ -870,7 +859,6 @@ class SubstitutionAnalysis(object):
                         if substitutions in ['time', 'growtbgs']:
 
                             argsets.append({'ff': ff,
-                                            'lemmatizing': True,
                                             'substitutions': substitutions,
                                             'substrings': bool(int(subsgs)),
                                             'POS': pos,
@@ -883,7 +871,6 @@ class SubstitutionAnalysis(object):
                             for n_timebags in args.n_timebagss:
 
                                 argsets.append({'ff': ff,
-                                            'lemmatizing': True,
                                             'substitutions': substitutions,
                                             'substrings': bool(int(subsgs)),
                                             'POS': pos,
@@ -915,8 +902,7 @@ class SubstitutionAnalysis(object):
     def analyze_all(self, args):
         """Run 'analyze' with various argsets.
 
-        The analysis is always done with framing-filtering and lemmatizing
-        activated.
+        The analysis is always done with framing-filtering activated.
 
         Arguments:
           * args: the dict of args passed in from the command line

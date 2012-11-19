@@ -40,11 +40,6 @@ def get_args_from_cmdline():
                          "'filtered': the filtered clusters; "
                          "'ff': the framed-filtered clusters."),
                    choices=['full', 'framed', 'filtered', 'ff'])
-    p.add_argument('--lemmatizing', action='store', nargs=1, required=True,
-                   help=('1: lemmatize words before searching for them '
-                         'in the features lists; '
-                         "0: don't lemmatize them."),
-                   choices=['0', '1'])
     p.add_argument('--substitutions', action='store', nargs=1, required=True,
                    help=('analyze substitutions from the root quote, from '
                          'successive timebags, or based on the appearance '
@@ -78,14 +73,12 @@ def get_args_from_cmdline():
     args = p.parse_args()
 
     ff = args.ff[0]
-    lemmatizing = bool(int(args.lemmatizing[0]))
     substitutions = args.substitutions[0]
     substrings = bool(int(args.substrings[0]))
     POS = args.POS[0]
     n_timebags = int(args.n_timebags[0])
 
     return {'ff': ff,
-            'lemmatizing': lemmatizing,
             'substitutions': substitutions,
             'substrings': substrings,
             'POS': POS,
