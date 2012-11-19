@@ -141,6 +141,29 @@ cmu_MNphonemes_pickle = os.path.join(cmu_root, cmu_MNphonemes_pickle_rel)
 
 
 ##############################################################################
+# AGE-OF-ACQUISITION DATA #
+###########################
+#
+# Folder for the AoA data, relative to data_root
+
+aoa_root_rel = 'AoA'
+aoa_root = os.path.join(data_root, aoa_root_rel)
+check_folder(aoa_root)
+
+
+# Source csv file for the Kuperman AoA data, relative to aoa_root
+
+aoa_Kuperman_csv_rel = 'Kuperman-BRM-data-2012.csv'
+aoa_Kuperman_csv = os.path.join(aoa_root, aoa_Kuperman_csv_rel)
+
+
+# Pickle file for the AoA Kuperman data, relative to aoa_root
+
+aoa_Kuperman_pickle_rel = 'aoa_Kuperman.pickle'
+aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
+
+
+##############################################################################
 # FREE ASSOCIATION NORMS DATA #
 ###############################
 #
@@ -238,7 +261,8 @@ memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
                                      'MNSyns': wordnet_MNSyns_pickle},
                               'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle},
                               'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
-                                      'MNphonemes': cmu_MNphonemes_pickle}
+                                      'MNphonemes': cmu_MNphonemes_pickle},
+                              'aoa': {'Kuperman': aoa_Kuperman_pickle}
                               }
 
 
