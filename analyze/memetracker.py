@@ -767,14 +767,9 @@ class SubstitutionAnalysis(object):
           * argset: the argset for the analysis
           * data: the dict containing the data to be examined
 
-        Returns: a dict containing six items: three Nx2 numpy arrays, each one
-                 containing the features (WN PR scores, WN degrees, FA PR
-                 scores) of the substituted and substitutant words from the
-                 substitutions that were kept after filtering; three lists of
-                 dicts containing the details of each substitution stored, for
-                 each feature.
+        Returns: TODO
 
-        Details: ***
+        Details: TODO
 
         """
 
@@ -788,12 +783,6 @@ class SubstitutionAnalysis(object):
         suscept_data = gen_results_dict(lambda: {'possibilities': {},
                                                  'realised': {}})
         n_stored = gen_results_dict(int)
-#        suscept_data = dict((fdata, {'possibilities': {}, 'realised': {}})
-#                             for fdata
-#                             in st.memetracker_subst_features.iterkeys())
-#        n_stored = dict((fdata, 0)
-#                        for fdata
-#                        in st.memetracker_subst_features.iterkeys())
         n_all = 0
 
         for mother, daughter, subst_info in self.itersubstitutions_all(argset,
