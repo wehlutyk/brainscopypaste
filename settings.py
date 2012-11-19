@@ -57,7 +57,7 @@ def check_file(filename, look_for_absent=False):
 # '~/Code/cogmaster-stage/data', or even better '../data'.
 # But we should check that it works...
 
-data_root = '/home/sebastien/Code/cogmaster/stage/data'
+data_root = '/home/sebastien/Code/Research/WebQuotes/data'
 if not os.path.exists(data_root):
     os.makedirs(data_root)
 
@@ -115,6 +115,29 @@ wordnet_NSigns_pickle = os.path.join(wordnet_root,
 wordnet_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
 wordnet_MNSyns_pickle = os.path.join(wordnet_root,
                                      wordnet_MNSyns_pickle_rel)
+
+
+##############################################################################
+# CMU PRONOUNCIATION DATA #
+###########################
+#
+# Folder for the CMU Pronouciation data, relative to data_root
+
+cmu_root_rel = 'CMU'
+cmu_root = os.path.join(data_root, cmu_root_rel)
+check_folder(cmu_root)
+
+
+# Pickle file for the CMU number of syllables, relative to cmu_root
+
+cmu_MNsyllables_pickle_rel = 'cmu_MNsyllables.pickle'
+cmu_MNsyllables_pickle = os.path.join(cmu_root, cmu_MNsyllables_pickle_rel)
+
+
+# Pickle file for the CMU number of phonemes, relative to cmu_root
+
+cmu_MNphonemes_pickle_rel = 'cmu_MNphonemes.pickle'
+cmu_MNphonemes_pickle = os.path.join(cmu_root, cmu_MNphonemes_pickle_rel)
 
 
 ##############################################################################
@@ -213,7 +236,10 @@ memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
                                      'BCs': wordnet_BCs_pickle,
                                      'NSigns': wordnet_NSigns_pickle,
                                      'MNSyns': wordnet_MNSyns_pickle},
-                              'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle}}
+                              'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle},
+                              'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
+                                      'MNphonemes': cmu_MNphonemes_pickle}
+                              }
 
 
 # Pickle files for the MemeTracker substitution analysis, relative to
