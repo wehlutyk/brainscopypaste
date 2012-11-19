@@ -805,6 +805,7 @@ class SubstitutionAnalysis(object):
             details = {'mother': mother,
                        'daughter': daughter,
                        'idx': idx,
+                       'norm_idx': idx / (len(daughter.tokens) - 1),
                        'lem1': lem1,
                        'lem2': lem2,
                        'subst_info': subst_info}
