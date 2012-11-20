@@ -49,7 +49,7 @@ import settings as st
 def gen_results_dict(gen=list):
     return dict((fdata, dict((fname, gen()) for fname in ffiles.iterkeys()))
                 for fdata, ffiles
-                in st.memetracker_subst_features.iteritems())
+                in st.mt_sa_features.iteritems())
 
 
 class SubstitutionsMiner(object):

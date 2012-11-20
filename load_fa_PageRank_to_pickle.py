@@ -15,13 +15,13 @@ if __name__ == '__main__':
 
     # The destination file; check it doesn't already exist
 
-    picklefile = st.freeassociation_norms_PR_scores_pickle
+    picklefile = st.fa_norms_PR_scores_pickle
     di_fs.check_file(picklefile)
 
     # Load the norms.
 
     print 'Loading Free Association norms from pickle...',
-    norms = ps.load(st.freeassociation_norms_pickle)
+    norms = ps.load(st.fa_norms_pickle)
     print 'OK'
 
     # Compute the PageRank scores.

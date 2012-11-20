@@ -14,13 +14,13 @@ if __name__ == '__main__':
 
     # The destination file; check it doesn't already exist
 
-    picklefile = st.freeassociation_norms_pickle
+    picklefile = st.fa_norms_pickle
     di_fs.check_file(picklefile)
 
     # Load the norms.
 
     print 'Loading all the Free Association norms...',
-    fa = di_fa.FreeAssociationNorms(st.freeassociation_norms_all)
+    fa = di_fa.FreeAssociationNorms(st.fa_norms_all)
     fa.load_norms()
     print 'OK'
 

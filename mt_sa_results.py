@@ -38,7 +38,7 @@ def plot_results(substitutions, substrings):
     # Prepare some parameters
 
     args = r_mt.DictNS({'n_timebagss': ['5'],#['2', '3', '4', '5']
-                        'POSs': st.memetracker_subst_POSs,
+                        'POSs': st.mt_mining_POSs,
                         'ffs': ['filtered'],#, 'ff'],
                         'substringss': [substrings],
                         'substitutionss': [substitutions],
@@ -55,7 +55,7 @@ def plot_results(substitutions, substrings):
     features = r_mt.load_features()
     fvalues = r_mt.features_to_values(features)
 
-    for fdata, ffiles in st.memetracker_subst_features.iteritems():
+    for fdata, ffiles in st.mt_sa_features.iteritems():
 
         annotes[fdata] = {}
         for fname in ffiles.iterkeys():
@@ -79,7 +79,7 @@ def plot_results(substitutions, substrings):
 
             # Build the H0 values for comparison w/ respect to feature sets
 
-            for pos in st.memetracker_subst_POSs:
+            for pos in st.mt_mining_POSs:
                 H0s[fdata][fname][pos] = (fvalues[fdata][fname][pos].mean()
                                           * (1 / fvalues[fdata][fname][pos]).mean())
 
@@ -107,7 +107,7 @@ def plot_results(substitutions, substrings):
 
     # Plot everything
 
-    for fdata, ffiles in st.memetracker_subst_features.iteritems():
+    for fdata, ffiles in st.mt_sa_features.iteritems():
 
         for fname in ffiles.iterkeys():
 

@@ -19,11 +19,11 @@ import settings as st
 
 if __name__ == '__main__':
     # Parameters for test run.
-    #filename = st.memetracker_test_rel
-    #picklefile = st.memetracker_test_pickle
+    #filename = st.mt_test_rel
+    #picklefile = st.mt_test_pickle
 
-    filename = st.memetracker_full_rel
-    picklefile = st.memetracker_full_pickle
+    filename = st.mt_full_rel
+    picklefile = st.mt_full_pickle
 
 
     # Load the data.

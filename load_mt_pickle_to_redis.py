@@ -14,15 +14,15 @@ import settings as st
 if __name__ == '__main__':
 
     # Parameters for testing, not doing the full-blown loading.
-    #picklefile = st.memetracker_test_pickle
-    #picklefile_framed = st.memetracker_test_framed_pickle
-    #clusters_filtered_pickle = st.memetracker_test_filtered_pickle
-    #clusters_ff_pickle = st.memetracker_test_ff_pickle
+    #picklefile = st.mt_test_pickle
+    #picklefile_framed = st.mt_test_framed_pickle
+    #clusters_filtered_pickle = st.mt_test_filtered_pickle
+    #clusters_ff_pickle = st.mt_test_ff_pickle
 
-    clusters_pickle = st.memetracker_full_pickle
-    clusters_framed_pickle = st.memetracker_full_framed_pickle
-    clusters_filtered_pickle = st.memetracker_full_filtered_pickle
-    clusters_ff_pickle = st.memetracker_full_ff_pickle
+    clusters_pickle = st.mt_full_pickle
+    clusters_framed_pickle = st.mt_full_framed_pickle
+    clusters_filtered_pickle = st.mt_full_filtered_pickle
+    clusters_ff_pickle = st.mt_full_ff_pickle
 
     # The redis connection
 

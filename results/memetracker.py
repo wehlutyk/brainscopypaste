@@ -64,9 +64,9 @@ def plot_substseries(h0, r_h0s, fv, fd, r_avgs, r_ics, r_clids, annotes,
     pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R', 'all': 'all'}
 
     cmap = cm.jet
-    n_POSs = len(st.memetracker_subst_POSs)
+    n_POSs = len(st.mt_mining_POSs)
     col_POS = dict([(pos, cmap(i / n_POSs, alpha=0.15))
-                    for i, pos in enumerate(st.memetracker_subst_POSs)])
+                    for i, pos in enumerate(st.mt_mining_POSs)])
 
     pl.figure()
     ax = pl.subplot(111)
@@ -405,7 +405,7 @@ def iter_argsets_results(args):
                        ArgsetResults(results['transitions'][fdata][fname],
                                      results['transitions_d'][fdata][fname]))
                        for fname in ffiles.iterkeys()))
-                for fdata, ffiles in st.memetracker_subst_features.iteritems())
+                for fdata, ffiles in st.mt_sa_features.iteritems())
         suscept_data = results['suscept_data']
 
         for sddata in suscept_data.iterkeys():
@@ -475,7 +475,7 @@ def features_to_values(features):
 
         for fname, f in fdict.iteritems():
 
-            for pos in st.memetracker_subst_POSs:
+            for pos in st.mt_mining_POSs:
                 values[fdata][fname][pos] = array(f[pos].values())
 
     return values
@@ -484,13 +484,13 @@ def features_to_values(features):
 def load_features():
     features = {}
 
-    for fdata, ffiles in st.memetracker_subst_features.iteritems():
+    for fdata, ffiles in st.mt_sa_features.iteritems():
 
         features[fdata] = {}
         for fname, ffile in ffiles.iteritems():
 
             features[fdata][fname] = {}
-            for pos in st.memetracker_subst_POSs:
+            for pos in st.mt_mining_POSs:
                 features[fdata][fname][pos] = ps.load(ffile.format(pos))
 
     return features

@@ -66,11 +66,11 @@ class MiningArgs(object):
                             "'a', 'n', 'v', 'r', or 'all' (in which case only "
                             'substitutions where words have the same POS are '
                             'taken into account).'),
-                    choices=st.memetracker_subst_POSs)
+                    choices=st.mt_mining_POSs)
         p.add_argument('--n_timebags', action='store', nargs=1, required=False,
                     help=('number of timebags to slice the clusters into. '
                         'This is only necessary if the model is one '
-                        'of {}.'.format(st.memetracker_mining_fixedslicing_models)))
+                        'of {}.'.format(st.mt_mining_fixedslicing_models)))
         p.add_argument('--resume', dest='resume', action='store_const',
                     const=True, default=False, help='resume a previous mining')
         p.add_argument('--verbose', dest='verbose', action='store_const',
@@ -92,17 +92,17 @@ class MiningArgs(object):
 
                 if self.n_timebags < 2:
                     raise ValueError(("The requested 'n_timebags' must be at least 2 for a model "
-                                     "in {}.".format(st.memetracker_mining_fixedslicing_models)))
+                                     "in {}.".format(st.mt_mining_fixedslicing_models)))
             except (KeyError, AttributeError):
                 raise ValueError(("Need the 'n_timebags' argument when 'model' "
-                                  "is one of {}.".format(st.memetracker_mining_fixedslicing_models)))
+                                  "is one of {}.".format(st.mt_mining_fixedslicing_models)))
 
         else:
             # This will be ignored during mining, but must be present
             self.n_timebags = 0
 
     def is_fixedslicing_model(self):
-        return self.model in st.memetracker_mining_fixedslicing_models
+        return self.model in st.mt_mining_fixedslicing_models
 
     def print_mining(self):
         """Print this MiningArgs to stdout."""
@@ -148,7 +148,7 @@ class MultipleMiningArgs(object):
                                      'POS': POS,
                                      'resume': args.resume}
 
-                        if model in st.memetracker_mining_fixedslicing_models:
+                        if model in st.mt_mining_fixedslicing_models:
 
                             for n_timebags in args.n_timebagss:
 
@@ -167,7 +167,7 @@ class MultipleMiningArgs(object):
         return len(self.mas)
 
     def has_fixedslicing_model(self):
-        return not set(self.models).isdisjoint(set(st.memetracker_mining_fixedslicing_models))
+        return not set(self.models).isdisjoint(set(st.mt_mining_fixedslicing_models))
 
     def set_n_timebagss(self, args):
         if self.has_fixedslicing_model():
@@ -175,7 +175,7 @@ class MultipleMiningArgs(object):
                 self.n_timebagss = [int(n) for n in args.n_timebagss]
             except TypeError:
                 raise ValueError(("Need the 'n_timebagss' argument when 'models' "
-                                  "has one of {}.".format(st.memetracker_mining_fixedslicing_models)))
+                                  "has one of {}.".format(st.mt_mining_fixedslicing_models)))
 
     def parse_args(self):
 
@@ -212,7 +212,7 @@ class MultipleMiningArgs(object):
                             "values are 'a', 'n', 'v', 'r', or 'all' (in which"
                             'case only substitutions where words have the same '
                             'POS are taken into account).'),
-                    choices=st.memetracker_subst_POSs)
+                    choices=st.mt_mining_POSs)
         p.add_argument('--n_timebagss', action='store', nargs='+',
                     help=('space-separated list of timebag slicings to '
                             "examine. e.g. '2 3 4' will run the mining "
@@ -220,7 +220,7 @@ class MultipleMiningArgs(object):
                             'timebags, and examining all possible transitions '
                             'each time. This parameter is ignored for non fixed-'
                             'slicings models (i.e. a model not in '
-                            '{})'.format(st.memetracker_mining_fixedslicing_models)))
+                            '{})'.format(st.mt_mining_fixedslicing_models)))
         p.add_argument('--resume', dest='resume',
                     action='store_const', const=True, default=False,
                     help=('resume a previously interrupted mining: if the '

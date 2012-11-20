@@ -56,7 +56,7 @@ def get_save_file(ma, readonly=False):
     if ma.is_fixedslicing_model():
         file_prefix += 'N{}_'.format(ma.n_timebags)
 
-    filename = st.memetracker_subst_results_pickle.format(file_prefix)
+    filename = st.mt_mining_substitutions_pickle.format(file_prefix)
 
     # Check that the destination doesn't already exist.
 

@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # Load or compute the CCs for 'all'
 
-    picklefile_all = st.wordnet_CCs_pickle.format('all')
+    picklefile_all = st.wn_CCs_pickle.format('all')
     try:
         di_fs.check_file(picklefile_all)
     except Exception:
@@ -37,13 +37,13 @@ if __name__ == '__main__':
 
     # Then compute the other POSs
 
-    POSs = st.memetracker_subst_POSs
+    POSs = st.mt_mining_POSs
     POSs.remove('all')
     for p in POSs:
 
         # Get the filename and check the destination doesn't exist.
 
-        picklefile = st.wordnet_CCs_pickle.format(p)
+        picklefile = st.wn_CCs_pickle.format(p)
 
         try:
             di_fs.check_file(picklefile)

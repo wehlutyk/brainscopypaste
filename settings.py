@@ -43,53 +43,53 @@ if not os.path.exists(data_root):
 #
 # Root folder for Wordnet scores data, relative to data_root
 
-wordnet_root_rel = 'Wordnet'
-wordnet_root = os.path.join(data_root, wordnet_root_rel)
-check_folder(wordnet_root)
+wn_root_rel = 'Wordnet'
+wn_root = os.path.join(data_root, wn_root_rel)
+check_folder(wn_root)
 
 
 # Pickle file for the Wordnet PageRank scores, relative to wordnet root.
 
-wordnet_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
-wordnet_PR_scores_pickle = os.path.join(wordnet_root,
-                                        wordnet_PR_scores_pickle_rel)
+wn_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
+wn_PR_scores_pickle = os.path.join(wn_root,
+                                   wn_PR_scores_pickle_rel)
 
 
 # Pickle file for the Wordnet degrees, relative to wordnet root.
 
-wordnet_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
-wordnet_degrees_pickle = os.path.join(wordnet_root,
-                                      wordnet_degrees_pickle_rel)
+wn_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
+wn_degrees_pickle = os.path.join(wn_root,
+                                 wn_degrees_pickle_rel)
 
 
 # Pickle file for the Wordnet clusterization coefficients, relative to wordnet
 # root.
 
-wordnet_CCs_pickle_rel = 'wordnet_CCs_{}.pickle'
-wordnet_CCs_pickle = os.path.join(wordnet_root,
-                                 wordnet_CCs_pickle_rel)
+wn_CCs_pickle_rel = 'wordnet_CCs_{}.pickle'
+wn_CCs_pickle = os.path.join(wn_root,
+                             wn_CCs_pickle_rel)
 
 
 # Pickle file for the Wordnet betweenness, relative to wordnet root.
 
-wordnet_BCs_pickle_rel = 'wordnet_BCs_{}.pickle'
-wordnet_BCs_pickle = os.path.join(wordnet_root,
-                                  wordnet_BCs_pickle_rel)
+wn_BCs_pickle_rel = 'wordnet_BCs_{}.pickle'
+wn_BCs_pickle = os.path.join(wn_root,
+                             wn_BCs_pickle_rel)
 
 
 # Pickle file for the Wordnet Number of significations, relative to wordnet
 # root
 
-wordnet_NSigns_pickle_rel = 'wordnet_NSigns_{}.pickle'
-wordnet_NSigns_pickle = os.path.join(wordnet_root,
-                                     wordnet_NSigns_pickle_rel)
+wn_NSigns_pickle_rel = 'wordnet_NSigns_{}.pickle'
+wn_NSigns_pickle = os.path.join(wn_root,
+                                wn_NSigns_pickle_rel)
 
 
 # Pickle file for the Wordnet Mean Number of Synonyms, relative to wordnet root
 
-wordnet_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
-wordnet_MNSyns_pickle = os.path.join(wordnet_root,
-                                     wordnet_MNSyns_pickle_rel)
+wn_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
+wn_MNSyns_pickle = os.path.join(wn_root,
+                                wn_MNSyns_pickle_rel)
 
 
 ##############################################################################
@@ -144,39 +144,37 @@ aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
 #
 # Folder for Free Association Norms data, relative to data_root.
 
-freeassociation_root_rel = 'FreeAssociation'
-freeassociation_root = os.path.join(data_root, freeassociation_root_rel)
-check_folder(freeassociation_root)
+fa_root_rel = 'FreeAssociation'
+fa_root = os.path.join(data_root, fa_root_rel)
+check_folder(fa_root)
 
 
-# Files for raw Free Association data, relative to freeassociation_root.
+# Files for raw Free Association data, relative to fa_root.
 
-freeassociation_norms_all_rel = ['Cue_Target_Pairs.A-B',
-                                 'Cue_Target_Pairs.C',
-                                 'Cue_Target_Pairs.D-F',
-                                 'Cue_Target_Pairs.G-K',
-                                 'Cue_Target_Pairs.L-O',
-                                 'Cue_Target_Pairs.P-R',
-                                 'Cue_Target_Pairs.S',
-                                 'Cue_Target_Pairs.T-Z']
-freeassociation_norms_all = [os.path.join(freeassociation_root, fn_rel) for
-                             fn_rel in freeassociation_norms_all_rel]
+fa_norms_all_rel = ['Cue_Target_Pairs.A-B',
+                    'Cue_Target_Pairs.C',
+                    'Cue_Target_Pairs.D-F',
+                    'Cue_Target_Pairs.G-K',
+                    'Cue_Target_Pairs.L-O',
+                    'Cue_Target_Pairs.P-R',
+                    'Cue_Target_Pairs.S',
+                    'Cue_Target_Pairs.T-Z']
+fa_norms_all = [os.path.join(fa_root, fn_rel) for
+                fn_rel in fa_norms_all_rel]
 
 
-# File for pickle Free Association data, relative to freeassociation_root.
+# File for pickle Free Association data, relative to fa_root.
 
-freeassociation_norms_pickle_rel = 'norms.pickle'
-freeassociation_norms_pickle = os.path.join(freeassociation_root,
-                                            freeassociation_norms_pickle_rel)
+fa_norms_pickle_rel = 'norms.pickle'
+fa_norms_pickle = os.path.join(fa_root, fa_norms_pickle_rel)
 
 
 # File for PageRank scores of the Free Association data, relative to
-# freeassociation_root.
+# fa_root.
 
-freeassociation_norms_PR_scores_pickle_rel = 'norms_PR_scores.pickle'
-freeassociation_norms_PR_scores_pickle = \
-    os.path.join(freeassociation_root,
-                 freeassociation_norms_PR_scores_pickle_rel)
+fa_norms_PR_scores_pickle_rel = 'norms_PR_scores.pickle'
+fa_norms_PR_scores_pickle = os.path.join(fa_root,
+                                         fa_norms_PR_scores_pickle_rel)
 
 
 #############################################################################
@@ -185,92 +183,94 @@ freeassociation_norms_PR_scores_pickle = \
 #
 # Folder for MemeTracker data, relative to data_root.
 
-memetracker_root_rel = 'MemeTracker'
-memetracker_root = os.path.join(data_root, memetracker_root_rel)
-check_folder(memetracker_root)
+mt_root_rel = 'MemeTracker'
+mt_root = os.path.join(data_root, mt_root_rel)
+check_folder(mt_root)
 
 
-# File for the complete MemeTracker dataset, relative to memetracker_root.
+# File for the complete MemeTracker dataset, relative to mt_root.
 
-memetracker_full_rel = 'clust-qt08080902w3mfq5.txt'
-memetracker_full = os.path.join(memetracker_root, memetracker_full_rel)
-memetracker_full_pickle = memetracker_full + '.pickle'
-memetracker_full_framed_pickle = memetracker_full + '_framed.pickle'
-memetracker_full_filtered_pickle = memetracker_full + '_filtered.pickle'
-memetracker_full_ff_pickle = memetracker_full + '_ff.pickle'
+mt_full_rel = 'clust-qt08080902w3mfq5.txt'
+mt_full = os.path.join(mt_root, mt_full_rel)
+mt_full_pickle = mt_full + '.pickle'
+mt_full_framed_pickle = mt_full + '_framed.pickle'
+mt_full_filtered_pickle = mt_full + '_filtered.pickle'
+mt_full_ff_pickle = mt_full + '_ff.pickle'
 
 
 # File for a subset of the MemeTracker dataset for testing algorithms before a
-# full-blown run, relative to memetracker_root.
+# full-blown run, relative to mt_root.
 
-memetracker_test_rel = 'clust-cropped-50000.txt'
+mt_test_rel = 'clust-cropped-50000.txt'
 
-memetracker_test = os.path.join(memetracker_root, memetracker_test_rel)
-memetracker_test_pickle = memetracker_test + '.pickle'
-memetracker_test_framed_pickle = memetracker_test + '_framed.pickle'
-memetracker_test_filtered_pickle = memetracker_test + '_filtered.pickle'
-memetracker_test_ff_pickle = memetracker_test + '_ff.pickle'
+mt_test = os.path.join(mt_root, mt_test_rel)
+mt_test_pickle = mt_test + '.pickle'
+mt_test_framed_pickle = mt_test + '_framed.pickle'
+mt_test_filtered_pickle = mt_test + '_filtered.pickle'
+mt_test_ff_pickle = mt_test + '_ff.pickle'
 
 
 ##############################################################################
-# MEMETRACKER SUBSTITUTION ANALYSIS #
-#####################################
+# MEMETRACKER SUBSTITUTION MINING #
+###################################
 #
-# Folder for files concerning the MemeTracker substitution analysis, relative
-# to memetracker_root.
+# Folder for files concerning the MemeTracker substitution mining, relative
+# to mt_root.
 
-memetracker_subst_root_rel = 'subst_analysis'
-memetracker_subst_root = os.path.join(memetracker_root,
-                                      memetracker_subst_root_rel)
-check_folder(memetracker_subst_root)
-
-
-# List of available features.
-
-memetracker_subst_features = {'wn': {'PR_scores': wordnet_PR_scores_pickle,
-                                     'degrees': wordnet_degrees_pickle,
-                                     'CCs': wordnet_CCs_pickle,
-                                     'BCs': wordnet_BCs_pickle,
-                                     'NSigns': wordnet_NSigns_pickle,
-                                     'MNSyns': wordnet_MNSyns_pickle},
-                              'fa': {'PR_scores': freeassociation_norms_PR_scores_pickle},
-                              'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
-                                      'MNphonemes': cmu_MNphonemes_pickle},
-                              'aoa': {'Kuperman': aoa_Kuperman_pickle}
-                              }
-
-
-# For each feature, boolean telling us if we should lemmatize or not
-
-memetracker_subst_features_lem = {'wn': {'PR_scores': True,
-                                     'degrees': True,
-                                     'CCs': True,
-                                     'BCs': True,
-                                     'NSigns': True,
-                                     'MNSyns': True},
-                              'fa': {'PR_scores': True},
-                              'cmu': {'MNsyllables': False,
-                                      'MNphonemes': False},
-                              'aoa': {'Kuperman': True}
-                              }
+mt_mining_root_rel = 'mining'
+mt_mining_root = os.path.join(mt_root, mt_mining_root_rel)
+check_folder(mt_mining_root)
 
 
 # List of mining models which are based on slicing the clusters into a given
 # n_timebags number of timebags
 
-memetracker_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
+mt_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
 
-# Pickle files for the MemeTracker substitution analysis, relative to
-# memetracker_subst_root.
 
-memetracker_subst_results_pickle_rel = '{}results.pickle'
-memetracker_subst_results_pickle = os.path.join(memetracker_subst_root,
-                                                memetracker_subst_results_pickle_rel)
+# Pickle files for the MemeTracker substitution mining, relative to
+# mt_mining_root.
+
+mt_mining_substitutions_pickle_rel = '{}substitutions.pickle'
+mt_mining_substitutions_pickle = os.path.join(mt_mining_root,
+                                              mt_mining_substitutions_pickle_rel)
 
 
 # List of available POS tags, taken as options for the analysis scripts.
 
-memetracker_subst_POSs = ['a', 'n', 'v', 'r', 'all']
+mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
+
+
+##############################################################################
+# MEMETRACKER SUBSTITUTION ANALYSIS #
+####################################
+#
+# List of available features.
+
+mt_sa_features = {'wn': {'PR_scores': wn_PR_scores_pickle,
+                         'degrees': wn_degrees_pickle,
+                         'CCs': wn_CCs_pickle,
+                         'BCs': wn_BCs_pickle,
+                         'NSigns': wn_NSigns_pickle,
+                         'MNSyns': wn_MNSyns_pickle},
+                 'fa': {'PR_scores': fa_norms_PR_scores_pickle},
+                 'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
+                         'MNphonemes': cmu_MNphonemes_pickle},
+                 'aoa': {'Kuperman': aoa_Kuperman_pickle}}
+
+
+# For each feature, boolean telling us if we should lemmatize or not
+
+mt_sa_features_lem = {'wn': {'PR_scores': True,
+                             'degrees': True,
+                             'CCs': True,
+                             'BCs': True,
+                             'NSigns': True,
+                             'MNSyns': True},
+                     'fa': {'PR_scores': True},
+                     'cmu': {'MNsyllables': False,
+                             'MNphonemes': False},
+                     'aoa': {'Kuperman': True}}
 
 
 ##############################################################################
