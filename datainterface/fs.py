@@ -1,8 +1,6 @@
 import os
 from warnings import warn
 
-import settings as st
-
 
 def check_folder(folder):
     """Check if folder exists; if not, create it and notify the user."""
@@ -43,6 +41,9 @@ def get_save_file(ma, readonly=False):
                 None if a check failed.
 
     """
+
+    # Prevent circular imports
+    import settings as st
 
     # Create the file prefix according to 'ma'.
 
