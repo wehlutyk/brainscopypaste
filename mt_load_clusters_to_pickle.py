@@ -8,8 +8,8 @@ framed clusters, and the framed-filtered clusters to pickle files."""
 import gc
 
 import datainterface.picklesaver as ps
-import datainterface.memetracker as di_mt
-import analyze.memetracker as a_mt
+import datainterface.mt as di_mt
+import mine.susbtitutions as a_mt
 import settings as st
 
 

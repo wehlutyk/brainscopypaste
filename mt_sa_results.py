@@ -11,9 +11,9 @@ import argparse as ap
 from numpy import array
 import pylab as pl
 
-from datastructure.memetracker_base import list_attributes_trunc
-from datastructure.memetracker import Cluster
-from analyze.memetracker import gen_results_dict
+from util import list_attributes_trunc
+from datastructure.full import Cluster
+from mine.substitutions import gen_results_dict
 import results.memetracker as r_mt
 import settings as st
 

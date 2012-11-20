@@ -103,7 +103,7 @@ def distance_word_mother_sub(base, daughter):
 
     # This import goes here to prevent a circular import problem.
 
-    from datastructure.memetracker import QtString
+    from datastructure.full import QtString
 
     d, k, l = subhamming_word(base, daughter)
     mother_tok = base.tokens[k:k + l]

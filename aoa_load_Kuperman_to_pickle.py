@@ -6,7 +6,7 @@ a dict, and save that in a pickle file."""
 
 
 import datainterface.picklesaver as ps
-import datainterface.aoatools as at
+import datainterface.aoa as at
 import settings as st
 
 

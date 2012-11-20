@@ -35,7 +35,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 
 import datainterface.picklesaver as ps
-from analyze.memetracker import SubstitutionAnalysis, gen_results_dict
+from mine.substitutions import SubstitutionAnalysis, gen_results_dict
 import visualize.annotations_new as an
 import settings as st
 

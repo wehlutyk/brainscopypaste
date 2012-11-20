@@ -6,7 +6,7 @@ a pickle file."""
 
 
 import datainterface.picklesaver as ps
-import linguistics.wordnettools as wnt
+import linguistics.wn as l_wn
 import settings as st
 
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print
         print ('*** Computing degrees for all the lemmas in Wordnet '
                "(POS = 'all') ***")
-        degrees_all = wnt.build_wn_degrees('all')
+        degrees_all = l_wn.build_wn_degrees('all')
 
         print "*** Saving the degrees to '" + picklefile_all + "'...",
         ps.save(degrees_all, picklefile_all)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         print
         print ("*** Truncating the degrees for 'all' to POS={} ***").format(p)
-        degrees = wnt.truncate_wn_features(degrees_all, p)
+        degrees = l_wn.truncate_wn_features(degrees_all, p)
 
         # And save them.
 

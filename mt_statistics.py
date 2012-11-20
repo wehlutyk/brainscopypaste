@@ -13,7 +13,7 @@ Statistics computed:
 from pylab import plot, xlabel, ylabel, figure, legend, show
 
 import datainterface.redistools as rt
-import analyze.memetracker as a_mt
+import mine.statistics as a_mt
 import settings as st
 
 

@@ -11,9 +11,9 @@ Methods:
 
 import argparse as ap
 
-from datastructure.memetracker_base import list_attributes_trunc
-from datastructure.memetracker import Cluster
-from analyze.memetracker import SubstitutionAnalysis
+from util import list_attributes_trunc
+from datastructure.full import Cluster
+from mine.substitutions import SubstitutionAnalysis
 import settings as st
 
 

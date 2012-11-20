@@ -5,7 +5,7 @@
 to pickle."""
 
 
-import linguistics.freeassociation as l_fa
+import linguistics.fa as l_fa
 import datainterface.picklesaver as ps
 import settings as st
 

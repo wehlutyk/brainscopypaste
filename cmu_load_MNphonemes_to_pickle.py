@@ -6,7 +6,7 @@ dict in a pickle file."""
 
 
 import datainterface.picklesaver as ps
-import linguistics.cmutools as ct
+import linguistics.cmu as l_cmu
 import settings as st
 
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
         print
         print "*** Loading MNphonemes from CMU ***"
-        MNphonemes = ct.get_all_MNphonemes()
+        MNphonemes = l_cmu.get_all_MNphonemes()
 
         print "*** Saving the MNphonemes to '" + picklefile + "'...",
         ps.save(MNphonemes, picklefile)

@@ -6,7 +6,7 @@ the scores dict to a pickle file."""
 
 
 import datainterface.picklesaver as ps
-import linguistics.wordnettools as wnt
+import linguistics.wn as l_wn
 import settings as st
 
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print
         print ('*** Computing BCs for all the lemmas in Wordnet '
                "(POS = 'all') ***")
-        BCs_all = wnt.build_wn_BCs('all')
+        BCs_all = l_wn.build_wn_BCs('all')
 
         print "*** Saving the BCs to '" + picklefile_all + "'...",
         ps.save(BCs_all, picklefile_all)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         print
         print ("*** Truncating the BCs for 'all' to POS={} ***").format(p)
-        BCs = wnt.truncate_wn_features(BCs_all, p)
+        BCs = l_wn.truncate_wn_features(BCs_all, p)
 
         # And save them.
 

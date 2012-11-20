@@ -4,7 +4,7 @@
 """Load Free Association norms from files into pickle."""
 
 
-import datainterface.freeassociation as di_fa
+import datainterface.fa as di_fa
 import datainterface.picklesaver as ps
 import settings as st
 
