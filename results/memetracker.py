@@ -461,7 +461,7 @@ def load_ratio_results(args):
                     r['r_lens'].append(res[fdata][fname].length_cl)
                     r['r_clids'].append(res[fdata][fname].clids)
                     r['r_h0s'].append(res[fdata][fname].h0_cl)
-                except:
+                except AttributeError:
                     print "*** " + fdata + " " + fname + " no data"
                     continue
 

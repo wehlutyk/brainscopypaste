@@ -31,7 +31,7 @@ Classes:
 
 from __future__ import division
 
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count
 
 import numpy as np
 
@@ -42,6 +42,7 @@ import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
 from util import dict_plusone, ProgressInfo
+from util.mp import LoggingPool
 import settings as st
 
 
@@ -333,44 +334,27 @@ class SubstitutionsMiner(object):
         substitutions = self.examine_substitutions(ma, clusters)
         self.save_substitutions(savefile, substitutions)
 
-    def analyze_all(self, args):
-        """Run 'analyze' with various argsets.
-
-        Arguments:
-          * args: the dict of args passed in from the command line
+    def mine_multiple(self, mma):
+        """Run 'mine' with various argsets.
 
         """
 
-        print
-        print ('Starting substitution analysis, for timebag '
-               'slicings {}, POSs {}, datasets {}, substitutionss {}, and '
-               'substringss {} ...').format(args.n_timebagss, args.POSs,
-                                            args.ffs, args.substitutionss,
-                                            args.substringss)
+        mma.print_mining()
 
-        argsets = self.create_argsets(args)
+        for ma in mma:
+            self.mine(ma)
 
-        for argset in argsets:
-            self.analyze(argset)
+    def mine_multiple_mt(self, mma):
+        """Run 'minee' with various argsets, multi-threaded."""
 
-    def analyze_all_mt(self, args):
-        """Run 'analyze' with various argsets, multi-threaded."""
-
-        print
-        print ('Starting multi-threaded substitution analysis, for timebag '
-               'slicings {}, POSs {}, datasets {}, substitutionss {}, and '
-               'substringss {} ...').format(args.n_timebagss, args.POSs,
-                                            args.ffs, args.substitutionss,
-                                            args.substringss)
-
-        argsets = self.create_argsets(args)
-        n_jobs = len(argsets)
+        mma.print_mining()
+        n_jobs = len(mma)
 
         print
         print 'Using {} workers to do {} jobs.'.format(self.n_proc, n_jobs)
 
-        pool = Pool(processes=self.n_proc, maxtasksperchild=1)
-        res = pool.map_async(self.analyze, argsets)
+        pool = LoggingPool(processes=self.n_proc, maxtasksperchild=1)
+        res = pool.map_async(self.mine, mma.mas)
 
         # The timeout here is to be able to keyboard-interrupt.
         # See http://bugs.python.org/issue8296 for details.

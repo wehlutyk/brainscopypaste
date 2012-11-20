@@ -26,7 +26,7 @@ def load_aoa_Kuperman_csv():
         for row in reader:
             try:
                 aoas[row[0]] = float(row[3])
-            except:
+            except ValueError:
                 pass
 
     return aoas
