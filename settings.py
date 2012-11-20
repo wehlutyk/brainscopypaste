@@ -20,32 +20,7 @@ Sections:
 
 import os
 
-
-##############################################################################
-# UTILITIES #
-#############
-#
-# Two routines for checking if folders and files exist.
-
-def check_folder(folder):
-    """Check if folder exists; if not, create it and notify the user."""
-    if not os.path.exists(folder):
-        print "*** Settings: '" + folder + "' does not exist. Creating it."
-        os.makedirs(folder)
-
-
-def check_file(filename, look_for_absent=False):
-    """Check if filename already exists; if it does, raise an exception."""
-    if os.path.exists(filename):
-
-        if not look_for_absent:
-            raise Exception(("File '" + filename + "' already exists! You should "
-                             "sort this out first: I'm not going to overwrite "
-                             'it. Aborting.'))
-    else:
-
-        if look_for_absent:
-            raise Exception("File '" + filename + "' not found.")
+from datainterface.fs import check_folder
 
 
 ##############################################################################
@@ -279,6 +254,11 @@ memetracker_subst_features_lem = {'wn': {'PR_scores': True,
                               'aoa': {'Kuperman': True}
                               }
 
+
+# List of mining models which are based on slicing the clusters into a given
+# n_timebags number of timebags
+
+memetracker_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
 
 # Pickle files for the MemeTracker substitution analysis, relative to
 # memetracker_subst_root.

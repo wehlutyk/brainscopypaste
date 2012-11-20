@@ -1,6 +1,6 @@
 import numpy as np
 
-import datetime.datetime
+from datetime import datetime
 
 from linguistics.treetagger import tagger
 from util.combinatorials import build_ordered_tuples
@@ -118,7 +118,7 @@ class ClusterModels(ds_mtb.ClusterBase):
     def iter_substitutions(self):
         return ds_mtb.dictionarize_attributes(self, 'iter_substitutions_')
 
-    def iter_substitutions_root(self, argset):
+    def iter_substitutions_root(self, ma):
         """Iterate through substitutions taken as changes from root string. Yield
         (mother, string or substring, bag info) tuples."""
 
@@ -127,48 +127,49 @@ class ClusterModels(ds_mtb.ClusterBase):
         from datastructure.full import QtString
 
         base = QtString(self.root.lower(), self.id, 0)
-        tbgs = self.build_timebags(argset['n_timebags'])
+        tbgs = self.build_timebags(ma.n_timebags)
 
-        for j in range(0, argset['n_timebags']):
+        for j in range(0, ma.n_timebags):
 
-            for mother, daughter in tbgs[j].iter_sphere[
-                                        argset['substrings']](base):
+            for mother, daughter in tbgs[j].iter_sphere[ma.substrings](base):
                 yield (mother, daughter, {'tobag': j})
 
-    def iter_substitutions_slidetbgs(self, argset):
+    def iter_substitutions_slidetbgs(self, ma):
         """Iterate through substitutions taken as changes from the preceding
         time window. Yield (mother, string or substring, None) tuples."""
 
         for qt2 in self.quotes.itervalues():
+
             dest = qt2.to_qt_string_lower(self.id)
-            prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1)
+            for url_time in qt2.url_times:
 
-            if prevtbg.tot_freq == 0:
-                continue
+                prevtbg = self.build_timebag(ma.n_timebags, url_time)
+                if prevtbg.tot_freq == 0:
+                    continue
 
-            for mother, daughter in prevtbg.has_mother[
-                                                argset['substrings']](dest):
-                yield (mother, daughter, None)
+                for mother, daughter in prevtbg.has_mother[ma.substrings](dest):
+                    yield (mother, daughter, None)
 
-    def iter_substitutions_growtbgs(self, argset):
+    def iter_substitutions_growtbgs(self, ma):
         """Iterate through substitutions taken as changes from the cumulated
         previous time window. Yield (mother, string or substring, None)"""
 
         for qt2 in self.quotes.itervalues():
+
             dest = qt2.to_qt_string_lower(self.id)
-            prevtbg = self.build_timebag(argset['n_timebags'], qt2.start - 1,
-                                         True)
-            if prevtbg.tot_freq == 0:
-                continue
+            for url_time in qt2.url_times:
 
-            for mother, daughter in prevtbg.has_mother[
-                                                argset['substrings']](dest):
-                yield (mother, daughter, None)
+                prevtbg = self.build_timebag(ma.n_timebags, url_time, True)
+                if prevtbg.tot_freq == 0:
+                    continue
 
-    def iter_substitutions_tbgs(self, argset):
+                for mother, daughter in prevtbg.has_mother[ma.substrings](dest):
+                    yield (mother, daughter, None)
+
+    def iter_substitutions_tbgs(self, ma):
         """Iterate through substitutions taken as changes between timebags.
         Yield (mother, string or substring, bag info) tuples."""
-        tbgs = self.build_timebags(argset['n_timebags'])
+        tbgs = self.build_timebags(ma.n_timebags)
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
         idx = np.where(tot_freqs)[0]
 
@@ -176,15 +177,14 @@ class ClusterModels(ds_mtb.ClusterBase):
                         range(1, len(idx))):
 
             base = tbgs[idx[i]].qt_string_lower(tbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[
-                                        argset['substrings']](base):
+            for mother, daughter in tbgs[idx[j]].iter_sphere[ma.substrings](base):
                 yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
 
-    def iter_substitutions_cumtbgs(self, argset):
+    def iter_substitutions_cumtbgs(self, ma):
         """Iterate through substitutions taken as changes between cumulated
         timebags. Yield (mother, string or substring, bag info) tuples."""
-        tbgs = self.build_timebags(argset['n_timebags'])
-        cumtbgs = self.build_timebags(argset['n_timebags'], cumulative=True)
+        tbgs = self.build_timebags(ma.n_timebags)
+        cumtbgs = self.build_timebags(ma.n_timebags, cumulative=True)
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
         idx = np.where(tot_freqs)[0]
 
@@ -193,11 +193,10 @@ class ClusterModels(ds_mtb.ClusterBase):
 
             base = cumtbgs[idx[i]].qt_string_lower(
                                             cumtbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[
-                                        argset['substrings']](base):
+            for mother, daughter in tbgs[idx[j]].iter_sphere[ma.substrings](base):
                 yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
 
-    def iter_substitutions_time(self, argset):
+    def iter_substitutions_time(self, ma):
         """Iterate through substitutions taken as transitions from earlier quotes
         to older quotes (in order of appearance in time)."""
 
@@ -221,7 +220,7 @@ class ClusterModels(ds_mtb.ClusterBase):
 
             base = qt_list[i].to_qt_string_lower(self.id)
             daughter = qt_list[j].to_qt_string_lower(self.id)
-            d, mother = distance_word_mother[argset['substrings']](base, daughter)
+            d, mother = distance_word_mother[ma.substrings](base, daughter)
 
             if d == 1:
 

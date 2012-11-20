@@ -32,7 +32,6 @@ Classes:
 from __future__ import division
 
 from multiprocessing import cpu_count, Pool
-from warnings import warn
 
 import numpy as np
 
@@ -41,6 +40,7 @@ from linguistics.treetagger import tagger
 from linguistics.wn import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
+import datainterface.fs as di_fs
 from util import dict_plusone, ProgressInfo
 import settings as st
 
@@ -51,133 +51,16 @@ def gen_results_dict(gen=list):
                 in st.memetracker_subst_features.iteritems())
 
 
+class SubstitutionsMiner(object):
 
-class SubstitutionAnalysis(object):
-
-    """Analyze the 1-word changes in the MemeTracker dataset.
-
-    This class looks at features of words that are substituted through time in
-    the MemeTracker Clusters. The features are the Wordnet PageRank scores of
-    the words, their degree in the Wordnet graph, and the Free Association
-    PageRank scores.
-
-    Methods:
-      * __init__: set the number of processes for multi-threading
-      * get_save_files: get the filenames where data is to be saved; check
-                        they don't already exist
-      * print_argset: print an argset to stdout
-      * load_data: load the data from pickle files
-      * itersubstitutions_all: iterate through all substitutions according to the
-                               given argset
-      * subst_print_info: print information about the substitution if argset
-                          asks for it
-      * subst_test_POS: test for correspondence of POS tags in a substitution
-      * subst_lemmatize: lemmatize a substitution
-      * subst_test_real: test if two words really form a substitution, or are
-                         in fact only variations of the same root
-      * subst_try_save_wn: save a substitution if it is referenced in the WN
-                           feature list
-      * subst_try_save_fa: save a substitution if it is referenced in the FA
-                           feature list
-      * subst_update_possibilities: update the counts of what words can be
-                                    substituted
-      * examine_substitutions: examine substitutions and retain only those we
-                               want
-      * save_results: save the analysis results to pickle files
-      * create_argsets: create a list of possible argset dicts, according to
-                        args from the command line
-      * analyze: load data, do the substitution analysis, and save results
-      * analyze_all: run 'analyze' with various argsets
-      * put_analyze: put an analysis job in the queue
-      * analyze_all_mt: run 'analyze' with various argsets, multi-threaded
-
-    """
+    pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
 
     def __init__(self):
         """Set the number of processes for multi-threading."""
         self.n_cpu = cpu_count()
         self.n_proc = self.n_cpu - 1
-        self.pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
 
-    @classmethod
-    def get_save_files(cls, argset, readonly=False):
-        """Get the filenames where data is to be saved to or read from; check
-        either that they don't already exist, or that they do exist.
-
-        Arguments:
-          * argset: an argset of arguments (= processed arguments from
-                    command line)
-
-        Keyword arguments:
-          * readonly: boolean specifying the behaviour of checking of files.
-                      False means we want to be warned if the files already
-                      exist, True means we want to be warned if the files
-                      don't exist. Defaults to False.
-
-        Returns: a dict of filenames corresponding to the data to save, or
-                 None if a check failed.
-
-        """
-
-        # Create the file prefix according to 'argset'.
-
-        file_prefix = ''
-
-        file_prefix += 'F{}_'.format(argset['ff'])
-
-        file_prefix += 'S{}_'.format(argset['substitutions'])
-
-        if not argset['substrings']:
-            file_prefix += 'N'
-
-        file_prefix += 'sub_'
-
-        file_prefix += 'P{}_'.format(argset['POS'])
-
-        if argset['substitutions'] != 'time':
-            file_prefix += str(argset['n_timebags']) + '_'
-
-        filename = st.memetracker_subst_results_pickle.format(file_prefix)
-
-        # Check that the destination doesn't already exist.
-
-        try:
-            st.check_file(filename, look_for_absent=readonly)
-
-        except Exception, msg:
-
-            if readonly:
-
-                warn('{}: not found'.format(argset))
-                return None
-
-            else:
-
-                if argset['resume']:
-
-                    warn(('*** A file for parameters {} already exists, not '
-                          'overwriting it. Skipping the whole '
-                          'argset. ***').format(file_prefix))
-                    return None
-
-                else:
-
-                    raise Exception(msg)
-
-        return filename
-
-    def print_argset(self, argset):
-        """Print an argset to stdout."""
-        print
-        print 'Doing analysis with the following argset:'
-        print '  ff = {}'.format(argset['ff'])
-        print '  substitutions = {}'.format(argset['substitutions'])
-        print '  substrings = {}'.format(argset['substrings'])
-        print '  POS = {}'.format(argset['POS'])
-        print '  verbose = {}'.format(argset['verbose'])
-        print '  n_timebags = {}'.format(argset['n_timebags'])
-
-    def load_data(self, argset):
+    def load_clusters(self, ma):
         """Load the data from pickle files.
 
         Arguments:
@@ -188,48 +71,36 @@ class SubstitutionAnalysis(object):
         """
 
         print
-        print ('Connecting to redis server for cluster data, '
-               'loading PageRank and degree data from pickle...'),
+        print 'Connecting to redis server for cluster data...',
 
         ff_dict = {'full': st.redis_mt_clusters_pref,
                    'framed': st.redis_mt_clusters_framed_pref,
                    'filtered': st.redis_mt_clusters_filtered_pref,
                    'ff': st.redis_mt_clusters_ff_pref}
-
-        clusters = rt.RedisReader(ff_dict[argset['ff']])
-        features = {}
-
-        for fdata, ffiles in st.memetracker_subst_features.iteritems():
-
-            features[fdata] = {}
-
-            for fname, filename in ffiles.iteritems():
-                features[fdata][fname] = \
-                        ps.load(filename.format(argset['POS']))
+        clusters = rt.RedisReader(ff_dict[ma.ff])
 
         print 'OK'
 
-        return {'clusters': clusters, 'features': features }
+        return clusters
 
-    def itersubstitutions_all(self, argset, data):
-        """Iterate through all substitutions according to the given argset."""
-        progress = ProgressInfo(len(data['clusters']), 100, 'clusters')
+    def iter_substitutions(self, ma, clusters):
+        """Iterate through all substitutions according to the given MiningArgs."""
+        progress = ProgressInfo(len(clusters), 100, 'clusters')
 
-        for cl in data['clusters'].itervalues():
+        for cl in clusters.itervalues():
 
             progress.next_step()
-            for mother, daughter, subst_info in cl.iter_substitutions[
-                                            argset['substitutions']](argset):
-                yield (mother, daughter, subst_info)
+            for mother, daughter, mining_info in cl.iter_substitutions[ma.model](ma):
+                yield (mother, daughter, mining_info)
 
-    def subst_print_info(self, argset, mother, daughter, idx, subst_info):
-        """Print information about the substitution if argset asks for it."""
-        if argset['verbose']:
+    def subst_print_info(self, ma, mother, daughter, idx, mining_info):
+        """Print information about the substitution if ma asks for it."""
+        if ma.verbose:
 
             raw_input()
             print
             print ("***** SUBST (cl #{} / {}) ***** '".format(mother.cl_id,
-                                                              subst_info) +
+                                                              mining_info) +
                    '{}/{}'.format(mother.tokens[idx],
                                   mother.POS_tags[idx]) +
                    "' -> '" +
@@ -241,29 +112,29 @@ class SubstitutionAnalysis(object):
             print daughter
             print
 
-    def subst_test_POS(self, argset, mother, daughter, idx):
+    def subst_test_POS(self, ma, mother, daughter, idx):
         """Test for correspondence of POS tags in a substitution."""
         ret = True
 
-        if argset['POS'] == 'all':
+        if ma.POS == 'all':
 
             if daughter.POS_tags[idx][0] != mother.POS_tags[idx][0]:
-                if argset['verbose']:
-                    print 'Stored: NONE (different POS)'
+                if ma.verbose:
+                    print 'Not kept (different POS)'
                 ret = False
 
         else:
 
             if (daughter.POS_tags[idx][0] !=
-                self.pos_wn_to_tt[argset['POS']] or
-                mother.POS_tags[idx][0] != self.pos_wn_to_tt[argset['POS']]):
-                if argset['verbose']:
-                    print 'Stored: NONE (wrong POS)'
+                self.pos_wn_to_tt[ma.POS] or
+                mother.POS_tags[idx][0] != self.pos_wn_to_tt[ma.POS]):
+                if ma.verbose:
+                    print 'Not kept (wrong POS)'
                 ret = False
 
         return ret
 
-    def subst_lemmatize(self, argset, mother, daughter, idx):
+    def subst_lemmatize(self, ma, mother, daughter, idx):
         """Lemmatize a substitution using TreeTagger and Wordnet."""
         t1 = tagger.Lemmatize(mother)[idx]
         t2 = tagger.Lemmatize(daughter)[idx]
@@ -271,19 +142,19 @@ class SubstitutionAnalysis(object):
         lem1 = lemmatize(t1)
         lem2 = lemmatize(t2)
 
-        if argset['verbose']:
+        if ma.verbose:
             print ("Lemmatized: '" + lem1 + "' -> '" +
                     lem2 + "'")
         return (lem1, lem2)
 
-    def subst_test_real(self, argset, lem1, lem2):
+    def subst_test_real(self, ma, lem1, lem2):
         """Test if two words really form a substitution, or are in fact only
         variations of the same root."""
         ret = True
 
         if levenshtein(lem1, lem2) <= 1:
-            if argset['verbose']:
-                print 'Stored: NONE (not substitution)'
+            if ma.verbose:
+                print 'Not kept (not substitution)'
             ret = False
 
         return ret
@@ -335,7 +206,7 @@ class SubstitutionAnalysis(object):
                     if data['features'][fdata][fname].has_key(lem):
                         dict_plusone(fsuscept['possibilities'], lem)
 
-    def examine_substitutions(self, argset, data):
+    def examine_substitutions(self, ma, clusters):
         """Examine substitutions and retain only those we want.
 
         Arguments:
@@ -349,60 +220,45 @@ class SubstitutionAnalysis(object):
         """
 
         print
-        print 'Doing substitution analysis:'
+        print 'Mining substitutions:'
 
-        # Results of the analysis
+        # Results of the mining
+        substitutions = []
 
-        transitions = gen_results_dict()
-        transitions_d = gen_results_dict()
-        suscept_data = gen_results_dict(lambda: {'possibilities': {},
-                                                 'realised': {}})
-        n_stored = gen_results_dict(int)
+        n_stored = 0
         n_all = 0
 
-        for mother, daughter, subst_info in self.itersubstitutions_all(argset,
-                                                                       data):
-
-            self.subst_update_possibilities(argset, data, mother,
-                                            suscept_data)
+        for mother, daughter, mining_info in self.iter_substitutions(ma, clusters):
 
             n_all += 1
             idx = np.where([w1 != w2 for (w1, w2) in
                             zip(daughter.tokens, mother.tokens)])[0]
 
-            self.subst_print_info(argset, mother, daughter, idx, subst_info)
-            if not self.subst_test_POS(argset, mother, daughter, idx):
+            self.subst_print_info(ma, mother, daughter, idx, mining_info)
+            if not self.subst_test_POS(ma, mother, daughter, idx):
                 continue
             word1, word2 = mother.tokens[idx], daughter.tokens[idx]
-            lem1, lem2 = self.subst_lemmatize(argset, mother, daughter, idx)
-            if not self.subst_test_real(argset, lem1, lem2):
+            lem1, lem2 = self.subst_lemmatize(ma, mother, daughter, idx)
+            if not self.subst_test_real(ma, lem1, lem2):
                 continue
 
-            details = {'mother': mother,
-                       'daughter': daughter,
-                       'idx': idx,
-                       'norm_idx': idx / (len(daughter.tokens) - 1),
-                       'word1': word1,
-                       'word2': word2,
-                       'lem1': lem1,
-                       'lem2': lem2,
-                       'subst_info': subst_info}
-
-            self.subst_try_save(argset, data['features'], word1, word2,
-                                lem1, lem2, details,
-                                transitions, transitions_d, n_stored,
-                                suscept_data)
+            subst = {'mother': mother,
+                     'daughter': daughter,
+                     'idx': idx,
+                     'word1': word1,
+                     'word2': word2,
+                     'lem1': lem1,
+                     'lem2': lem2,
+                     'mining_info': mining_info}
+            substitutions.append(subst)
+            n_stored += 1
 
         print
-        print 'Examined {} substitutions.'.format(n_all)
+        print 'Stored {} of {} mined substitutions.'.format(n_stored, n_all)
 
-        for fdata, ns in n_stored.iteritems():
-            print 'Stored {} substitutions with {}'.format(n_stored[fdata], fdata)
+        return substitutions
 
-        return {'transitions': transitions, 'transitions_d': transitions_d,
-                'suscept_data': suscept_data}
-
-    def save_results(self, files, results):
+    def save_substitutions(self, savefile, substitutions):
         """Save the analysis results to pickle files.
 
         Arguments:
@@ -412,14 +268,8 @@ class SubstitutionAnalysis(object):
         """
 
         print
-        print 'Done. Saving data...',
-
-        for fdata, trdict in results['transitions'].iteritems():
-
-            for fname, trs in trdict.iteritems():
-                results['transitions'][fdata][fname] = np.array(trs)
-
-        ps.save(results, files)
+        print 'Done. Saving substitutions...',
+        ps.save(substitutions, savefile)
         print 'OK'
 
     @classmethod
@@ -470,24 +320,18 @@ class SubstitutionAnalysis(object):
 
         return argsets
 
-    def analyze(self, argset):
-        """Load data, do the substitution analysis, and save results.
+    def mine(self, ma):
+        """Load data, do the substitution mining, and save results."""
 
-        Arguments:
-          * argset: the argset for the analysis (= transformed args from
-                    command line)
+        ma.print_mining()
+        savefile = di_fs.get_save_file(ma)
 
-        """
-
-        self.print_argset(argset)
-        files = self.get_save_files(argset)
-
-        if files == None:
+        if savefile == None:
             return
 
-        data = self.load_data(argset)
-        results = self.examine_substitutions(argset, data)
-        self.save_results(files, results)
+        clusters = self.load_clusters(ma)
+        substitutions = self.examine_substitutions(ma, clusters)
+        self.save_substitutions(savefile, substitutions)
 
     def analyze_all(self, args):
         """Run 'analyze' with various argsets.

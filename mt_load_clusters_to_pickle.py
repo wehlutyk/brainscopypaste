@@ -9,7 +9,9 @@ import gc
 
 import datainterface.picklesaver as ps
 import datainterface.mt as di_mt
-import mine.susbtitutions as a_mt
+from util import ProgressInfo
+import mine.filters as m_fi
+import datainterface.fs as di_fs
 import settings as st
 
 
@@ -31,10 +33,10 @@ if __name__ == '__main__':
 
     # Check that the destination doesn't already exist.
 
-    st.check_file(picklefile)
-    st.check_file(picklefile_framed)
-    st.check_file(picklefile_filtered)
-    st.check_file(picklefile_ff)
+    di_fs.check_file(picklefile)
+    di_fs.check_file(picklefile_framed)
+    di_fs.check_file(picklefile_filtered)
+    di_fs.check_file(picklefile_ff)
 
     # Load the data. Set some parameters.
 
@@ -55,12 +57,12 @@ if __name__ == '__main__':
 
     print 'Computing framed Clusters...'
     framed_clusters = {}
-    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
+    progress = ProgressInfo(len(MT.clusters), 100, 'clusters')
 
     for cl_id, cl in MT.clusters.iteritems():
 
         progress.next_step()
-        framed_cl = a_mt.frame_cluster_around_peak(cl)
+        framed_cl = m_fi.frame_cluster_around_peak(cl)
         if framed_cl != None:
             framed_clusters[cl_id] = framed_cl
 
@@ -71,12 +73,12 @@ if __name__ == '__main__':
 
     print 'Computing filtered Clusters (min_tokens={})...'.format(min_tokens)
     filtered_clusters = {}
-    progress = a_mt.ProgressInfo(len(MT.clusters), 100, 'clusters')
+    progress = ProgressInfo(len(MT.clusters), 100, 'clusters')
 
     for cl_id, cl in MT.clusters.iteritems():
 
         progress.next_step()
-        filtered_cl = a_mt.filter_cluster(cl, min_tokens)
+        filtered_cl = m_fi.filter_cluster(cl, min_tokens)
         if filtered_cl != None:
             filtered_clusters[cl_id] = filtered_cl
 
@@ -115,12 +117,12 @@ if __name__ == '__main__':
     print ('Computing framed-filtered Clusters '
            '(min_tokens={})...').format(min_tokens)
     ff_clusters = {}
-    progress = a_mt.ProgressInfo(len(framed_clusters), 100, 'clusters')
+    progress = ProgressInfo(len(framed_clusters), 100, 'clusters')
 
     for cl_id, cl in framed_clusters.iteritems():
 
         progress.next_step()
-        ff_cl = a_mt.filter_cluster(cl, min_tokens)
+        ff_cl = m_fi.filter_cluster(cl, min_tokens)
         if ff_cl != None:
             ff_clusters[cl_id] = ff_cl
 
