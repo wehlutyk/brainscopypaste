@@ -41,7 +41,7 @@ from linguistics.wn import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
-from util import dict_plusone, ProgressInfo
+from util import ProgressInfo
 from util.mp import LoggingPool
 import settings as st
 
@@ -160,53 +160,6 @@ class SubstitutionsMiner(object):
 
         return ret
 
-    def subst_try_save(self, argset, features, word1, word2, lem1, lem2,
-                       details, tdata, tdata_d, n_stored, suscept_data):
-        """Save a substitution if it is referenced in the feature list."""
-
-        for fdata in features.iterkeys():
-
-            for fname in features[fdata].iterkeys():
-
-                # If the feature uses lemmatizing, then do it.
-                if st.memetracker_subst_features_lem[fdata][fname]:
-                    save1, save2 = lem1, lem2
-                else:
-                    save1, save2 = word1, word2
-
-                try:
-                    tdata[fdata][fname].append([features[fdata][fname][save1],
-                                                features[fdata][fname][save2]])
-                    tdata_d[fdata][fname].append(details)
-
-                    n_stored[fdata][fname] += 1
-                    dict_plusone(suscept_data[fdata][fname]['realised'], lem1)
-
-                    if argset['verbose']:
-                        print 'Stored: %s %s YES' % (fdata, fname)
-
-                except KeyError:
-
-                    if argset['verbose']:
-                        print 'Stored: %s %s NO (not referenced)' % (fdata,
-                                                                     fname)
-
-    def subst_update_possibilities(self, argset, data, mother, suscept_data):
-        """Update the counts of what words can be substituted."""
-
-        lem_mother = tagger.Lemmatize(mother)
-
-        for tlem in lem_mother:
-
-            lem = lemmatize(tlem)
-
-            for fdata in suscept_data.iterkeys():
-
-                for fname, fsuscept in suscept_data[fdata].iteritems():
-
-                    if data['features'][fdata][fname].has_key(lem):
-                        dict_plusone(fsuscept['possibilities'], lem)
-
     def examine_substitutions(self, ma, clusters):
         """Examine substitutions and retain only those we want.
 
@@ -272,54 +225,6 @@ class SubstitutionsMiner(object):
         print 'Done. Saving substitutions...',
         ps.save(substitutions, savefile)
         print 'OK'
-
-    @classmethod
-    def create_argsets(self, args):
-        """Create a list of possible argset dicts, according to args from the
-        command line.
-
-        Arguments:
-          * args: the dict of args passed in from the command line
-
-        Returns:
-          * argsets: a list of dicts, each one being an acceptable dict for
-                     self.analyze.
-
-        """
-
-        argsets = []
-
-        for ff in args.ffs:
-
-            for pos in args.POSs:
-
-                for substitutions in args.substitutionss:
-
-                    for subsgs in args.substringss:
-
-                        if substitutions in ['time', 'growtbgs']:
-
-                            argsets.append({'ff': ff,
-                                            'substitutions': substitutions,
-                                            'substrings': bool(int(subsgs)),
-                                            'POS': pos,
-                                            'verbose': False,
-                                            'n_timebags': 0,
-                                            'resume': args.resume})
-
-                        else:
-
-                            for n_timebags in args.n_timebagss:
-
-                                argsets.append({'ff': ff,
-                                            'substitutions': substitutions,
-                                            'substrings': bool(int(subsgs)),
-                                            'POS': pos,
-                                            'verbose': False,
-                                            'n_timebags': int(n_timebags),
-                                            'resume': args.resume})
-
-        return argsets
 
     def mine(self, ma):
         """Load data, do the substitution mining, and save results."""
