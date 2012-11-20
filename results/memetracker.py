@@ -313,9 +313,8 @@ class ArgsetResults(object):
     def __init__(self, data, details):
         """Initialize the structure with data and details about the data, as
         resulting from a substitution analysis."""
-        self.length = len(data[:, 0])
 
-        if self.length <= 1:
+        if len(data) <= 1:
             return None
 
         self.data = data
@@ -456,11 +455,15 @@ def load_ratio_results(args):
 
             for fname, r in rdict.iteritems():
 
-                r['r_avgs'].append(res[fdata][fname].ratios_cl.mean())
-                r['r_stds'].append(res[fdata][fname].ratios_cl.std())
-                r['r_lens'].append(res[fdata][fname].length_cl)
-                r['r_clids'].append(res[fdata][fname].clids)
-                r['r_h0s'].append(res[fdata][fname].h0_cl)
+                try:
+                    r['r_avgs'].append(res[fdata][fname].ratios_cl.mean())
+                    r['r_stds'].append(res[fdata][fname].ratios_cl.std())
+                    r['r_lens'].append(res[fdata][fname].length_cl)
+                    r['r_clids'].append(res[fdata][fname].clids)
+                    r['r_h0s'].append(res[fdata][fname].h0_cl)
+                except:
+                    print "*** " + fdata + " " + fname + " no data"
+                    continue
 
     return argsets, results, suscept_data
 

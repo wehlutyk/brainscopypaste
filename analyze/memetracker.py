@@ -902,8 +902,6 @@ class SubstitutionAnalysis(object):
     def analyze_all(self, args):
         """Run 'analyze' with various argsets.
 
-        The analysis is always done with framing-filtering activated.
-
         Arguments:
           * args: the dict of args passed in from the command line
 
