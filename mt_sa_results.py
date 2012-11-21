@@ -55,7 +55,7 @@ def plot_results(substitutions, substrings):
     features = r_mt.load_features()
     fvalues = r_mt.features_to_values(features)
 
-    for fdata, ffiles in st.mt_sa_features.iteritems():
+    for fdata, ffiles in st.mt_analysis_features.iteritems():
 
         annotes[fdata] = {}
         for fname in ffiles.iterkeys():
@@ -107,7 +107,7 @@ def plot_results(substitutions, substrings):
 
     # Plot everything
 
-    for fdata, ffiles in st.mt_sa_features.iteritems():
+    for fdata, ffiles in st.mt_analysis_features.iteritems():
 
         for fname in ffiles.iterkeys():
 

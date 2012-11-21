@@ -9,38 +9,23 @@ def check_folder(folder):
         os.makedirs(folder)
 
 
-def check_file(filename, look_for_absent=False):
+def check_file(filename, for_read=False):
     """Check if filename already exists; if it does, raise an exception."""
     if os.path.exists(filename):
 
-        if not look_for_absent:
+        if not for_read:
             raise Exception(("File '" + filename + "' already exists! You should "
                              "sort this out first: I'm not going to overwrite "
                              'it. Aborting.'))
     else:
 
-        if look_for_absent:
+        if for_read:
             raise Exception("File '" + filename + "' not found.")
 
+    return True
 
-def get_save_file(ma, readonly=False):
-    """Get the filename where data is to be saved to or read from; check
-    either that they don't already exist, or that they do exist.
 
-    Arguments:
-        * ma: a MiningArgs instance (= processed arguments from
-                command line)
-
-    Keyword arguments:
-        * readonly: boolean specifying the behaviour for checking the files.
-                    False means we want to be warned if the files already
-                    exist, True means we want to be warned if the files
-                    don't exist. Defaults to False.
-
-    Returns: a dict of filenames corresponding to the data to save, or
-                None if a check failed.
-
-    """
+def get_filename(args):
 
     # Prevent circular imports
     import settings as st
@@ -48,35 +33,42 @@ def get_save_file(ma, readonly=False):
     # Create the file prefix according to 'ma'.
 
     file_prefix = ''
-    file_prefix += 'F{}_'.format(ma.ff)
-    file_prefix += 'M{}_'.format(ma.model)
-    file_prefix += 'S{}_'.format('yes' if ma.substrings else 'no')
-    file_prefix += 'P{}_'.format(ma.POS)
+    file_prefix += 'F{}_'.format(args.ff)
+    file_prefix += 'M{}_'.format(args.model)
+    file_prefix += 'S{}_'.format('yes' if args.substrings else 'no')
+    file_prefix += 'P{}_'.format(args.POS)
 
-    if ma.is_fixedslicing_model():
-        file_prefix += 'N{}_'.format(ma.n_timebags)
+    if args.is_fixedslicing_model():
+        file_prefix += 'N{}_'.format(args.n_timebags)
 
     filename = st.mt_mining_substitutions_pickle.format(file_prefix)
 
     # Check that the destination doesn't already exist.
+    try:
+        # The file is for writing
+        resume = args.resume
+        for_read = False
+    except AttributeError:
+        # The file is for reading
+        for_read = True
 
     try:
-        check_file(filename, look_for_absent=readonly)
+        check_file(filename, for_read=for_read)
 
     except Exception, msg:
 
-        if readonly:
+        if for_read:
 
             warn('{}: not found'.format(filename))
             return None
 
         else:
 
-            if ma.resume:
+            if resume:
 
                 warn(('*** A file for parameters {} already exists, not '
-                        'overwriting it. Skipping this whole '
-                        'argset. ***').format(file_prefix))
+                      'overwriting it. Skipping this whole '
+                      'argset. ***').format(file_prefix))
                 return None
 
             else:

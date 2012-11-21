@@ -1,13 +1,10 @@
 import pylab as pl
 
-import datainterface.picklesaver as ps
-from datainterface.fs import get_save_file
-
 class AnalysisCase(object):
 
-    def __init__(self, ma):
-        self.ma = ma
-        self.filename = get_save_file(ma, readonly=True)
-        self.data = ps.load(self.filename)
-
+    def __init__(self, data):
+        self.data = data
         self.fig = pl.figure()
+
+    def analyze(self):
+        raise NotImplementedError

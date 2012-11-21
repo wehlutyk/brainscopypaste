@@ -405,7 +405,7 @@ def iter_argsets_results(args):
                        ArgsetResults(results['transitions'][fdata][fname],
                                      results['transitions_d'][fdata][fname]))
                        for fname in ffiles.iterkeys()))
-                for fdata, ffiles in st.mt_sa_features.iteritems())
+                for fdata, ffiles in st.mt_analysis_features.iteritems())
         suscept_data = results['suscept_data']
 
         for sddata in suscept_data.iterkeys():
@@ -484,7 +484,7 @@ def features_to_values(features):
 def load_features():
     features = {}
 
-    for fdata, ffiles in st.mt_sa_features.iteritems():
+    for fdata, ffiles in st.mt_analysis_features.iteritems():
 
         features[fdata] = {}
         for fname, ffile in ffiles.iteritems():

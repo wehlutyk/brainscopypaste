@@ -57,6 +57,7 @@ class Substitution(object):
         self.daughter = daughter
         self.idx = np.where([w1 != w2 for (w1, w2) in
                              zip(daughter.tokens, mother.tokens)])[0]
+        self.qt_length = len(mother.tokens)
         self.word1 = mother.tokens[self.idx]
         self.word2 = daughter.tokens[self.idx]
         self.mining_info = mining_info
@@ -208,7 +209,7 @@ class SubstitutionsMiner(object):
         """Load data, do the substitution mining, and save results."""
 
         self.ma.print_mining()
-        self.savefile = di_fs.get_save_file(self.ma)
+        self.savefile = di_fs.get_filename(self.ma)
 
         if self.savefile == None:
             return

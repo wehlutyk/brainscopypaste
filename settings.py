@@ -245,32 +245,29 @@ mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
 # MEMETRACKER SUBSTITUTION ANALYSIS #
 ####################################
 #
-# List of available features.
+# List of available features, telling us which should use lemmatized words and
+# which souldn't.
 
-mt_sa_features = {'wn': {'PR_scores': wn_PR_scores_pickle,
-                         'degrees': wn_degrees_pickle,
-                         'CCs': wn_CCs_pickle,
-                         'BCs': wn_BCs_pickle,
-                         'NSigns': wn_NSigns_pickle,
-                         'MNSyns': wn_MNSyns_pickle},
-                 'fa': {'PR_scores': fa_norms_PR_scores_pickle},
-                 'cmu': {'MNsyllables': cmu_MNsyllables_pickle,
-                         'MNphonemes': cmu_MNphonemes_pickle},
-                 'aoa': {'Kuperman': aoa_Kuperman_pickle}}
-
-
-# For each feature, boolean telling us if we should lemmatize or not
-
-mt_sa_features_lem = {'wn': {'PR_scores': True,
-                             'degrees': True,
-                             'CCs': True,
-                             'BCs': True,
-                             'NSigns': True,
-                             'MNSyns': True},
-                     'fa': {'PR_scores': True},
-                     'cmu': {'MNsyllables': False,
-                             'MNphonemes': False},
-                     'aoa': {'Kuperman': True}}
+mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
+                                             'lem': True},
+                               'degrees': {'file': wn_degrees_pickle,
+                                           'lem': True},
+                               'CCs': {'file': wn_CCs_pickle,
+                                       'lem': True},
+                               'BCs': {'file': wn_BCs_pickle,
+                                       'lem': True},
+                               'NSigns': {'file': wn_NSigns_pickle,
+                                          'lem': True},
+                               'MNSyns': {'file': wn_MNSyns_pickle,
+                                          'lem': True}},
+                        'fa': {'PR_scores': {'file': fa_norms_PR_scores_pickle,
+                                             'lem': True}},
+                        'cmu': {'MNsyllables': {'file': cmu_MNsyllables_pickle,
+                                                'lem': False},
+                                'MNphonemes': {'file': cmu_MNphonemes_pickle,
+                                               'lem': False}},
+                        'aoa': {'Kuperman': {'file': aoa_Kuperman_pickle,
+                                             'lem': True}}}
 
 
 ##############################################################################
