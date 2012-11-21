@@ -92,6 +92,13 @@ wn_MNSyns_pickle = os.path.join(wn_root,
                                 wn_MNSyns_pickle_rel)
 
 
+# Pickle file for the Wordnet paths data, relative to wordnet root
+
+wn_paths_pickle_rel = 'wordnet_paths_{}.pickle'
+wn_paths_pckle_rel = os.path.join(wn_root,
+                                  wn_paths_pickle_rel)
+
+
 ##############################################################################
 # CMU PRONOUNCIATION DATA #
 ###########################

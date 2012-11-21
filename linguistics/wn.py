@@ -37,10 +37,11 @@ import numpy as np
 from scipy import random
 import networkx as nx
 
+from util import inv_dict, memoize
 import util.linalg as u_la
 
 
-def build_wn_coords(pos):
+def _build_wn_coords(pos):
     """Build a dictionary associating each lemma (in lowercase) in Wordnet to
     a coordinate.
 
@@ -74,6 +75,9 @@ def build_wn_coords(pos):
     print 'OK'
 
     return lem_coords
+
+
+build_wn_coords = memoize(_build_wn_coords)
 
 
 def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
@@ -246,6 +250,60 @@ def build_wn_CCs(pos):
     print 'OK'
 
     return lem_CCs
+
+
+def build_wn_paths(pos):
+
+    if pos == 'all':
+        pos = None
+
+    lem_coords = build_wn_coords(pos)
+    inv_coords = inv_dict(lem_coords)
+
+    # Get the WN adjacency matrix in Scipy CSC format.
+
+    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
+
+    # Compute the BCs of each lemma name.
+
+    print 'Computing the shortest paths between each lemma pair...',
+
+    G = nx.from_scipy_sparse_matrix(M)
+    nx.relabel_nodes(G, inv_coords)
+    path_lengths = nx.all_pairs_shortest_path_length(G)
+
+    print 'OK'
+
+    print 'Comuting distribution...',
+
+    return path_lengths
+
+
+def build_wn_paths_distribution(path_lengths):
+    distribution = []
+    for d in path_lengths.itervalues():
+        distribution.extend(d.values())
+    distribution = np.array(distribution)
+    return distribution
+
+
+def truncate_wn_paths(path_lengths, pos):
+    if pos == 'all':
+        return path_lengths
+
+    lem_coords = build_wn_coords(pos)
+    new_paths = {}
+
+    for lem1 in lem_coords.iterkeys():
+
+        if path_lengths.has_key(lem1):
+
+            new_paths[lem1] = {}
+            for lem2 in lem_coords.iterkeys():
+
+                new_paths[lem1][lem2] = path_lengths[lem1][lem2]
+
+    return new_paths
 
 
 def build_wn_BCs(pos):

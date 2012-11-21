@@ -3,6 +3,22 @@ import re
 import numpy as np
 
 
+def memoize(func):
+    cache = {}
+    def inner(*args):
+        if args not in cache:
+            cache[args] = func(*args)
+        return cache[args]
+    return inner
+
+
+def inv_dict(d):
+    inv_d = {}
+    for k, v in d.iteritems():
+        inv_d[v] = d[k]
+    return d
+
+
 def indices_in_range(values, (lower, upper), incl=False):
     if incl:
         return np.where((lower <= values) *
