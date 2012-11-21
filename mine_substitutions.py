@@ -12,5 +12,5 @@ from mine.substitutions import SubstitutionsMiner
 
 if __name__ == '__main__':
     mining_args = MiningArgs()
-    sm = SubstitutionsMiner()
-    sm.mine(mining_args)
+    sm = SubstitutionsMiner(mining_args)
+    sm.mine()
