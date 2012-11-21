@@ -99,6 +99,7 @@ class FeatureAnalysis(AnalysisCase):
 
         ax = self.fig.add_subplot(222)
         #self.plot_daughters_distribution(ax)
+        self.plot_variations_from_h0(ax)
 
         ax = self.fig.add_subplot(223)
         self.plot_susceptibilities(ax)
@@ -165,32 +166,57 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        ax.plot(self.bin_middles, self.h0, 'k', label='h0')
-        t1 = '<<' if self.feature.log else '<'
-        t2 = '>>' if self.feature.log else '>'
-        t = t1 + 'f(daughter) - f(mother)' + t2
-        ax.plot(self.bin_middles, self.v, 'b', linewidth=2, label=t)
-        ax.plot(self.bin_middles, self.v - self.std, 'm', label='IC-95%')
-        ax.plot(self.bin_middles, self.v + self.std, 'm')
+        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='h0')
+        t = '<f(daughter) - f(mother)>'
+        ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2, label=t)
+        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
+        ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_title('Detailed variations' + self.log_text)
         ax.set_xlabel('Mother feature')
-        ax.legend()
+        ax.set_xlim(self.bins[0], self.bins[-1])
+        ax.legend(loc='best')
+
+    def plot_variations_from_h0(self, ax):
+        self.build_variations()
+
+        ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
+        t = '<f(daughter)> - <f(daughter)>_h0'
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0,
+                'b', linewidth=2, label=t)
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                'm', label='IC-95%')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                'm')
+
+        ax.set_title('Variations from h0' + self.log_text)
+        ax.set_xlabel('Mother feature')
+        ax.set_xlim(self.bins[0], self.bins[-1])
+        ax.legend(loc='best')
 
     def build_variations(self):
         try:
 
-            self.h0
-            self.v
-            self.std
+            self.daughter_d_h0
+            self.daughter_d
+            self.daughter_d_std
+            self.v_d_h0
+            self.v_d
+            self.v_d_std
 
         except AttributeError:
 
             self.build_l2_f_lists()
 
-            self.h0 = np.zeros(self.nbins)
-            self.v = np.zeros(self.nbins)
-            self.std = np.zeros(self.nbins)
+            self.daughter_d_h0 = np.zeros(self.nbins)
+            self.daughter_d = np.zeros(self.nbins)
+            self.daughter_d_std = np.zeros(self.nbins)
+            self.v_d_h0 = np.zeros(self.nbins)
+            self.v_d = np.zeros(self.nbins)
+            self.v_d_std = np.zeros(self.nbins)
 
             for i in range(self.nbins):
                 bin_ = (self.bins[i], self.bins[i + 1])
@@ -198,23 +224,34 @@ class FeatureAnalysis(AnalysisCase):
                 # TODO: restrict this to neighbors in WN
                 idx_h0 = indices_in_range(self.feature.values, bin_)
                 if len(idx_h0) > 0:
-                    self.h0[i] = (self.feature.values.mean()
-                                  - self.feature.values[idx_h0].mean())
+                    self.daughter_d_h0[i] = self.feature.values.mean()
+                    self.v_d_h0[i] = (self.feature.values.mean()
+                                      - self.feature.values[idx_h0].mean())
                 else:
-                    self.h0[i] = None
+                    self.daughter_d_h0[i] = None
+                    self.v_d_h0[i] = None
 
-                idx_v = indices_in_range(self.l2_f_mothers, bin_)
+                idx_d = indices_in_range(self.l2_f_mothers, bin_)
 
                 # We need > 1 here to make sure the std computing works
-                if len(idx_v) > 1:
-                    vv = (self.l2_f_daughters[idx_v]
-                        - self.l2_f_mothers[idx_v])
-                    self.v[i] = vv.mean()
-                    self.std[i] = 1.96 * vv.std() / np.sqrt(len(idx_v) - 1)
-                else:
-                    self.v[i] = None
-                    self.std[i] = None
+                if len(idx_d) > 1:
 
+                    daughter_dd = self.l2_f_daughters[idx_d]
+                    self.daughter_d[i] = daughter_dd.mean()
+                    self.daughter_d_std[i] = 1.96 * daughter_dd.std() / np.sqrt(len(idx_d) - 1)
+
+                    v_dd = (self.l2_f_daughters[idx_d]
+                            - self.l2_f_mothers[idx_d])
+                    self.v_d[i] = v_dd.mean()
+                    self.v_d_std[i] = 1.96 * v_dd.std() / np.sqrt(len(idx_d) - 1)
+
+                else:
+
+                    self.daughter_d[i] = None
+                    self.daughter_d_std[i] = None
+
+                    self.v_d[i] = None
+                    self.v_d_std[i] = None
 
 
     def build_susceptibilities(self):
