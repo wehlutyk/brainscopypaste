@@ -60,6 +60,7 @@ class Substitution(object):
         self.word1 = mother.tokens[self.idx]
         self.word2 = daughter.tokens[self.idx]
         self.mining_info = mining_info
+        self.print_info()
         self.lemmatize()
 
     def lemmatize(self):
@@ -181,7 +182,6 @@ class SubstitutionsMiner(object):
 
             n_all += 1
             s = Substitution(self.ma, mother, daughter, mining_info)
-            s.print_info()
 
             if not s.test_POS():
                 continue
