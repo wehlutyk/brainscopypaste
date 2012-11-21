@@ -1,6 +1,7 @@
 from __future__ import division
 
 import numpy as np
+from scipy.stats import gaussian_kde
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 
@@ -41,16 +42,22 @@ class Feature(object):
         try:
             self.data
         except AttributeError:
-            self.data = ps.load(self.filename)
+            data_raw = ps.load(self.filename)
+            self.data = {}
+            if self.log:
+                for k, v in data_raw.iteritems():
+                    self.data[k] = np.log(v)
+            else:
+                self.data = data_raw
 
     @classmethod
     def iter_features(cls, aa):
 
-        for data_src, ftypes in st.mt_analysis_features.iteritems():
+        for s, ts in aa.features.iteritems():
 
-            for ftype in ftypes.iterkeys():
+            for t in ts:
 
-                yield cls.get_instance(data_src, ftype, aa.POS)
+                yield cls.get_instance(s, t, aa.POS)
 
     @classmethod
     def get_instance(cls, data_src, ftype, POS):
@@ -68,7 +75,6 @@ class FeatureAnalysis(AnalysisCase):
     def __init__(self, data, feature):
         super(FeatureAnalysis, self).__init__(data)
         self.feature = feature
-        self.log = np.log if feature.log else lambda x: x
         self.log_text = ' [LOG]' if feature.log else ''
         self.nbins = 20
         self.bins = np.linspace(feature.values.min(),
@@ -89,10 +95,10 @@ class FeatureAnalysis(AnalysisCase):
         self.feature.load()
 
         ax = self.fig.add_subplot(221)
-        self.plot_mothers_distribution(ax)
+        #self.plot_mothers_distribution(ax)
 
         ax = self.fig.add_subplot(222)
-        self.plot_daughters_distribution(ax)
+        #self.plot_daughters_distribution(ax)
 
         ax = self.fig.add_subplot(223)
         self.plot_susceptibilities(ax)
@@ -100,10 +106,16 @@ class FeatureAnalysis(AnalysisCase):
         ax = self.fig.add_subplot(224)
         self.plot_variations(ax)
 
+    def _plot_distribution(self, ax, values):
+        ax.hist(values, bins=self.bins, normed=True)
+        kde = gaussian_kde(values)
+        x = np.linspace(self.bins[0], self.bins[-1], 100)
+        ax.plot(x, kde(x), 'g')
+
     def plot_mothers_distribution(self, ax):
         self.build_l2_f_lists()
 
-        ax.hist(self.l2_f_mothers, bins=self.bins, log=self.feature.log)
+        self._plot_distribution(ax, self.l2_f_mothers)
 
         ax.set_title('Mothers distribution' + self.log_text)
         ax.set_xlabel(self.feature.fullname)
@@ -112,7 +124,7 @@ class FeatureAnalysis(AnalysisCase):
     def plot_daughters_distribution(self, ax):
         self.build_l2_f_lists()
 
-        ax.hist(self.l2_f_daughters, bins=self.bins, log=self.feature.log)
+        self._plot_distribution(ax, self.l2_f_daughters)
 
         ax.set_title('Daughters distribution' + self.log_text)
         ax.set_xlabel(self.feature.fullname)
@@ -122,8 +134,7 @@ class FeatureAnalysis(AnalysisCase):
         self.build_susceptibilities()
 
         # Set the backdrop
-        patches = ax.hist(self.feature.values, self.bins,
-                          log=self.feature.log)[2]
+        patches = ax.hist(self.feature.values, self.bins, normed=True)[2]
 
         # Get susceptibility of each bin
         binned_suscepts = np.zeros(self.nbins)
@@ -151,46 +162,60 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_ylabel('Feature distribution')
 
     def plot_variations(self, ax):
-        self.build_l2_f_lists()
+        self.build_variations()
 
-        h0 = np.zeros(self.nbins)
-        v = np.zeros(self.nbins)
-        std = np.zeros(self.nbins)
-
-        for i in range(self.nbins):
-            bin_ = (self.bins[i], self.bins[i + 1])
-
-            # TODO: restrict this to neighbors in WN
-            idx_h0 = indices_in_range(self.feature.values, bin_)
-            if len(idx_h0) > 0:
-                h0[i] = (self.log(self.feature.values).mean()
-                        - self.log(self.feature.values[idx_h0]).mean())
-            else:
-                h0[i] = None
-
-            idx_v = indices_in_range(self.l2_f_mothers, bin_)
-
-            # We need > 1 here to make sure the std computing works
-            if len(idx_v) > 1:
-                vv = (self.log(self.l2_f_daughters[idx_v])
-                    - self.log(self.l2_f_mothers[idx_v]))
-                v[i] = vv.mean()
-                std[i] = 1.96 * vv.std() / np.sqrt(len(idx_v) - 1)
-            else:
-                v[i] = None
-                std[i] = None
-
-        ax.plot(self.bin_middles, h0, 'k', label='h0')
+        ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
+        ax.plot(self.bin_middles, self.h0, 'k', label='h0')
         t1 = '<<' if self.feature.log else '<'
         t2 = '>>' if self.feature.log else '>'
         t = t1 + 'f(daughter) - f(mother)' + t2
-        ax.plot(self.bin_middles, v, 'b', linewidth=2, label=t)
-        ax.plot(self.bin_middles, v - std, 'm', label='IC-95%')
-        ax.plot(self.bin_middles, v + std, 'm')
+        ax.plot(self.bin_middles, self.v, 'b', linewidth=2, label=t)
+        ax.plot(self.bin_middles, self.v - self.std, 'm', label='IC-95%')
+        ax.plot(self.bin_middles, self.v + self.std, 'm')
 
         ax.set_title('Detailed variations' + self.log_text)
         ax.set_xlabel('Mother feature')
         ax.legend()
+
+    def build_variations(self):
+        try:
+
+            self.h0
+            self.v
+            self.std
+
+        except AttributeError:
+
+            self.build_l2_f_lists()
+
+            self.h0 = np.zeros(self.nbins)
+            self.v = np.zeros(self.nbins)
+            self.std = np.zeros(self.nbins)
+
+            for i in range(self.nbins):
+                bin_ = (self.bins[i], self.bins[i + 1])
+
+                # TODO: restrict this to neighbors in WN
+                idx_h0 = indices_in_range(self.feature.values, bin_)
+                if len(idx_h0) > 0:
+                    self.h0[i] = (self.feature.values.mean()
+                                  - self.feature.values[idx_h0].mean())
+                else:
+                    self.h0[i] = None
+
+                idx_v = indices_in_range(self.l2_f_mothers, bin_)
+
+                # We need > 1 here to make sure the std computing works
+                if len(idx_v) > 1:
+                    vv = (self.l2_f_daughters[idx_v]
+                        - self.l2_f_mothers[idx_v])
+                    self.v[i] = vv.mean()
+                    self.std[i] = 1.96 * vv.std() / np.sqrt(len(idx_v) - 1)
+                else:
+                    self.v[i] = None
+                    self.std[i] = None
+
+
 
     def build_susceptibilities(self):
         try:
@@ -316,5 +341,3 @@ class FeatureAnalysis(AnalysisCase):
 
             self.l2_f_mothers = self.l2_values(self.f_mothers)
             self.l2_f_daughters = self.l2_values(self.f_daughters)
-
-
