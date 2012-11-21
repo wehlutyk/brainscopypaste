@@ -25,7 +25,7 @@ if __name__ == '__main__':
         print ('*** Computing path lengths for all the lemmas in Wordnet '
                "(POS = 'all') ***")
         paths_all = l_wn.build_wn_paths('all')
-        distribution_all = l_wn.build_paths_distribution(paths_all)
+        distribution_all = l_wn.build_wn_paths_distribution(paths_all)
 
         print "*** Saving the path lengths and distribution to '" + picklefile_all + "'...",
         ps.save({'paths': paths_all, 'distribution': distribution_all},
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         print ("*** Truncating the paths for 'all' to POS={} ***").format(p)
 
         paths = l_wn.truncate_wn_paths(paths_all, p)
-        distribution = l_wn.build_paths_distribution(paths)
+        distribution = l_wn.build_wn_paths_distribution(paths)
 
         # And save them.
 
