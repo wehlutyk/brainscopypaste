@@ -1,12 +1,19 @@
 from __future__ import division
 
+import numpy as np
+
 from analyze.base import AnalysisCase
 
 
 class PositionAnalysis(AnalysisCase):
 
     def analyze(self):
+        print 'Analyzing positions'
 
-        positions = [s.idx / (s.qt_length - 1) for s in self.data]
-        self.fig.hist(positions, 30, normed=True)
-        self.fig.title('Histogram of normalized positions of substitutions')
+        positions = np.array([s.idx / (s.qt_length - 1) for s in self.data])
+
+        ax = self.fig.add_subplot(111)
+        ax.hist(positions, 20, normed=True)
+        ax.set_title('Histogram of normalized positions of substitutions')
+        ax.set_xlabel('Normalized position')
+        ax.set_ylabel('Probability density')

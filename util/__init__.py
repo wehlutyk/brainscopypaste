@@ -3,6 +3,15 @@ import re
 import numpy as np
 
 
+def indices_in_range(values, (lower, upper), incl=False):
+    if incl:
+        return np.where((lower <= values) *
+                        (values <= upper))[0]
+    else:
+        return np.where((lower <= values) *
+                        (values < upper))[0]
+
+
 def list_to_dict(l):
     """Convert a list of numbers to a dict associating each single item to an
     array of its coordinates."""

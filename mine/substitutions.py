@@ -64,6 +64,9 @@ class Substitution(object):
         self.print_info()
         self.lemmatize()
 
+    def __getitem__(self, key):
+        return self.__getattribute__(key)
+
     def lemmatize(self):
         """Lemmatize the substitution using TreeTagger and Wordnet."""
         t1 = tagger.Lemmatize(self.mother)[self.idx]
