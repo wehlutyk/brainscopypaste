@@ -40,6 +40,7 @@ class QtStringModels(str):
         if parse:
             self.POS_tags = tagger.Tags(string)
             self.tokens = tagger.Tokenize(string)
+            self.lems = tagger.Lemmatize(string)
 
 
 class ClusterModels(ds_mtb.ClusterBase):

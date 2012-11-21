@@ -1,5 +1,25 @@
 import re
 
+import numpy as np
+
+
+def list_to_dict(l):
+    """Convert a list of numbers to a dict associating each single item to an
+    array of its coordinates."""
+    out = {}
+
+    for i, item in enumerate(l):
+
+        if out.has_key(item):
+            out[item].append(i)
+        else:
+            out[item] = [i]
+
+    for k, v in out.iteritems():
+        out[k] = np.array(v)
+
+    return out
+
 
 def dict_plusone(d, key):
     """Add one to d[key] or set it to one if non-existent."""
