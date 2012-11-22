@@ -14,6 +14,8 @@ import cPickle
 import copy_reg
 import types
 
+import numpy as np
+
 
 # Let us pickle instancemethods
 
@@ -63,5 +65,17 @@ def load(filepath):
 
     with open(filepath, 'rb') as f:
         s = cPickle.load(f)
+
+    return s
+
+
+def npsave(s, filepath):
+    with open(filepath, 'wb') as f:
+        np.save(f, s)
+
+
+def npload(filepath):
+    with open(filepath, 'rb') as f:
+        s = np.load(f)
 
     return s

@@ -72,8 +72,8 @@ class Feature(object):
 
 class FeatureAnalysis(AnalysisCase):
 
-    def __init__(self, data, feature):
-        super(FeatureAnalysis, self).__init__(data)
+    def __init__(self, aa, data, feature):
+        super(FeatureAnalysis, self).__init__(aa, data)
         self.feature = feature
         self.log_text = ' [LOG]' if feature.log else ''
         self.nbins = 20
@@ -118,7 +118,8 @@ class FeatureAnalysis(AnalysisCase):
 
         self._plot_distribution(ax, self.l2_f_mothers)
 
-        ax.set_title('Mothers distribution' + self.log_text)
+        ax.set_title(self.aa.title() + 'Mothers distribution' + self.log_text,
+                     fontsize='small')
         ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('# mothers')
 
@@ -127,7 +128,8 @@ class FeatureAnalysis(AnalysisCase):
 
         self._plot_distribution(ax, self.l2_f_daughters)
 
-        ax.set_title('Daughters distribution' + self.log_text)
+        ax.set_title(self.aa.title() + 'Daughters distribution' + self.log_text,
+                     fontsize='small')
         ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('# daughters')
 
@@ -158,7 +160,8 @@ class FeatureAnalysis(AnalysisCase):
         sm.set_array(binned_suscepts)
         self.fig.colorbar(sm, ax=ax)
 
-        ax.set_title('Susceptibilities on feature distribution' + self.log_text)
+        ax.set_title(self.aa.title() + 'Susceptibilities on feature distribution' + self.log_text,
+                     fontsize='small')
         ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('Feature distribution')
 
@@ -172,10 +175,11 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
-        ax.set_title('Detailed variations' + self.log_text)
+        ax.set_title(self.aa.title() + 'Detailed variations' + self.log_text,
+                     fontsize='small')
         ax.set_xlabel('Mother feature')
         ax.set_xlim(self.bins[0], self.bins[-1])
-        ax.legend(loc='best')
+        ax.legend(loc='best', fontsize='small')
 
     def plot_variations_from_h0(self, ax):
         self.build_variations()
@@ -192,10 +196,11 @@ class FeatureAnalysis(AnalysisCase):
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'm')
 
-        ax.set_title('Variations from h0' + self.log_text)
+        ax.set_title(self.aa.title() + 'Variations from h0' + self.log_text,
+                     fontsize='small')
         ax.set_xlabel('Mother feature')
         ax.set_xlim(self.bins[0], self.bins[-1])
-        ax.legend(loc='best')
+        ax.legend(loc='best', fontsize='small')
 
     def build_variations(self):
         try:

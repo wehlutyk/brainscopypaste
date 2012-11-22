@@ -41,7 +41,7 @@ from util import inv_dict, memoize
 import util.linalg as u_la
 
 
-def _build_wn_coords(pos):
+def _build_wn_coords(pos=None):
     """Build a dictionary associating each lemma (in lowercase) in Wordnet to
     a coordinate.
 
@@ -50,6 +50,9 @@ def _build_wn_coords(pos):
              e.g. with an adjacency matrix.
 
     """
+
+    if pos == 'all':
+        pos = None
 
     print 'Building lemma coordinates...',
 
@@ -96,6 +99,9 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
              alone in their synset).
 
     """
+
+    if pos == 'all':
+        pos = None
 
     print 'Building Wordnet adjacency matrix...',
 
@@ -216,6 +222,19 @@ def build_wn_degrees(pos):
     return lem_degrees
 
 
+def build_wn_nxgraph(lem_coords, pos=None):
+
+    print 'Building NX graph...',
+    if pos == 'all':
+        pos = None
+
+    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
+    G =  nx.from_scipy_sparse_matrix(M)
+
+    print 'OK'
+    return G
+
+
 def build_wn_CCs(pos):
     """Compute clusterization coefficients of lemmas in the WN graph.
 
@@ -229,16 +248,10 @@ def build_wn_CCs(pos):
         pos = None
 
     lem_coords = build_wn_coords(pos)
-
-    # Get the WN adjacency matrix in Scipy CSC format.
-
-    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
-
-    # Compute the CCs of each lemma name.
+    G = build_wn_nxgraph(lem_coords, pos)
 
     print 'Computing the CC of each lemma...',
 
-    G = nx.from_scipy_sparse_matrix(M)
     CCs = nx.clustering(G)
 
     lem_CCs = {}
@@ -259,22 +272,14 @@ def build_wn_paths(pos):
 
     lem_coords = build_wn_coords(pos)
     inv_coords = inv_dict(lem_coords)
-
-    # Get the WN adjacency matrix in Scipy CSC format.
-
-    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
-
-    # Compute the BCs of each lemma name.
+    G = build_wn_nxgraph(lem_coords, pos)
 
     print 'Computing the shortest paths between each lemma pair...',
 
-    G = nx.from_scipy_sparse_matrix(M)
-    nx.relabel_nodes(G, inv_coords)
+    G = nx.relabel_nodes(G, inv_coords)
     path_lengths = nx.all_pairs_shortest_path_length(G)
 
     print 'OK'
-
-    print 'Comuting distribution...',
 
     return path_lengths
 
@@ -285,25 +290,6 @@ def build_wn_paths_distribution(path_lengths):
         distribution.extend(d.values())
     distribution = np.array(distribution)
     return distribution
-
-
-def truncate_wn_paths(path_lengths, pos):
-    if pos == 'all':
-        return path_lengths
-
-    lem_coords = build_wn_coords(pos)
-    new_paths = {}
-
-    for lem1 in lem_coords.iterkeys():
-
-        if path_lengths.has_key(lem1):
-
-            new_paths[lem1] = {}
-            for lem2 in lem_coords.iterkeys():
-
-                new_paths[lem1][lem2] = path_lengths[lem1][lem2]
-
-    return new_paths
 
 
 def build_wn_BCs(pos):
@@ -319,16 +305,10 @@ def build_wn_BCs(pos):
         pos = None
 
     lem_coords = build_wn_coords(pos)
-
-    # Get the WN adjacency matrix in Scipy CSC format.
-
-    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
-
-    # Compute the BCs of each lemma name.
+    G = build_wn_nxgraph(lem_coords, pos)
 
     print 'Computing the BC of each lemma...',
 
-    G = nx.from_scipy_sparse_matrix(M)
     BCs = nx.betweenness_centrality(G)
 
     lem_BCs = {}

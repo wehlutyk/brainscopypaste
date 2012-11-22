@@ -15,8 +15,8 @@ def memoize(func):
 def inv_dict(d):
     inv_d = {}
     for k, v in d.iteritems():
-        inv_d[v] = d[k]
-    return d
+        inv_d[v] = k
+    return inv_d
 
 
 def indices_in_range(values, (lower, upper), incl=False):
