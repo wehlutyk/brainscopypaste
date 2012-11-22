@@ -148,7 +148,7 @@ class MultipleBaseArgs(object):
                                   "has one of {}.".format(st.mt_mining_fixedslicing_models)))
 
     def create_init_dict(self, ff, model, substrings, POS):
-        return {'ff': ff, 'model': model, 'substrings': bool(substrings), 'POS': POS}
+        return {'ff': ff, 'model': model, 'substrings': bool(int(substrings)), 'POS': POS}
 
     def create_args_instance(self, init_dict):
         return BaseArgs(init_dict)
