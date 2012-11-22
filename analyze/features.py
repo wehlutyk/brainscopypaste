@@ -191,7 +191,8 @@ class FeatureAnalysis(AnalysisCase):
         self.plot_variations(ax)
 
     def _plot_distribution(self, ax, values):
-        ax.hist(values, bins=self.bins, normed=True)
+        ax.hist(values, bins=self.bins, normed=True,
+                log=self.feature.log)
         kde = gaussian_kde(values)
         x = np.linspace(self.bins[0], self.bins[-1], 100)
         ax.plot(x, kde(x), 'g')
@@ -218,7 +219,8 @@ class FeatureAnalysis(AnalysisCase):
         self.build_susceptibilities()
 
         # Set the backdrop
-        patches = ax.hist(self.feature.values, self.bins, normed=True)[2]
+        patches = ax.hist(self.feature.values, self.bins, normed=True,
+                          log=self.feature.log)[2]
 
         # Get susceptibility of each bin
         binned_suscepts = np.zeros(self.nbins)
@@ -510,5 +512,7 @@ class FeatureAnalysis(AnalysisCase):
             self.build_f_lists()
             self.build_l2_f_cl_ids()
 
+            self.l2_f_mothers = self.l2_values(self.f_mothers)
+            self.l2_f_daughters = self.l2_values(self.f_daughters)
             self.l2_f_mothers = self.l2_values(self.f_mothers)
             self.l2_f_daughters = self.l2_values(self.f_daughters)

@@ -36,13 +36,11 @@ class AnalysisArgs(BaseArgs):
 
             for f_string in f_strings:
 
-                try:
-                    parts = re.split('_', f_string)
-                    if not self.features.has_key(parts[0]):
-                        self.features[parts[0]] = set([])
-                    self.features[parts[0]].add(parts[1])
-                except IndexError:
-                    continue
+                parts = re.split('_', f_string)
+                if not self.features.has_key(parts[0]):
+                    self.features[parts[0]] = set([])
+                if len(parts) > 1:
+                    self.features[parts[0]].add('_'.join(parts[1:]))
 
             for s in self.features.iterkeys():
                 if len(self.features[s]) == 0:
