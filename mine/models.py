@@ -235,6 +235,7 @@ class ClusterModels(ds_mtb.ClusterBase):
                     {'mother_start': mother_d,
                         'daughter_start': daughter_d})
 
+
 class TimeBagModels(ds_mtb.TimeBagBase):
 
     def __init__(self, *args, **kwargs):
