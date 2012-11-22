@@ -99,7 +99,7 @@ class MultipleBaseArgs(object):
 
         self.ffs = self.args.ffs
         self.models = self.args.models
-        self.substringss = [bool(s) for s in self.args.substringss]
+        self.substringss = [bool(int(s)) for s in self.args.substringss]
         self.POSs = self.args.POSs
         self.set_n_timebagss()
 
