@@ -268,12 +268,9 @@ def build_wn_CCs(pos):
     return lem_CCs
 
 
-def build_wn_paths(pos):
+def build_wn_paths():
 
-    if pos == 'all':
-        pos = None
-
-    lem_coords, G = build_wn_nxgraph(pos)
+    lem_coords, G = build_wn_nxgraph()
     inv_coords = inv_dict(lem_coords)
 
     print 'Computing the shortest paths between each lemma pair...',
@@ -287,10 +284,14 @@ def build_wn_paths(pos):
 
 
 def build_wn_paths_distribution(path_lengths):
-    distribution = []
+    lengths_all = []
     for d in path_lengths.itervalues():
-        distribution.extend(d.values())
-    distribution = np.array(distribution)
+        lengths_all.extend(d.values())
+    lengths_all = np.array(lengths_all, dtype=np.uint8)
+
+    bins = np.arange(lengths_all.min(), lengths_all.max() + 2) - 0.5
+    distribution = np.histogram(lengths_all, bins=bins, normed=True)[0]
+
     return distribution
 
 

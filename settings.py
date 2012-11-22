@@ -92,13 +92,6 @@ wn_MNSyns_pickle = os.path.join(wn_root,
                                 wn_MNSyns_pickle_rel)
 
 
-# Pickle file for the Wordnet paths data, relative to wordnet root
-
-wn_paths_pickle_rel = 'wordnet_paths.pickle'
-wn_paths_pickle = os.path.join(wn_root,
-                               wn_paths_pickle_rel)
-
-
 # Pickle file for the Wordnet path lengths distribution, relative to wordnet
 # root
 
