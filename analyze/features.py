@@ -66,6 +66,9 @@ class Feature(object):
             self.load()
             try:
                 neighbors = self.walk_neighbors(word, distance)
+            except nx.NetworkXError:
+                f = None
+            else:
                 neighbors.discard(word)
 
                 f = []
@@ -80,9 +83,6 @@ class Feature(object):
                 else:
                     f = np.array(f)
 
-            except nx.NetworkXError:
-                f = None
-
             self._cache_fnw[(word, distance)] = f
             return f
 
@@ -92,6 +92,7 @@ class Feature(object):
             return self._cache_fnr[(f_range, distance)]
 
         except KeyError:
+            self.load()
 
             idx = indices_in_range(self.values, f_range)
             all_words = self.data.keys()
@@ -200,20 +201,18 @@ class FeatureAnalysis(AnalysisCase):
 
         self._plot_distribution(ax, self.l2_f_mothers)
 
-        ax.set_title(self.aa.title() + 'Mothers distribution' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel(self.feature.fullname)
-        ax.set_ylabel('# mothers')
+        ax.set_ylabel('# mothers' + self.log_text)
 
     def plot_daughters_distribution(self, ax):
         self.build_l2_f_lists()
 
         self._plot_distribution(ax, self.l2_f_daughters)
 
-        ax.set_title(self.aa.title() + 'Daughters distribution' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel(self.feature.fullname)
-        ax.set_ylabel('# daughters')
+        ax.set_ylabel('# daughters' + self.log_text)
 
     def plot_susceptibilities(self, ax):
         self.build_susceptibilities()
@@ -242,10 +241,9 @@ class FeatureAnalysis(AnalysisCase):
         sm.set_array(binned_suscepts)
         self.fig.colorbar(sm, ax=ax)
 
-        ax.set_title(self.aa.title() + 'Susceptibilities on feature distribution' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel(self.feature.fullname)
-        ax.set_ylabel('Feature distribution')
+        ax.set_ylabel('Susceptibilities' + self.log_text)
 
     def plot_variations(self, ax):
         self.build_h0()
@@ -259,9 +257,9 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
-        ax.set_title(self.aa.title() + 'Detailed variations' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Mother feature')
+        ax.set_ylabel('Detailed variations' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -281,9 +279,9 @@ class FeatureAnalysis(AnalysisCase):
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'm')
 
-        ax.set_title(self.aa.title() + 'Variations from h0' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Mother feature')
+        ax.set_ylabel('Variations from h0' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -303,9 +301,9 @@ class FeatureAnalysis(AnalysisCase):
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'm')
 
-        ax.set_title(self.aa.title() + 'Variations from h0_n' + self.log_text,
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Mother feature')
+        ax.set_ylabel('Variations from h0_n' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -327,8 +325,9 @@ class FeatureAnalysis(AnalysisCase):
             for i in range(self.nbins):
                 bin_ = (float(self.bins[i]), float(self.bins[i + 1]))
 
-                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 3)
+                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 2)
                 idx = indices_in_range(self.feature.values, bin_)
+
                 if len(idx) > 0:
                     if neighbors_feature != None:
                         self.daughter_d_h0_n[i] = neighbors_feature

@@ -14,7 +14,6 @@ class PositionAnalysis(AnalysisCase):
 
         ax = self.fig.add_subplot(111)
         ax.hist(positions, 20, normed=True)
-        ax.set_title(self.aa.title() + 'Positions of substitutions',
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Normalized position')
         ax.set_ylabel('Probability density')

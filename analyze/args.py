@@ -13,8 +13,12 @@ class AnalysisArgs(BaseArgs):
 
         if init_dict is None:
             self.parse_features(self.args.features)
+            self.positions = self.args.positions
+            self.paths = self.args.paths
         else:
             self.parse_features(init_dict['features'])
+            self.positions = init_dict['positions']
+            self.paths = init_dict['paths']
 
     def parse_features(self, f_strings):
 
@@ -59,6 +63,12 @@ class AnalysisArgs(BaseArgs):
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
+        p.add_argument('--no-positions', dest='positions', action='store_const',
+                       const=False, default=True,
+                       help="don't analyze positions of substitutions")
+        p.add_argument('--no-paths', dest='paths', action='store_const',
+                       const=False, default=True,
+                       help="don't analyze path lengths of substitutions")
 
         return p
 
@@ -74,6 +84,8 @@ class AnalysisArgs(BaseArgs):
             print '  n_timebags = {}'.format(self.n_timebags)
         if len(self.features) != 0:
             print '  features = {}'.format(self.features)
+        print '  positions = {}'.format(self.positions)
+        print '  paths = {}'.format(self.paths)
 
     def title(self):
         title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ff,
@@ -82,7 +94,6 @@ class AnalysisArgs(BaseArgs):
                                                                 self.POS)
         if self.is_fixedslicing_model():
             title += ' | n: {}'.format(self.n_timebags)
-        title += '\n'
         return title
 
 
@@ -95,6 +106,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         super(MultipleAnalysisArgs, self).__init__()
 
         self.features = self.args.features
+        self.positions = self.args.positions
+        self.paths = self.args.paths
 
     def create_init_dict(self, ff, model, substrings, POS):
         init_dict = super(MultipleAnalysisArgs,
@@ -103,6 +116,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
                                                  substrings,
                                                  POS)
         init_dict['features'] = self.args.features
+        init_dict['positions'] = self.args.positions
+        init_dict['paths'] = self.args.paths
         return init_dict
 
     def create_args_instance(self, init_dict):
@@ -120,6 +135,12 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
+        p.add_argument('--no-positions', dest='positions', action='store_const',
+                       const=False, default=True,
+                       help="don't analyze positions of substitutions")
+        p.add_argument('--no-paths', dest='paths', action='store_const',
+                       const=False, default=True,
+                       help="don't analyze path lengths of substitutions")
 
         return p
 
@@ -134,3 +155,5 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         if self.has_fixedslicing_model():
             print '  n_timebagss = {}'.format(self.n_timebagss)
         print '  features = {}'.format(self.features)
+        print '  positions = {}'.format(self.positions)
+        print '  paths = {}'.format(self.paths)

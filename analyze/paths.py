@@ -71,8 +71,7 @@ class PathsAnalysis(AnalysisCase):
 
     def plot_observed(self, ax):
         ax.plot(self.x, self.n_lengths, 'b', label='Observed')
-        ax.set_title(self.aa.title() + 'Distance traveled during substitutions',
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Distance')
         ax.set_ylabel('Probability density')
         ax.legend(loc='best')
@@ -81,10 +80,7 @@ class PathsAnalysis(AnalysisCase):
         c_distribution = self.distribution[self.x]
         ax.plot(self.x, self.n_lengths / c_distribution,
                 'r', label='Normalized observed')
-        ax.set_title(self.aa.title() + 'Distance traveled during substitutions',
-                     fontsize='small')
+        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Distance')
         ax.set_ylabel('Probability density')
         ax.legend(loc='best')
-
-

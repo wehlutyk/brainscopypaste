@@ -1,8 +1,8 @@
 import datainterface.picklesaver as ps
 from datainterface.fs import get_filename
 from features import Feature, FeatureAnalysis
-#from positions import PositionAnalysis
-#from paths import PathsAnalysis
+from positions import PositionAnalysis
+from paths import PathsAnalysis
 
 class SubstitutionsAnalyzer(object):
 
@@ -19,11 +19,13 @@ class SubstitutionsAnalyzer(object):
             analysis = FeatureAnalysis(self.aa, self.substitutions, feature)
             self.analyses.append(analysis)
 
-        #analysis = PositionAnalysis(self.aa, self.substitutions)
-        #self.analyses.append(analysis)
+        if self.aa.positions:
+            analysis = PositionAnalysis(self.aa, self.substitutions)
+            self.analyses.append(analysis)
 
-        #analysis = PathsAnalysis(self.aa, self.substitutions)
-        #self.analyses.append(analysis)
+        if self.aa.paths:
+            analysis = PathsAnalysis(self.aa, self.substitutions)
+            self.analyses.append(analysis)
 
         print 'OK'
 
