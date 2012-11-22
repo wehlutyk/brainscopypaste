@@ -134,7 +134,10 @@ class Feature(object):
             cls.lem_coords, G = l_wn.build_wn_nxgraph()
             cls.inv_coords = inv_dict(cls.lem_coords)
             cls.G = nx.relabel_nodes(G, cls.inv_coords)
-            cls.walk_neighbors = caching_neighbors_walker(cls.G)
+            neighbors_walker = caching_neighbors_walker(cls.G)
+            def wrapped_neighbors_walker(c, node, distance):
+                return neighbors_walker(node, distance)
+            cls.walk_neighbors = wrapped_neighbors_walker
 
     @classmethod
     def get_instance(cls, data_src, ftype, POS):
@@ -327,12 +330,17 @@ class FeatureAnalysis(AnalysisCase):
                 neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 3)
                 idx = indices_in_range(self.feature.values, bin_)
                 if len(idx) > 0:
+                    if neighbors_feature != None:
+                        self.daughter_d_h0_n[i] = neighbors_feature
+                        self.v_d_h0_n[i] = (neighbors_feature
+                                            - self.feature.values[idx].mean())
+                    else:
+                        self.daughter_d_h0_n[i] = None
+                        self.v_d_h0_n[i] = None
+
                     self.daughter_d_h0[i] = self.feature.values.mean()
-                    self.daughter_d_h0_n[i] = neighbors_feature
                     self.v_d_h0[i] = (self.feature.values.mean()
                                       - self.feature.values[idx].mean())
-                    self.v_d_h0_n[i] = (neighbors_feature
-                                        - self.feature.values[idx].mean())
                 else:
                     self.daughter_d_h0[i] = None
                     self.daughter_d_h0_n[i] = None

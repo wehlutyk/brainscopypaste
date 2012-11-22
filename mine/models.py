@@ -14,10 +14,10 @@ import datastructure.base as ds_mtb
 
 class QuoteModels(ds_mtb.QuoteBase):
 
-        def to_qt_string_lower(self, cl_id, parse=True):
-            """Return a QtString built from this Quote, in lowercase."""
-            from datastructure.full import QtString
-            return QtString(self.string.lower(), cl_id, self.id, parse=parse)
+    def to_qt_string_lower(self, cl_id, parse=True):
+        """Return a QtString built from this Quote, in lowercase."""
+        from datastructure.full import QtString
+        return QtString(self.string.lower(), cl_id, self.id, parse=parse)
 
 
 class QtStringModels(str):

@@ -32,7 +32,6 @@ Classes:
 from __future__ import division
 
 from multiprocessing import cpu_count
-from functools import partial
 
 import numpy as np
 
@@ -133,6 +132,43 @@ class Substitution(object):
         return ret
 
 
+def instantiate_and_mine(ma):
+    sm = SubstitutionsMiner(ma)
+    sm.mine()
+
+
+def mine_multiple(mma):
+    """Run 'mine' with various argsets.
+
+    """
+
+    mma.print_mining()
+
+    for ma in mma:
+        instantiate_and_mine(ma)
+
+
+def mine_multiple_mt(mma):
+    """Run 'minee' with various argsets, multi-threaded."""
+
+    mma.print_mining()
+    n_jobs = len(mma)
+
+    n_cpu = cpu_count()
+    n_proc = n_cpu - 1
+
+    print
+    print 'Using {} workers to do {} jobs.'.format(n_proc, n_jobs)
+
+    pool = LoggingPool(processes=n_proc, maxtasksperchild=1)
+    res = pool.map_async(instantiate_and_mine, mma)
+
+    # The timeout here is to be able to keyboard-interrupt.
+    # See http://bugs.python.org/issue8296 for details.
+
+    res.wait(1e12)
+
+
 class SubstitutionsMiner(object):
 
     def __init__(self, ma, start=False):
@@ -221,36 +257,3 @@ class SubstitutionsMiner(object):
         self.examine_substitutions()
         self.save_substitutions()
 
-    @classmethod
-    def mine_multiple(cls, mma):
-        """Run 'mine' with various argsets.
-
-        """
-
-        mma.print_mining()
-
-        for ma in mma:
-            sm = cls(ma)
-            sm.mine()
-
-    @classmethod
-    def mine_multiple_mt(cls, mma):
-        """Run 'minee' with various argsets, multi-threaded."""
-
-        mma.print_mining()
-        n_jobs = len(mma)
-
-        n_cpu = cpu_count()
-        n_proc = n_cpu - 1
-
-        print
-        print 'Using {} workers to do {} jobs.'.format(n_proc, n_jobs)
-
-        pool = LoggingPool(processes=n_proc, maxtasksperchild=1)
-        mine = partial(cls, start=True)
-        res = pool.map_async(mine, mma)
-
-        # The timeout here is to be able to keyboard-interrupt.
-        # See http://bugs.python.org/issue8296 for details.
-
-        res.wait(1e12)
