@@ -222,17 +222,21 @@ def build_wn_degrees(pos):
     return lem_degrees
 
 
-def build_wn_nxgraph(lem_coords, pos=None):
+def _build_wn_nxgraph(pos=None):
 
     print 'Building NX graph...',
     if pos == 'all':
         pos = None
 
+    lem_coords = build_wn_coords(pos)
     M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
     G =  nx.from_scipy_sparse_matrix(M)
 
     print 'OK'
-    return G
+    return (lem_coords, G)
+
+
+build_wn_nxgraph = memoize(_build_wn_nxgraph)
 
 
 def build_wn_CCs(pos):
@@ -247,8 +251,7 @@ def build_wn_CCs(pos):
     if pos == 'all':
         pos = None
 
-    lem_coords = build_wn_coords(pos)
-    G = build_wn_nxgraph(lem_coords, pos)
+    lem_coords, G = build_wn_nxgraph(pos)
 
     print 'Computing the CC of each lemma...',
 
@@ -270,9 +273,8 @@ def build_wn_paths(pos):
     if pos == 'all':
         pos = None
 
-    lem_coords = build_wn_coords(pos)
+    lem_coords, G = build_wn_nxgraph(pos)
     inv_coords = inv_dict(lem_coords)
-    G = build_wn_nxgraph(lem_coords, pos)
 
     print 'Computing the shortest paths between each lemma pair...',
 
@@ -304,8 +306,7 @@ def build_wn_BCs(pos):
     if pos == 'all':
         pos = None
 
-    lem_coords = build_wn_coords(pos)
-    G = build_wn_nxgraph(lem_coords, pos)
+    lem_coords, G = build_wn_nxgraph(pos)
 
     print 'Computing the BC of each lemma...',
 

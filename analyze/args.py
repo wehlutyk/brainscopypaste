@@ -20,6 +20,14 @@ class AnalysisArgs(BaseArgs):
 
         self.features = {}
 
+        if f_strings is None:
+            for s in st.mt_analysis_features.iterkeys():
+                self.features[s] = set(st.mt_analysis_features[s].keys())
+            return
+
+        if f_strings[0] == 'None':
+            return
+
         try:
 
             for f_string in f_strings:
@@ -39,10 +47,6 @@ class AnalysisArgs(BaseArgs):
         except TypeError:
             pass
 
-        if len(self.features) == 0:
-            for s in st.mt_analysis_features.iterkeys():
-                self.features[s] = set(st.mt_analysis_features[s].keys())
-
     def create_argparser(self):
 
         # Create the arguments parser.
@@ -50,7 +54,8 @@ class AnalysisArgs(BaseArgs):
         p = super(AnalysisArgs, self).create_argparser()
         features = ([s for s in st.mt_analysis_features.iterkeys()] +
                     [s + '_' + t for s in st.mt_analysis_features.iterkeys()
-                                 for t in st.mt_analysis_features[s].iterkeys()])
+                                 for t in st.mt_analysis_features[s].iterkeys()] +
+                    ['None'])
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
@@ -110,7 +115,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         p = super(MultipleAnalysisArgs, self).create_argparser()
         features = ([s for s in st.mt_analysis_features.iterkeys()] +
                     [s + '_' + t for s in st.mt_analysis_features.iterkeys()
-                                 for t in st.mt_analysis_features[s].iterkeys()])
+                                 for t in st.mt_analysis_features[s].iterkeys()] +
+                    ['None'])
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)

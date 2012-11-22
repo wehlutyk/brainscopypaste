@@ -4,10 +4,13 @@ import numpy as np
 from scipy.stats import gaussian_kde
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
+import networkx as nx
 
-from util import dict_plusone, indices_in_range, list_to_dict
+from util import dict_plusone, indices_in_range, list_to_dict, inv_dict
+from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
 from linguistics.treetagger import tagger
+import linguistics.wn as l_wn
 from analyze.base import AnalysisCase
 import settings as st
 
@@ -25,6 +28,9 @@ class Feature(object):
         self.filename = pre_filename.format(POS)
         self.lem = st.mt_analysis_features[data_src][ftype]['lem']
         self.log = st.mt_analysis_features[data_src][ftype]['log']
+
+        self._cache_fnw = {}
+        self._cache_fnr = {}
 
     def __call__(self, key):
         return self.data[key]
@@ -50,6 +56,61 @@ class Feature(object):
             else:
                 self.data = data_raw
 
+    def features_neighboring_word(self, word, distance):
+        try:
+
+            return self._cache_fnw[(word, distance)]
+
+        except KeyError:
+
+            self.load()
+            try:
+                neighbors = self.walk_neighbors(word, distance)
+                neighbors.discard(word)
+
+                f = []
+                for w in neighbors:
+                    try:
+                        f.append(self.data[w])
+                    except KeyError:
+                        continue
+
+                if len(f) == 0:
+                    f = None
+                else:
+                    f = np.array(f)
+
+            except nx.NetworkXError:
+                f = None
+
+            self._cache_fnw[(word, distance)] = f
+            return f
+
+    def mean_feature_neighboring_range(self, f_range, distance):
+        try:
+
+            return self._cache_fnr[(f_range, distance)]
+
+        except KeyError:
+
+            idx = indices_in_range(self.values, f_range)
+            all_words = self.data.keys()
+            words = [all_words[i] for i in idx]
+
+            features = []
+            for w in words:
+                features_w = self.features_neighboring_word(w, distance)
+                if features_w != None:
+                    features.extend(features_w)
+
+            if len(features) == 0:
+                f = None
+            else:
+                f = np.array(features).mean()
+
+            self._cache_fnr[(f_range, distance)] = f
+            return f
+
     @classmethod
     def iter_features(cls, aa):
 
@@ -60,7 +121,24 @@ class Feature(object):
                 yield cls.get_instance(s, t, aa.POS)
 
     @classmethod
+    def load_G(cls):
+        try:
+
+            cls.lem_coords
+            cls.inv_coords
+            cls.G
+            cls.walk_neighbors
+
+        except AttributeError:
+
+            cls.lem_coords, G = l_wn.build_wn_nxgraph()
+            cls.inv_coords = inv_dict(cls.lem_coords)
+            cls.G = nx.relabel_nodes(G, cls.inv_coords)
+            cls.walk_neighbors = caching_neighbors_walker(cls.G)
+
+    @classmethod
     def get_instance(cls, data_src, ftype, POS):
+        cls.load_G()
         try:
             return cls._cached_instances[(data_src, ftype, POS)]
         except KeyError:
@@ -95,6 +173,7 @@ class FeatureAnalysis(AnalysisCase):
         self.feature.load()
 
         ax = self.fig.add_subplot(221)
+        self.plot_variations_from_h0_n(ax)
         #self.plot_mothers_distribution(ax)
 
         ax = self.fig.add_subplot(222)
@@ -166,10 +245,12 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_ylabel('Feature distribution')
 
     def plot_variations(self, ax):
+        self.build_h0()
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
         ax.plot(self.bin_middles, self.v_d_h0, 'r', label='h0')
+        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='h0_n')
         t = '<f(daughter) - f(mother)>'
         ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2, label=t)
         ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
@@ -179,9 +260,10 @@ class FeatureAnalysis(AnalysisCase):
                      fontsize='small')
         ax.set_xlabel('Mother feature')
         ax.set_xlim(self.bins[0], self.bins[-1])
-        ax.legend(loc='best', fontsize='small')
+        ax.legend(loc='best', prop={'size': 8})
 
     def plot_variations_from_h0(self, ax):
+        self.build_h0()
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
@@ -200,15 +282,68 @@ class FeatureAnalysis(AnalysisCase):
                      fontsize='small')
         ax.set_xlabel('Mother feature')
         ax.set_xlim(self.bins[0], self.bins[-1])
-        ax.legend(loc='best', fontsize='small')
+        ax.legend(loc='best', prop={'size': 8})
+
+    def plot_variations_from_h0_n(self, ax):
+        self.build_h0()
+        self.build_variations()
+
+        ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
+        t = '<f(daughter)> - <f(daughter)>_h0_n'
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n,
+                'b', linewidth=2, label=t)
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
+                'm', label='IC-95%')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
+                'm')
+
+        ax.set_title(self.aa.title() + 'Variations from h0_n' + self.log_text,
+                     fontsize='small')
+        ax.set_xlabel('Mother feature')
+        ax.set_xlim(self.bins[0], self.bins[-1])
+        ax.legend(loc='best', prop={'size': 8})
+
+    def build_h0(self):
+        try:
+
+            self.daughter_d_h0
+            self.daughter_d_h0_n
+            self.v_d_h0
+            self.v_d_h0_n
+
+        except AttributeError:
+
+            self.daughter_d_h0 = np.zeros(self.nbins)
+            self.daughter_d_h0_n = np.zeros(self.nbins)
+            self.v_d_h0 = np.zeros(self.nbins)
+            self.v_d_h0_n = np.zeros(self.nbins)
+
+            for i in range(self.nbins):
+                bin_ = (float(self.bins[i]), float(self.bins[i + 1]))
+
+                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 3)
+                idx = indices_in_range(self.feature.values, bin_)
+                if len(idx) > 0:
+                    self.daughter_d_h0[i] = self.feature.values.mean()
+                    self.daughter_d_h0_n[i] = neighbors_feature
+                    self.v_d_h0[i] = (self.feature.values.mean()
+                                      - self.feature.values[idx].mean())
+                    self.v_d_h0_n[i] = (neighbors_feature
+                                        - self.feature.values[idx].mean())
+                else:
+                    self.daughter_d_h0[i] = None
+                    self.daughter_d_h0_n[i] = None
+                    self.v_d_h0[i] = None
+                    self.v_d_h0_n[i] = None
 
     def build_variations(self):
         try:
 
-            self.daughter_d_h0
             self.daughter_d
             self.daughter_d_std
-            self.v_d_h0
             self.v_d
             self.v_d_std
 
@@ -216,39 +351,27 @@ class FeatureAnalysis(AnalysisCase):
 
             self.build_l2_f_lists()
 
-            self.daughter_d_h0 = np.zeros(self.nbins)
             self.daughter_d = np.zeros(self.nbins)
             self.daughter_d_std = np.zeros(self.nbins)
-            self.v_d_h0 = np.zeros(self.nbins)
             self.v_d = np.zeros(self.nbins)
             self.v_d_std = np.zeros(self.nbins)
 
             for i in range(self.nbins):
                 bin_ = (self.bins[i], self.bins[i + 1])
 
-                # TODO: restrict this to neighbors in WN
-                idx_h0 = indices_in_range(self.feature.values, bin_)
-                if len(idx_h0) > 0:
-                    self.daughter_d_h0[i] = self.feature.values.mean()
-                    self.v_d_h0[i] = (self.feature.values.mean()
-                                      - self.feature.values[idx_h0].mean())
-                else:
-                    self.daughter_d_h0[i] = None
-                    self.v_d_h0[i] = None
-
-                idx_d = indices_in_range(self.l2_f_mothers, bin_)
+                idx = indices_in_range(self.l2_f_mothers, bin_)
 
                 # We need > 1 here to make sure the std computing works
-                if len(idx_d) > 1:
+                if len(idx) > 1:
 
-                    daughter_dd = self.l2_f_daughters[idx_d]
+                    daughter_dd = self.l2_f_daughters[idx]
                     self.daughter_d[i] = daughter_dd.mean()
-                    self.daughter_d_std[i] = 1.96 * daughter_dd.std() / np.sqrt(len(idx_d) - 1)
+                    self.daughter_d_std[i] = 1.96 * daughter_dd.std() / np.sqrt(len(idx) - 1)
 
-                    v_dd = (self.l2_f_daughters[idx_d]
-                            - self.l2_f_mothers[idx_d])
+                    v_dd = (self.l2_f_daughters[idx]
+                            - self.l2_f_mothers[idx])
                     self.v_d[i] = v_dd.mean()
-                    self.v_d_std[i] = 1.96 * v_dd.std() / np.sqrt(len(idx_d) - 1)
+                    self.v_d_std[i] = 1.96 * v_dd.std() / np.sqrt(len(idx) - 1)
 
                 else:
 
@@ -257,7 +380,6 @@ class FeatureAnalysis(AnalysisCase):
 
                     self.v_d[i] = None
                     self.v_d_std[i] = None
-
 
     def build_susceptibilities(self):
         try:

@@ -28,9 +28,8 @@ class PathsAnalysis(AnalysisCase):
 
             print 'Loading path data'
             self.distribution = ps.load(self.filename)
-            self.lem_coords = l_wn.build_wn_coords()
+            self.lem_coords, G = l_wn.build_wn_nxgraph()
             self.inv_coords = inv_dict(self.lem_coords)
-            G = l_wn.build_wn_nxgraph(self.lem_coords)
             self.G = nx.relabel_nodes(G, self.inv_coords)
 
     def build_lengths(self):
