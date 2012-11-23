@@ -12,4 +12,6 @@ if __name__ == '__main__':
 
     multiple_analysis_args = MultipleAnalysisArgs()
     SubstitutionsAnalyzer.analyze_multiple(multiple_analysis_args)
-    pl.show()
+
+    if multiple_analysis_args.show:
+        pl.show()

@@ -31,6 +31,7 @@ Classes:
 
 from __future__ import division
 
+from warnings import warn
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -244,16 +245,29 @@ class SubstitutionsMiner(object):
         ps.save(self.substitutions, self.savefile)
         print 'OK'
 
+    def checkfile(self):
+        try:
+            di_fs.check_file(self.savefile)
+        except Exception, msg:
+
+            if self.ma.resume:
+                warn(('*** A file for parameters {} already exists, not '
+                    'overwriting it. Skipping this whole '
+                    'argset. ***').format(di_fs.get_fileprefix(self.ma)))
+                return False
+            else:
+                raise Exception(msg)
+
+        return True
+
     def mine(self):
         """Load data, do the substitution mining, and save results."""
 
         self.ma.print_mining()
         self.savefile = di_fs.get_filename(self.ma)
-
-        if self.savefile == None:
+        if not self.checkfile():
             return
 
         self.load_clusters()
         self.examine_substitutions()
         self.save_substitutions()
-

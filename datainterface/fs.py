@@ -1,5 +1,4 @@
 import os
-from warnings import warn
 
 
 def check_folder(folder):
@@ -25,12 +24,9 @@ def check_file(filename, for_read=False):
     return True
 
 
-def get_filename(args):
+def get_fileprefix(args):
 
-    # Prevent circular imports
-    import settings as st
-
-    # Create the file prefix according to 'ma'.
+    # Create the file prefix according to 'args'.
 
     file_prefix = ''
     file_prefix += 'F{}_'.format(args.ff)
@@ -41,38 +37,15 @@ def get_filename(args):
     if args.is_fixedslicing_model():
         file_prefix += 'N{}_'.format(args.n_timebags)
 
+    return file_prefix
+
+
+def get_filename(args):
+
+    # Prevent circular imports
+    import settings as st
+
+    file_prefix = get_fileprefix(args)
     filename = st.mt_mining_substitutions_pickle.format(file_prefix)
-
-    # Check that the destination doesn't already exist.
-    try:
-        # The file is for writing
-        resume = args.resume
-        for_read = False
-    except AttributeError:
-        # The file is for reading
-        for_read = True
-
-    try:
-        check_file(filename, for_read=for_read)
-
-    except Exception, msg:
-
-        if for_read:
-
-            warn('{}: not found'.format(filename))
-            return None
-
-        else:
-
-            if resume:
-
-                warn(('*** A file for parameters {} already exists, not '
-                      'overwriting it. Skipping this whole '
-                      'argset. ***').format(file_prefix))
-                return None
-
-            else:
-
-                raise Exception(msg)
 
     return filename

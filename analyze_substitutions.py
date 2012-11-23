@@ -8,4 +8,6 @@ if __name__ == '__main__':
     analysis_args = AnalysisArgs()
     sa = SubstitutionsAnalyzer(analysis_args)
     sa.analyze()
-    pl.show()
+
+    if analysis_args.show:
+        pl.show()

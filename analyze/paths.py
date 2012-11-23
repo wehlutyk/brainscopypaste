@@ -16,6 +16,9 @@ class PathsAnalysis(AnalysisCase):
         super(PathsAnalysis, self).__init__(aa, data)
         self.filename = st.wn_lengths_pickle
 
+    def savefile_postfix(self):
+        return 'paths'
+
     def load(self):
         try:
 
@@ -69,9 +72,12 @@ class PathsAnalysis(AnalysisCase):
         ax = self.fig.add_subplot(212)
         self.plot_normalized_observed(ax)
 
+        self.fig.text(0.5, 0.95,
+                      self.aa.title() + ' -- paths',
+                      ha='center')
+
     def plot_observed(self, ax):
         ax.plot(self.x, self.n_lengths, 'b', label='Observed')
-        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Distance')
         ax.set_ylabel('Probability density')
         ax.legend(loc='best')
@@ -80,7 +86,6 @@ class PathsAnalysis(AnalysisCase):
         c_distribution = self.distribution[self.x]
         ax.plot(self.x, self.n_lengths / c_distribution,
                 'r', label='Normalized observed')
-        ax.set_title(self.aa.title(), fontsize='small')
         ax.set_xlabel('Distance')
         ax.set_ylabel('Probability density')
         ax.legend(loc='best')

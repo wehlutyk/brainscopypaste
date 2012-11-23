@@ -1,7 +1,7 @@
 import datainterface.picklesaver as ps
-from datainterface.fs import get_filename
+from datainterface.fs import get_filename, check_file
 from features import Feature, FeatureAnalysis
-from positions import PositionAnalysis
+from positions import PositionsAnalysis
 from paths import PathsAnalysis
 
 class SubstitutionsAnalyzer(object):
@@ -9,6 +9,7 @@ class SubstitutionsAnalyzer(object):
     def __init__(self, aa):
         self.aa = aa
         self.filename = get_filename(aa)
+        check_file(self.filename, for_read=True)
 
     def load_analysis_cases(self):
         print 'Loading analysis cases...',
@@ -20,7 +21,7 @@ class SubstitutionsAnalyzer(object):
             self.analyses.append(analysis)
 
         if self.aa.positions:
-            analysis = PositionAnalysis(self.aa, self.substitutions)
+            analysis = PositionsAnalysis(self.aa, self.substitutions)
             self.analyses.append(analysis)
 
         if self.aa.paths:
@@ -42,6 +43,7 @@ class SubstitutionsAnalyzer(object):
         print 'Running analyses...'
         for a in self.analyses:
             a.analyze()
+            a.save()
 
     @classmethod
     def analyze_multiple(cls, maa):

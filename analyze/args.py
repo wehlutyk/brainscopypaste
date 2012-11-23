@@ -15,10 +15,19 @@ class AnalysisArgs(BaseArgs):
             self.parse_features(self.args.features)
             self.positions = self.args.positions
             self.paths = self.args.paths
+            self.save = self.args.save
+            self.overwrite = self.args.overwrite
+            self.show = self.args.show
         else:
             self.parse_features(init_dict['features'])
             self.positions = init_dict['positions']
             self.paths = init_dict['paths']
+            self.save = init_dict['save']
+            self.overwrite = init_dict['overwrite']
+            self.show = init_dict['show']
+
+        # No show implies save
+        self.save = self.save or (not self.show)
 
     def parse_features(self, f_strings):
 
@@ -67,6 +76,16 @@ class AnalysisArgs(BaseArgs):
         p.add_argument('--no-paths', dest='paths', action='store_const',
                        const=False, default=True,
                        help="don't analyze path lengths of substitutions")
+        p.add_argument('--save', dest='save', action='store_const',
+                       const=True, default=False,
+                       help='save figures to files')
+        p.add_argument('--overwrite', dest='overwrite', action='store_const',
+                       const=True, default=False,
+                       help='overwrite existing figure files')
+        p.add_argument('--no-show', dest='show', action='store_const',
+                       const=False, default=True,
+                       help=("don't show the graphs, just save the file. "
+                             'This implies --save'))
 
         return p
 
@@ -84,6 +103,9 @@ class AnalysisArgs(BaseArgs):
             print '  features = {}'.format(self.features)
         print '  positions = {}'.format(self.positions)
         print '  paths = {}'.format(self.paths)
+        print '  save = {}'.format(self.save)
+        print '  overwrite = {}'.format(self.overwrite)
+        print '  show = {}'.format(self.show)
 
     def title(self):
         title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ff,
@@ -106,6 +128,12 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         self.features = self.args.features
         self.positions = self.args.positions
         self.paths = self.args.paths
+        self.save = self.args.save
+        self.overwrite = self.args.overwrite
+        self.show = self.args.show
+
+        # No show implies save
+        self.save = self.save or (not self.show)
 
     def create_init_dict(self, ff, model, substrings, POS):
         init_dict = super(MultipleAnalysisArgs,
@@ -116,6 +144,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         init_dict['features'] = self.args.features
         init_dict['positions'] = self.args.positions
         init_dict['paths'] = self.args.paths
+        init_dict['save'] = self.args.save
+        init_dict['overwrite'] = self.args.overwrite
+        init_dict['show'] = self.args.show
         return init_dict
 
     def create_args_instance(self, init_dict):
@@ -139,6 +170,16 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         p.add_argument('--no-paths', dest='paths', action='store_const',
                        const=False, default=True,
                        help="don't analyze path lengths of substitutions")
+        p.add_argument('--save', dest='save', action='store_const',
+                       const=True, default=False,
+                       help='save figures to files')
+        p.add_argument('--overwrite', dest='overwrite', action='store_const',
+                       const=True, default=False,
+                       help='overwrite existing figure files')
+        p.add_argument('--no-show', dest='show', action='store_const',
+                       const=False, default=True,
+                       help=("don't show the graphs, just save the file. "
+                             'This implies --save'))
 
         return p
 
@@ -155,3 +196,6 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         print '  features = {}'.format(self.features)
         print '  positions = {}'.format(self.positions)
         print '  paths = {}'.format(self.paths)
+        print '  save = {}'.format(self.save)
+        print '  overwrite = {}'.format(self.overwrite)
+        print '  show = {}'.format(self.show)

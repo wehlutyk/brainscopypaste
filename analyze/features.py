@@ -190,6 +190,13 @@ class FeatureAnalysis(AnalysisCase):
         ax = self.fig.add_subplot(224)
         self.plot_variations(ax)
 
+        self.fig.text(0.5, 0.95,
+                      self.aa.title() + ' -- ' + self.feature.fullname,
+                      ha='center')
+
+    def savefile_postfix(self):
+        return self.feature.fullname
+
     def _plot_distribution(self, ax, values):
         ax.hist(values, bins=self.bins, normed=True,
                 log=self.feature.log)
@@ -202,8 +209,7 @@ class FeatureAnalysis(AnalysisCase):
 
         self._plot_distribution(ax, self.l2_f_mothers)
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
+        ax.set_xlabel('Mother feature')
         ax.set_ylabel('# mothers' + self.log_text)
 
     def plot_daughters_distribution(self, ax):
@@ -211,8 +217,7 @@ class FeatureAnalysis(AnalysisCase):
 
         self._plot_distribution(ax, self.l2_f_daughters)
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
+        ax.set_xlabel('Daughter feature')
         ax.set_ylabel('# daughters' + self.log_text)
 
     def plot_susceptibilities(self, ax):
@@ -243,9 +248,8 @@ class FeatureAnalysis(AnalysisCase):
         sm.set_array(binned_suscepts)
         self.fig.colorbar(sm, ax=ax)
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
-        ax.set_ylabel('Susceptibilities' + self.log_text)
+        ax.set_xlabel('Pool feature')
+        ax.set_ylabel('Susceptibilities in color' + self.log_text)
 
     def plot_variations(self, ax):
         self.build_h0()
@@ -259,9 +263,8 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
-        ax.set_ylabel('Detailed variations' + self.log_text)
+        ax.set_xlabel('Mother feature')
+        ax.set_ylabel('Variations from mother' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -281,8 +284,7 @@ class FeatureAnalysis(AnalysisCase):
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'm')
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
+        ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from h0' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
@@ -303,8 +305,7 @@ class FeatureAnalysis(AnalysisCase):
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'm')
 
-        ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel(self.feature.fullname)
+        ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from h0_n' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
