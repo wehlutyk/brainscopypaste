@@ -1,4 +1,5 @@
 from warnings import warn
+import re
 
 import pylab as pl
 
@@ -13,7 +14,8 @@ class AnalysisCase(object):
         self.data = data
         self.fig = pl.figure()
         self.savefile_prefix = get_fileprefix(aa)
-        filename = self.savefile_prefix + self.savefile_postfix()
+        filename = (self.savefile_prefix +
+                    re.sub(' ', '-', self.savefile_postfix()))
         self.filepath = st.mt_analysis_figure_file.format(filename)
 
     def analyze(self):
