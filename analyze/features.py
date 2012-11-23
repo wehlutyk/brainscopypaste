@@ -260,7 +260,7 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel('Mother feature')
+        ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('Detailed variations' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
@@ -282,7 +282,7 @@ class FeatureAnalysis(AnalysisCase):
                 'm')
 
         ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel('Mother feature')
+        ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('Variations from h0' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
@@ -304,7 +304,7 @@ class FeatureAnalysis(AnalysisCase):
                 'm')
 
         ax.set_title(self.aa.title(), fontsize='small')
-        ax.set_xlabel('Mother feature')
+        ax.set_xlabel(self.feature.fullname)
         ax.set_ylabel('Variations from h0_n' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
