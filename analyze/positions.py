@@ -10,13 +10,13 @@ class PositionsAnalysis(AnalysisCase):
     def savefile_postfix(self):
         return 'positions'
 
-    def analyze(self):
+    def analyze_inner(self):
         print 'Analyzing positions'
 
         positions = np.array([s.idx / (s.qt_length - 1) for s in self.data])
 
         ax = self.fig.add_subplot(111)
-        ax.hist(positions, 20, normed=True)
+        ax.hist(positions, 10, normed=True)
         ax.set_xlabel('Normalized position')
         ax.set_ylabel('Probability density')
 

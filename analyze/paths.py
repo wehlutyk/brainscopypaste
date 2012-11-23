@@ -61,7 +61,7 @@ class PathsAnalysis(AnalysisCase):
             self.n_lengths = np.histogram(self.lengths, bins=self.bins,
                                           normed=True)[0]
 
-    def analyze(self):
+    def analyze_inner(self):
         print 'Analyzing paths'
 
         self.build_lengths()

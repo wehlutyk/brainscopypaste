@@ -43,7 +43,6 @@ class SubstitutionsAnalyzer(object):
         print 'Running analyses...'
         for a in self.analyses:
             a.analyze()
-            a.save()
 
     @classmethod
     def analyze_multiple(cls, maa):

@@ -155,8 +155,9 @@ class Feature(object):
 class FeatureAnalysis(AnalysisCase):
 
     def __init__(self, aa, data, feature):
-        super(FeatureAnalysis, self).__init__(aa, data)
+        # We need the feature to be calling savefile_postfix in super
         self.feature = feature
+        super(FeatureAnalysis, self).__init__(aa, data)
         self.log_text = ' [LOG]' if feature.log else ''
         self.nbins = 20
         self.bins = np.linspace(feature.values.min(),
@@ -171,23 +172,24 @@ class FeatureAnalysis(AnalysisCase):
             self.w1 = 'word1'
             self.w2 = 'word2'
 
-    def analyze(self):
+    def analyze_inner(self):
         print 'Analyzing feature ' + self.feature.fullname
 
         self.feature.load()
 
-        ax = self.fig.add_subplot(221)
-        self.plot_variations_from_h0_n(ax)
+        #ax = self.fig.add_subplot(221)
+        #self.plot_variations_from_h0_n(ax)
         #self.plot_mothers_distribution(ax)
 
-        ax = self.fig.add_subplot(222)
+        #ax = self.fig.add_subplot(222)
         #self.plot_daughters_distribution(ax)
-        self.plot_variations_from_h0(ax)
+        #self.plot_variations_from_h0(ax)
 
-        ax = self.fig.add_subplot(223)
-        self.plot_susceptibilities(ax)
+        #ax = self.fig.add_subplot(223)
+        #self.plot_susceptibilities(ax)
 
-        ax = self.fig.add_subplot(224)
+        #ax = self.fig.add_subplot(224)
+        ax = self.fig.add_subplot(111)
         self.plot_variations(ax)
 
         self.fig.text(0.5, 0.95,

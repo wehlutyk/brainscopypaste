@@ -13,22 +13,32 @@ class AnalysisCase(object):
         self.data = data
         self.fig = pl.figure()
         self.savefile_prefix = get_fileprefix(aa)
+        filename = self.savefile_prefix + self.savefile_postfix()
+        self.filepath = st.mt_analysis_figure_file.format(filename)
 
     def analyze(self):
+        if self.aa.save and not self.checkfile():
+            return
+
+        self.analyze_inner()
+        if self.aa.save:
+            self.fig.canvas.print_figure(self.filepath, dpi=300)
+
+    def analyze_inner(self):
         raise NotImplementedError
 
     def savefile_postfix(self):
         raise NotImplementedError
 
-    def save(self):
-        if self.aa.save:
-            filename = self.savefile_prefix + self.savefile_postfix()
-            filepath = st.mt_analysis_figure_file.format(filename)
-            try:
-                check_file(filepath)
-            except Exception, msg:
-                if self.aa.overwrite:
-                    warn('Overwriting file ' + filepath)
-                else:
-                    raise Exception(msg)
-            self.fig.canvas.print_figure(filepath, dpi=300)
+    def checkfile(self):
+        try:
+            check_file(self.filepath)
+        except Exception:
+            if self.aa.overwrite:
+                warn('Overwriting file ' + self.filepath)
+                return True
+            else:
+                warn(self.filepath + ' already exists, skipping it')
+                return False
+
+        return True
