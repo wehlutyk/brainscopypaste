@@ -190,7 +190,7 @@ class FeatureAnalysis(AnalysisCase):
 
         #ax = self.fig.add_subplot(224)
         ax = self.fig.add_subplot(111)
-        self.plot_variations(ax)
+        self.plot_variations_from_h0_h0_n(ax)
 
         self.fig.text(0.5, 0.95,
                       self.aa.title() + ' -- ' + self.feature.fullname,
@@ -212,7 +212,7 @@ class FeatureAnalysis(AnalysisCase):
         self._plot_distribution(ax, self.l2_f_mothers)
 
         ax.set_xlabel('Mother feature')
-        ax.set_ylabel('# mothers' + self.log_text)
+        ax.set_ylabel('\\# mothers' + self.log_text)
 
     def plot_daughters_distribution(self, ax):
         self.build_l2_f_lists()
@@ -220,7 +220,7 @@ class FeatureAnalysis(AnalysisCase):
         self._plot_distribution(ax, self.l2_f_daughters)
 
         ax.set_xlabel('Daughter feature')
-        ax.set_ylabel('# daughters' + self.log_text)
+        ax.set_ylabel('\\# daughters' + self.log_text)
 
     def plot_susceptibilities(self, ax):
         self.build_susceptibilities()
@@ -258,15 +258,47 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='h0')
-        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='h0_n')
-        t = '<f(daughter) - f(mother)>'
-        ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2, label=t)
-        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95%')
+        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$')
+        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$')
+
+        ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2,
+                label='$<f(daughter) - f(mother)>$')
+        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\%')
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from mother' + self.log_text)
+        ax.set_xlim(self.bins[0], self.bins[-1])
+        ax.legend(loc='best', prop={'size': 8})
+
+    def plot_variations_from_h0_h0_n(self, ax):
+        self.build_h0()
+        self.build_variations()
+
+        ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
+
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0,
+                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                'b', linewidth=0.5, alpha=0.5, label='IC-95\\%')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                'b', linewidth=0.5, alpha=0.5)
+
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n,
+                'c', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
+                'c', linewidth=0.5, alpha=0.5, label='IC-95\\%')
+        ax.plot(self.bin_middles,
+                self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
+                'c', linewidth=0.5, alpha=0.5)
+
+        ax.set_xlabel('Mother feature')
+        ax.set_ylabel('Variations from $H_0$ / $H_{0,n}$' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -275,19 +307,18 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        t = '<f(daughter)> - <f(daughter)>_h0'
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0,
-                'b', linewidth=2, label=t)
+                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                'm', label='IC-95%')
+                'm', label='IC-95\\%')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'm')
 
         ax.set_xlabel('Mother feature')
-        ax.set_ylabel('Variations from h0' + self.log_text)
+        ax.set_ylabel('Variations from $H_0$' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
@@ -296,19 +327,18 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        t = '<f(daughter)> - <f(daughter)>_h0_n'
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
-                'b', linewidth=2, label=t)
+                'b', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
-                'm', label='IC-95%')
+                'm', label='IC-95\\%')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'm')
 
         ax.set_xlabel('Mother feature')
-        ax.set_ylabel('Variations from h0_n' + self.log_text)
+        ax.set_ylabel('Variations from $H_{0,n}$' + self.log_text)
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
