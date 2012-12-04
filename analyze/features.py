@@ -193,7 +193,8 @@ class FeatureAnalysis(AnalysisCase):
         self.plot_variations_from_h0_h0_n(ax)
 
         self.fig.text(0.5, 0.95,
-                      self.aa.title() + ' -- ' + self.feature.fullname,
+                      self.latexize(self.aa.title() +
+                                    ' --- ' + self.feature.fullname),
                       ha='center')
 
     def savefile_postfix(self):
@@ -302,25 +303,27 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
-    def plot_variations_from_h0(self, ax):
+    def plot_variations_from_h0(self, ax, chrome=True, label=None, color=None):
         self.build_h0()
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0,
-                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$')
-        ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                'm', label='IC-95\\%')
-        ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
-                'm')
+                self.daughter_d - self.daughter_d_h0, color=color or 'b',
+                linewidth=2, label=label or '$\\Delta - \\Delta_{H_0}$')
 
-        ax.set_xlabel('Mother feature')
-        ax.set_ylabel('Variations from $H_0$' + self.log_text)
-        ax.set_xlim(self.bins[0], self.bins[-1])
-        ax.legend(loc='best', prop={'size': 8})
+        if chrome:
+            ax.plot(self.bin_middles,
+                    self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                    'm', label='IC-95\\%')
+            ax.plot(self.bin_middles,
+                    self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                    'm')
+
+            ax.set_xlabel('Mother feature')
+            ax.set_ylabel('Variations from $H_0$' + self.log_text)
+            ax.set_xlim(self.bins[0], self.bins[-1])
+            ax.legend(loc='best', prop={'size': 8})
 
     def plot_variations_from_h0_n(self, ax):
         self.build_h0()

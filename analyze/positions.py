@@ -21,5 +21,5 @@ class PositionsAnalysis(AnalysisCase):
         ax.set_ylabel('Probability density')
 
         self.fig.text(0.5, 0.95,
-                      self.aa.title() + ' -- positions',
+                      self.latexize(self.aa.title() + ' --- positions'),
                       ha='center')

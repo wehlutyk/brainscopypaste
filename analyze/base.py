@@ -44,3 +44,9 @@ class AnalysisCase(object):
                 return False
 
         return True
+
+    @classmethod
+    def latexize(cls, text):
+        latex_text = re.sub('\\|', '$|$', text)
+        latex_text = re.sub('_', ' ', latex_text)
+        return latex_text

@@ -73,7 +73,7 @@ class PathsAnalysis(AnalysisCase):
         self.plot_normalized_observed(ax)
 
         self.fig.text(0.5, 0.95,
-                      self.aa.title() + ' -- paths',
+                      self.latexize(self.aa.title() + ' --- paths'),
                       ha='center')
 
     def plot_observed(self, ax):

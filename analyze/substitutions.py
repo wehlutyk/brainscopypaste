@@ -4,6 +4,7 @@ from features import Feature, FeatureAnalysis
 from positions import PositionsAnalysis
 from paths import PathsAnalysis
 
+
 class SubstitutionsAnalyzer(object):
 
     def __init__(self, aa):
