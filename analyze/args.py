@@ -112,20 +112,57 @@ class AnalysisArgs(BaseArgs):
         print '  overwrite = {}'.format(self.overwrite)
         print '  show = {}'.format(self.show)
 
+
+class GroupAnalysisArgs(object):
+
+    def __init__(self, aas, maa, s):
+        self.aas = aas
+        self.save = maa.save
+
+        # Build texts for filenames
+        self.ffs_text = ','.join(maa.ffs) if s[0] is Ellipsis else maa.ffs[s[0]]
+        self.models_text = ','.join(maa.models) if s[1] is Ellipsis else maa.models[s[1]]
+        if s[2] is Ellipsis:
+            self.substringss_text = ','.join(['yes' if ss else 'no' for ss in maa.substringss])
+        else:
+            self.substringss_text = 'yes' if maa.substringss[s[2]] else 'no'
+        self.POSs_text = ','.join(maa.POSs) if s[3] is Ellipsis else maa.POSs[s[3]]
+
+        fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
+        if sum(fixedslicing_models):
+            self.has_fixedslicing_model = True
+            self.n_timebags_text = aas[fixedslicing_models.index(True)].n_timebags
+
+        # Build text for in graph legend
+        for aa in aas:
+            text_to_include = []
+            if s[0] is Ellipsis:
+                text_to_include.append('ff: ' + aa.ff)
+            if s[1] is Ellipsis:
+                text_to_include.append('model: ' + aa.model)
+            if s[2] is Ellipsis:
+                text_to_include.append('sub: ' + aa.substrings)
+            if s[3] is Ellipsis:
+                text_to_include.append('POS: ' + aa.POS)
+            aa.ingraph_text = ' | '.join(text_to_include)
+
+    def __iter__(self):
+        for aa in self.aas:
+            yield aa
+
     def title(self):
-        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ff,
-                                                                self.model,
-                                                                self.substrings,
-                                                                self.POS)
-        if self.is_fixedslicing_model():
-            title += ' | n: {}'.format(self.n_timebags)
+        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ffs_text,
+                                                                self.models_text,
+                                                                self.substringss_text,
+                                                                self.POSs_text)
+        if self.has_fixedslicing_model:
+            title += ' | n: {}'.format(self.n_timebags_text)
         return title
 
 
 class MultipleAnalysisArgs(MultipleBaseArgs):
 
     description = 'analyze substitutions for various argument sets'
-    dim_to_attr = ['ff', 'model', 'substrings', 'POS']
 
     def __init__(self):
 
@@ -163,9 +200,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         for s in slices:
             y = self.aas_ndarray[s]
             if isinstance(y, np.ndarray):
-                yield y.flatten()
+                yield GroupAnalysisArgs(y.flatten(), self, s)
             else:
-                yield [y]
+                yield GroupAnalysisArgs([y], self, s)
 
     def build_aas_ndarray(self):
         self.aas_shape = (len(self.ffs), len(self.models), len(self.substringss), len(self.POSs))

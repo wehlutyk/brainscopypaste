@@ -61,24 +61,27 @@ class BasePathsAnalysis(AnalysisCase):
             self.n_lengths = np.histogram(self.lengths, bins=self.bins,
                                           normed=True)[0]
 
-    def analyze_inner(self):
+    def build_axes(self, fig):
+        return [fig.add_subplot(211), fig.add_subplot(212)]
+
+    def analyze_inner(self, axs):
         print 'Analyzing paths'
 
         self.build_lengths()
 
-        ax = self.fig.add_subplot(211)
-        self.plot_observed(ax)
+        self.plot_observed(axs[0])
 
-        ax = self.fig.add_subplot(212)
-        self.plot_normalized_observed(ax)
+        self.plot_normalized_observed(axs[1])
 
-        self.fig.text(0.5, 0.95,
-                      self.latexize(self.aa.title() + ' --- '
-                                    + self.savefile_postfix()),
-                      ha='center')
+
+    def print_fig_text(self, fig, title):
+        fig.text(0.5, 0.95,
+                 self.latexize(title + ' --- '
+                               + self.savefile_postfix()),
+                 ha='center')
 
     def plot_observed(self, ax):
-        ax.plot(self.x, self.n_lengths, 'b', label='Observed')
+        ax.plot(self.x, self.n_lengths, 'b', label='Observed ' + self.aa.ingraph_text)
         ax.set_xlabel('Distance')
         ax.set_ylabel('Probability density')
         ax.legend(loc='best')
@@ -86,7 +89,7 @@ class BasePathsAnalysis(AnalysisCase):
     def plot_normalized_observed(self, ax):
         c_distribution = self.distribution[self.x]
         ax.plot(self.x, self.n_lengths / c_distribution,
-                'r', label='Normalized observed')
+                'r', label='Normalized observed ' + self.aa.ingraph_text)
         ax.set_xlabel('Distance')
         ax.legend(loc='best')
 

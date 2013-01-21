@@ -172,7 +172,10 @@ class FeatureAnalysis(AnalysisCase):
             self.w1 = 'word1'
             self.w2 = 'word2'
 
-    def analyze_inner(self):
+    def build_axes(self, fig):
+        return [fig.add_subplot(111)]
+
+    def analyze_inner(self, axs):
         print 'Analyzing feature ' + self.feature.fullname
 
         self.feature.load()
@@ -195,10 +198,11 @@ class FeatureAnalysis(AnalysisCase):
         #self.plot_variations_from_h0(ax)
         self.plot_variations(ax)
 
-        self.fig.text(0.5, 0.95,
-                      self.latexize(self.aa.title() +
-                                    ' --- ' + self.feature.fullname),
-                      ha='center')
+    def print_fig_text(self, fig, title):
+        fig.text(0.5, 0.95,
+                 self.latexize(title +
+                               ' --- ' + self.feature.fullname),
+                 ha='center')
 
     def savefile_postfix(self):
         return self.feature.fullname
@@ -283,20 +287,20 @@ class FeatureAnalysis(AnalysisCase):
 
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0,
-                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$')
+                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                'b', linewidth=0.5, alpha=0.5, label='IC-95\\%')
+                'b', linewidth=0.5, alpha=0.5, label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'b', linewidth=0.5, alpha=0.5)
 
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
-                'c', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$')
+                'c', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
-                'c', linewidth=0.5, alpha=0.5, label='IC-95\\%')
+                'c', linewidth=0.5, alpha=0.5, label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'c', linewidth=0.5, alpha=0.5)
