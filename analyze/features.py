@@ -180,19 +180,15 @@ class FeatureAnalysis(AnalysisCase):
 
         self.feature.load()
 
-        #ax = self.fig.add_subplot(221)
-        #self.plot_variations_from_h0_n(ax)
-        #self.plot_mothers_distribution(ax)
+        self.plot_variations_from_h0_n(axs[0])
+        #self.plot_mothers_distribution(axs[0])
 
-        #ax = self.fig.add_subplot(222)
-        #self.plot_daughters_distribution(ax)
-        #self.plot_variations_from_h0(ax)
+        #self.plot_daughters_distribution(axs[0])
+        #self.plot_variations_from_h0(axs[0])
 
-        #ax = self.fig.add_subplot(223)
-        #self.plot_susceptibilities(ax)
+        #self.plot_susceptibilities(axs[0])
 
-        #ax = self.fig.add_subplot(224)
-        self.plot_variations_from_h0_h0_n(axs[0])
+        #self.plot_variations_from_h0_h0_n(axs[0])
 
     def print_fig_text(self, fig, title):
         fig.text(0.5, 0.95,
@@ -262,12 +258,12 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$')
-        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$')
+        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$ ' + self.aa.ingraph_text)
+        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$ ' + self.aa.ingraph_text)
 
         ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2,
-                label='$<f(daughter) - f(mother)>$')
-        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\%')
+                label='$<f(daughter) - f(mother)>$ ' + self.aa.ingraph_text)
+        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_xlabel('Mother feature')
@@ -313,12 +309,12 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0, color=color or 'b',
-                linewidth=2, label=label or '$\\Delta - \\Delta_{H_0}$')
+                linewidth=2, label=label + ' ' + self.aa.ingraph_text or '$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
 
         if chrome:
             ax.plot(self.bin_middles,
                     self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                    'm', label='IC-95\\%')
+                    'm', label='IC-95\\% ' + self.aa.ingraph_text)
             ax.plot(self.bin_middles,
                     self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                     'm')
@@ -335,10 +331,10 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
-                'b', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$')
+                'b', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
-                'm', label='IC-95\\%')
+                'm', label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'm')
