@@ -1,5 +1,7 @@
 import re
 
+import numpy as np
+
 from baseargs import BaseArgs, MultipleBaseArgs
 import settings as st
 
@@ -12,13 +14,16 @@ class AnalysisArgs(BaseArgs):
         super(AnalysisArgs, self).__init__(init_dict)
 
         if init_dict is None:
+
             self.parse_features(self.args.features)
             self.positions = self.args.positions
             self.paths = self.args.paths
             self.save = self.args.save
             self.overwrite = self.args.overwrite
             self.show = self.args.show
+
         else:
+
             self.parse_features(init_dict['features'])
             self.positions = init_dict['positions']
             self.paths = init_dict['paths']
@@ -120,12 +125,14 @@ class AnalysisArgs(BaseArgs):
 class MultipleAnalysisArgs(MultipleBaseArgs):
 
     description = 'analyze substitutions for various argument sets'
+    dim_to_attr = ['ff', 'model', 'substrings', 'POS']
 
     def __init__(self):
 
         super(MultipleAnalysisArgs, self).__init__()
 
         self.features = self.args.features
+        self.ingraph = self.args.ingraph or []
         self.positions = self.args.positions
         self.paths = self.args.paths
         self.save = self.args.save
@@ -134,6 +141,61 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
         # No show implies save
         self.save = self.save or (not self.show)
+
+        # Create the AnalysisArgs array
+        self.ingraph_c = {'ff', 'model', 'substrings', 'POS'}.difference(self.ingraph)
+        self.build_aas_ndarray()
+
+    def __iter__(self):
+        # Create the list of slicing tuples
+        slices = set()
+        for ff_idx in range(len(self.ffs)):
+            for model_idx in range(len(self.models)):
+                for substrings_idx in range(len(self.substringss)):
+                    for POS_idx in range(len(self.POSs)):
+                        s = ()
+                        s += (ff_idx if 'ff' in self.ingraph_c else Ellipsis,)
+                        s += (model_idx if 'model' in self.ingraph_c else Ellipsis,)
+                        s += (substrings_idx if 'substrings' in self.ingraph_c else Ellipsis,)
+                        s += (POS_idx if 'POS' in self.ingraph_c else Ellipsis,)
+                        slices.add(s)
+
+        for s in slices:
+            y = self.aas_ndarray[s]
+            if isinstance(y, np.ndarray):
+                yield y.flatten()
+            else:
+                yield [y]
+
+    def build_aas_ndarray(self):
+        self.aas_shape = (len(self.ffs), len(self.models), len(self.substringss), len(self.POSs))
+        self.aas_ndarray = np.ndarray(self.aas_shape, dtype=AnalysisArgs)
+
+        for i, ff in enumerate(self.args.ffs):
+
+            for j, model in enumerate(self.args.models):
+
+                for k, substrings in enumerate(self.args.substringss):
+
+                    for l, POS in enumerate(self.args.POSs):
+
+                        init_dict = self.create_init_dict(ff,
+                                                          model,
+                                                          substrings,
+                                                          POS)
+
+                        if model in st.mt_mining_fixedslicing_models:
+
+                            if len(self.args.n_timebagss) > 1:
+                                raise ValueError("can't have multiple n_timebags values when using --ingraph option")
+
+                            init_dict['n_timebags'] = int(self.n_timebagss[0])
+                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
+
+                        else:
+
+                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
+
 
     def create_init_dict(self, ff, model, substrings, POS):
         init_dict = super(MultipleAnalysisArgs,
@@ -164,6 +226,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
+        p.add_argument('--ingraph', action='store', nargs='+',
+                       help='parameters to slice into the graphs. Defaults to None.',
+                       choices=['ff', 'model', 'substrings', 'POS'])
         p.add_argument('--no-positions', dest='positions', action='store_const',
                        const=False, default=True,
                        help="don't analyze positions of substitutions")
@@ -191,6 +256,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         print '  models = {}'.format(self.models)
         print '  substringss = {}'.format(self.substringss)
         print '  POSs = {}'.format(self.POSs)
+        print '  ingraph slicing = {}'.format(self.ingraph)
         if self.has_fixedslicing_model():
             print '  n_timebagss = {}'.format(self.n_timebagss)
         print '  features = {}'.format(self.features)
