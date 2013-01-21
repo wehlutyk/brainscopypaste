@@ -180,11 +180,11 @@ class FeatureAnalysis(AnalysisCase):
 
         self.feature.load()
 
-        self.plot_variations_from_h0_n(axs[0])
+        #self.plot_variations_from_h0_n(axs[0])
         #self.plot_mothers_distribution(axs[0])
 
         #self.plot_daughters_distribution(axs[0])
-        #self.plot_variations_from_h0(axs[0])
+        self.plot_variations_from_h0(axs[0])
 
         #self.plot_susceptibilities(axs[0])
 
