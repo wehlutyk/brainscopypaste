@@ -49,6 +49,10 @@ class SubstitutionsAnalyzer(object):
     def analyze_multiple(cls, maa):
         maa.print_analysis()
 
-        for aa in maa:
-            sa = cls(aa)
-            sa.analyze()
+        for aas in maa:
+            print
+            print 'Graph ------------------------'
+            for aa in aas:
+                aa.print_analysis()
+            #sa = cls(aa)
+            #sa.analyze()
