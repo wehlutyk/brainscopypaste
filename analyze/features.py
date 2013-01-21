@@ -310,7 +310,7 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0,
                 #color=color or 'b',
-                linewidth=2 if self.aa.POS == 'all' else 1, label=label + ' ' + self.aa.ingraph_text or '$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
+                linewidth=2 if self.aa.POS == 'all' else 1, label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
 
         if chrome:
             #ax.plot(self.bin_middles,
