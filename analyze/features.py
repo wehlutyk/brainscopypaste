@@ -306,18 +306,19 @@ class FeatureAnalysis(AnalysisCase):
         self.build_h0()
         self.build_variations()
 
-        ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
+        ax.plot(self.bin_middles, np.zeros(self.nbins))#, 'k')
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0, color=color or 'b',
-                linewidth=2, label=label + ' ' + self.aa.ingraph_text or '$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
+                self.daughter_d - self.daughter_d_h0,
+                #color=color or 'b',
+                linewidth=2 if self.aa.POS == 'all' else 1, label=label + ' ' + self.aa.ingraph_text or '$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
 
         if chrome:
-            ax.plot(self.bin_middles,
-                    self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                    'm', label='IC-95\\% ' + self.aa.ingraph_text)
-            ax.plot(self.bin_middles,
-                    self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
-                    'm')
+            #ax.plot(self.bin_middles,
+                    #self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                    #'m', label='IC-95\\% ' + self.aa.ingraph_text)
+            #ax.plot(self.bin_middles,
+                    #self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                    #'m')
 
             ax.set_xlabel('Mother feature')
             ax.set_ylabel('Variations from $H_0$' + self.log_text)
@@ -331,13 +332,14 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
-                'b', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
-        ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
-                'm', label='IC-95\\% ' + self.aa.ingraph_text)
-        ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
-                'm')
+                #'b',
+                linewidth=2 if self.aa.POS == 'all' else 1, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles,
+                #self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
+                #'m', label='IC-95\\% ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles,
+                #self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
+                #'m')
 
         ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from $H_{0,n}$' + self.log_text)
