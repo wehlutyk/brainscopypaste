@@ -56,9 +56,11 @@ class SubstitutionsAnalyzer(object):
     def analyze(self, axss, filepaths):
         self.aa.print_analysis()
 
+        saves = []
         print 'Running analyses...'
         for a, axs, filepath in zip(self.analyses, axss, filepaths):
-            a.analyze(axs, filepath)
+            saves.append(a.analyze(axs, filepath))
+        return saves
 
 
 class SubstitutionsGroupAnalyzer(object):
@@ -91,7 +93,8 @@ class SubstitutionsGroupAnalyzer(object):
                 self.filepaths
             except AttributeError:
                 self.build_analysis_cases_attrs(sa)
-            sa.analyze(self.axss, self.filepaths)
+            # The saves list should be the same for each aa
+            saves = sa.analyze(self.axss, self.filepaths)
 
         # Print titles
         for a, fig in zip(sa.analyses, self.figs):
@@ -99,8 +102,9 @@ class SubstitutionsGroupAnalyzer(object):
 
         # Save if asked to
         if self.gaa.save:
-            for fig, filepath in zip(self.figs, self.filepaths):
-                fig.canvas.print_figure(filepath, dpi=300)
+            for save, fig, filepath in zip(saves, self.figs, self.filepaths):
+                if save:
+                    fig.canvas.print_figure(filepath, dpi=300)
 
     @classmethod
     def analyze_multiple(cls, maa):

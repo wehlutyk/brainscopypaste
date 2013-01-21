@@ -12,9 +12,10 @@ class AnalysisCase(object):
 
     def analyze(self, axs, filepath):
         if self.aa.save and not self.checkfile(filepath):
-            return
+            return False
 
         self.analyze_inner(axs)
+        return True
 
     def build_axes(self):
         raise NotImplementedError
