@@ -185,6 +185,7 @@ class FeatureAnalysis(AnalysisCase):
 
         #self.plot_daughters_distribution(axs[0])
         self.plot_variations_from_h0(axs[0])
+        #self.plot_variations(axs[0])
 
         #self.plot_susceptibilities(axs[0])
 
@@ -263,13 +264,15 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$ ' + self.aa.ingraph_text)
-        ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$ ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$ ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$ ' + self.aa.ingraph_text)
 
-        ax.plot(self.bin_middles, self.v_d, 'b', linewidth=2,
+        ax.plot(self.bin_middles, self.v_d,
+                #'b',
+                linewidth=2,
                 label='$<f(daughter) - f(mother)>$ ' + self.aa.ingraph_text)
-        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\% ' + self.aa.ingraph_text)
-        ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
+        #ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\% ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from mother' + self.log_text)
