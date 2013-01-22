@@ -184,10 +184,10 @@ class FeatureAnalysis(AnalysisCase):
         #self.plot_mothers_distribution(axs[0])
 
         #self.plot_daughters_distribution(axs[0])
-        self.plot_variations_from_h0(axs[0])
+        #self.plot_variations_from_h0(axs[0])
         #self.plot_variations(axs[0])
 
-        #self.plot_susceptibilities(axs[0])
+        self.plot_susceptibilities(axs[0])
 
         #ax = self.fig.add_subplot(224)
         ax = self.fig.add_subplot(111)
@@ -254,7 +254,7 @@ class FeatureAnalysis(AnalysisCase):
         # Add a colorbar
         sm = cm.ScalarMappable(Normalize(b_s_min, b_s_max), cmap)
         sm.set_array(binned_suscepts)
-        self.fig.colorbar(sm, ax=ax)
+        ax.figure.colorbar(sm, ax=ax)
 
         ax.set_xlabel('Pool feature')
         ax.set_ylabel('Susceptibilities in color' + self.log_text)
