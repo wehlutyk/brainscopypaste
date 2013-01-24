@@ -1,0 +1,12 @@
+# The full requirements. Run `pip install -r requirements_numpy.txt` first,
+# or you'll be bumping into errors!
+PyYAML==3.10
+argparse==1.2.1
+distribute==0.6.24
+ipython==0.13.1
+matplotlib==1.2.0
+networkx==1.7
+nltk==2.0.4
+numpy==1.6.2
+scipy==0.11.0
+wsgiref==0.1.2
