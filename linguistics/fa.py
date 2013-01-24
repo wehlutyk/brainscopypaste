@@ -22,21 +22,31 @@ import numpy as np
 from scipy import random
 import networkx as nx
 
+import datainterface.picklesaver as ps
 from util import memoize
 import util.linalg as u_la
+import settings as st
 
 
-def _build_fa_coords(norms):
+def _load_fa_norms():
+    print 'Loading Free Association norms from pickle...',
+    norms = ps.load(st.fa_norms_pickle)
+    print 'OK'
+    return norms
+
+
+load_fa_norms = memoize(_load_fa_norms)
+
+
+def _build_fa_coords():
     """Build a dictionary associating each normed word (in lowercase) in the
     Free Association norms to a coordinate.
-
-    Arguments:
-      * norms: the dict of norms to read from (as created by
-               'datainterface.FreeAssociationNorms.load_norms')
 
     Returns: a dict associating each normed word to its coordinate.
 
     """
+
+    norms = load_fa_norms()
 
     print 'Building word coordinates...',
 
@@ -56,12 +66,11 @@ def _build_fa_coords(norms):
 build_fa_coords = memoize(_build_fa_coords)
 
 
-def build_fa_adjacency_matrix(norms, word_coords, outfmt):
+def build_fa_adjacency_matrix(word_coords, outfmt):
     """Build the adjacency matrix (in CSC or CSR format) for the Free
     Association graph.
 
     Arguments:
-      * norms: the dict of norms to read from
       * word_coords: the dict of coordinates for the norms (as created by
                      'build_fa_coords')
       * outfmt: a string specifying the compression format for the result
@@ -70,6 +79,8 @@ def build_fa_adjacency_matrix(norms, word_coords, outfmt):
     Returns: the adjacency matrix, in Scipy CSC or CSR format, of the Free
              Association graph.
     """
+
+    norms = load_fa_norms()
 
     print 'Building Free Association adjacency matrix...',
 
@@ -99,12 +110,12 @@ def build_fa_adjacency_matrix(norms, word_coords, outfmt):
     return M
 
 
-def _build_fa_nxgraph(norms):
+def _build_fa_nxgraph():
 
     print 'Building NX graph...',
 
-    lem_coords = build_fa_coords(norms)
-    M = build_fa_adjacency_matrix(norms, lem_coords, outfmt='csc')
+    lem_coords = build_fa_coords()
+    M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
     G =  nx.from_scipy_sparse_matrix(M)
 
     print 'OK'
@@ -114,12 +125,9 @@ def _build_fa_nxgraph(norms):
 build_fa_nxgraph = memoize(_build_fa_nxgraph)
 
 
-def build_fa_PR_scores(norms):
+def build_fa_PR_scores():
     """Compute the PageRank scores corresponding to the Free Association
     graph.
-
-    Arguments:
-      * norms: the dict of norms to read from
 
     Returns: a dict associating each normed word to its PageRank score.
 
@@ -127,13 +135,12 @@ def build_fa_PR_scores(norms):
 
     # Build the word coordinates.
 
-    word_coords = build_fa_coords(norms)
+    word_coords = build_fa_coords()
     num_words = len(word_coords)
 
     # Get the normalized adjacency matrix.
 
-    M = u_la.matrix_normalize_columns(build_fa_adjacency_matrix(norms,
-                                                                word_coords,
+    M = u_la.matrix_normalize_columns(build_fa_adjacency_matrix(word_coords,
                                                                 outfmt='csc'),
                                       outfmt='csr')
 
@@ -171,7 +178,7 @@ def build_fa_PR_scores(norms):
     return word_scores
 
 
-def build_fa_BCs(norms):
+def build_fa_BCs():
     """Compute betweenness centrality of lemmas in the FA graph.
 
     Returns: a dict associating each lemma to its BC.
@@ -180,7 +187,7 @@ def build_fa_BCs(norms):
 
     # Build the lemma coordinates.
 
-    lem_coords, G = build_fa_nxgraph(norms)
+    lem_coords, G = build_fa_nxgraph()
 
     print 'Computing the BC of each lemma...',
 
@@ -195,4 +202,3 @@ def build_fa_BCs(norms):
     print 'OK'
 
     return lem_BCs
-

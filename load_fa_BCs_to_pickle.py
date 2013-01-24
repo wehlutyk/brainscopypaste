@@ -17,16 +17,10 @@ if __name__ == '__main__':
     picklefile = st.fa_norms_BCs_pickle
     di_fs.check_file(picklefile)
 
-    # Load the norms.
-
-    print 'Loading Free Association norms from pickle...',
-    norms = ps.load(st.fa_norms_pickle)
-    print 'OK'
-
     # Compute the BCs.
 
     print '*** Computing BCs from the Free Association norms ***'
-    BCs = l_fa.build_fa_BCs(norms)
+    BCs = l_fa.build_fa_BCs()
     print
 
     # And save them to pickle.
