@@ -13,7 +13,7 @@ Classes:
 """
 
 
-from treetaggerwrapper import TreeTagger
+from .treetaggerwrapper import TreeTagger
 
 import settings as st
 
