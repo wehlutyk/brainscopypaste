@@ -20,11 +20,13 @@ from __future__ import division
 from scipy.sparse import csc_matrix, csr_matrix
 import numpy as np
 from scipy import random
+import networkx as nx
 
+from util import memoize
 import util.linalg as u_la
 
 
-def build_fa_coords(norms):
+def _build_fa_coords(norms):
     """Build a dictionary associating each normed word (in lowercase) in the
     Free Association norms to a coordinate.
 
@@ -49,6 +51,9 @@ def build_fa_coords(norms):
     print 'OK'
 
     return word_coords
+
+
+build_fa_coords = memoize(_build_fa_coords)
 
 
 def build_fa_adjacency_matrix(norms, word_coords, outfmt):
@@ -92,6 +97,21 @@ def build_fa_adjacency_matrix(norms, word_coords, outfmt):
     print 'OK'
 
     return M
+
+
+def _build_fa_nxgraph(norms):
+
+    print 'Building NX graph...',
+
+    lem_coords = build_fa_coords(norms)
+    M = build_fa_adjacency_matrix(norms, lem_coords, outfmt='csc')
+    G =  nx.from_scipy_sparse_matrix(M)
+
+    print 'OK'
+    return (lem_coords, G)
+
+
+build_fa_nxgraph = memoize(_build_fa_nxgraph)
 
 
 def build_fa_PR_scores(norms):
@@ -149,3 +169,30 @@ def build_fa_PR_scores(norms):
     print 'OK'
 
     return word_scores
+
+
+def build_fa_BCs(norms):
+    """Compute betweenness centrality of lemmas in the FA graph.
+
+    Returns: a dict associating each lemma to its BC.
+
+    """
+
+    # Build the lemma coordinates.
+
+    lem_coords, G = build_fa_nxgraph(norms)
+
+    print 'Computing the BC of each lemma...',
+
+    BCs = nx.betweenness_centrality(G)
+
+    lem_BCs = {}
+
+    for w, i in lem_coords.iteritems():
+        if BCs[i] > 0:
+            lem_BCs[w] = BCs[i]
+
+    print 'OK'
+
+    return lem_BCs
+
