@@ -1,0 +1,7 @@
+# Needed first, for the full requirements install to work.
+# If you don't believe in this try `pip install -r requirements.txt`
+# directly and see what error it gives you.
+argparse==1.2.1
+distribute==0.6.24
+numpy==1.6.2
+wsgiref==0.1.2
