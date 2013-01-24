@@ -1,7 +1,3 @@
-.settings
-*.ipynb
-.pydevproject
-.project
 *.pyc
 *~
 .ropeproject
