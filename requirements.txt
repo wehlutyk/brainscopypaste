@@ -10,4 +10,5 @@ nltk==2.0.4
 numpy==1.6.2
 redis==2.7.2
 scipy==0.11.0
+tornado==2.4.1
 wsgiref==0.1.2
