@@ -190,8 +190,10 @@ class FeatureAnalysis(AnalysisCase):
 
         #ax = self.fig.add_subplot(224)
         ax = self.fig.add_subplot(111)
+        self.plot_susceptibilities(ax)
         #self.plot_variations_from_h0_h0_n(ax)
-        self.plot_variations_from_h0(ax)
+        #self.plot_variations_from_h0(ax)
+        #self.plot_variations(ax)
 
         self.fig.text(0.5, 0.95,
                       self.latexize(self.aa.title() +
