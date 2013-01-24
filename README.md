@@ -19,7 +19,8 @@ On Debian/Ubuntu, install a few required packages:
 TBD: any additional packages?
 TBD: add some script to download nltk data and install treetagger.
 
-Finally, install Python dependencies:
+Finally, create a virtualenv and install Python dependencies:
 
+    mkvirtualenv webquotes
     pip install -r requirements_numpy.txt   # Used in the next line
     pip install -r requirements.txt         # Needs numpy to be completely installed
