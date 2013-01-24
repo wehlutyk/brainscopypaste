@@ -192,6 +192,13 @@ fa_norms_BCs_pickle = os.path.join(fa_root,
                                    fa_norms_BCs_pickle_rel)
 
 
+# File for CCs of the Free Association data, relative to fa_root.
+
+fa_norms_CCs_pickle_rel = 'norms_CCs.pickle'
+fa_norms_CCs_pickle = os.path.join(fa_root,
+                                   fa_norms_CCs_pickle_rel)
+
+
 #############################################################################
 # MEMETRACKER DATA #
 ####################
@@ -285,6 +292,9 @@ mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
                                              'lem': True,
                                              'log': True},
                                'BCs': {'file': fa_norms_BCs_pickle,
+                                       'lem': True,
+                                       'log': True},
+                               'CCs': {'file': fa_norms_CCs_pickle,
                                        'lem': True,
                                        'log': True}},
                         'cmu': {'MNsyllables': {'file': cmu_MNsyllables_pickle,

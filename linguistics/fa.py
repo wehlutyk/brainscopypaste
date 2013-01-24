@@ -202,3 +202,29 @@ def build_fa_BCs():
     print 'OK'
 
     return lem_BCs
+
+
+def build_fa_CCs():
+    """Compute clustering coefficients of lemmas in the FA graph.
+
+    Returns: a dict associating each lemma to its CC.
+
+    """
+
+    # Build the lemma coordinates.
+
+    lem_coords, G = build_fa_nxgraph()
+
+    print 'Computing the CC of each lemma...',
+
+    CCs = nx.clustering(G)
+
+    lem_CCs = {}
+
+    for w, i in lem_coords.iteritems():
+        if CCs[i] > 0:
+            lem_CCs[w] = CCs[i]
+
+    print 'OK'
+
+    return lem_CCs
