@@ -1,0 +1,10 @@
+## A tentative list of requirements for this software
+
+# numpy
+# scipy
+# pylab
+# matplotlib
+# networkx
+# nltk
+
+## Also needs an init script to download nltk data and install treetagger
