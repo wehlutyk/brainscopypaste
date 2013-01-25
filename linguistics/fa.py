@@ -126,6 +126,22 @@ def _build_fa_nxgraph():
 build_fa_nxgraph = memoize(_build_fa_nxgraph)
 
 
+def _build_fa_undirected_nxgraph():
+
+    print 'Building undirected NX graph...',
+
+    lem_coords = build_fa_coords()
+    M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
+    # Careful to transpose M here: the format for loading into nx is different
+    G =  nx.from_scipy_sparse_matrix(M.transpose())
+
+    print 'OK'
+    return (lem_coords, G)
+
+
+build_fa_undirected_nxgraph = memoize(_build_fa_undirected_nxgraph)
+
+
 def build_fa_PR_scores():
     """Compute the PageRank scores corresponding to the Free Association
     graph.
@@ -242,7 +258,7 @@ def build_fa_CCs():
 
     # Build the lemma coordinates.
 
-    lem_coords, G = build_fa_nxgraph()
+    lem_coords, G = build_fa_undirected_nxgraph()
 
     print 'Computing the CC of each lemma...',
 
