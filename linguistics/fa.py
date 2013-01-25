@@ -243,7 +243,7 @@ def build_fa_outdegrees():
     outdegrees = {}
 
     for w, i in lem_coords.iteritems():
-        if G.outdegree(i) > 0:
+        if G.out_degree(i) > 0:
             outdegrees[w] = G.out_degree(i)
 
     return outdegrees
