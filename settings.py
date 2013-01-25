@@ -199,6 +199,19 @@ fa_norms_CCs_pickle = os.path.join(fa_root,
                                    fa_norms_CCs_pickle_rel)
 
 
+# File for in-degrees of the Free Association data, relative to fa_root.
+
+fa_norms_indegrees_pickle_rel = 'norms_indegrees.pickle'
+fa_norms_indegrees_pickle = os.path.join(fa_root,
+                                         fa_norms_indegrees_pickle_rel)
+
+
+# File for in-degrees of the Free Association data, relative to fa_root.
+
+fa_norms_outdegrees_pickle_rel = 'norms_outdegrees.pickle'
+fa_norms_outdegrees_pickle = os.path.join(fa_root,
+                                          fa_norms_outdegrees_pickle_rel)
+
 # Pickle file for the Free Association path lengths distribution, relative to
 # fa_root
 
@@ -303,6 +316,12 @@ mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
                                        'lem': True,
                                        'log': True},
                                'CCs': {'file': fa_norms_CCs_pickle,
+                                       'lem': True,
+                                       'log': True},
+                               'indegrees': {'file': fa_norms_indegrees_pickle,
+                                       'lem': True,
+                                       'log': True},
+                               'outdegrees': {'file': fa_norms_outdegrees_pickle,
                                        'lem': True,
                                        'log': True}},
                         'cmu': {'MNsyllables': {'file': cmu_MNsyllables_pickle,
