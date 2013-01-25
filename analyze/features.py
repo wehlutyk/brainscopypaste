@@ -366,7 +366,7 @@ class FeatureAnalysis(AnalysisCase):
             for i in range(self.nbins):
                 bin_ = (float(self.bins[i]), float(self.bins[i + 1]))
 
-                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 2)
+                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 1)
                 idx = indices_in_range(self.feature.values, bin_)
 
                 if len(idx) > 0:
