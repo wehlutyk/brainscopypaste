@@ -116,7 +116,8 @@ def _build_fa_nxgraph():
 
     lem_coords = build_fa_coords()
     M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
-    G =  nx.from_scipy_sparse_matrix(M)
+    # Careful to transpose M here: the format for loading into nx is different
+    G =  nx.from_scipy_sparse_matrix(M.transpose(), create_using=nx.DiGraph())
 
     print 'OK'
     return (lem_coords, G)
@@ -202,6 +203,34 @@ def build_fa_BCs():
     print 'OK'
 
     return lem_BCs
+
+
+def build_fa_indegrees():
+    lem_coords, G = build_fa_nxgraph()
+
+    print 'Computing in-degree of each lemma...',
+
+    indegrees = {}
+
+    for w, i in lem_coords.iteritems():
+        if G.in_degree(i) > 0:
+            indegrees[w] = G.in_degree(i)
+
+    return indegrees
+
+
+def build_fa_outdegrees():
+    lem_coords, G = build_fa_nxgraph()
+
+    print 'Computing out-degree of each lemma...',
+
+    outdegrees = {}
+
+    for w, i in lem_coords.iteritems():
+        if G.outdegree(i) > 0:
+            outdegrees[w] = G.out_degree(i)
+
+    return outdegrees
 
 
 def build_fa_CCs():
