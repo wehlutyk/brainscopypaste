@@ -13,12 +13,12 @@ if __name__ == '__main__':
     di_fs.check_file(picklefile)
 
     print
-    print '*** Computing path lengths ***'
+    print '*** Computing WN path lengths ***'
     lengths_detail = l_wn.build_wn_paths()
 
-    print '*** Computing path length distribution ***'
+    print '*** Computing WN path length distribution ***'
     distribution = l_wn.build_wn_paths_distribution(lengths_detail)
 
-    print "*** Saving the path length distribution to '" + picklefile + "'...",
+    print "*** Saving the WN path length distribution to '" + picklefile + "'...",
     ps.save(distribution, picklefile)
     print 'OK'

@@ -5,19 +5,19 @@ import networkx as nx
 
 import datainterface.picklesaver as ps
 import linguistics.wn as l_wn
+import linguistics.fa as l_fa
 from util import inv_dict
 from analyze.base import AnalysisCase
 import settings as st
 
 
-class PathsAnalysis(AnalysisCase):
+class BasePathsAnalysis(AnalysisCase):
 
     def __init__(self, aa, data):
-        super(PathsAnalysis, self).__init__(aa, data)
-        self.filename = st.wn_lengths_pickle
+        super(BasePathsAnalysis, self).__init__(aa, data)
 
     def savefile_postfix(self):
-        return 'paths'
+        raise NotImplementedError
 
     def load(self):
         try:
@@ -31,7 +31,7 @@ class PathsAnalysis(AnalysisCase):
 
             print 'Loading path data'
             self.distribution = ps.load(self.filename)
-            self.lem_coords, G = l_wn.build_wn_nxgraph()
+            self.lem_coords, G = self.load_graph()
             self.inv_coords = inv_dict(self.lem_coords)
             self.G = nx.relabel_nodes(G, self.inv_coords)
 
@@ -73,7 +73,8 @@ class PathsAnalysis(AnalysisCase):
         self.plot_normalized_observed(ax)
 
         self.fig.text(0.5, 0.95,
-                      self.latexize(self.aa.title() + ' --- paths'),
+                      self.latexize(self.aa.title() + ' --- '
+                                    + self.savefile_postfix()),
                       ha='center')
 
     def plot_observed(self, ax):
@@ -87,5 +88,26 @@ class PathsAnalysis(AnalysisCase):
         ax.plot(self.x, self.n_lengths / c_distribution,
                 'r', label='Normalized observed')
         ax.set_xlabel('Distance')
-        ax.set_ylabel('Probability density')
         ax.legend(loc='best')
+
+
+class WNPathsAnalysis(BasePathsAnalysis):
+
+    def __init__(self, aa, data):
+        super(WNPathsAnalysis, self).__init__(aa, data)
+        self.filename = st.wn_lengths_pickle
+        self.load_graph = l_wn.build_wn_nxgraph
+
+    def savefile_postfix(self):
+        return 'paths-wn'
+
+
+class FAPathsAnalysis(BasePathsAnalysis):
+
+    def __init__(self, aa, data):
+        super(FAPathsAnalysis, self).__init__(aa, data)
+        self.filename = st.fa_lengths_pickle
+        self.load_graph = l_fa.build_fa_nxgraph
+
+    def savefile_postfix(self):
+        return 'paths-fa'

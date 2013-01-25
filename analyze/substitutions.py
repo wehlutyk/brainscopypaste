@@ -2,7 +2,7 @@ import datainterface.picklesaver as ps
 from datainterface.fs import get_filename, check_file
 from features import Feature, FeatureAnalysis
 from positions import PositionsAnalysis
-from paths import PathsAnalysis
+from paths import WNPathsAnalysis, FAPathsAnalysis
 
 
 class SubstitutionsAnalyzer(object):
@@ -26,7 +26,9 @@ class SubstitutionsAnalyzer(object):
             self.analyses.append(analysis)
 
         if self.aa.paths:
-            analysis = PathsAnalysis(self.aa, self.substitutions)
+            analysis = WNPathsAnalysis(self.aa, self.substitutions)
+            self.analyses.append(analysis)
+            analysis = FAPathsAnalysis(self.aa, self.substitutions)
             self.analyses.append(analysis)
 
         print 'OK'

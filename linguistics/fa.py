@@ -23,7 +23,7 @@ from scipy import random
 import networkx as nx
 
 import datainterface.picklesaver as ps
-from util import memoize
+from util import inv_dict, memoize
 import util.linalg as u_la
 import settings as st
 
@@ -228,3 +228,30 @@ def build_fa_CCs():
     print 'OK'
 
     return lem_CCs
+
+
+def build_fa_paths():
+
+    lem_coords, G = build_fa_nxgraph()
+    inv_coords = inv_dict(lem_coords)
+
+    print 'Computing the shortest paths between each lemma pair...',
+
+    G = nx.relabel_nodes(G, inv_coords)
+    path_lengths = nx.all_pairs_shortest_path_length(G)
+
+    print 'OK'
+
+    return path_lengths
+
+
+def build_fa_paths_distribution(path_lengths):
+    lengths_all = []
+    for d in path_lengths.itervalues():
+        lengths_all.extend(d.values())
+    lengths_all = np.array(lengths_all, dtype=np.uint8)
+
+    bins = np.arange(lengths_all.min(), lengths_all.max() + 2) - 0.5
+    distribution = np.histogram(lengths_all, bins=bins, normed=True)[0]
+
+    return distribution

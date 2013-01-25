@@ -199,6 +199,14 @@ fa_norms_CCs_pickle = os.path.join(fa_root,
                                    fa_norms_CCs_pickle_rel)
 
 
+# Pickle file for the Free Association path lengths distribution, relative to
+# fa_root
+
+fa_lengths_pickle_rel = 'fa_lengths.pickle'
+fa_lengths_pickle = os.path.join(fa_root,
+                                 fa_lengths_pickle_rel)
+
+
 #############################################################################
 # MEMETRACKER DATA #
 ####################
