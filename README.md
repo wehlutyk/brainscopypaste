@@ -61,7 +61,7 @@ This reads the MemeTracker clusters file and imports various filtered versions o
 
 You can get some preliminary statistics on the data by running the following:
 
-    python 
+    python -u mine_statistics.py
 
 
 ### 3. Run substitution mining
