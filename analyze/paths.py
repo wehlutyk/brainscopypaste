@@ -73,7 +73,6 @@ class BasePathsAnalysis(AnalysisCase):
 
         self.plot_normalized_observed(axs[1])
 
-
     def print_fig_text(self, fig, title):
         fig.text(0.5, 0.95,
                  self.latexize(title + ' --- '
