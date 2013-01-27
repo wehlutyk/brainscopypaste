@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the out-degree for the lemmas in FreeAssociation, and save
+"""Compute the degree for the lemmas in FreeAssociation, and save
 the scores dict to a pickle file."""
 
 
@@ -14,17 +14,17 @@ if __name__ == '__main__':
 
     # The destination file; check it doesn't already exist
 
-    picklefile = st.fa_norms_outdegrees_pickle
+    picklefile = st.fa_norms_degrees_pickle
     di_fs.check_file(picklefile)
 
     # Compute the BCs.
 
-    print '*** Computing outdegrees from the Free Association norms ***'
-    outdegrees = l_fa.build_fa_outdegrees()
+    print '*** Computing degrees from the Free Association norms ***'
+    degrees = l_fa.build_fa_degrees()
     print
 
     # And save them to pickle.
 
-    print "*** Saving the outdegrees to '" + picklefile + "'...",
-    ps.save(outdegrees, picklefile)
+    print "*** Saving the degrees to '" + picklefile + "'...",
+    ps.save(degrees, picklefile)
     print 'OK'

@@ -53,10 +53,17 @@ def _build_fa_coords():
     word_coords = {}
     i = 0
 
-    for w in norms.iterkeys():
+    for w1, assoc in norms.iteritems():
 
-        word_coords[w] = i
-        i += 1
+        for w2, ref, weight in assoc:
+
+            if not word_coords.has_key(w1):
+                word_coords[w1] = i
+                i += 1
+
+            if not word_coords.has_key(w2):
+                word_coords[w2] = i
+                i += 1
 
     print 'OK'
 
@@ -85,24 +92,20 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
     print 'Building Free Association adjacency matrix...',
 
     ij = ([], [])
-    data = []
 
     for w1, assoc in norms.iteritems():
 
         for (w2, ref, weight) in assoc:
 
-            if ref:
-
-                ij[1].append(word_coords[w1])
-                ij[0].append(word_coords[w2])
-                data.append(weight)
+            ij[1].append(word_coords[w1])
+            ij[0].append(word_coords[w2])
 
     # Create the Scipy CSC/CSR matrix.
 
     num_words = len(word_coords)
     build_matrix = {'csc': csc_matrix, 'csr': csr_matrix}
 
-    M = build_matrix[outfmt]((data, ij),
+    M = build_matrix[outfmt]((np.ones(len(ij[0])), ij),
                              shape=(num_words, num_words), dtype=np.float)
 
     print 'OK'
@@ -112,34 +115,19 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
 def _build_fa_nxgraph():
 
-    print 'Building NX graph...',
+    print 'Building Undirected NX graph...',
 
     lem_coords = build_fa_coords()
     M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
-    # Careful to transpose M here: the format for loading into nx is different
-    G =  nx.from_scipy_sparse_matrix(M.transpose(), create_using=nx.DiGraph())
-
-    print 'OK'
-    return (lem_coords, G)
-
-
-build_fa_nxgraph = memoize(_build_fa_nxgraph)
-
-
-def _build_fa_undirected_nxgraph():
-
-    print 'Building undirected NX graph...',
-
-    lem_coords = build_fa_coords()
-    M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
-    # Careful to transpose M here: the format for loading into nx is different
+    # The format for loading into nx is transposed from scipy's, but this isn't
+    # important here since we're symetrising the graph anyway
     G =  nx.from_scipy_sparse_matrix(M.transpose())
 
     print 'OK'
     return (lem_coords, G)
 
 
-build_fa_undirected_nxgraph = memoize(_build_fa_undirected_nxgraph)
+build_fa_nxgraph = memoize(_build_fa_nxgraph)
 
 
 def build_fa_PR_scores():
@@ -221,32 +209,18 @@ def build_fa_BCs():
     return lem_BCs
 
 
-def build_fa_indegrees():
+def build_fa_degrees():
     lem_coords, G = build_fa_nxgraph()
 
-    print 'Computing in-degree of each lemma...',
+    print 'Computing degree of each lemma...',
 
-    indegrees = {}
-
-    for w, i in lem_coords.iteritems():
-        if G.in_degree(i) > 0:
-            indegrees[w] = G.in_degree(i)
-
-    return indegrees
-
-
-def build_fa_outdegrees():
-    lem_coords, G = build_fa_nxgraph()
-
-    print 'Computing out-degree of each lemma...',
-
-    outdegrees = {}
+    degrees = {}
 
     for w, i in lem_coords.iteritems():
-        if G.out_degree(i) > 0:
-            outdegrees[w] = G.out_degree(i)
+        if G.degree(i) > 0:
+            degrees[w] = G.degree(i)
 
-    return outdegrees
+    return degrees
 
 
 def build_fa_CCs():
@@ -258,7 +232,7 @@ def build_fa_CCs():
 
     # Build the lemma coordinates.
 
-    lem_coords, G = build_fa_undirected_nxgraph()
+    lem_coords, G = build_fa_nxgraph()
 
     print 'Computing the CC of each lemma...',
 
