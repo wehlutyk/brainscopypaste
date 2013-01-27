@@ -187,14 +187,12 @@ class FeatureAnalysis(AnalysisCase):
         #self.plot_variations_from_h0(axs[0])
         #self.plot_variations(axs[0])
 
-        self.plot_susceptibilities(axs[0])
-
         #ax = self.fig.add_subplot(224)
-        ax = self.fig.add_subplot(111)
-        #self.plot_susceptibilities(ax)
-        #self.plot_variations_from_h0_h0_n(ax)
-        #self.plot_variations_from_h0(ax)
-        self.plot_variations(ax)
+        #ax = self.fig.add_subplot(111)
+        #self.plot_susceptibilities(axs[0])
+        #self.plot_variations_from_h0_h0_n(axs[0])
+        #self.plot_variations_from_h0(axs[0])
+        self.plot_variations(axs[0])
 
     def print_fig_text(self, fig, title):
         fig.text(0.5, 0.95,
