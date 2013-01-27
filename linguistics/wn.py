@@ -215,7 +215,10 @@ def build_wn_degrees(pos):
     lem_degrees = {}
 
     for w, i in lem_coords.iteritems():
-        lem_degrees[w] = sum(M.data[M.indptr[i]:M.indptr[i+1]])
+        # Use the unpondered graph
+        lem_degrees[w] = M.indptr[i+1] - M.indptr[i]
+        ## Use the pondered graph
+        #lem_degrees[w] = sum(M.data[M.indptr[i]:M.indptr[i+1]])
 
     print 'OK'
 
