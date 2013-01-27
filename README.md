@@ -117,7 +117,7 @@ TBD: add a link to the computed data for those who don't have a workstation to c
     python -u load_fa_paths_to_pickle.py            # Path lengths distribution
 
 
-Lines marked with a `/!\\` sign can be resource-demanding. The time indicated is an order of magnitude of the computing time with a 4x2.4GHz / 4G-RAM laptop.
+Lines marked with a `/!\` sign can be resource-demanding. The time indicated is an order of magnitude of the computing time with a 4x2.4GHz / 4G-RAM laptop.
 
 
 #### WordNet
@@ -136,7 +136,7 @@ Lines marked with a `/!\\` sign can be resource-demanding. The time indicated is
     python -u load_wn_paths_to_pickle.py            # Path lengths distribution
 
 
-Again, lines marked with a `/!\\` sign are pretty resource-demanding. the workserver used has 48 CPUs and 500G of RAM, and the last two lines used up to half the RAM.
+Again, lines marked with a `/!\` sign are pretty resource-demanding. the workserver used has 48 CPUs and 500G of RAM, and the last two lines used up to half the RAM.
 
 
 ### 5. Plot the results
