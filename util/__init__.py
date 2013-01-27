@@ -29,8 +29,8 @@ def indices_in_range(values, (lower, upper), incl=False):
 
 
 def list_to_dict(l):
-    """Convert a list of numbers to a dict associating each single item to an
-    array of its coordinates."""
+    """Convert a list of immutable items to a dict associating each single
+    item to an array of its coordinates."""
     out = {}
 
     for i, item in enumerate(l):

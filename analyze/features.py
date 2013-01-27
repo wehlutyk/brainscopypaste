@@ -483,16 +483,16 @@ class FeatureAnalysis(AnalysisCase):
             o = np.argsort(self.f_susceptibilities[:,0])
             self.f_susceptibilities = self.f_susceptibilities[o]
 
-    def build_l2_f_cl_ids(self):
+    def build_l2_f_cl_m_ids(self):
         try:
-            self.l2_f_cl_ids
+            self.l2_f_cl_m_ids
         except AttributeError:
-            self.l2_f_cl_ids = list_to_dict(self.f_cl_ids)
+            self.l2_f_cl_m_ids = list_to_dict(self.f_cl_m_ids)
 
     def l2_values(self, l1_values):
         l2_values = []
 
-        for idx in self.l2_f_cl_ids.itervalues():
+        for idx in self.l2_f_cl_m_ids.itervalues():
             l2_values.append(l1_values[idx].mean())
 
         return np.array(l2_values)
@@ -515,14 +515,14 @@ class FeatureAnalysis(AnalysisCase):
 
             self.f_mothers
             self.f_daughters
-            self.f_cl_ids
+            self.f_cl_m_ids
 
         except AttributeError:
 
             self.build_w_lists()
             self.f_mothers = []
             self.f_daughters = []
-            self.f_cl_ids = []
+            self.f_cl_m_ids = []
 
             for m, d, cl_id in zip(self.mothers, self.daughters, self.cl_ids):
 
@@ -534,11 +534,10 @@ class FeatureAnalysis(AnalysisCase):
 
                 self.f_mothers.append(f_m)
                 self.f_daughters.append(f_d)
-                self.f_cl_ids.append(cl_id)
+                self.f_cl_m_ids.append((cl_id, m))
 
             self.f_mothers = np.array(self.f_mothers)
             self.f_daughters = np.array(self.f_daughters)
-            self.f_cl_ids = np.array(self.f_cl_ids)
 
     def build_l2_f_lists(self):
         try:
@@ -549,7 +548,7 @@ class FeatureAnalysis(AnalysisCase):
         except AttributeError:
 
             self.build_f_lists()
-            self.build_l2_f_cl_ids()
+            self.build_l2_f_cl_m_ids()
 
             self.l2_f_mothers = self.l2_values(self.f_mothers)
             self.l2_f_daughters = self.l2_values(self.f_daughters)
