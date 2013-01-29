@@ -12,6 +12,7 @@ matplotlib==1.2.0
 networkx==1.7
 nltk==2.0.4
 numpy==1.6.2
+numpydoc==0.4
 pyzmq==2.2.0.1
 redis==2.7.2
 scipy==0.11.0
