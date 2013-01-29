@@ -26,7 +26,7 @@ Then you can create a virtual environment and install the python dependencies:
     pip install -r requirements.txt         # Needs numpy to be completely installed
 
 
-All further shell commands are assumed to be running inside this new virtual environment. (You can activate that environment with `workon webquotes.)
+All further shell commands are assumed to be running inside this new virtual environment. (You can activate that environment with `workon webquotes`.)
 
 The `-u` option used below with the python interpreter is to have unbuffered output: otherwise you'll get the information text messages only once the computations are over, not as it goes.
 
