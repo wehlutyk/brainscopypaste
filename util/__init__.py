@@ -1,9 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Various utility methods.
+
+The methods in this module manipulate lists, dicts, and classes. The
+package also contains methods for exploring a graph, some linear algebra,
+and heck-like helpers to ease logging with multiprocessing.
+
+"""
+
+
 import re
 
 import numpy as np
 
 
 def memoize(func):
+    """Wrap `func` in a caching method."""
+
     cache = {}
     def inner(*args):
         if args not in cache:
@@ -13,6 +27,8 @@ def memoize(func):
 
 
 def inv_dict(d):
+    """Create the dict of `v, k` mappings where `d[k] = v`."""
+
     inv_d = {}
     for k, v in d.iteritems():
         inv_d[v] = k
@@ -20,6 +36,8 @@ def inv_dict(d):
 
 
 def indices_in_range(values, (lower, upper), incl=False):
+    """Find indices of items in `values` that are in range `(lower, upper)`."""
+
     if incl:
         return np.where((lower <= values) *
                         (values <= upper))[0]
@@ -29,8 +47,8 @@ def indices_in_range(values, (lower, upper), incl=False):
 
 
 def list_to_dict(l):
-    """Convert a list of immutable items to a dict associating each single
-    item to an array of its coordinates."""
+    """Build a dict of unique items in `l` associated to their coordinates."""
+
     out = {}
 
     for i, item in enumerate(l):
@@ -47,7 +65,8 @@ def list_to_dict(l):
 
 
 def dict_plusone(d, key):
-    """Add one to d[key] or set it to one if non-existent."""
+    """Add one to `d[key]` or set to one if it does not exist."""
+
     if d.has_key(key):
         d[key] += 1
     else:
@@ -55,7 +74,8 @@ def dict_plusone(d, key):
 
 
 def is_int(s):
-    """Test if a string represents an integer."""
+    """Test if `s` represents an integer."""
+
     try:
         int(s)
         return True
@@ -67,23 +87,36 @@ class ProgressInfo(object):
 
     """Print progress information.
 
-    Methods:
-      * __init__: initialize the instance
-      * next_step: increase progress counter and print info if needed
+    A helper class to print information on the progress of an analysis,
+    depending on the total number of steps and the current completed number.
+
+    Parameters
+    ----------
+    n_tot : int
+        Total number of steps.
+    n_info : int
+        Number of information messages to be printed.
+    label : string, optional
+        Label used for the progress information printed.
+
+    Methods
+    -------
+    next_step()
+        Increase progress counter and print info if needed.
 
     """
 
     def __init__(self, n_tot, n_info, label='objects'):
         """Initialize the instance.
 
-        Arguments:
-          * n_tot: the total number of items through which we are making
-                   progress
-          * n_info: the number of informations messages to be displayed
-
-        Keyword arguments:
-          * label: a label for printing information (i.e. what kind of objects
-                   are we making progress through?). Defaults to 'objects'.
+        Parameters
+        ----------
+        n_tot : int
+            Total number of steps.
+        n_info : int
+            Number of information messages to be printed.
+        label : string, optional
+            Label used for the progress information printed.
 
         """
 
@@ -94,6 +127,7 @@ class ProgressInfo(object):
 
     def next_step(self):
         """Increase progress counter and print info if needed."""
+
         self.progress += 1
         if self.progress % self.info_step == 0:
             print '  {} % ({} / {} {})'.format(
@@ -102,17 +136,25 @@ class ProgressInfo(object):
 
 
 def list_attributes(cls, prefix):
+    """Recursively list all attributes of class `cls` beginning with
+    `prefix`."""
+
     return set([k for scls in cls.__mro__
                 for k in scls.__dict__.iterkeys()
                 if re.search('^' + prefix, k)])
 
 
 def list_attributes_trunc(cls, prefix):
+    """Recursively list all attributes of class `cls` beginning with `prefix`,
+    truncating `prefix` from the attribute names."""
+
     return set([k[len(prefix):] for k in list_attributes(cls, prefix)])
 
 
 def dictionarize_attributes(inst, prefix):
+    """Build a dict of `attr_name, attr` from `inst`'s class attributes
+    beginning with `prefix`, with `attr_name` is truncated from `prefix`."""
+
     keys = list_attributes(inst.__class__, prefix)
     return dict([(k[len(prefix):], inst.__getattribute__(k))
                  for k in keys])
-
