@@ -32,7 +32,7 @@ from datainterface.fs import check_folder
 # '~/Code/cogmaster-stage/data', or even better '../data'.
 # But we should check that it works...
 
-data_root = '/home/sebastien/Code/Research/WebQuotes/data'
+data_root = os.path.abspath('data')
 if not os.path.exists(data_root):
     os.makedirs(data_root)
 
