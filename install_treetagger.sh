@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# Prepare folders
+echo
+echo "[WebQuotes installer] Preparing folders..."
+echo
+mkdir -p usr/share/treetagger
+cd usr/share/treetagger
+
+# Download necessary zips
+echo
+echo "[WebQuotes installer] Downloading exectuables and parameter files..."
+echo
+wget ftp://ftp.ims.uni-stuttgart.de/pub/corpora/tree-tagger-linux-3.2.tar.gz
+wget ftp://ftp.ims.uni-stuttgart.de/pub/corpora/tagger-scripts.tar.gz
+wget ftp://ftp.ims.uni-stuttgart.de/pub/corpora/install-tagger.sh
+wget ftp://ftp.ims.uni-stuttgart.de/pub/corpora/english-par-linux-3.2.bin.gz
+wget ftp://ftp.ims.uni-stuttgart.de/pub/corpora/english-chunker-par-linux-3.2.bin.gz
+
+# Run the installer
+echo
+echo "[WebQuotes installer] Installing files..."
+echo
+chmod +x install-tagger.sh
+./install-tagger.sh
+
+# Warn about the warning that `install-tagger.sh` will give
+echo
+echo "[WebQuotes installer] There is no need to add environment variables as"
+echo "                      suggested in the message above! These are added"
+echo "                      automatically in the webquotes python scripts."
