@@ -12,8 +12,7 @@ Contents:
    :maxdepth: 2
 
    intro
-   installation
-   datasets
+   setup
    usage
    reference
 
