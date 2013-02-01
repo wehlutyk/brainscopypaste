@@ -4,10 +4,12 @@ Analyzing mutation in quotes when they propagate through the blog- and news-spac
 
 This software was developed for a research paper based on the [MemeTracker](http://memetracker.org/) quotes database [to be pusblished]. It is released under the GNU/GPLv3 licence.
 
+You can read all about how to setup and use the software at https://mehho.net/sl/research/webquotes (you might have to add an exception for the certificate, signed by [CACert](https://www.cacert.org/)).
 
-## Quickstart
 
-Setup and usage of the software is a well-documented (though slightly intricate) process. The included docs explain it all, so here are the steps to build those docs on a Debian/Ubuntu system. In a shell, from the root directory of this repository, run the following:
+## Build the docs yourself
+
+If the documentation server is down, you can still build the docs yourself. On a Debian/Ubuntu system: open a shell, `cd` into the root directory of this repository, and run the following:
 
     sudo apt-get install virtualenvwrapper   # For isolating python environments; pulls in virtualenv automatically
     sudo apt-get install tk-dev              # Needed to install matplotlib with TkAgg
