@@ -18,116 +18,47 @@ class MT_dataset(object):
 
     """Represent (part of) the MemeTracker dataset.
 
-    Methods:
-      * __init__: initialize the class with a filename and the folder
-                  containing it
-      * print_quotes_freq: create a file containing, one per line, all the
-                           quotes of the dataset and their frequencies
-      * print_quote_ids: create a file containing, on each line, all the quote
-                         ids belonging to a same cluster
-      * load_clusters: load the whole dataset into a dictionary of Cluster
-                       objects
+    Parameters
+    ----------
+    mt_filename : string
+        Path to the MemeTracker dataset file.
+
+    Attributes
+    ----------
+    clusters : dict of :class:`~datastructure.full.Cluster`\ s
+        Created when calling :meth:`load_clusters`.
+
+    Methods
+    -------
+    load_clusters()
+        Load the whole dataset into a dictionary of \
+                :class:`~datastructure.full.Cluster` objects.
 
     """
 
     def __init__(self, mt_filename):
-        """Initialize the class with a filename and the folder containing it,
-        for saving other files."""
+        """Initialize the instance with the filename of the MemeTracker
+        dataset.
+
+        Parameters
+        ----------
+        mt_filename : string
+            Path to the MemeTracker dataset file.
+
+        """
+
         self.mt_filename = mt_filename
         self.rootfolder = os.path.split(mt_filename)[0]
 
-    def print_quotes_freqs(self):
-        """Create a file containing, one per line, all the quotes of the
-        dataset and their frequencies.
-
-        Effects:
-          * the desired file is created in the folder containing the dataset
-            file, named 'quotes_and_frequency'
-
-        Returns: the full path to the file created.
-
-        """
-
-        outfilename = os.path.join(self.rootfolder, 'quotes_and_frequency')
-
-        with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
-
-            # The first lines are not data.
-
-            self.skip_lines(infile)
-
-            # Parse it all.
-
-            print ('Reading cluster file and writing the quotes and '
-                   'frequencies...'),
-
-            for line in infile:
-
-                if line[0] == '\t' and line[1] != '\t':
-
-                    tokens = line.split('\t')
-                    outfile.write(u'%s\t%d\n' % (tokens[3], int(tokens[1])))
-
-            print 'done'
-
-        return outfilename
-
-    def print_quote_ids(self):
-        """Create a file containing, on each line, all the quote ids belonging
-        to a same cluster.
-
-        Effects:
-          * the desired file is created in the folder containing the dataset
-            file, named 'quotes_and_frequency'
-
-        Returns: the full path to the file created.
-
-        """
-
-        outfilename = os.path.join(self.rootfolder, 'quote_ids')
-
-        with c_open(self.mt_filename, 'rb', encoding='utf-8') as infile, \
-             c_open(outfilename, 'wb', encoding='utf-8') as outfile:
-
-            # The first lines are not data.
-
-            self.skip_lines(infile)
-
-            # Parse it all.
-
-            print 'Reading cluster file and writing quote ids...',
-
-            clust = []
-            j = 0
-
-            for line in infile:
-
-                line0 = re.split(r'[\xa0\s+\t\n]+', line)
-
-                if line0[0] != '':
-                    clust.append([])
-                elif line[0] == '\t' and line[1] != '\t':
-
-                    clust[-1].append(j)
-                    j += 1
-
-            for cl in clust:
-
-                for x in cl:
-                    outfile.write('%d ' % x)
-
-                outfile.write('\n')
-
-            print 'done'
-
-        return outfilename
-
     def load_clusters(self):
-        """Load the whole clusters file into a dictionary of Cluster objects.
+        """Load the whole dataset into a dictionary of
+        :class:`~datastructure.full.Cluster` objects.
 
-        Effects:
-          * the dictionary of Cluster objects is put into self.clusters
+        The dictionary of Cluster objects is stored in ``self.clusters``.
+
+        See Also
+        --------
+        ClustersLoader
 
         """
 

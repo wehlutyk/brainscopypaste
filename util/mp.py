@@ -63,8 +63,8 @@ class LoggingPool(object):
 
     Raising exepctions inside :class:`~multiprocessing.Pool` doesn't always
     get logged. To overcome this problem, this class wraps a
-    :class:`~multiprocessing.Pool` and provides the ``map_async()`` and
-    ``apply_async()`` methods, that will properly log execptions raised in
+    :class:`~multiprocessing.Pool` and provides the :meth:`map_async` and
+    :meth:`apply_async` methods, that will properly log execptions raised in
     subprocesses.
 
     The constructor forwards arguments to :class:`~multiprocessing.Pool`'s
