@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Save or load any data in pickle format.
-
-Methods:
-  * save: save a structure to a file
-  * load: load a structure from a file
-
-"""
+"""Save or load any data in pickle format."""
 
 
 import cPickle
@@ -17,7 +11,11 @@ import types
 import numpy as np
 
 
-# Let us pickle instancemethods
+#
+# This little hack lets us pickle instancemethods
+#
+
+# ----- start hack -----
 
 def _pickle_method(method):
     func_name = method.im_func.__name__
@@ -39,13 +37,18 @@ def _unpickle_method(func_name, obj, cls):
 
 copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
+# ----- end hack -----
+
 
 def save(s, filepath):
     """Save a structure to a file.
 
-    Arguments:
-      * s: the structure to save
-      * filepath: full path to the file to save to
+    Parameters
+    ----------
+    s : picklable
+        The structure to save.
+    filepath : string
+        Full path to the file to save to.
 
     """
 
@@ -56,10 +59,15 @@ def save(s, filepath):
 def load(filepath):
     """Load a structure from a file.
 
-    Arguments:
-      * filepath: full path to the file to load from
+    Parameters
+    ----------
+    filepath : string
+        Full path to the file to load from.
 
-    Returns: the loaded structure.
+    Returns
+    -------
+    s : picklable
+        The loaded structure.
 
     """
 
@@ -70,11 +78,37 @@ def load(filepath):
 
 
 def npsave(s, filepath):
+    """Save a :class:`numpy.ndarray` to a file using numpy's dedicated method.
+
+    Parameters
+    ----------
+    s : :class:`numpy.ndarray`
+        The array to save.
+    filepath : string
+        Full path to the file to save to.
+
+    """
+
     with open(filepath, 'wb') as f:
         np.save(f, s)
 
 
 def npload(filepath):
+    """Load a :class:`numpy.ndarray` from a file using numpy's dedicated
+    method.
+
+    Parameters
+    ----------
+    filepath : string
+        Full path to the file to load from.
+
+    Returns
+    -------
+    s : :class:`numpy.ndarray`
+        The loaded array.
+
+    """
+
     with open(filepath, 'rb') as f:
         s = np.load(f)
 
