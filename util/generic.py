@@ -9,6 +9,7 @@ These methods are helpers used to manipulate lists, dicts, and classes.
 
 
 import re
+import os
 
 import numpy as np
 
@@ -155,3 +156,15 @@ def dictionarize_attributes(inst, prefix):
 
     keys = list_attributes_trunc(inst.__class__, prefix)
     return dict([(k, inst.__getattribute__(k)) for k in keys])
+
+
+def iter_upper_dirs(rel_dir):
+    """Iterate through parent directories of current working directory,
+    appending `rel_dir` to those successive directories."""
+
+    d = os.path.abspath('.')
+    pd = None
+    while pd != d:
+        yield os.path.join(d, rel_dir)
+        pd = d
+        d = os.path.split(d)[0]

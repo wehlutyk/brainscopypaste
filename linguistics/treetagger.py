@@ -13,7 +13,8 @@ Classes:
 """
 
 
-from .treetaggerwrapper import TreeTagger
+from .treetaggerwrapper import TreeTagger, TreeTaggerError
+from util.generic import iter_upper_dirs
 
 import settings as st
 
@@ -57,5 +58,15 @@ class TreeTaggerTags(TreeTagger):
         return [t.split('\t')[2] for t in self._tag_cache(s)]
 
 
-tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=st.treetagger_TAGDIR,
-                        TAGINENC='utf-8', TAGOUTENC='utf-8')
+_found = False
+for d in iter_upper_dirs(st.treetagger_TAGDIR):
+    try:
+        tagger = TreeTaggerTags(TAGLANG='en', TAGDIR=d, TAGINENC='utf-8',
+                                TAGOUTENC='utf-8')
+        _found = True
+    except TreeTaggerError:
+        continue
+
+if not _found:
+    raise TreeTaggerError('TreeTagger directory not found (searched parent '
+                          'directories recursively)')

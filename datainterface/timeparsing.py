@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Parse and convert strings representing dates and times.
-
-Methods:
-  * isostr_to_epoch_mt: convert a time-string from the MemeTracker dataset
-                        into seconds since epoch
-
-"""
+"""Parse and convert strings representing dates and times."""
 
 
 from __future__ import division
@@ -20,11 +14,25 @@ def isostr_to_epoch_mt(isostr):
     """Convert a time-string from the MemeTracker dataset into seconds since
     epoch.
 
-    Arguments:
-      * isostr: a string in format '%Y-%m-%d %H:%M:%S'
+    Parameters
+    ----------
+    isostr : string
+        Representation of a datetime in format ``%Y-%m-%d %H:%M:%S``.
 
-    Returns: the number of seconds between epoch and the time represented by
-             'isostr'.
+    Returns
+    -------
+    secs_to_epoch : int
+        Number of seconds between epoch and the time represented by `isostr`.
+
+    Raises
+    ------
+    AssertionError
+        If the :class:`datetime.datetime` extracted from `isostr` is
+        timezone-aware.
+
+    See Also
+    --------
+    datetime.datetime
 
     """
 

@@ -25,13 +25,13 @@ Time Parsing
 Filesystem Tools
 ----------------
 
-.. auotmodule:: datainterface.fs
+.. automodule:: datainterface.fs
 
 
 MemeTracker
 -----------
 
-.. auotmodule:: datainterface.mt
+.. automodule:: datainterface.mt
 
 
 Age-of-Acquisition

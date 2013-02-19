@@ -965,15 +965,24 @@ class TreeTagger (object) :
 
         Cut links with TreeTagger process.
         """
-        if self.taginput :
-            self.taginput.close()
-            self.taginput = None
-        if self.tagoutput :
-            self.tagoutput.close()
-            self.tagoutput = None
-        if self.tagpopen :
-            self.tagpopen = None
-            # There are terminate() and kill() methods, but only from Python 2.6.
+        try:
+            if self.taginput :
+                self.taginput.close()
+                self.taginput = None
+        except AttributeError:
+            pass
+        try:
+            if self.tagoutput :
+                self.tagoutput.close()
+                self.tagoutput = None
+        except AttributeError:
+            pass
+        try:
+            if self.tagpopen :
+                self.tagpopen = None
+        except AttributeError:
+            pass
+        # There are terminate() and kill() methods, but only from Python 2.6.
 
     #--------------------------------------------------------------------------
     def TagText(self,text,numlines=False,tagonly=False,
