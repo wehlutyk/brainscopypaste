@@ -45,7 +45,7 @@ You can now start the actual substitution mining. ``mine_substitutions.py`` will
 * On the other side:
 
   * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data and the reference documentation for more details ; TODO: add links)
-  * ``--substrings[s]``: indicates whether or not to include susbtitutions of a substring of a quote
+  * ``--substrings[s]``: indicates whether or not to include susbtitutions of substrings of quotes
   * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the supplementary data and the reference documentation for more details ; TODO: add links)
   * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
 
@@ -76,16 +76,16 @@ TBD: add a link to the computed data for those who don't have a workstation to c
 Age-of-Acquisition
 ^^^^^^^^^^^^^^^^^^
 
-::
+Load the Age-of-Acquisition features to a usable pickle file::
 
-   ## Compute features
+   ## Load feature to pickle
    python -u load_aoa_Kuperman_to_pickle.py
 
 
 CMU Pronunciation Dictionary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
+Compute the Mean Number of Phonemes and the Mean Number of Syllables using NLTK / CMU, and save them to a usable pickle file::
 
    ## Compute features
    python -u load_cmu_MNphonemes_to_pickle.py      # Mean numbers of phonemes
@@ -95,7 +95,7 @@ CMU Pronunciation Dictionary
 Free Association Norms
 ^^^^^^^^^^^^^^^^^^^^^^
 
-::
+Load Free Association Norms to a usable pickle file, and compute the four main features based on the norms as well as the path lengths distribution::
 
    ## Preprocess norms data
    python -u load_fa_norms_to_pickle.py
@@ -106,19 +106,20 @@ Free Association Norms
    python -u load_fa_PageRank_to_pickle.py         # PageRank of words
 
    # /!\ laptop: 30 minutes
-   python -u load_fa_BCs_to_pickle.py              # Betweenness centralities of words.
+   python -u load_fa_BCs_to_pickle.py              # Betweenness centralities of words
 
    # /!\ laptop: 30 minutes
    python -u load_fa_paths_to_pickle.py            # Path lengths distribution
 
+.. note::
 
-Lines marked with a ``/!\`` sign can be resource-demanding. The time indicated is an order of magnitude of the computing time with a 4x2.4GHz / 4G-RAM laptop.
+   Lines marked with a ``/!\`` sign can be resource-demanding. The time indicated is an order of magnitude of the computing time with a 4x2.4GHz / 4G-RAM laptop.
 
 
 WordNet
 ^^^^^^^
 
-::
+Compute the four main features and path lengths distribution from the WordNet network::
 
    ## Compute features
    python -u load_wn_degrees_to_pickle.py          # Degrees of words
@@ -133,8 +134,9 @@ WordNet
    # /!\ workserver: 20 hours
    python -u load_wn_paths_to_pickle.py            # Path lengths distribution
 
+.. note::
 
-Again, lines marked with a ``/!\`` sign are pretty resource-demanding. The workserver used has 48 CPUs and 500G of RAM, and the last two lines used up to half the RAM.
+   Again, lines marked with a ``/!\`` sign are pretty resource-demanding. The workserver used has 48 CPUs and 500G of RAM, and the last two commands used up to half the RAM.
 
 
 Plot the results
