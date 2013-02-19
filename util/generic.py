@@ -168,3 +168,44 @@ def iter_upper_dirs(rel_dir):
         yield os.path.join(d, rel_dir)
         pd = d
         d = os.path.split(d)[0]
+
+
+class NotFoundError(Exception):
+
+    """Simple exception to signal a directory was not found."""
+
+    pass
+
+
+def find_upper_rel_dir(rel_dir):
+    """Find a relative directory in parent directories.
+
+    This function will search for directory `rel_dir` in all parent
+    directories of the current directory.
+
+    Parameters
+    ----------
+    rel_dir : string
+        The relative directory to search for.
+
+    Returns
+    -------
+    d : string
+        Full path to the first found directory.
+
+    Raises
+    ------
+    NotFoundError
+        If no relative directory is found in the parent directories.
+
+    See Also
+    --------
+    iter_upper_dirs, NotFoundError
+
+    """
+
+    for d in iter_upper_dirs(rel_dir):
+        if os.path.exists(d) and os.path.isdir(d):
+            return d
+
+    raise NotFoundError('No relative directory found in parent directories')

@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Load data from the MemeTracker dataset.
-
-Classes:
-  * MT_dataset: represent (part of) the MemeTracker dataset
-  * ClustersFileParser: Abstract Base Class to help defining parser for the
-                        MemeTracker file format
-  * ClustersLoader: parse the MemeTracker file format to load all the data
-                    into a dict of Cluster objects
-
-"""
+"""Load data from the MemeTracker dataset."""
 
 
 from __future__ import division
