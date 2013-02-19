@@ -153,6 +153,5 @@ def dictionarize_attributes(inst, prefix):
     """Build a dict of `attr_name, attr` from `inst`'s class attributes
     beginning with `prefix`, with `attr_name` is truncated from `prefix`."""
 
-    keys = list_attributes(inst.__class__, prefix)
-    return dict([(k[len(prefix):], inst.__getattribute__(k))
-                 for k in keys])
+    keys = list_attributes_trunc(inst.__class__, prefix)
+    return dict([(k, inst.__getattribute__(k)) for k in keys])

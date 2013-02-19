@@ -27,7 +27,7 @@ def walk_neighbors(G, node, depth):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : :class:`networkx.classes.graph.Graph`
         Graph to explore.
     node : immutable object
         Name of the node from which to explore neighbors.
@@ -37,7 +37,7 @@ def walk_neighbors(G, node, depth):
     Returns
     -------
     out : set
-        `set` of nodes at distance `<= depth` from `node`.
+        Set of nodes at distance lower of equal to `depth` from `node`.
 
     """
 
@@ -51,7 +51,7 @@ def caching_neighbors_walker(G):
 
     Parameters
     ----------
-    G : networkx.Graph
+    G : :class:`networkx.classes.graph.Graph`
         Graph to work on.
 
     Returns
