@@ -9,7 +9,7 @@ import gc
 
 import datainterface.picklesaver as ps
 import datainterface.mt as di_mt
-from util import ProgressInfo
+from util.generic import ProgressInfo
 import mine.filters as m_fi
 import datainterface.fs as di_fs
 import settings as st

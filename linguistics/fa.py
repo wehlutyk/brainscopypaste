@@ -23,7 +23,7 @@ from scipy import random
 import networkx as nx
 
 import datainterface.picklesaver as ps
-from util import inv_dict, memoize
+from util.generic import inv_dict, memoize
 import util.linalg as u_la
 import settings as st
 

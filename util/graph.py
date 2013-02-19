@@ -1,6 +1,6 @@
 from functools import partial
 
-from util import memoize
+from .generic import memoize
 
 
 def _walk_neighbors(G, node, depth, l):

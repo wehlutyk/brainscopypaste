@@ -1,7 +1,7 @@
 import argparse as ap
 
 from datastructure.full import Cluster
-from util import list_attributes_trunc
+from util.generic import list_attributes_trunc
 import settings as st
 
 

@@ -6,7 +6,7 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 import networkx as nx
 
-from util import dict_plusone, indices_in_range, list_to_dict, inv_dict
+from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
 from linguistics.treetagger import tagger

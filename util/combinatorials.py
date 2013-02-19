@@ -3,12 +3,7 @@
 
 """Combinatorial tools, used particularly when working with quote transitions.
 
-Methods:
-  * _build_ordered_tuples: recursively build the list of all possible ordered
-                           tuples with values in a certain range (private
-                           method, used by 'build_ordered_tuples')
-  * build_ordered_tuples: build the list of all possible ordered tuples with
-                          values below indices_max
+These methods are used to build Combinatorial lists of tuples.
 
 """
 

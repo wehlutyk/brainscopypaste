@@ -42,7 +42,7 @@ from linguistics.wn import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
-from util import ProgressInfo
+from util.generic import ProgressInfo
 from util.mp import LoggingPool
 import settings as st
 

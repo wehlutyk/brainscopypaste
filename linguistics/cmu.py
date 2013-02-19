@@ -22,7 +22,7 @@ from numpy import array
 
 from nltk.corpus import cmudict
 
-from util import is_int
+from util.generic import is_int
 
 prondict = cmudict.dict()
 

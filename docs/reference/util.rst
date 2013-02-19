@@ -1,8 +1,13 @@
 Util
 ====
 
-
 .. automodule:: util
+
+
+Generic utilities
+-----------------
+
+.. automodule:: util.generic
    :members:
 
 

@@ -6,7 +6,7 @@ import networkx as nx
 import datainterface.picklesaver as ps
 import linguistics.wn as l_wn
 import linguistics.fa as l_fa
-from util import inv_dict
+from util.generic import inv_dict
 from analyze.base import AnalysisCase
 import settings as st
 
