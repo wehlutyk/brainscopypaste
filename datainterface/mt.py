@@ -79,15 +79,8 @@ class MT_dataset(object):
 
 class ClustersFileParser(object):
 
-    """Abstract Base Class to help defining parser for the MemeTracker file
+    """Abstract Base Class to help defining parsers for the MemeTracker file
     format.
-
-    'Abstract Base Class' means you can't instantiate this class. It must be
-    subclassed, and is meant to be used as a building block for classes that
-    parse the dataset file. Methods with the @abstractmethod decorator are not
-    implemented here, and must be overloaded (i.e. redefined) in subclasses.
-    Methods starting with an underscore (_X) don't need to be used by
-    subclasses.
 
     The idea here is to ease the writing of a parser for the dataset file: a
     subclass need only define the cluster-, quote-, and url-handlers, which
@@ -95,23 +88,28 @@ class ClustersFileParser(object):
     encountered in the dataset file; the rest of the parsing code is common
     for all classes and is implemented in this base class.
 
-    Methods:
-      * __init__: initialize the class with some internal info for parsing and
-                  printing progress info
-      * parse: parse a file, using the defined cluster-, quote-, and
-               url-handlers
+    Methods
+    -------
+    parse()
+        Parse a file, using the defined cluster-, quote-, and url-handlers
+    handle_cluster()
+        Handle a cluster definition encountered in the dataset file; abstract
+        method.
+    handle_quote()
+        Handle a quote definition encountered in the dataset file; abstract
+        method.
+    handle_url()
+        Handle a url definition encountered in the dataset file; abstract
+        method.
+    _skip_lines()
+        Skip the first few lines in an open file (usually the syntax
+        definition lines).
+    _count_lines()
+        Count the number of lines in a file.
 
-    Abstract methods (must be overloaded in subclasses):
-      * handle_cluster: handle a cluster definition encountered in the dataset
-                        file
-      * handle_quote: handle a quote definition encountered in the dataset
-                      file
-      * handle_url: handle a url definition encountered in the dataset file
-
-    Private methods (don't need to be used in subclasses)::
-      * _skip_lines: skip the first few lines in an open file (usually the
-                     syntax definition lines)
-      * _count_lines: count the number of lines in a file
+    See Also
+    --------
+    ClustersLoader
 
     """
 
@@ -162,8 +160,10 @@ class ClustersFileParser(object):
         """Skip the first few lines in an open file (usually the syntax
         definition lines).
 
-        Arguments:
-          * f: an open file where you want lines to be skipped
+        Parameters
+        ----------
+        f : file descriptor
+            The open file in which you want lines to be skipped.
 
         """
 
@@ -173,10 +173,15 @@ class ClustersFileParser(object):
     def _count_lines(self, filename):
         """Count the number of lines in a file.
 
-        Arguments:
-          * filename: the path to the file from which the lines are counted
+        Parameters
+        ----------
+        filename : string
+            Path to the file from which the lines are counted.
 
-        Returns: the number of lines in the file.
+        Returns
+        -------
+        count : int
+            Number of lines in the file.
 
         """
 
@@ -191,11 +196,14 @@ class ClustersFileParser(object):
     def parse(self, filename):
         """Parse a file, using the defined cluster-, quote-, and url-handlers.
 
-        Arguments:
-          * filename: the path to the file to parse
+        It will parse the file according to the cluster-, quote-, and
+        url-handlers. Each definition line is passed to one of those handlers,
+        and no other action is taken.
 
-        Effects: whatever effects the cluster-, quote-, and url-handlers have,
-                 and nothing else.
+        Parameters
+        ----------
+        filename : string
+            Path to the file to parse.
 
         """
 
@@ -237,19 +245,30 @@ class ClustersFileParser(object):
 
 class ClustersLoader(ClustersFileParser):
 
-    """Parse the MemeTracker file format to load all the data into a dict of
+    """Parse the MemeTracker file to load all the data into a dict of
     Cluster objects.
 
-    This is built as a subclass of the ClustersFileParser, and therefore
-    overloads the cluster-, quote-, and url-handlers. The parsing itself is
+    This is a subclass of :class:`ClustersFileParser`, and therefore
+    overrides the cluster-, quote-, and url-handlers. The parsing itself is
     implemented by the ClustersFileParser.
 
-    Methods:
-      * __init__: initialize the ClustersFileParser and some variables used
-                  for keeping track of what's happening during parsing
-      * handle_cluster: handle a cluster definition in the dataset file
-      * handle_quote: handle a quote definition in the dataset file
-      * handle_url: handle a url definition in the dataset file
+    Attributes
+    ----------
+    clusters : dict of :class:`~datastructure.full.Cluster`\ s
+        Filled up upon parsing.
+
+    Methods
+    -------
+    handle_cluster()
+        Handle a cluster definition in the dataset file.
+    handle_quote()
+        Handle a quote definition in the dataset file.
+    handle_url()
+        Handle a url definition in the dataset file.
+
+    See Also
+    --------
+    ClustersFileParser
 
     """
 
@@ -272,7 +291,17 @@ class ClustersLoader(ClustersFileParser):
         self.clusters = {}
 
     def handle_cluster(self, line_fields):
-        """Handle a cluster definition in the dataset file."""
+        """Handle a cluster definition in the dataset file.
+
+        Create the :class:`~datastructure.full.Cluster` from the
+        `line_fields`, and store it in ``self.clusters``.
+
+        Parameters
+        ----------
+        line_fields : list of strings
+            The fields extracted from the MemeTracker definition line.
+
+        """
 
         # Remember the Cluster id.
 
@@ -283,7 +312,17 @@ class ClustersLoader(ClustersFileParser):
         self.clusters[self.cluster_id] = Cluster(line_fields)
 
     def handle_quote(self, line_fields):
-        """Handle a quote definition in the dataset file."""
+        """Handle a quote definition in the dataset file.
+
+        Create the :class:`~datastructure.full.Quote` in the currently
+        parsed cluster from the `line_fields`.
+
+        Parameters
+        ----------
+        line_fields : list of strings
+            The fields extracted from the MemeTracker definition line.
+
+        """
 
         # Remember the Quote id.
 
@@ -295,7 +334,17 @@ class ClustersLoader(ClustersFileParser):
             Quote(line_fields)
 
     def handle_url(self, line_fields):
-        """Handle a url definition in the dataset file."""
+        """Handle a url definition in the dataset file.
+
+        Add the parsed url (from `line_fields`) to the currently parsed
+        quote.
+
+        Parameters
+        ----------
+        line_fields : list of strings
+            The fields extracted from the MemeTracker definition line.
+
+        """
 
         # Add that url the current Quote's Timeline.
 
