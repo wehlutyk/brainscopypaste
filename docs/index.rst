@@ -17,6 +17,8 @@ Contents:
    reference
 
 
+.. todolist::
+
 
 Indices and tables
 ==================
@@ -24,4 +26,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

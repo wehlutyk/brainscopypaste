@@ -5,7 +5,7 @@
 
 The methods in this module manipulate lists, dicts, and classes. The
 package also contains methods for exploring a graph, some linear algebra,
-and heck-like helpers to ease logging with multiprocessing.
+and hack-like helpers to ease logging with multiprocessing.
 
 """
 

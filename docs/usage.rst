@@ -1,3 +1,5 @@
+.. _usage:
+
 Usage
 =====
 
@@ -44,12 +46,14 @@ You can now start the actual substitution mining. ``mine_substitutions.py`` will
 
 * On the other side:
 
-  * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data and the reference documentation for more details ; TODO: add links)
+  * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
   * ``--substrings[s]``: indicates whether or not to include susbtitutions of substrings of quotes
-  * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the supplementary data and the reference documentation for more details ; TODO: add links)
+  * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
   * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
 
-TODO: use method argument formatting for this
+.. todo::
+
+   Add link to precise reference doc
 
 So to mine with all imaginable models, settings,  and filtered versions of the clusters::
 
@@ -156,3 +160,13 @@ The graph outputs can be:
 
 
 With all this you should be able to reproduce most of the figures in the paper [to be pusblished].
+
+
+References
+----------
+
+.. [LeriqueRoth12suppl] to be pusblished
+
+.. todo::
+
+   Add paper supplementary data reference
