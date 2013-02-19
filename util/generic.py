@@ -14,7 +14,7 @@ import numpy as np
 
 
 def memoize(func):
-    """Wrap `func` in a caching method."""
+    """Wrap `func` in a caching function."""
 
     cache = {}
     def inner(*args):
@@ -151,7 +151,7 @@ def list_attributes_trunc(cls, prefix):
 
 def dictionarize_attributes(inst, prefix):
     """Build a dict of `attr_name, attr` from `inst`'s class attributes
-    beginning with `prefix`, with `attr_name` is truncated from `prefix`."""
+    beginning with `prefix`, with `attr_name` truncated from `prefix`."""
 
     keys = list_attributes_trunc(inst.__class__, prefix)
     return dict([(k, inst.__getattribute__(k)) for k in keys])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Graph exploring utilities.
+"""Graph exploration utilities.
 
 These methods are used to recursively explore neighbors of a node in a graph.
 
@@ -14,7 +14,13 @@ from .generic import memoize
 
 
 def _walk_neighbors(G, node, depth, l):
-    """Recursive worker function for :func:`walk_neighbors`."""
+    """Recursive worker function for :func:`walk_neighbors`.
+
+    See Also
+    --------
+    walk_neighbors
+
+    """
 
     l.add(node)
     if depth > 0:
@@ -58,6 +64,10 @@ def caching_neighbors_walker(G):
     -------
     out : function
         A caching version of :func:`walk_neighbors` without the `G` parameter.
+
+    See Also
+    --------
+    walk_neighbors, .generic.memoize
 
     """
 

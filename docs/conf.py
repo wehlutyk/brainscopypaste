@@ -247,7 +247,11 @@ texinfo_documents = [
 
 # Intersphinx mapping
 intersphinx_mapping = {'networkx': ('http://networkx.lanl.gov/', None),
-                       'numpy': ('http://docs.scipy.org/doc/', None)}
+                       'numpy': ('http://docs.scipy.org/doc/', None),
+                       'python': ('http://docs.python.org/2.7/', None)}
 
 # Show todo items
 todo_include_todos = True
+
+# Default flags for autodoc
+autodoc_default_flags = ['members', 'private-members']
