@@ -1,17 +1,34 @@
 Usage
 =====
 
+In the previous section we set up the environment, installed the dependencies, and downloaded the datasets. Those datasets divide in two categories:
+
+* The MemeTracker dataset, which contains all the blog and quotes data
+* All the other datasets, which are used to compute word features
+
+The general flow for the analysis is as follows:
+
+#. Filter through all of the MemeTracker data looking for substitutions from one quote to another. This is not a trivial task, since substitutions are not directly available from the dataset (because it contains no ``source -> destination`` information) and thus have to be detected based on various models that imagine how the substitution process takes place. Call this step **substitution mining** . The output of this step is a list of mined substitutions; and since we have several ways of mining those substitutions, we obtain a list of mined substitutions for each mining method (or *argument set*). *This step accounts for about half of the total computation time of the final results.*
+#. To characterize the way words are modified upon substitution we compute a set of features for each word, which we use in the next step by examining how those features vary when a word is substituted. Call this step **word feature computation**. *This step accounts for the other half of the computation time of the final results.*
+#. We now have lists of substitutions (one for each mining method) and a set of features for the words involved in the substitutions ; it's time to plot the variations of those features upon substitution. This is the final exploratory step, which we can call **substitution visualization**.
+
+Now let's get all this running!
+
 
 Preprocess the MemeTracker data
 -------------------------------
 
-This reads the MemeTracker clusters file and imports various filtered versions of the clusters into a usable python datastructure, stored in Redis::
+The MemeTracker data comes in a text-based format, which isn't quite suitable for the analysis we want to perform. Before diving into substitution mining, we need to parse the dataset to store it in better-suited python objects. All these objects will be stored in the Redis backend (this speeds up program loading and lets multiple processes read the data without needing to copy it several times in memory).
+
+The following commands will read the MemeTracker clusters file and import various filtered versions of the clusters into usable python datastructures, stored in Redis::
 
    sudo service redis-server start             # Start redis server
    python -u load_mt_clusters_to_pickle.py     # Filter clusters and save to pickle files
    python -u load_mt_pickle_to_redis.py        # Load the filtered clusters to Redis
 
-You can get some preliminary statistics on the data by running the following::
+The data that was loaded to Redis is also stored in files in pickle format, located at ``data/MemeTracker/clust-qt08080902w3mfq5*.txt.pickle``.
+
+You can already get some preliminary statistics on the data by running the following::
 
    python -u mine_statistics.py
 
@@ -19,18 +36,33 @@ You can get some preliminary statistics on the data by running the following::
 Run substitution mining
 -----------------------
 
-This step finds substitutions according to the different substitution-detection models implemented. Careful that these commands are multiprocesssed, and will use all your CPUs minus one, so that I/O doesn't block.
+You can now start the actual substitution mining. ``mine_substitutions.py`` will mine with one given set of arguments defining a model, and ``mine_substitutions_multiple.py`` will mine with multiple sets of arguments, testing all correct combinations of the lists of arguments you provide. The arguments for those commands fall into two types (the plurals, denoted by ``[s]``, are for ``mine_substitutions_multiple.py``):
 
-``mine_substitutions.py`` will mine with one given set of arguments defining a model. ``mine_substitutions_multiple.py`` will mine with multiple sets of arguments, testing all correct combinations of the lists of arguments you provide. So to mine with all imaginable models::
+* On one side:
+
+  * ``--ff[s]``: selects which filtered version of the MemeTracker clusters to work on
+
+* On the other side:
+
+  * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data and the reference documentation for more details ; TODO: add links)
+  * ``--substrings[s]``: indicates whether or not to include susbtitutions of a substring of a quote
+  * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the supplementary data and the reference documentation for more details ; TODO: add links)
+  * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
+
+TODO: use method argument formatting for this
+
+So to mine with all imaginable models, settings,  and filtered versions of the clusters::
 
    python -u mine_substitutions_multiple.py \
        --ffs full framed filtered ff \                         # All filtered versions of clusters
-       --models tbgs slidetbgs growtbgs time cumtbgs root \    # All detection models
+       --models tbgs cumtbgs slidetbgs growtbgs time root \    # All detection models
        --substringss 0 1 \                                     # Include or don't include substitutions on substrings
-       --POS a n v r all \                                     # All filters on POS tags
-       --n_timebags 2 3 4 5 \                                  # Various slicings of clusters into timebags
+       --POSs a n v r all \                                    # All filters on POS tags
+       --n_timebagss 2 3 4 5                                   # Various slicings of clusters into timebags
 
-Careful, the command above took about a day to complete on a 48-CPU / 500G-RAM workserver! You might want to try only a subset of those arguments.
+.. note::
+
+   These commands are multiprocesssed and will use all your CPUs minus one (so that I/O doesn't block) and a lot of RAM. As an example, the command above took about a day to complete on a 48-CPU / 500G-RAM workserver! You might want to try only a subset of those arguments.
 
 
 Compute word features

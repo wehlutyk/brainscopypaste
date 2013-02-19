@@ -3,7 +3,13 @@ Setup
 
 You need to install a few packages to get up and running with the analyses. Once this is done, you will be able to run all the analyses used in the paper and will have access to tools to explore all its data. In particular, this means you will be able to reproduce all the figures in the paper.
 
-I'll assume you're using a Debian/Ubuntu system from now on. If it's not the case, do this on a virtual machine with Debian/Ubuntu, or figure out yourself how to do it on your own system (be it OS X, Windows, or any other OS).
+We'll assume you're using a Debian/Ubuntu system from now on. If it's not the case, do this on a virtual machine with Debian/Ubuntu, or figure out yourself how to do it on your own system (be it OS X, Windows, or any other OS).
+
+The installation breaks down into three steps:
+
+#. Creation and configuration of the python environment
+#. Installation of TreeTagger
+#. Installation of the datasets used by the suite
 
 .. note::
 
@@ -44,13 +50,13 @@ TreeTagger is used to extract POS tags and lemmas from sentences, and is therefo
 
 .. note::
 
-   TreeTagger isn't packaged for usual GNU/Linux distributions, and the above script will do the install locally for you. If you're running OSX, you'll have to adapt the script to download the proper executable. See http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/ for more information.
+   TreeTagger isn't packaged for usual GNU/Linux distributions, and the above script will do the install locally for you. If you're running another OS, you'll have to adapt the script to download the proper executable. See http://www.ims.uni-stuttgart.de/projekte/corplex/TreeTagger/ for more information.
 
 
 Download datasets
 -----------------
 
-Now you can download the datasets WebQuotes works on. These are:
+The software suite uses the following datasets for mining and word feature extraction:
 
 * `WordNet <http://wordnet.princeton.edu/>`_ data
 * `CMU Pronunciation Dictionary <http://www.speech.cs.cmu.edu/cgi-bin/cmudict>`_ data
