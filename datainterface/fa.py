@@ -24,13 +24,14 @@ class FreeAssociationNorms(object):
     Attributes
     ----------
     norms : dict
-        Mapping of ``word, norms`` couples. Created by :meth:`load_norms`.
+        Mapping of ``word, norms`` couples (words in lowercase). Created by \
+                :meth:`load_norms`.
 
     Methods
     -------
     _skip_lines()
         Skip the first few lines in an open file (usually the syntax \
-        definition lines).
+                definition lines).
     load_norms()
         Parse the Appendix A files.
 
