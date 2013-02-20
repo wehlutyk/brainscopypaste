@@ -50,6 +50,8 @@ class PRedis(redis.Redis):
     This subclass of :class:`~redis.Redis` makes storing and loading picklable
     python objects straightforward.
 
+    .. todo:: find Redis doc to link in intersphinx
+
     Methods
     -------
     pset()
@@ -62,8 +64,6 @@ class PRedis(redis.Redis):
     See Also
     --------
     redis.Redis
-
-    .. todo:: find Redis doc to link in intersphinx
 
     """
 

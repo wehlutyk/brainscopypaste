@@ -72,7 +72,7 @@ class TimelineBase(object):
 
     See Also
     --------
-    QuoteBase, full.Timeline
+    QuoteBase, .full.Timeline
 
     """
 
@@ -187,7 +187,7 @@ class QuoteBase(TimelineBase):
 
     See Also
     --------
-    full.Quote, TimelineBase, full.Timeline
+    .full.Quote, TimelineBase, .full.Timeline
 
     """
 
@@ -320,7 +320,7 @@ class ClusterBase(object):
 
     Attributes
     ----------
-    timeline : :class:`~full.Timeline`
+    timeline : :class:`~.full.Timeline`
         The built timeline of the cluster. Created by :meth:`build_timeline`.
     timeline_built : bool
         Whether or not :meth:`build_timeline` has been called.
@@ -328,16 +328,16 @@ class ClusterBase(object):
     Methods
     -------
     add_quote()
-        Add a :class:`~full.Quote` to the cluster (used when loading the data \
-                into the :class:`~full.Cluster` object).
+        Add a :class:`~.full.Quote` to the cluster (used when loading the data \
+                into the :class:`~.full.Cluster` object).
     build_timeline()
-        Build the :class:`~full.Timeline` representing the occurrences of the \
+        Build the :class:`~.full.Timeline` representing the occurrences of the \
                 cluster as a single object (not categorized into quotes; \
                 this is used to plot the occurrences of the cluster).
 
     See Also
     --------
-    full.Cluster, TimelineBase, full.Timeline, QuoteBase, full.Quote
+    .full.Cluster, TimelineBase, .full.Timeline, QuoteBase, .full.Quote
 
     """
 
@@ -436,16 +436,16 @@ class ClusterBase(object):
                 'tot_freq={})').format(self.id, self.n_quotes, self.tot_freq)
 
     def build_timeline(self):
-        """Build the :class:`~full.Timeline` representing the occurrences of
+        """Build the :class:`~.full.Timeline` representing the occurrences of
         the cluster as a single object (not categorized into quotes; this is
         used to plot the occurrences of the cluster).
 
-        The computed :class:`~full.Timeline` object is stored in
+        The computed :class:`~.full.Timeline` object is stored in
         ``self.timeline``, and its attributes are automatically computed.
 
         See Also
         --------
-        full.Timeline
+        .full.Timeline
 
         """
 
@@ -468,7 +468,7 @@ class ClusterBase(object):
 class TimeBagBase(object):
 
     """A bag of strings with some attributes, resulting from the splitting of
-    a :class:`~full.Cluster` into time windows.
+    a :class:`~.full.Cluster` into time windows.
 
     This object is used for analysis of the evolution of a cluster through
     time. It is a timebag containing all strings in `cluster` occurring
@@ -483,7 +483,7 @@ class TimeBagBase(object):
 
     Parameters
     ----------
-    cluster : :class:`~full.Cluster`
+    cluster : :class:`~.full.Cluster`
         The cluster from which to build the timebag.
     start : int
         The starting time for the timebag (in seconds from epoch).
@@ -516,12 +516,12 @@ class TimeBagBase(object):
 
     See Also
     --------
-    full.TimeBag, full.Cluster
+    .full.TimeBag, .full.Cluster
 
     """
 
     def __init__(self, cluster, start, end):
-        """Build from a :class:`~full.Cluster`, a starting time, and an ending
+        """Build from a :class:`~.full.Cluster`, a starting time, and an ending
         time.
 
         A TimeBag containing all strings occurring between start and end will
@@ -536,7 +536,7 @@ class TimeBagBase(object):
 
         Parameters
         ----------
-        cluster : :class:`~full.Cluster`
+        cluster : :class:`~.full.Cluster`
             The cluster from which to build the timebag.
         start : int
             The starting time for the timebag (in seconds from epoch).
