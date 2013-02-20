@@ -185,11 +185,6 @@ class QuoteBase(TimelineBase):
         If the parameters to the constructor are not either only
         `line_fields`, or all of `n_urls`, `tot_freq`, `string`, `qt_id`.
 
-    Methods
-    -------
-    to_qt_string_lower()
-        Build a :class:`full.QtString` from this Quote, in lowercase.
-
     See Also
     --------
     full.Quote, TimelineBase, full.Timeline
@@ -441,11 +436,16 @@ class ClusterBase(object):
                 'tot_freq={})').format(self.id, self.n_quotes, self.tot_freq)
 
     def build_timeline(self):
-        """Build the Timeline representing the occurrences of the cluster as a
-        single object (used in 'plot').
+        """Build the :class:`~full.Timeline` representing the occurrences of
+        the cluster as a single object (not categorized into quotes; this is
+        used to plot the occurrences of the cluster).
 
-        The :class:`~full.Timeline` object is stored in ``self.timeline``, and
-        its attributes are automatically computed.
+        The computed :class:`~full.Timeline` object is stored in
+        ``self.timeline``, and its attributes are automatically computed.
+
+        See Also
+        --------
+        full.Timeline
 
         """
 
@@ -468,33 +468,76 @@ class ClusterBase(object):
 class TimeBagBase(object):
 
     """A bag of strings with some attributes, resulting from the splitting of
-    a Cluster (or Quote) into time windows.
+    a :class:`~full.Cluster` into time windows.
 
-    This object is used for analysis of the evolution of a Cluster through
-    time.
+    This object is used for analysis of the evolution of a cluster through
+    time. It is a timebag containing all strings in `cluster` occurring
+    between `start` and `end`. Attributes about the occurrences are also
+    stored: their ``tot_freq``\ s, their ``n_urls``\ s, and their ``id``\ s.
+    The id of the parent cluster is kept, the total frequency of the timebag
+    is computed, and the string with highest frequency is also found.
 
-    Methods:
-      * __init__: build the TimeBag from a Cluster, a starting time, and an
-                  ending time
-     * qt_string_lower: return a QtString corresponding to string number k of
-                         the Timebag, in lowercase
+    If `cluster` has no quotes occuring between `start` and `end`, the
+    timebag is still created but all its attributes are Initialized to null
+    or empty values.
+
+    Parameters
+    ----------
+    cluster : :class:`~full.Cluster`
+        The cluster from which to build the timebag.
+    start : int
+        The starting time for the timebag (in seconds from epoch).
+    end : int
+        The ending time for the timebag (in seconds from epoch).
+
+    Attributes
+    ----------
+    id_fromcluster : int
+        The parent cluster's id.
+    tot_freq : int
+        Total number of occurrences in the timebag.
+    strings : list of strings
+        List of the strings of the quotes that have occurrences in the timebag.
+    tot_freqs : list of ints
+        Number of occurrences for each of the quotes whose strings are listed
+        in ``self.strings`` (indices correspond).
+    n_urlss : list of ints
+        Number of urls quoting the given quote, for each of the quotes whose
+        whose strings are listed in ``self.strings`` (indices correspond).
+    ids : list of ints
+        Ids of the quotes whose strings are listed in ``self.strings`` (indices
+        correspond).
+    argmax_freq_string : int
+        Index (in ``self.strings``) of the string with highest number of
+        occurrences.
+    max_freq_string : string
+        String with highest number of occurrences
+        (``max_freq_string = strings[argmax_freq_string]``).
+
+    See Also
+    --------
+    full.TimeBag, full.Cluster
 
     """
 
     def __init__(self, cluster, start, end):
-        """Build the TimeBag from a Cluster, a starting time, and an ending
+        """Build from a :class:`~full.Cluster`, a starting time, and an ending
         time.
 
         A TimeBag containing all strings occurring between start and end will
         be created. Attributes about the occurrences are also stored: their
-        tot_freqs, their number of urls, and their ids. The id of the parent
-        Cluster is kept, the total frequency of the TimeBag if computed, and
-        the string with highest frequency is found too.
+        ``tot_freq``\ s, their ``n_urls``\ s, and their ``id``\ s. The id of
+        the parent cluster is kept, the total frequency of the TimeBag is
+        computed, and the string with highest frequency is also found.
 
-        Arguments:
-          * cluster: the Cluster from which to build the TimeBag
-          * start: starting time for the TimeBag, in seconds from epoch
-          * end: ending time for the TimeBag, in seconds from epoch
+        Parameters
+        ----------
+        cluster : :class:`~full.Cluster`
+            The cluster from which to build the timebag.
+        start : int
+            The starting time for the timebag (in seconds from epoch).
+        end : int
+            The ending time for the timebag (in seconds from epoch).
 
         """
 
