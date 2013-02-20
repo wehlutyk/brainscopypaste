@@ -9,4 +9,5 @@ Contents:
    :maxdepth: 2
 
    reference/datainterface
+   reference/datastructure
    reference/util

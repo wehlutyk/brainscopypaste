@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""The base classes for data representation on top of which other packages
+build."""
+
+
 from __future__ import division
 
 from datetime import datetime
 from warnings import warn
-import re
-from textwrap import dedent
 
 import numpy as np
 import pylab as pl
@@ -19,59 +21,6 @@ from datainterface.timeparsing import isostr_to_epoch_mt
 # for-using-import-in-a-module for more details.
 
 
-def list_attributes(cls, prefix):
-    return set([k for scls in cls.__mro__
-                for k in scls.__dict__.iterkeys()
-                if re.search('^' + prefix, k)])
-
-
-def list_attributes_trunc(cls, prefix):
-    return set([k[len(prefix):] for k in list_attributes(cls, prefix)])
-
-
-def dictionarize_attributes(inst, prefix):
-    keys = list_attributes(inst.__class__, prefix)
-    return dict([(k[len(prefix):], inst.__getattribute__(k))
-                 for k in keys])
-
-
-class ArgsetBase(object):
-
-    """Hold a set of arguments for a memetracker analysis.
-
-    Methods:
-      * __init__: fill in the argset based on command line arguments
-
-    """
-
-    def __init__(self, clargs):
-        self.ff = clargs[0]
-        self.lemmatizing = bool(int(clargs.lemmatizing[0]))
-        self.substitutions = clargs.substitutions[0]
-        self.substrings = bool(int(clargs.substrings[0]))
-        self.POS = clargs.POS[0]
-        self.n_timebags = int(clargs.n_timebags[0])
-        self.verbose = clargs.verbose
-        self.resume = clargs.resume
-
-    def __str__(self):
-        return self.__unicode__()
-
-    def __unicode__(self):
-        return dedent('''
-                      ArgsetBase:
-                          ff = {}
-                          lemmatizing = {}
-                          substitutions = {}
-                          substrings = {}
-                          POS = {}
-                          n_timebags = {}
-                          verbose = {}
-                     '''.format(self.ff, self.lemmatizing,
-                                 self.substitutions, self.substrings,
-                                 self.POS, self.verbose, self.n_timebags))
-
-
 class TimelineBase(object):
 
     """Hold a series of occurrences (e.g. occurrences of a quote, or of quotes
@@ -82,16 +31,61 @@ class TimelineBase(object):
     class of Quote. Times in the Timeline are usually stored in seconds from
     epoch.
 
-    Methods:
-      * __init__: initialize the Timeline with a certain length
-      * compute_attrs: compute a histogram of the occurrences as well as a few
-                       useful pieces of information
-      * add_url: add an url to the timeline
+    Parameters
+    ----------
+    length : int
+        Length to Initialize the Timeline with.
+
+    Attributes
+    ----------
+    attrs_computed : bool
+        Whether or not :meth:`compute_attrs` has been called yet.
+    start : int
+        Time of the first occurrence.
+    end : int
+        Time of the last occurrence.
+    span : int
+        Span (in seconds) of the timeline.
+    span_days : int
+        span (in days) of the timeline (minimum 1, and rounded to nearest \
+                integer).
+    ipd : list of ints
+        Number of occurrences per day.
+    ipd_x_secs : list of ints
+        The corresponding timestamps for number of occurrences per day (they \
+                are the times of the middles of the days used as bins for \
+                ``self.ipd``).
+    argmax_ipd : int
+        Index of maximum number of occurrences per day (index in ``self.ipd``).
+    max_ipd : int
+        Maximum number of occurrences per day.
+    max_ipd_x_secs : int
+        Corresponding timestamp for the maximum number of occurrences per day.
+
+    Methods
+    -------
+    add_url()
+        Add an url to the timeline.
+    compute_attrs()
+        Compute a histogram of the occurrences as well as a few useful \
+                pieces of information.
+
+    See Also
+    --------
+    QuoteBase
 
     """
 
     def __init__(self, length):
-        """Initialize the Timeline with a certain length."""
+        """Initialize the Timeline with a certain length.
+
+        Parameters
+        ----------
+        length : int
+            Length to Initialize the Timeline with.
+
+        """
+
         self.url_times = np.zeros(length)
         self.current_idx = 0
         self.attrs_computed = False
@@ -101,12 +95,16 @@ class TimelineBase(object):
         pieces of information.
 
         The useful pieces of information are:
-          * starting and ending time of the Timeline
-          * span in seconds and in days
-          * histogram with 1-day-wide bins
-          * maximum activity (instances per day: ipd)
-          * 24h window of maximum activity, with a rough precision of one day
-            (max_ipd_secs)
+
+        * starting and ending time of the Timeline
+        * span in seconds and in days
+        * histogram with 1-day-wide bins
+        * maximum activity (instances per day: ipd)
+        * 24h window of maximum activity, with a rough precision of one day
+          (max_ipd_secs)
+
+        See the :class:`class documentation <TimelineBase>` for details on
+        the attributes created by this method.
 
         """
 
@@ -138,7 +136,15 @@ class TimelineBase(object):
             self.attrs_computed = True
 
     def add_url(self, line_fields):
-        """Add an url to the Timeline."""
+        """Add an url to the Timeline.
+
+        Parameters
+        ----------
+        line_fields : list of strings
+            The fields extracted from the MemeTracker dataset file.
+
+        """
+
         for i in xrange(int(line_fields[3])):
 
             self.url_times[self.current_idx] = \
@@ -430,4 +436,3 @@ class TimeBagBase(object):
             self.ids = []
             self.argmax_freq_string = -1
             self.max_freq_string = ''
-
