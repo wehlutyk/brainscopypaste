@@ -530,6 +530,10 @@ class TimeBagBase(object):
         the parent cluster is kept, the total frequency of the TimeBag is
         computed, and the string with highest frequency is also found.
 
+        If `cluster` has no quotes occuring between `start` and `end`, the
+        timebag is still created but all its attributes are Initialized to
+        null or empty values.
+
         Parameters
         ----------
         cluster : :class:`~full.Cluster`
