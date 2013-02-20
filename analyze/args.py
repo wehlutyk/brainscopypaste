@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Argument classes for analysis of substitutions.
+
+These classes are used to define arguments in the analysis scripts
+(:mod:`analyze_substitutions` and :mod:`analyze_substitutions_multiple`)
+
+"""
+
+
 import re
 
 from baseargs import BaseArgs, MultipleBaseArgs
@@ -6,9 +17,68 @@ import settings as st
 
 class AnalysisArgs(BaseArgs):
 
+    """Arguments for analysis of one list of substitutions.
+
+    It defines all necessary arguments for an analysis of mined substitutions,
+    and is pluggable into most structures that are related to such an
+    analysis. It is also the main object that :class:`MultipleAnalysisArgs`
+    manipulates. This class inherits from :class:`baseargs.BaseArgs`.
+
+    Parameters
+    ----------
+    init_dict : dict, optional
+        Dictionary of arguments to fill the instance with. If not provided,
+        the arguments will be taken from the command line. Defaults to
+        ``None``.
+
+    Attributes
+    ----------
+    features : dict
+        Subportion of the dict of features defined by :mod:`settings`. \
+                Specifies which features to analyze for.
+    positions : bool
+        Whether or not to analyze positions of substituted words.
+    paths : bool
+        Whether or not to analyze distances travelled upon substitution.
+    save : bool
+        Whether or not to save the generated plots to files.
+    overwrite : bool
+        Whether or not to overwrite existing files when saving plots.
+    show : bool
+        Whether or not to show the plots generated (vs. only saving them).
+        (``!show`` implies ``save``.)
+
+    Methods
+    -------
+    create_argparser()
+        Create the argument parser to extract arguments from command line.
+    parse_features()
+        Parse the ``features`` argument from the command line.
+    print_analysis()
+        Print details of the analysis specified by the instance.
+    title()
+        Build a title representing the type of analysis specified.
+
+    See Also
+    --------
+    baseargs.BaseArgs, MultipleAnalysisArgs
+
+    """
+
     description = 'analyze substitutions (haming_word-distance == 1)'
 
     def __init__(self, init_dict=None):
+        """Initialize the structure from command line or provided parameters.
+
+        Parameters
+        ----------
+        init_dict : dict, optional
+            Dictionary of arguments to fill the instance with. If not provided,
+            the arguments will be taken from the command line. Defaults to
+            ``None``.
+
+        """
+
         super(AnalysisArgs, self).__init__(init_dict)
 
         if init_dict is None:
@@ -30,6 +100,17 @@ class AnalysisArgs(BaseArgs):
         self.save = self.save or (not self.show)
 
     def parse_features(self, f_strings):
+        """Parse the ``features`` argument from the command line.
+
+        The result, a subportion of the dict of features defined by
+        :mod:`settings`, is stored in ``self.features``.
+
+        Parameters
+        ----------
+        f_strings : list of strings
+            The ``features`` argument extracted from the command line.
+
+        """
 
         self.features = {}
 
@@ -55,10 +136,19 @@ class AnalysisArgs(BaseArgs):
                 if len(self.features[s]) == 0:
                     self.features[s] = set(st.mt_analysis_features[s].keys())
 
+        # If ``f_strings`` is None
         except TypeError:
             pass
 
     def create_argparser(self):
+        """Create the argument parser to extract arguments from command line.
+
+        Returns
+        -------
+        p : :class:`argparse.ArgumentParser`
+            The argument parser used to parse the command line arguments.
+
+        """
 
         # Create the arguments parser.
 
@@ -90,7 +180,8 @@ class AnalysisArgs(BaseArgs):
         return p
 
     def print_analysis(self):
-        """Print this AnalysisArgs to stdout."""
+        """Print details of the analysis specified by the instance."""
+
         print
         print 'Analyzing with the following args:'
         print '  ff = {}'.format(self.ff)
@@ -108,6 +199,15 @@ class AnalysisArgs(BaseArgs):
         print '  show = {}'.format(self.show)
 
     def title(self):
+        """Build a title representing the type of analysis specified.
+
+        Returns
+        -------
+        title : string
+            The built title.
+
+        """
+
         title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ff,
                                                                 self.model,
                                                                 self.substrings,

@@ -10,4 +10,5 @@ Contents:
 
    reference/datainterface
    reference/datastructure
+   reference/analyze
    reference/util
