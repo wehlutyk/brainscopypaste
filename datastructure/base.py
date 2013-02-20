@@ -158,18 +158,35 @@ class QuoteBase(TimelineBase):
     Timeline).
 
     This is a subclass of Timeline, meant to hold additionnal information
-    about a quote.
+    about a quote. The constructor accepts either the `line_fields` parameter,
+    OR all of `n_urls`, `tot_freq`, `string`, and `qt_id` (those four
+    parameters correspond to the extracted data from `line_fields`). Any other
+    combination of parameters will raise a ValueError.
 
-    Methods:
-      * __init__: initialize the quote based on a line from the dataset, or
-                  explicit attributes
-      * __repr__: define how we see a Quote object when printed in a terminal
-                  (e.g. >>> myquote)
-      * __str__: see __unicode__
-      * __unicode__: define how we see a Quote object when printed with print
-                     (e.g. >>> print myquote)
-      * to_qt_string_lower: return a QtString built from this Quote, in
-                            lowercase
+    Parameters
+    ----------
+    line_fields : list of strings, optional
+        Fields from the MemeTracker dataset file, as provided by
+        :meth:`datainterface.mt.ClustersLoader.handle_quote`.
+    n_urls : int, optional
+        Number of urls quoting the quote.
+    tot_freq : int, optional
+        Total number of occurrences of the quote.
+    string : string, optional
+        The quote string itself.
+    qt_id : int, optional
+        The quote id, as given by the dataset.
+
+    Raises
+    ------
+    ValueError
+        If the parameters to the constructor are not either only
+        `line_fields`, or all of `n_urls`, `tot_freq`, `string`, `qt_id`.
+
+    Methods
+    -------
+    to_qt_string_lower()
+        Build a :class:`full.QtString` from this Quote, in lowercase.
 
     """
 
@@ -178,15 +195,25 @@ class QuoteBase(TimelineBase):
         """Initialize the quote based on a line from the dataset, or explicit
         attributes.
 
-        Arguments -- either line_fields OR all of n_urls, tot_freq, string,
-                     and qt_id must be provided:
-          * line_fields: a list of strings read from tab-separated fields in
-                         the raw dataset file, as provided by methods in
-                         'datainterface.mt'
-          * n_urls: number of urls quoting the quote
-          * tot_freq: total number of occurrences of the quote
-          * string: the quote string itself
-          * qt_id: the quote id, as given by the dataset
+        Parameters
+        ----------
+        line_fields : list of strings, optional
+            Fields from the MemeTracker dataset file, as provided by
+            :meth:`datainterface.mt.ClustersLoader.handle_quote`.
+        n_urls : int, optional
+            Number of urls quoting the quote.
+        tot_freq : int, optional
+            Total number of occurrences of the quote.
+        string : string, optional
+            The quote string itself.
+        qt_id : int, optional
+            The quote id, as given by the dataset.
+
+        Raises
+        ------
+        ValueError
+            If the parameters to the constructor are not either only
+            `line_fields`, or all of `n_urls`, `tot_freq`, `string`, `qt_id`.
 
         """
 
@@ -233,16 +260,19 @@ class QuoteBase(TimelineBase):
 
     def __repr__(self):
         """Define how we see a Quote object when printed in a terminal
-        (e.g. >>> myquote)."""
+        (e.g. ```>>> myquote```)."""
+
         return '<Quote: ' + self.__unicode__() + '>'
 
     def __str__(self):
         """See __unicode__."""
+
         return self.__unicode__()
 
     def __unicode__(self):
-        """Define how we see a Quote object when printed with print
-        (e.g. >>> print myquote)."""
+        """Define how we see a Quote object when printed with ``print``
+        (e.g. ``>>> print myquote``)."""
+
         return ('"' + self.string + '" (quote #{} ; '
                 'tot_freq={})').format(self.id, self.tot_freq)
 
