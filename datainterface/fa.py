@@ -2,14 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Load data from raw files from the University of South Florida Free
-Association Norms.
-
-Classes:
-  * FreeAssociationNorms: load raw Free Association norms files (Appendix A
-                          from http://w3.usf.edu/FreeAssociation/) and parse
-                          them
-
-"""
+Association Norms."""
 
 
 from codecs import open as c_open
@@ -20,16 +13,32 @@ class FreeAssociationNorms(object):
     """Load raw Free Association norms files (Appendix A from
     http://w3.usf.edu/FreeAssociation/) and parse them.
 
-    Methods:
-      * __init__: initialize the filenames the be parsed
-      * _skip_lines: skip the first few lines in an open file (usually the
-                     syntax definition lines)
-      * load_norms: parse the Appendix A files and save results in self.norms
+    Use this class by creating an instance and then calling its
+    :meth:`load_norms` method.
+
+    Parameters
+    ----------
+    filenames : list of strings
+        The list of paths to the files constituting the Free Association Norms.
+
+    Attributes
+    ----------
+    norms : dict
+        Mapping of ``word, norms`` couples. Created by :meth:`load_norms`.
+
+    Methods
+    -------
+    _skip_lines()
+        Skip the first few lines in an open file (usually the syntax \
+        definition lines).
+    load_norms()
+        Parse the Appendix A files.
 
     """
 
     def __init__(self, filenames):
-        """Initialize the filenames the be parsed."""
+        """Initialize the filenames to be parsed."""
+
         self.filenames = filenames
         self._n_skip = 4
 
@@ -37,8 +46,10 @@ class FreeAssociationNorms(object):
         """Skip the first few lines in an open file (usually the syntax
         definition lines).
 
-        Arguments:
-          * f: an open file where you want lines to be skipped
+        Parameters
+        ----------
+        f : file descriptor
+            The open file in which you want lines to be skipped.
 
         """
 
@@ -46,14 +57,14 @@ class FreeAssociationNorms(object):
             f.readline()
 
     def load_norms(self):
-        """Parse the Appendix A files and save results in self.norms.
+        """Parse the Appendix A files.
 
-        Effects: set self.norms to a dict containing, for each (lowercased)
-                 cue, a list of tuples. Each tuple represents a word
-                 referenced by the cue, and is in format (word, ref, weight):
-                 'word' is the word referenced; 'ref' is a boolean indicating
-                 if 'word' has been normed or not; 'weight' is the strength of
-                 the referencing.
+        After loading, ``self.norms`` is a dict containing, for each
+        (lowercased) cue, a list of tuples. Each tuple represents a word
+        referenced by the cue, and is in format ``(word, ref, weight)``:
+        ``word`` is the referenced word; ``ref`` is a boolean indicating
+        if ``word`` has been normed or not; ``weight`` is the strength of
+        the referencing.
 
         """
 
