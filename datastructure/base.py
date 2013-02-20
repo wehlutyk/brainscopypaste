@@ -158,7 +158,9 @@ class QuoteBase(TimelineBase):
     Timeline).
 
     This is a subclass of Timeline, meant to hold additionnal information
-    about a quote. The constructor accepts either the `line_fields` parameter,
+    about a quote.
+
+    The constructor accepts either the `line_fields` parameter,
     OR all of `n_urls`, `tot_freq`, `string`, and `qt_id` (those four
     parameters correspond to the extracted data from `line_fields`). Any other
     combination of parameters will raise a ValueError.
@@ -194,6 +196,11 @@ class QuoteBase(TimelineBase):
                  string=None, qt_id=None):
         """Initialize the quote based on a line from the dataset, or explicit
         attributes.
+
+        The constructor accepts either the `line_fields` parameter,
+        OR all of `n_urls`, `tot_freq`, `string`, and `qt_id` (those four
+        parameters correspond to the extracted data from `line_fields`). Any
+        other combination of parameters will raise a ValueError.
 
         Parameters
         ----------
@@ -260,12 +267,12 @@ class QuoteBase(TimelineBase):
 
     def __repr__(self):
         """Define how we see a Quote object when printed in a terminal
-        (e.g. ```>>> myquote```)."""
+        (e.g. ``>>> myquote``)."""
 
         return '<Quote: ' + self.__unicode__() + '>'
 
     def __str__(self):
-        """See __unicode__."""
+        """See :meth:`__unicode__`."""
 
         return self.__unicode__()
 
@@ -286,38 +293,85 @@ class ClusterBase(object):
     read), and can be analyzed later thanks to methods imported from analysis
     packages.
 
-    Methods:
-      * __init__: initialize the cluster based on a line from the dataset, or
-                  explicit attributes
-      * __repr__: define how we see a Cluster object when printed in a
-                  terminal (e.g. >>> mycluster)
-      * __str__: see __unicode__
-      * __unicode__: define how we see a Cluster object when printed with
-                     print (e.g. >>> print mycluster)
-      * add_quote: add a Quote to the Cluster (used when loading the data into
-                   the Cluster object)
-      * build_timeline: build the Timeline representing the occurrences of the
-                        cluster as a single object (not categorized into
-                        quotes; this is used to plot the occurrences of the
-                        cluster)
+    The constructor accepts either the `line_fields` parameter,
+    OR all of `n_quotes`, `tot_freq`, `root`, and `cl_id` (those four
+    parameters correspond to the extracted data from `line_fields`). Any other
+    combination of parameters will raise a ValueError.
+
+    Parameters
+    ----------
+    line_fields : list of strings, optional
+        Fields from the MemeTracker dataset file, as provided by
+        :meth:`datainterface.mt.ClustersLoader.handle_quote`.
+    n_quotes : int, optional
+        Number of quotes in the cluster.
+    tot_freq : int, optional
+        Total number of occurrences in the cluster (i.e. sum of the
+        ``tot_freq``\ s of the quotes).
+    root : string, optional
+        The root string for the cluster.
+    cl_id : int, optional
+        The cluster id, as given by the dataset.
+
+    Raises
+    ------
+    ValueError
+        If the parameters to the constructor are not either only
+        `line_fields`, or all of `n_quotes`, `tot_freq`, `root`, `cl_id`.
+
+    Attributes
+    ----------
+    timeline : :class:`~full.Timeline`
+        The built timeline of the cluster. Created by :meth:`build_timeline`.
+    timeline_built : bool
+        Whether or not :meth:`build_timeline` has been called.
+
+    Methods
+    -------
+    add_quote()
+        Add a :class:`~full.Quote` to the cluster (used when loading the data \
+                into the :class:`~full.Cluster` object).
+    build_timeline()
+        Build the :class:`~full.Timeline` representing the occurrences of the \
+                cluster as a single object (not categorized into quotes; \
+                this is used to plot the occurrences of the cluster).
+
+    See Also
+    --------
+    TimelineBase, full.Timeline, QuoteBase, full.Quote
 
     """
 
     def __init__(self, line_fields=None, n_quotes=None, tot_freq=None,
-                  root=None, cl_id=None):
+                 root=None, cl_id=None):
         """Initialize the cluster based on a line from the dataset, or
         explicit attributes.
 
-        Arguments -- either line_fields OR all of n_quotes, tot_freq, root,
-                     and cl_id must be provided:
-          * line_fields: a list of strings read from tab-separated fields in
-                         the raw dataset file, as provided by methods in
-                         'datainterface.mt'
-          * n_quotes: number of quotes in the cluster
-          * tot_freq: total number of occurrences of the cluster (i.e. sum of
-                      tot_freqs of the Quotes)
-          * root: the root string for the cluster
-          * cl_id: the cluster id, as given by the dataset
+        The constructor accepts either the `line_fields` parameter,
+        OR all of `n_quotes`, `tot_freq`, `root`, and `cl_id` (those four
+        parameters correspond to the extracted data from `line_fields`). Any
+        other combination of parameters will raise a ValueError.
+
+        Parameters
+        ----------
+        line_fields : list of strings, optional
+            Fields from the MemeTracker dataset file, as provided by
+            :meth:`datainterface.mt.ClustersLoader.handle_quote`.
+        n_quotes : int, optional
+            Number of quotes in the cluster.
+        tot_freq : int, optional
+            Total number of occurrences in the cluster (i.e. sum of the
+            ``tot_freq``\ s of the quotes).
+        root : string, optional
+            The root string for the cluster.
+        cl_id : int, optional
+            The cluster id, as given by the dataset.
+
+        Raises
+        ------
+        ValueError
+            If the parameters to the constructor are not either only
+            `line_fields`, or all of `n_quotes`, `tot_freq`, `root`, `cl_id`.
 
         """
 
@@ -366,22 +420,30 @@ class ClusterBase(object):
 
     def __repr__(self):
         """Define how we see a Cluster object when printed in a terminal
-        (e.g. >>> mycluster)."""
+        (e.g. ``>>> mycluster``)."""
+
         return '<Cluster: ' + self.__unicode__() + '>'
 
     def __str__(self):
-        """See __unicode__."""
+        """See :meth:`__unicode__`."""
+
         return self.__unicode__()
 
     def __unicode__(self):
-        """Define how we see a Cluster object when printed with print
-        (e.g. >>> print mycluster)."""
+        """Define how we see a Cluster object when printed with ``print``
+        (e.g. ``>>> print mycluster``)."""
+
         return ('"' + self.root + '" (cluster #{} ; tot_quotes={} ; '
                 'tot_freq={})').format(self.id, self.n_quotes, self.tot_freq)
 
     def build_timeline(self):
         """Build the Timeline representing the occurrences of the cluster as a
-        single object (used in 'plot')."""
+        single object (used in 'plot').
+
+        The :class:`full.Timeline` object is stored in ``self.timeline``, and
+        its attributes are automatically computed.
+
+        """
 
         from datastructure.full import Timeline
 
