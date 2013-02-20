@@ -72,7 +72,7 @@ class TimelineBase(object):
 
     See Also
     --------
-    QuoteBase
+    QuoteBase, full.Timeline
 
     """
 
@@ -189,6 +189,10 @@ class QuoteBase(TimelineBase):
     -------
     to_qt_string_lower()
         Build a :class:`full.QtString` from this Quote, in lowercase.
+
+    See Also
+    --------
+    full.Quote, TimelineBase, full.Timeline
 
     """
 
@@ -338,7 +342,7 @@ class ClusterBase(object):
 
     See Also
     --------
-    TimelineBase, full.Timeline, QuoteBase, full.Quote
+    full.Cluster, TimelineBase, full.Timeline, QuoteBase, full.Quote
 
     """
 
@@ -440,7 +444,7 @@ class ClusterBase(object):
         """Build the Timeline representing the occurrences of the cluster as a
         single object (used in 'plot').
 
-        The :class:`full.Timeline` object is stored in ``self.timeline``, and
+        The :class:`~full.Timeline` object is stored in ``self.timeline``, and
         its attributes are automatically computed.
 
         """
