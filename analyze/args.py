@@ -143,6 +143,8 @@ class AnalysisArgs(BaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
+        This method is used by :class:`~baseargs.BaseArgs`'s constructor.
+
         Returns
         -------
         p : :class:`argparse.ArgumentParser`
@@ -219,9 +221,51 @@ class AnalysisArgs(BaseArgs):
 
 class MultipleAnalysisArgs(MultipleBaseArgs):
 
+    """Arguments for analysis of multiple lists of substitutions.
+
+    It defines all necessary arguments for analysis of substitutions mined
+    with several sets of arguments, and is usable with the
+    :class:`.base.SubstitutionsAnalyzer`. This class inherits from
+    :class:`baseargs.MultipleBaseArgs`.
+
+    Attributes
+    ----------
+    features : dict
+        Subportion of the dict of features defined by :mod:`settings`. \
+                Specifies which features to analyze for.
+    positions : bool
+        Whether or not to analyze positions of substituted words.
+    paths : bool
+        Whether or not to analyze distances travelled upon substitution.
+    save : bool
+        Whether or not to save the generated plots to files.
+    overwrite : bool
+        Whether or not to overwrite existing files when saving plots.
+    show : bool
+        Whether or not to show the plots generated (vs. only saving them).
+        (``!show`` implies ``save``.)
+
+    Methods
+    -------
+    create_argparser()
+        Create the argument parser to extract arguments from command line.
+    create_args_instance()
+        Create a :class:`AnalysisArgs` instance.
+    create_init_dict()
+        Create an initialization dict.
+    print_analysis()
+        Print details of the analyses specified by the instance.
+
+    See Also
+    --------
+    baseargs.MultipleBaseArgs, AnalysisArgs
+
+    """
+
     description = 'analyze substitutions for various argument sets'
 
     def __init__(self):
+        """Initialize the instance with arguments from the command line."""
 
         super(MultipleAnalysisArgs, self).__init__()
 
@@ -236,6 +280,34 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         self.save = self.save or (not self.show)
 
     def create_init_dict(self, ff, model, substrings, POS):
+        """Create an initialization dict.
+
+        This will produce an initialization dict suitable for creation of
+        an instance of :class:`AnalysisArgs`, merging the parameters provided
+        and the arguments stored in attributes of ``self``.
+
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        constructor.
+
+        Parameters
+        ----------
+        ff : string
+            The type of filtering for the clusters.
+        model : string
+            The substitution detection model.
+        substrings : bool
+            Whether or not to include substitutions from substrings of quotes.
+        POS : string
+            The type of POS filtering.
+
+        Returns
+        -------
+        init_dict : dict
+            The initialization dict resulting of parameters merged with
+            internal attributes.
+
+        """
+
         init_dict = super(MultipleAnalysisArgs,
                           self).create_init_dict(ff,
                                                  model,
@@ -250,9 +322,37 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         return init_dict
 
     def create_args_instance(self, init_dict):
+        """Create a :class:`AnalysisArgs` instance.
+
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        constructor.
+
+        Parameters
+        ----------
+        init_dict : dict
+            The initialization dictionary for the :class:`AnalysisArgs`.
+
+        Returns
+        -------
+        aa : :class:`AnalysisArgs`
+            The initialized instance.
+
+        """
+
         return AnalysisArgs(init_dict)
 
     def create_argparser(self):
+        """Create the argument parser to extract arguments from command line.
+
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        constructor.
+
+        Returns
+        -------
+        p : :class:`argparse.ArgumentParser`
+            The argument parser used to parse the command line arguments.
+
+        """
 
         # Create the arguments parser.
 
@@ -284,7 +384,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         return p
 
     def print_analysis(self):
-        """Print this MultipleAnalysisArgs to stdout."""
+        """Print details of the analyses specified by the instance."""
+
         print
         print 'Analyzing with the following lists of args:'
         print '  ffs = {}'.format(self.ffs)

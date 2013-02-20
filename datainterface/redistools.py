@@ -44,13 +44,13 @@ copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 class PRedis(redis.Redis):
 
-    """Add methods to :class:`~redis.Redis` to load and save python objects to
+    """Add methods to :class:`redis.Redis` (`ref`_) to load and save python objects to
     a redis database.
 
-    This subclass of :class:`~redis.Redis` makes storing and loading picklable
+    This subclass of :class:`redis.Redis` (`ref`_) makes storing and loading picklable
     python objects straightforward.
 
-    .. todo:: find Redis doc to link in intersphinx
+    .. _ref: https://pypi.python.org/pypi/redis
 
     Methods
     -------
@@ -63,7 +63,8 @@ class PRedis(redis.Redis):
 
     See Also
     --------
-    redis.Redis
+    redis
+        `Reference documentation <https://pypi.python.org/pypi/redis>`_
 
     """
 
@@ -85,7 +86,7 @@ class PRedis(redis.Redis):
         Returns
         -------
         r : bool
-            The result of the :meth:`~redis.Redis.set` operation.
+            The result of the :meth:`redis.Redis.set` (`ref`_) operation.
 
         See Also
         --------
@@ -200,11 +201,11 @@ class RedisReader(object):
     iterkeys()
         Iterate through keys like :meth:`dict.iterkeys`.
     __iter__()
-        Iteration interface, like :meth:`dict.__iter__`.
+        Iteration interface.
     __len__()
-        Length interface, like :meth:`dict.__len__`.
+        Length interface.
     __getitem__()
-        Item getter, like :meth:`dict.__getitem__`.
+        Item getter.
 
     See Also
     --------
@@ -256,17 +257,17 @@ class RedisReader(object):
             yield k
 
     def __iter__(self):
-        """Iteration interface, like :meth:`dict.__iter__`."""
+        """Iteration interface."""
 
         for k in self._keys:
             yield k
 
     def __len__(self):
-        """Length interface, like :meth:`dict.__len__`."""
+        """Length interface."""
 
         return len(self._keys)
 
     def __getitem__(self, name):
-        """Item getter, like :meth:`dict.__getitem__`."""
+        """Item getter."""
 
         return self._rserver.pget(self._pref, name)

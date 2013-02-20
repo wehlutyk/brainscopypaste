@@ -3,10 +3,11 @@
 
 """Hacky helper to have proper exception logging with multiprocessing.
 
-:class:`LoggingPool` defines a :class:`~multiprocessing.Pool` that properly
-logs exceptions.
+This code is taken from http://stackoverflow.com/questions/6728236/exception-thrown-in-multiprocessing-pool-not-detected.
 
-.. todo:: add SO question reference
+:class:`LoggingPool` defines a
+:class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>` that
+properly logs exceptions.
 
 """
 
@@ -58,30 +59,35 @@ class LogExceptions(object):
 
 class LoggingPool(object):
 
-    """Mimic :class:`~multiprocessing.Pool`'s behavior with additional logging
-    capabilities.
+    """Mimic
+    :class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>`'s
+    behavior with additional logging capabilities.
 
-    Raising exepctions inside :class:`~multiprocessing.Pool` doesn't always
-    get logged. To overcome this problem, this class wraps a
-    :class:`~multiprocessing.Pool` and provides the :meth:`map_async` and
-    :meth:`apply_async` methods, that will properly log execptions raised in
-    subprocesses.
+    Raising exceptions inside
+    :class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>`
+    doesn't always get logged. To overcome this problem, this class wraps a
+    :class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>`
+    and provides the :meth:`map_async` and :meth:`apply_async` methods, that
+    will properly log execptions raised in subprocesses.
 
-    The constructor forwards arguments to :class:`~multiprocessing.Pool`'s
+    The constructor forwards arguments to
+    :class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>`'s
     constructor.
 
     Methods
     -------
     apply_async()
-        Forward to the :class:`~multiprocessing.Pool`'s ``apply_async()``, \
+        Forward to \
+                :meth:`multiprocessing.Pool.apply_async <multiprocessing.pool.multiprocessing.Pool.apply_async>`, \
                 with wrapping for exception logging.
     map_async()
-        Forward to the :class:`~multiprocessing.Pool`'s ``map_async()``, \
+        Forward to \
+                :meth:`multiprocessing.Pool.map_async <multiprocessing.pool.multiprocessing.Pool.map_async>`, \
                 with wrapping for exception logging.
 
     See Also
     --------
-    multiprocessing.Pool, LogExceptions
+    multiprocessing.pool.multiprocessing.Pool, LogExceptions
 
     """
 
@@ -90,13 +96,15 @@ class LoggingPool(object):
         self._pool = Pool(*args, **kwargs)
 
     def apply_async(self, func, args=(), kwds={}, callback=None):
-        """Forward to the :class:`~multiprocessing.Pool`'s ``apply_async()``,
+        """Forward to
+        :meth:`multiprocessing.Pool.apply_async <multiprocessing.pool.multiprocessing.Pool.apply_async>`,
         with wrapping for exception logging."""
 
         return self._pool.apply_async(LogExceptions(func), args, kwds, callback)
 
     def map_async(self, func, args=[], callback=None):
-        """Forward to the :class:`~multiprocessing.Pool`'s ``map_async()``,
+        """Forward to
+        :meth:`multiprocessing.Pool.map_async <multiprocessing.pool.multiprocessing.Pool.map_async>`,
         with wrapping for exception logging."""
 
         return self._pool.map_async(LogExceptions(func), args, callback)

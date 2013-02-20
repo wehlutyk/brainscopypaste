@@ -14,7 +14,8 @@ import settings as st
 def load_aoa_Kuperman_csv():
     """Load the AoA Kuperman csv data into a dict.
 
-    The path to the csv file is taken from the :mod:`settings` module.
+    The path to the csv file is taken from the
+    :const:`settings.aoa_Kuperman_csv` variable.
 
     Returns
     -------
