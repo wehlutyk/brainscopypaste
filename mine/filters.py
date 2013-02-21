@@ -1,6 +1,6 @@
 import numpy as np
 
-from linguistics.treetagger import tagger
+from linguistics.treetagger import TaggerBuilder
 from linguistics.language import langdetector
 
 
@@ -206,6 +206,7 @@ def filter_cluster(cl, min_tokens):
     """
 
     import datastructure.full as ds_mt
+    tagger = TaggerBuilder.get_tagger()
 
     # If the root has less than wanted, filter the whole cluster.
 

@@ -58,10 +58,21 @@ class TreeTaggerTags(TreeTagger):
         return [t.split('\t')[2] for t in self._tag_cache(s)]
 
 
-try:
-    tagger = TreeTaggerTags(TAGLANG='en',
-                            TAGDIR=find_upper_rel_dir(st.treetagger_TAGDIR),
-                            TAGINENC='utf-8', TAGOUTENC='utf-8')
-except NotFoundError:
-    raise TreeTaggerError('TreeTagger directory not found (searched parent '
-                          'directories recursively)')
+
+class TaggerBuilder(object):
+
+    tagger = None
+
+    @classmethod
+    def get_tagger(cls):
+        if not cls.tagger:
+            try:
+                cls.tagger = TreeTaggerTags(
+                        TAGLANG='en',
+                        TAGDIR=find_upper_rel_dir(st.treetagger_TAGDIR),
+                        TAGINENC='utf-8', TAGOUTENC='utf-8')
+            except NotFoundError:
+                raise TreeTaggerError('TreeTagger directory not found '
+                                      '(searched parent directories '
+                                      'recursively)')
+        return cls.tagger

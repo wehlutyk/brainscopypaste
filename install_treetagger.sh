@@ -4,8 +4,8 @@
 echo
 echo "[WebQuotes installer] Preparing folders..."
 echo
-mkdir -p usr/share/treetagger
-cd usr/share/treetagger
+mkdir -p treetagger
+cd treetagger
 
 # Download necessary zips
 echo

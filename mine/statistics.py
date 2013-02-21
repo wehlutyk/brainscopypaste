@@ -1,4 +1,4 @@
-from linguistics.treetagger import tagger
+from linguistics.treetagger import TaggerBuilder
 
 
 def build_n_quotes_to_clusterids(clusters):
@@ -35,6 +35,8 @@ def build_quotelengths_to_n_quote(clusters):
              that string length'.
 
     """
+
+    tagger = TaggerBuilder.get_tagger()
 
     inv_qt_lengths = {}
 

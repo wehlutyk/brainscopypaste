@@ -37,7 +37,7 @@ from multiprocessing import cpu_count
 import numpy as np
 
 from linguistics.distance import levenshtein
-from linguistics.treetagger import tagger
+from linguistics.treetagger import TaggerBuilder
 from linguistics.wn import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
@@ -69,6 +69,7 @@ class Substitution(object):
 
     def lemmatize(self):
         """Lemmatize the substitution using TreeTagger and Wordnet."""
+        tagger = TaggerBuilder.get_tagger()
         t1 = tagger.Lemmatize(self.mother)[self.idx]
         t2 = tagger.Lemmatize(self.daughter)[self.idx]
 

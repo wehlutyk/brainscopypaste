@@ -341,7 +341,7 @@ check_folder(mt_analysis_figures)
 #
 # Folder where the treetagger executables and libs live.
 
-treetagger_TAGDIR = 'usr/share/treetagger'
+treetagger_TAGDIR = 'treetagger'
 
 
 ##############################################################################

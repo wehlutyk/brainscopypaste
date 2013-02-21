@@ -9,7 +9,7 @@ import networkx as nx
 from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
-from linguistics.treetagger import tagger
+from linguistics.treetagger import TaggerBuilder
 import linguistics.wn as l_wn
 from analyze.base import AnalysisCase
 import settings as st
@@ -155,6 +155,8 @@ class Feature(object):
 class FeatureAnalysis(AnalysisCase):
 
     def __init__(self, aa, data, feature):
+        self.tagger = TaggerBuilder.get_tagger()
+
         # We need the feature to be calling savefile_postfix in super
         self.feature = feature
         super(FeatureAnalysis, self).__init__(aa, data)
@@ -448,7 +450,7 @@ class FeatureAnalysis(AnalysisCase):
                     try:
                         words = s.mother.lems
                     except AttributeError:
-                        words = tagger.Lemmatize(s.mother)
+                        words = self.tagger.Lemmatize(s.mother)
                 else:
                     words = s.mother.tokens
 
