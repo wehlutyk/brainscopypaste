@@ -1,2 +1,0 @@
-# Requirements for ReadTheDocs
-numpydoc==0.4
