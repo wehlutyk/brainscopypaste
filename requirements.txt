@@ -9,6 +9,7 @@ distribute==0.6.24
 docutils==0.10
 ipython==0.13.1
 matplotlib==1.2.0
+mock==1.0.1
 networkx==1.7
 nltk==2.0.4
 numpy==1.6.2
