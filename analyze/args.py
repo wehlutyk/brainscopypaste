@@ -11,6 +11,8 @@ These classes are used to define arguments in the analysis scripts
 
 import re
 
+import numpy as np
+
 from baseargs import BaseArgs, MultipleBaseArgs
 import settings as st
 
@@ -82,13 +84,16 @@ class AnalysisArgs(BaseArgs):
         super(AnalysisArgs, self).__init__(init_dict)
 
         if init_dict is None:
+
             self.parse_features(self.args.features)
             self.positions = self.args.positions
             self.paths = self.args.paths
             self.save = self.args.save
             self.overwrite = self.args.overwrite
             self.show = self.args.show
+
         else:
+
             self.parse_features(init_dict['features'])
             self.positions = init_dict['positions']
             self.paths = init_dict['paths']
@@ -200,6 +205,44 @@ class AnalysisArgs(BaseArgs):
         print '  overwrite = {}'.format(self.overwrite)
         print '  show = {}'.format(self.show)
 
+
+class GroupAnalysisArgs(object):
+
+    def __init__(self, aas, maa, s):
+        self.aas = aas
+        self.save = maa.save
+
+        # Build texts for filenames
+        self.ffs_text = ','.join(maa.ffs) if s[0] is Ellipsis else maa.ffs[s[0]]
+        self.models_text = ','.join(maa.models) if s[1] is Ellipsis else maa.models[s[1]]
+        if s[2] is Ellipsis:
+            self.substringss_text = ','.join(['yes' if ss else 'no' for ss in maa.substringss])
+        else:
+            self.substringss_text = 'yes' if maa.substringss[s[2]] else 'no'
+        self.POSs_text = ','.join(maa.POSs) if s[3] is Ellipsis else maa.POSs[s[3]]
+
+        fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
+        if sum(fixedslicing_models):
+            self.has_fixedslicing_model = True
+            self.n_timebags_text = aas[fixedslicing_models.index(True)].n_timebags
+
+        # Build text for in graph legend
+        for aa in aas:
+            text_to_include = []
+            if s[0] is Ellipsis:
+                text_to_include.append('ff: ' + aa.ff)
+            if s[1] is Ellipsis:
+                text_to_include.append('model: ' + aa.model)
+            if s[2] is Ellipsis:
+                text_to_include.append('sub: ' + aa.substrings)
+            if s[3] is Ellipsis:
+                text_to_include.append('POS: ' + aa.POS)
+            aa.ingraph_text = ' | '.join(text_to_include)
+
+    def __iter__(self):
+        for aa in self.aas:
+            yield aa
+
     def title(self):
         """Build a title representing the type of analysis specified.
 
@@ -210,12 +253,12 @@ class AnalysisArgs(BaseArgs):
 
         """
 
-        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ff,
-                                                                self.model,
-                                                                self.substrings,
-                                                                self.POS)
-        if self.is_fixedslicing_model():
-            title += ' | n: {}'.format(self.n_timebags)
+        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ffs_text,
+                                                                self.models_text,
+                                                                self.substringss_text,
+                                                                self.POSs_text)
+        if self.has_fixedslicing_model:
+            title += ' | n: {}'.format(self.n_timebags_text)
         return title
 
 
@@ -270,6 +313,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         super(MultipleAnalysisArgs, self).__init__()
 
         self.features = self.args.features
+        self.ingraph = self.args.ingraph or []
         self.positions = self.args.positions
         self.paths = self.args.paths
         self.save = self.args.save
@@ -278,6 +322,61 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
         # No show implies save
         self.save = self.save or (not self.show)
+
+        # Create the AnalysisArgs array
+        self.ingraph_c = {'ff', 'model', 'substrings', 'POS'}.difference(self.ingraph)
+        self.build_aas_ndarray()
+
+    def __iter__(self):
+        # Create the list of slicing tuples
+        slices = set()
+        for ff_idx in range(len(self.ffs)):
+            for model_idx in range(len(self.models)):
+                for substrings_idx in range(len(self.substringss)):
+                    for POS_idx in range(len(self.POSs)):
+                        s = ()
+                        s += (ff_idx if 'ff' in self.ingraph_c else Ellipsis,)
+                        s += (model_idx if 'model' in self.ingraph_c else Ellipsis,)
+                        s += (substrings_idx if 'substrings' in self.ingraph_c else Ellipsis,)
+                        s += (POS_idx if 'POS' in self.ingraph_c else Ellipsis,)
+                        slices.add(s)
+
+        for s in slices:
+            y = self.aas_ndarray[s]
+            if isinstance(y, np.ndarray):
+                yield GroupAnalysisArgs(y.flatten(), self, s)
+            else:
+                yield GroupAnalysisArgs([y], self, s)
+
+    def build_aas_ndarray(self):
+        self.aas_shape = (len(self.ffs), len(self.models), len(self.substringss), len(self.POSs))
+        self.aas_ndarray = np.ndarray(self.aas_shape, dtype=AnalysisArgs)
+
+        for i, ff in enumerate(self.args.ffs):
+
+            for j, model in enumerate(self.args.models):
+
+                for k, substrings in enumerate(self.args.substringss):
+
+                    for l, POS in enumerate(self.args.POSs):
+
+                        init_dict = self.create_init_dict(ff,
+                                                          model,
+                                                          substrings,
+                                                          POS)
+
+                        if model in st.mt_mining_fixedslicing_models:
+
+                            if len(self.args.n_timebagss) > 1:
+                                raise ValueError("can't have multiple n_timebags values when using --ingraph option")
+
+                            init_dict['n_timebags'] = int(self.n_timebagss[0])
+                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
+
+                        else:
+
+                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
+
 
     def create_init_dict(self, ff, model, substrings, POS):
         """Create an initialization dict.
@@ -364,6 +463,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
+        p.add_argument('--ingraph', action='store', nargs='+',
+                       help='parameters to slice into the graphs. Defaults to None.',
+                       choices=['ff', 'model', 'substrings', 'POS'])
         p.add_argument('--no-positions', dest='positions', action='store_const',
                        const=False, default=True,
                        help="don't analyze positions of substitutions")
@@ -392,6 +494,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         print '  models = {}'.format(self.models)
         print '  substringss = {}'.format(self.substringss)
         print '  POSs = {}'.format(self.POSs)
+        print '  ingraph slicing = {}'.format(self.ingraph)
         if self.has_fixedslicing_model():
             print '  n_timebagss = {}'.format(self.n_timebagss)
         print '  features = {}'.format(self.features)

@@ -79,14 +79,29 @@ def get_fileprefix(args):
 
     # Create the file prefix according to 'args'.
 
-    file_prefix = ''
-    file_prefix += 'F{}_'.format(args.ff)
-    file_prefix += 'M{}_'.format(args.model)
-    file_prefix += 'S{}_'.format('yes' if args.substrings else 'no')
-    file_prefix += 'P{}_'.format(args.POS)
+    try:
 
-    if args.is_fixedslicing_model():
-        file_prefix += 'N{}_'.format(args.n_timebags)
+        file_prefix = ''
+        file_prefix += 'F{}_'.format(args.ffs_text)
+        file_prefix += 'M{}_'.format(args.models_text)
+        file_prefix += 'S{}_'.format(args.substringss_text)
+        file_prefix += 'P{}_'.format(args.POSs_text)
+
+        try:
+            file_prefix += 'N{}_'.format(args.n_timebags_text)
+        except AttributeError:
+            pass
+
+    except AttributeError:
+
+        file_prefix = ''
+        file_prefix += 'F{}_'.format(args.ff)
+        file_prefix += 'M{}_'.format(args.model)
+        file_prefix += 'S{}_'.format('yes' if args.substrings else 'no')
+        file_prefix += 'P{}_'.format(args.POS)
+
+        if args.is_fixedslicing_model():
+            file_prefix += 'N{}_'.format(args.n_timebags)
 
     return file_prefix
 
