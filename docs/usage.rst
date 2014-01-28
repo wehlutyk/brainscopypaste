@@ -28,7 +28,7 @@ The following commands will read the MemeTracker clusters file and import variou
    python -u load_mt_clusters_to_pickle.py     # Filter clusters and save to pickle files
    python -u load_mt_pickle_to_redis.py        # Load the filtered clusters to Redis
 
-The data that was loaded to Redis is also stored in files in pickle format, located at ``data/MemeTracker/clust-qt08080902w3mfq5*.txt.pickle``.
+The data that was loaded to Redis is also stored in files in pickle format, located at ``data/MemeTracker/clust-qt08080902w3mfq5.txt*.pickle``.
 
 You can already get some preliminary statistics on the data by running the following::
 
