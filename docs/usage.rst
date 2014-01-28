@@ -72,9 +72,11 @@ So to mine with all imaginable models, settings,  and filtered versions of the c
 Compute word features
 ---------------------
 
-To measure what happens during a substition (the ones you just mined), you need to characterize the way words are changed upon substitution. This step computes the features used to characterize substitutions.
+To measure what happens during a substitution (the ones you just mined), you need to characterize the way words are changed upon substitution. This step computes the features used to characterize substitutions.
 
-TBD: add a link to the computed data for those who don't have a workstation to compute it all.
+.. todo::
+
+   Add a link to the computed data for those who don't have a workstation to compute it all.
 
 
 Age-of-Acquisition

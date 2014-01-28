@@ -35,6 +35,7 @@ You can then create a virtual environment where we'll install the dependencies::
 
    mkvirtualenv webquotes
 
+
 Quick environment setup on a 64-bit machine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -43,6 +44,7 @@ If you are using a 64-bit Linux OS, the binaries for all the environment are alr
    ./install_wheels.sh
 
 which should last only a few seconds, and you're good to go. You can jump directly to :ref:`treetagger-installation`.
+
 
 Environment setup from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,6 +65,7 @@ On any other architecture, you must install and build the dependencies from sour
 .. note::
 
    All further shell commands are assumed to be running inside this new virtual environment. It is activated automatically after the ``mkvirtualenv webquotes`` command, but you can activate it manually in a new shell by running ``workon webquotes``.
+
 
 .. _treetagger-installation:
 
