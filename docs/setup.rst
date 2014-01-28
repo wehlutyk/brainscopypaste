@@ -29,7 +29,6 @@ Creating the environment
 You need ``virtualenv`` (`documentation <http://www.virtualenv.org/en/latest/>`_), ``virtualenvwrapper`` (`documentation <http://virtualenvwrapper.readthedocs.org/en/latest/>`_), ``tk-dev`` and ``redis-server`` for the environment to run the suite. On Debian/Ubuntu you can do this by running the following commands in a shell::
 
    sudo apt-get install virtualenvwrapper  # For isolating python environments; pulls in virtualenv automatically
-   sudo apt-get install tk-dev             # Needed to install matplotlib with TkAgg
    sudo apt-get install redis-server       # A key-value store for data storage
 
 Then you can create a virtual environment and install the python dependencies::
@@ -37,6 +36,10 @@ Then you can create a virtual environment and install the python dependencies::
    mkvirtualenv webquotes
    pip install -r requirements_numpy.txt   # Required for the next line to work
    pip install -r requirements.txt         # Needs numpy to be completely installed
+
+.. todo::
+
+   Detail build dependencies (e.g. ``tk-dev`` for matplotlib, but also ``build-essentials``, ``python-dev``, the fortran toolchain, etc.)
 
 .. note::
 
