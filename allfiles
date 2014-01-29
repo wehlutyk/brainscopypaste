@@ -1,0 +1,83 @@
+├── analyze
+│   ├── args.py
+│   ├── base.py
+│   ├── features.py
+│   ├── __init__.py
+│   ├── paths.py
+│   ├── positions.py
+│   ├── substitutions.py
+├── datainterface
+│   ├── aoa.py
+│   ├── fa.py
+│   ├── fs.py
+│   ├── __init__.py
+│   ├── mt.py
+│   ├── picklesaver.py
+│   ├── redistools.py
+│   ├── timeparsing.py
+├── datastructure
+│   ├── base.py
+│   ├── full.py
+│   ├── __init__.py
+├── linguistics
+│   ├── cmu.py
+│   ├── distance.py
+│   ├── fa.py
+│   ├── __init__.py
+│   ├── language.py
+│   ├── treetagger.py
+│   ├── treetaggerwrapper.py
+│   ├── wn.py
+├── mine
+│   ├── args.py
+│   ├── filters.py
+│   ├── __init__.py
+│   ├── models.py
+│   ├── statistics.py
+│   ├── substitutions.py
+├── util
+│   ├── combinatorials.py
+│   ├── generic.py
+│   ├── graph.py
+│   ├── __init__.py
+│   ├── linalg.py
+│   ├── mp.py
+├── visualize
+│   ├── annotations_new.py
+│   ├── annotations.py
+│   ├── __init__.py
+│   ├── mt.py
+├── analyze_substitutions_multiple.py
+├── analyze_substitutions.py
+├── baseargs.py
+├── feature_correlations.ipynb
+├── install_datasets.sh
+├── install_treetagger.sh
+├── install_wheels.sh
+├── LICENSE
+├── load_aoa_Kuperman_to_pickle.py
+├── load_cmu_MNphonemes_to_pickle.py
+├── load_cmu_MNsyllables_to_pickle.py
+├── load_fa_BCs_to_pickle.py
+├── load_fa_CCs_to_pickle.py
+├── load_fa_degrees_to_pickle.py
+├── load_fa_norms_to_pickle.py
+├── load_fa_PageRank_to_pickle.py
+├── load_fa_paths_to_pickle.py
+├── load_mt_clusters_to_pickle.py
+├── load_mt_pickle_to_redis.py
+├── load_wn_BCs_to_pickle.py
+├── load_wn_CCs_to_pickle.py
+├── load_wn_degrees_to_pickle.py
+├── load_wn_PageRank_to_pickle.py
+├── load_wn_paths_to_pickle.py
+├── long_paths.ipynb
+├── matplotlibrc
+├── mine_statistics.py
+├── mine_substitutions_multiple.py
+├── mine_substitutions.py
+├── README.md
+├── requirements_docs.txt
+├── requirements_numpy.txt
+├── requirements.txt
+├── settings.py
