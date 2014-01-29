@@ -5,6 +5,8 @@
 a dict, and save that in a pickle file."""
 
 
+from __future__ import division
+
 import datainterface.picklesaver as ps
 import datainterface.aoa as at
 import datainterface.fs as di_fs

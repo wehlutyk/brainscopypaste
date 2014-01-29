@@ -1,3 +1,5 @@
+from __future__ import division
+
 import argparse as ap
 
 from datastructure.full import Cluster

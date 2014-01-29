@@ -5,6 +5,8 @@
 Association Norms."""
 
 
+from __future__ import division
+
 from codecs import open as c_open
 
 

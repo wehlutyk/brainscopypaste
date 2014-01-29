@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
+from __future__ import division
+
 from mine.args import MultipleMiningArgs
 from mine.substitutions import mine_multiple, mine_multiple_mt
 

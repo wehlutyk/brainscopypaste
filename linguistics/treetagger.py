@@ -13,6 +13,8 @@ Classes:
 """
 
 
+from __future__ import division
+
 from .treetaggerwrapper import TreeTagger, TreeTaggerError
 from util.generic import find_upper_rel_dir, NotFoundError
 

@@ -8,6 +8,8 @@ TODO: this module needs more commenting.
 """
 
 
+from __future__ import division
+
 from nltk.util import trigrams as nltk_trigrams
 from nltk.tokenize import word_tokenize as nltk_word_tokenize
 from nltk.probability import FreqDist

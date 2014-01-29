@@ -8,6 +8,8 @@ These methods are helpers used to manipulate lists, dicts, and classes.
 """
 
 
+from __future__ import division
+
 import re
 import os
 

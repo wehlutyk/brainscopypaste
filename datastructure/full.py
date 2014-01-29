@@ -5,6 +5,8 @@
 and TimeBags."""
 
 
+from __future__ import division
+
 import mine.models as m_mo
 import visualize.mt as v_mt
 

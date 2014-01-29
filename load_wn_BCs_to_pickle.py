@@ -5,6 +5,8 @@
 the scores dict to a pickle file."""
 
 
+from __future__ import division
+
 import datainterface.picklesaver as ps
 import linguistics.wn as l_wn
 import datainterface.fs as di_fs

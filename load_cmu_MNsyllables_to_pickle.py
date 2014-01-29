@@ -5,6 +5,8 @@
 dict in a pickle file."""
 
 
+from __future__ import division
+
 import datainterface.picklesaver as ps
 import linguistics.cmu as l_cmu
 import datainterface.fs as di_fs

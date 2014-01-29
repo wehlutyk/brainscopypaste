@@ -8,6 +8,8 @@ These methods are used to recursively explore neighbors of a node in a graph.
 """
 
 
+from __future__ import division
+
 from functools import partial
 
 from .generic import memoize

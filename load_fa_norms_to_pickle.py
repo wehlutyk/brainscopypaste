@@ -4,6 +4,8 @@
 """Load Free Association norms from files into pickle."""
 
 
+from __future__ import division
+
 import datainterface.fa as di_fa
 import datainterface.picklesaver as ps
 import datainterface.fs as di_fs

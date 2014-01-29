@@ -10,6 +10,8 @@ Statistics computed:
 """
 
 
+from __future__ import division
+
 from pylab import plot, xlabel, ylabel, figure, legend, show
 
 import datainterface.redistools as rt

@@ -4,6 +4,8 @@
 """Load and save python objects to redis."""
 
 
+from __future__ import division
+
 import re
 import cPickle
 import copy_reg

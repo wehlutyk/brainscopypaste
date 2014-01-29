@@ -8,6 +8,9 @@ These methods are used to build Combinatorial lists of tuples.
 """
 
 
+from __future__ import division
+
+
 def _build_ordered_tuples(indices_range, tuples):
     """Recursively build the list of all possible ordered tuples with values
     in `indices_range`.

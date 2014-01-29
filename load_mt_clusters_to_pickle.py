@@ -5,6 +5,8 @@
 framed clusters, and the framed-filtered clusters to pickle files."""
 
 
+from __future__ import division
+
 import gc
 
 import datainterface.picklesaver as ps

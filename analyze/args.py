@@ -9,6 +9,8 @@ These classes are used to define arguments in the analysis scripts
 """
 
 
+from __future__ import division
+
 import re
 
 import numpy as np

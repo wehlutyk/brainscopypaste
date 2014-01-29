@@ -18,6 +18,8 @@ Sections:
 """
 
 
+from __future__ import division
+
 import os
 
 from datainterface.fs import check_folder

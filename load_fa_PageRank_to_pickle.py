@@ -5,6 +5,8 @@
 and save that to pickle."""
 
 
+from __future__ import division
+
 import linguistics.fa as l_fa
 import datainterface.picklesaver as ps
 import datainterface.fs as di_fs

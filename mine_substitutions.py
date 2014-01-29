@@ -4,6 +4,8 @@
 """Mine the 1-word changes in the MemeTracker dataset."""
 
 
+from __future__ import division
+
 from mine.args import MiningArgs
 from mine.substitutions import SubstitutionsMiner
 

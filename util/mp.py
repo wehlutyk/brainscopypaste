@@ -11,6 +11,9 @@ properly logs exceptions.
 
 """
 
+
+from __future__ import division
+
 import traceback
 import logging
 from multiprocessing import Pool

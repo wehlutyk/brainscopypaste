@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pylab as pl
 
 from analyze.args import AnalysisArgs

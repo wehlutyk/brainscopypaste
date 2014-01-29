@@ -1,3 +1,5 @@
+from __future__ import division
+
 import datainterface.picklesaver as ps
 import linguistics.fa as l_fa
 import datainterface.fs as di_fs

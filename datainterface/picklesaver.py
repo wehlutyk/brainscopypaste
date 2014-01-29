@@ -4,6 +4,8 @@
 """Save or load any data in pickle format."""
 
 
+from __future__ import division
+
 import cPickle
 import copy_reg
 import types

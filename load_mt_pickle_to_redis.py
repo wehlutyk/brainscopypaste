@@ -4,6 +4,8 @@
 """Load the Clusters data (framed and not framed) from pickle to redis."""
 
 
+from __future__ import division
+
 import gc
 
 import datainterface.redistools as rt
