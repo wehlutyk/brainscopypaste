@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mine the 1-word changes in the MemeTracker dataset.
-
-"""
+"""Mine the 1-word changes in the MemeTracker dataset."""
 
 
 from mine.args import MiningArgs

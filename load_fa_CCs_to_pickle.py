@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the clustering coefficients for the lemmas in FreeAssociation, and save
-the scores dict to a pickle file."""
+"""Compute the clustering coefficients for the lemmas in FreeAssociation,
+and save the scores dict to a pickle file."""
 
 
 import datainterface.picklesaver as ps
 import linguistics.fa as l_fa
 import datainterface.fs as di_fs
 import settings as st
+
 
 if __name__ == '__main__':
 

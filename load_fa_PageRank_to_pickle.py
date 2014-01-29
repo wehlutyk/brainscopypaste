@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the PageRank scores for the Free Association norms, and save that
-to pickle."""
+"""Compute the PageRank scores for the Free Association norms,
+and save that to pickle."""
 
 
 import linguistics.fa as l_fa
