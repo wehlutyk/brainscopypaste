@@ -227,6 +227,8 @@ class GroupAnalysisArgs(object):
         if sum(fixedslicing_models):
             self.has_fixedslicing_model = True
             self.n_timebags_text = aas[fixedslicing_models.index(True)].n_timebags
+        else:
+            self.has_fixedslicing_model = False
 
         # Build text for in graph legend
         for aa in aas:
