@@ -129,23 +129,16 @@ class AnalysisArgs(BaseArgs):
         if f_strings[0] == 'None':
             return
 
-        try:
+        for f_string in f_strings:
+            parts = re.split('_', f_string)
+            if not parts[0] in self.features:
+                self.features[parts[0]] = set([])
+            if len(parts) > 1:
+                self.features[parts[0]].add('_'.join(parts[1:]))
 
-            for f_string in f_strings:
-
-                parts = re.split('_', f_string)
-                if not self.features.has_key(parts[0]):
-                    self.features[parts[0]] = set([])
-                if len(parts) > 1:
-                    self.features[parts[0]].add('_'.join(parts[1:]))
-
-            for s in self.features.iterkeys():
-                if len(self.features[s]) == 0:
-                    self.features[s] = set(st.mt_analysis_features[s].keys())
-
-        # If ``f_strings`` is None
-        except TypeError:
-            pass
+        for s in self.features.iterkeys():
+            if len(self.features[s]) == 0:
+                self.features[s] = set(st.mt_analysis_features[s].keys())
 
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
@@ -163,14 +156,15 @@ class AnalysisArgs(BaseArgs):
 
         p = super(AnalysisArgs, self).create_argparser()
         features = ([s for s in st.mt_analysis_features.iterkeys()] +
-                    [s + '_' + t for s in st.mt_analysis_features.iterkeys()
-                                 for t in st.mt_analysis_features[s].iterkeys()] +
+                    [s + '_' + t
+                     for s in st.mt_analysis_features.iterkeys()
+                     for t in st.mt_analysis_features[s].iterkeys()] +
                     ['None'])
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
-        p.add_argument('--no-positions', dest='positions', action='store_const',
-                       const=False, default=True,
+        p.add_argument('--no-positions', dest='positions',
+                       action='store_const', const=False, default=True,
                        help="don't analyze positions of substitutions")
         p.add_argument('--no-paths', dest='paths', action='store_const',
                        const=False, default=True,
@@ -215,18 +209,23 @@ class GroupAnalysisArgs(object):
         self.save = maa.save
 
         # Build texts for filenames
-        self.ffs_text = ','.join(maa.ffs) if s[0] is Ellipsis else maa.ffs[s[0]]
-        self.models_text = ','.join(maa.models) if s[1] is Ellipsis else maa.models[s[1]]
+        self.ffs_text = ','.join(maa.ffs) \
+            if s[0] is Ellipsis else maa.ffs[s[0]]
+        self.models_text = ','.join(maa.models) \
+            if s[1] is Ellipsis else maa.models[s[1]]
         if s[2] is Ellipsis:
-            self.substringss_text = ','.join(['yes' if ss else 'no' for ss in maa.substringss])
+            self.substringss_text = ','.join(['yes' if ss else 'no'
+                                              for ss in maa.substringss])
         else:
             self.substringss_text = 'yes' if maa.substringss[s[2]] else 'no'
-        self.POSs_text = ','.join(maa.POSs) if s[3] is Ellipsis else maa.POSs[s[3]]
+        self.POSs_text = ','.join(maa.POSs) \
+            if s[3] is Ellipsis else maa.POSs[s[3]]
 
         fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
         if sum(fixedslicing_models):
             self.has_fixedslicing_model = True
-            self.n_timebags_text = aas[fixedslicing_models.index(True)].n_timebags
+            self.n_timebags_text = \
+                aas[fixedslicing_models.index(True)].n_timebags
         else:
             self.has_fixedslicing_model = False
 
@@ -257,10 +256,9 @@ class GroupAnalysisArgs(object):
 
         """
 
-        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(self.ffs_text,
-                                                                self.models_text,
-                                                                self.substringss_text,
-                                                                self.POSs_text)
+        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(
+            self.ffs_text, self.models_text, self.substringss_text,
+            self.POSs_text)
         if self.has_fixedslicing_model:
             title += ' | n: {}'.format(self.n_timebags_text)
         return title
@@ -328,7 +326,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         self.save = self.save or (not self.show)
 
         # Create the AnalysisArgs array
-        self.ingraph_c = {'ff', 'model', 'substrings', 'POS'}.difference(self.ingraph)
+        self.ingraph_c = {'ff', 'model',
+                          'substrings', 'POS'}.difference(self.ingraph)
         self.build_aas_ndarray()
 
     def __iter__(self):
@@ -340,9 +339,12 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
                     for POS_idx in range(len(self.POSs)):
                         s = ()
                         s += (ff_idx if 'ff' in self.ingraph_c else Ellipsis,)
-                        s += (model_idx if 'model' in self.ingraph_c else Ellipsis,)
-                        s += (substrings_idx if 'substrings' in self.ingraph_c else Ellipsis,)
-                        s += (POS_idx if 'POS' in self.ingraph_c else Ellipsis,)
+                        s += (model_idx
+                              if 'model' in self.ingraph_c else Ellipsis,)
+                        s += (substrings_idx
+                              if 'substrings' in self.ingraph_c else Ellipsis,)
+                        s += (POS_idx
+                              if 'POS' in self.ingraph_c else Ellipsis,)
                         slices.add(s)
 
         for s in slices:
@@ -353,7 +355,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
                 yield GroupAnalysisArgs([y], self, s)
 
     def build_aas_ndarray(self):
-        self.aas_shape = (len(self.ffs), len(self.models), len(self.substringss), len(self.POSs))
+        self.aas_shape = (len(self.ffs), len(self.models),
+                          len(self.substringss), len(self.POSs))
         self.aas_ndarray = np.ndarray(self.aas_shape, dtype=AnalysisArgs)
 
         for i, ff in enumerate(self.args.ffs):
@@ -372,15 +375,18 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
                         if model in st.mt_mining_fixedslicing_models:
 
                             if len(self.args.n_timebagss) > 1:
-                                raise ValueError("can't have multiple n_timebags values when using --ingraph option")
+                                raise ValueError("can't have multiple "
+                                                 "n_timebags values when "
+                                                 "using --ingraph option")
 
                             init_dict['n_timebags'] = int(self.n_timebagss[0])
-                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
+                            self.aas_ndarray[i, j, k, l] = \
+                                self.create_args_instance(init_dict)
 
                         else:
 
-                            self.aas_ndarray[i,j,k,l] = self.create_args_instance(init_dict)
-
+                            self.aas_ndarray[i, j, k, l] = \
+                                self.create_args_instance(init_dict)
 
     def create_init_dict(self, ff, model, substrings, POS):
         """Create an initialization dict.
@@ -461,17 +467,19 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
         p = super(MultipleAnalysisArgs, self).create_argparser()
         features = ([s for s in st.mt_analysis_features.iterkeys()] +
-                    [s + '_' + t for s in st.mt_analysis_features.iterkeys()
-                                 for t in st.mt_analysis_features[s].iterkeys()] +
+                    [s + '_' + t
+                     for s in st.mt_analysis_features.iterkeys()
+                     for t in st.mt_analysis_features[s].iterkeys()] +
                     ['None'])
         p.add_argument('--features', action='store', nargs='+',
                        help='features to be analysed. Defaults to all.',
                        choices=features)
         p.add_argument('--ingraph', action='store', nargs='+',
-                       help='parameters to slice into the graphs. Defaults to None.',
+                       help=('parameters to slice into the graphs. '
+                             'Defaults to None.'),
                        choices=['ff', 'model', 'substrings', 'POS'])
-        p.add_argument('--no-positions', dest='positions', action='store_const',
-                       const=False, default=True,
+        p.add_argument('--no-positions', dest='positions',
+                       action='store_const', const=False, default=True,
                        help="don't analyze positions of substitutions")
         p.add_argument('--no-paths', dest='paths', action='store_const',
                        const=False, default=True,
