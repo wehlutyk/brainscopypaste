@@ -60,8 +60,6 @@ class AnalysisArgs(BaseArgs):
         Parse the ``features`` argument from the command line.
     print_analysis()
         Print details of the analysis specified by the instance.
-    title()
-        Build a title representing the type of analysis specified.
 
     See Also
     --------
@@ -204,6 +202,52 @@ class AnalysisArgs(BaseArgs):
 
 class GroupAnalysisArgs(object):
 
+    """Group of :class:`AnalysisArgs` to be used in a same figure.
+
+    This class is how :class:`AnalysisArgs`s get grouped when plotting several
+    distinct ``AnalysisArgs`` on the same figure. When using the ``--ingraph``
+    option, the plots for different ``AnalysisArgs`` get grouped into single
+    figures. This class represents a group of such ``AnalysisArgs`` that is
+    yielded when iterating over an instance of :class:``MultipleAnalysisArgs``.
+
+    Parameters
+    ----------
+    aas : list
+        List of :class:`AnalysisArgs` that are to be grouped in the same
+        figure.
+    maa : :class:`MultipleAnalysisArgs` instance
+        The parent ``MultipleAnalysisArgs`` that is generating this
+        ``GroupAnalysisArgs``.
+    s : tuple
+        The tuple of indices used to extract the ``aas`` list of
+        ``AnalysisArgs`` from the parent ``MultipleAnalysisArgs``. This is
+        used to construct a title for the figure.
+
+    Attributes
+    ----------
+    aas : list
+        The ``aas`` parameter given to the constructor.
+    save : bool
+        Whether or not to save the generated plots to files. Extracted from
+        the parent ``MultipleAnalysisArgs``.
+    ffs_text : string
+        String indicating the framings and filterings included in the group.
+        Used for the figure's title.
+    models_text : string
+        String indicating the models included in the group.
+        Used for the figure's title.
+    substringss_text : string
+        String indicating the substrings-handling behaviours included in the
+        group. Used for the figure's title.
+    POSs_text : string
+        String indicating the POSs included in the group. Used for the
+        figure's title.
+    has_fixedslicing_model : bool
+        Whether or not the group of ``AnalysisArgs`` includes a fixed slicing
+        model. Used for the figure's title.
+
+    """
+
     def __init__(self, aas, maa, s):
         self.aas = aas
         self.save = maa.save
@@ -221,6 +265,8 @@ class GroupAnalysisArgs(object):
         self.POSs_text = ','.join(maa.POSs) \
             if s[3] is Ellipsis else maa.POSs[s[3]]
 
+        # If we have a fixed slicing model in the lot, remember it
+        # for later when we create the title
         fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
         if sum(fixedslicing_models):
             self.has_fixedslicing_model = True
