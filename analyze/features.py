@@ -463,7 +463,7 @@ class FeatureAnalysis(AnalysisCase):
                     dict_plusone(possibilities, w)
 
                 # And realizations
-                dict_plusone(realizations, s[self.w2])
+                dict_plusone(realizations, s[self.w1])
 
             # Now compute the susceptibilities
             self.w_susceptibilities = {}
