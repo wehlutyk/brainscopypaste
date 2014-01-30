@@ -38,6 +38,11 @@ class AnalysisCase(object):
     data : any
         The data passed to the constructor.
 
+    See Also
+    --------
+    analyze.args.AnalysisArgs, analyze.features.FeatureAnalysis,
+    analyze.paths.PathsAnalysis, analyze.positions.PositionsAnalysis
+
     """
 
     def __init__(self, aa, data):
