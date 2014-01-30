@@ -460,7 +460,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
         This will produce an initialization dict suitable for creation of
         an instance of :class:`AnalysisArgs`, merging the parameters provided
-        and the arguments stored in attributes of ``self``.
+        and the arguments stored in attributes of `self`.
 
         This method is used by :class:`~baseargs.MultipleBaseArgs`'s
         constructor.
