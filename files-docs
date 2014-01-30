@@ -1,12 +1,13 @@
 # v: void, nothing documented
 # d: everything is documented
+# p: pep8 is checked
 # Class and function names: those that have missing documentation
 # n: needs translation to numpydoc
 # c: documentation is probably outdated, needs checking and rewriting
 
 ├── analyze
-│   ├── __init__.py d
-│   ├── args.py d
+│   ├── __init__.py dp
+│   ├── args.py dp
 │   ├── base.py v
 │   ├── features.py v
 │   ├── paths.py v
