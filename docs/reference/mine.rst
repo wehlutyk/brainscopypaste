@@ -1,0 +1,4 @@
+Mine
+====
+
+.. automodule:: mine

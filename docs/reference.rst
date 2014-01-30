@@ -8,7 +8,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   reference/analyze
    reference/datainterface
    reference/datastructure
-   reference/analyze
+   reference/linguistics
+   reference/mine
    reference/util
+   reference/visualize
