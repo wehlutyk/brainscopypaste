@@ -281,7 +281,7 @@ class Feature(object):
     @classmethod
     def iter_features(cls, aa):
         """Iterate over all features specified in `aa`, yielding a
-        `Feature` instance for each (class method).
+        `Feature` instance for each.
 
         Parameters
         ----------
