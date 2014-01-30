@@ -23,9 +23,66 @@ import settings as st
 
 class Feature(object):
 
+    """Load feature values, perform computations on them, and cache the
+    results.
+
+    Parameters
+    ----------
+    data_src : string
+        The initial database source for the features (WordNet,
+        Free Association).
+    ftype : string
+        The type of feature computed on the data source
+        (degrees, PageRank, etc.).
+    POS : string
+        The POS category for the considered feature (a, n, v, r, all).
+
+    Attributes
+    ----------
+    data_src : string
+        The `data_src` passed to the constructor.
+    ftype : string
+        The `ftype` passed to the constructor.
+    POS : string
+        The `POS` passed to the constructor.
+    fullname : string
+        Full name of the feature, for logging and title building.
+    filename : string
+        Name of the file containing the computed feature values.
+    lem : bool
+        Whether or not words are to be lemmatized when using this feature.
+    log : bool
+        Whether or not to plot with a log-scale when showing graphs using this
+        feature.
+    _cache_fnw : dict
+    Cache dict for :meth:`features_neighboring_word` values.
+    _cache_fnr : dict
+    Cache dict for :meth:`features_neighboring_range` values.
+
+    See Also
+    --------
+    FeatureAnalysis
+
+    """
+
     _cached_instances = {}
 
     def __init__(self, data_src, ftype, POS):
+        """Initialize structure with feature information.
+
+        Parameters
+        ----------
+        data_src : string
+            The initial database source for the features (WordNet,
+            Free Association).
+        ftype : string
+            The type of feature computed on the data source
+            (degrees, PageRank, etc.).
+        POS : string
+            The POS category for the considered feature (a, n, v, r, all).
+
+        """
+
         self.data_src = data_src
         self.ftype = ftype
         self.POS = POS
@@ -39,10 +96,20 @@ class Feature(object):
         self._cache_fnr = {}
 
     def __call__(self, key):
+        """Get feature value corresponding to `key`."""
+
         return self.data[key]
 
     @property
     def values(self):
+        """Get all feature values, caching the loading of those values.
+
+        See Also
+        --------
+        load
+
+        """
+
         try:
             return self._values
         except:
@@ -51,6 +118,15 @@ class Feature(object):
             return self._values
 
     def load(self):
+        """Load all feature values from file into memory.
+
+        If `self.log` is ``True``, we will in fact be using the log values
+        of the features. So all values are converted to log in the loading
+        process. The result is stored in `self.data`. If the data was
+        alreaydy previously loaded, nothing is done.
+
+        """
+
         try:
             self.data
         except AttributeError:
@@ -63,72 +139,175 @@ class Feature(object):
                 self.data = data_raw
 
     def features_neighboring_word(self, word, distance):
-        try:
+        """Get the list of feature values for words around `word` at
+        `distance` steps in the WordNet graph.
 
+        This method is used when comparing features to the average local value
+        around a given word: it finds all the neighbors of a word at a given
+        distance in the WordNet graph, and lists the feature values of those
+        words. Note that the WordNet graph is used as the graph to find
+        neighbors, but it wasn't necessarily involved in creating the feature
+        values we are dealing with. The feature we're working with could be
+        Age-of-Acquisition, Mean Number of Phonemes, Free Association Degree,
+        anything really.
+
+        The results of these computations are cached each time a call to this
+        method is made, so calling many times will eventually speed up.
+
+        Parameters
+        ----------
+        word : string
+            The word around which to look, which must already be lemmatized if
+            needed.
+        distance : int
+            The distance to travel around `word` to collect neighbors.
+
+        Returns
+        -------
+        list
+            The feature values of the neighboring words.
+
+        See Also
+        --------
+        mean_feature_neighboring_range
+
+        """
+
+        try:
+            # Have we already cached a result?
             return self._cache_fnw[(word, distance)]
 
         except KeyError:
-
+            # Make sure the feature values are loaded
             self.load()
             try:
                 neighbors = self.walk_neighbors(word, distance)
             except nx.NetworkXError:
+                # If the word was not found, return None
                 f = None
             else:
+                # Remove the origin word
                 neighbors.discard(word)
 
+                # Get the collected words' feature values
                 f = []
                 for w in neighbors:
                     try:
                         f.append(self.data[w])
                     except KeyError:
+                        # Don't fail if a word doesn't exist in the
+                        # feature values
                         continue
 
+                # If none of the collected words had feature values,
+                # return None
                 if len(f) == 0:
                     f = None
                 else:
                     f = np.array(f)
 
+            # Cache our results
             self._cache_fnw[(word, distance)] = f
             return f
 
     def mean_feature_neighboring_range(self, f_range, distance):
-        try:
+        """Compute the average feature value for words neighboring words with
+        features in a given range.
 
+        This method finds all the words having feature values in `f_range`,
+        finds all their neighbors at `distance` steps in the WordNet graph,
+        and averages the feature values of all those neighboring words. This
+        results in the average feature value for words neighboring words
+        having themselves feature values in `f_range`. Kind of the average
+        neighbor value around `f_range`. Note that the WordNet graph is used
+        to find neighbors, but isn't necessarily involved in how the feature
+        we're considering was computed (that feature could be
+        Age-of-Acquisition, Free Association Degrees, anything really).
+
+        The results of these computations are cached each time a call to this
+        method is made, so calling many times will eventually speed up.
+
+        Parameters
+        ----------
+        f_range : tuple or list
+            Feature range around which to explore the average feature value.
+        distance : int
+            Distance to travel in the WordNet graph to find neighbors.
+
+        Returns
+        -------
+        float
+            Resulting average feature value.
+
+        See Also
+        --------
+        features_neighboring_word, FeatureAnalysis.build_h0
+
+        """
+
+        try:
+            # Have we already cached a result?
             return self._cache_fnr[(f_range, distance)]
 
         except KeyError:
+            # Make sure the feature values are loaded
             self.load()
 
+            # Find the words with feature values in our range
+            # (this is a convoluted way of doing a `filter` on a dict,
+            # as I discovered later. But it could be more efficient on large
+            # arrays.)
             idx = indices_in_range(self.values, f_range)
             all_words = self.data.keys()
             words = [all_words[i] for i in idx]
 
+            # Get average feature value around each word
             features = []
             for w in words:
                 features_w = self.features_neighboring_word(w, distance)
                 if features_w is not None:
                     features.append(features_w.mean())
 
+            # Return None if no words were found, or the average of averages
             if len(features) == 0:
                 f = None
             else:
                 f = np.array(features).mean()
 
+            # And cache our results
             self._cache_fnr[(f_range, distance)] = f
             return f
 
     @classmethod
     def iter_features(cls, aa):
+        """Iterate over all features specified in `aa`, yielding a
+        `Feature` instance for each (class method).
+
+        Parameters
+        ----------
+        aa : :class:`AnalysisArgs` instance
+            The `AnalysisArgs` specifying the features to iterate over.
+
+        See Also
+        --------
+        get_instance
+
+        """
 
         for s, ts in aa.features.iteritems():
-
             for t in ts:
-
                 yield cls.get_instance(s, t, aa.POS)
 
     @classmethod
     def load_G(cls):
+        """Load WordNet graph and create a caching neighbor-walking method.
+
+        The results are stored in `cls.G` (graph) and `cls.walk_neighbors`
+        (neighbor-walking method). If all this was already loaded, nothing
+        is done.
+
+        """
+
         try:
 
             cls.lem_coords
@@ -150,11 +329,33 @@ class Feature(object):
 
     @classmethod
     def get_instance(cls, data_src, ftype, POS):
+        """Create an instance of :class:`Feature`.
+
+        Or return a cached instance if another one was already created for
+        these parameters.
+
+        Parameters
+        ----------
+        data_src : string
+            The initial database source for the features (WordNet,
+            Free Association).
+        ftype : string
+            The type of feature computed on the data source
+            (degrees, PageRank, etc.).
+        POS : string
+            The POS category for the considered feature (a, n, v, r, all).
+
+        Returns
+        -------
+        :class:`Feature` instance
+            The created instance.
+
+        """
+
         cls.load_G()
         try:
             return cls._cached_instances[(data_src, ftype, POS)]
         except KeyError:
-
             f = Feature(data_src, ftype, POS)
             cls._cached_instances[(data_src, ftype, POS)] = f
             return f
