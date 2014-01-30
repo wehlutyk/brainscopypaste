@@ -528,6 +528,10 @@ class FeatureAnalysis(AnalysisCase):
         See the paper for the formal definition of what susceptibility means
         here.
 
+        See Also
+        --------
+        build_susceptibilities
+
         """
 
         self.build_susceptibilities()
@@ -760,11 +764,12 @@ class FeatureAnalysis(AnalysisCase):
 
         The feature values used are in fact averages over several
         substitutions: substitutions occurring in the same cluster and on the
-        same start word are likely not independant, so we average arrival
+        same start word are likely not independent, so we average arrival
         feature values over same-cluster-same-start-word substitutions before
-        anything else. These values are called "level-2" values (as opposed to
-        the raw values called "level-1"), and are computed in
-        :meth:`build_l2_f_lists`.
+        anything else. That way, confidence intervals are really computed on
+        statistically independent occurrences. These values are called
+        "level-2" values (as opposed to the raw values called "level-1"), and
+        are computed in :meth:`build_l2_f_lists`.
 
         If the arrays have already been computed previously, nothing is done.
 
@@ -822,12 +827,24 @@ class FeatureAnalysis(AnalysisCase):
     def build_susceptibilities(self):
         """Compute susceptibility values for each bin.
 
-        TBD.
+        Susceptibility is built as the number of times a word is substituted
+        divided by the number of times that word appears in a quote where a
+        substitution occurs, whether it occurs on that word or not (the fact
+        that a substitution occurs on that quote means that the word was in a
+        "substitutable" position).
+
+        The values are then aggregated to compute the average susceptibility
+        for each bin. This array is stored in `self.f_susceptibilities`. If the
+        array was already computed previously, nothing is done.
+
+        See Also
+        --------
+        plot_susceptibilities
 
         """
 
         try:
-
+            # Did we already compute this before? If so, do nothing.
             self.f_susceptibilities
 
         except AttributeError:
@@ -840,7 +857,9 @@ class FeatureAnalysis(AnalysisCase):
                 # Lemmatize if asked to
                 if self.feature.lem:
                     # This will take advantage of data from
-                    # future analyses
+                    # future analyses where the lemmas are directly
+                    # included in the data. If they're not, do the
+                    # lemmatizing on-the-fly.
                     try:
                         words = s.mother.lems
                     except AttributeError:
@@ -880,12 +899,46 @@ class FeatureAnalysis(AnalysisCase):
             self.f_susceptibilities = self.f_susceptibilities[o]
 
     def build_l2_f_cl_m_ids(self):
+        """Build the dict of indices for level-2 averaging.
+
+        Since substitutions occurring in the same cluster and with the same
+        start words are not independent, we regularly average feature values
+        over same-cluster-same-start-word occurrences. Those average values are
+        called "level-2" values, and the original ones are called "level-1"
+        values.
+
+        Level-1 values are computed in :meth:`build_f_lists`, and have all the
+        same size (it is the length of `self.data` minus the substitutions
+        where the start or end word doesn't figure in our feature pool).
+
+        This method builds the dict of `(cluster id, start word)` to `indices
+        in data` mapping, which is then used by :meth:`l2_values` to compute
+        the level-2 values for any given level-1 array of values. If the dict
+        was already computed previously, nothing is done.
+
+        See Also
+        --------
+        l2_values, build_f_lists, build_l2_f_lists
+
+        """
+
         try:
             self.l2_f_cl_m_ids
         except AttributeError:
             self.l2_f_cl_m_ids = list_to_dict(self.f_cl_m_ids)
 
     def l2_values(self, l1_values):
+        """Compute the level-2 values corresponding to `l1_values`.
+
+        See :meth:`build_l2_f_cl_m_ids` for an explanation on level-1 and
+        level-2 values.
+
+        See Also
+        --------
+        build_l2_f_cl_m_ids
+
+        """
+
         l2_values = []
 
         for idx in self.l2_f_cl_m_ids.itervalues():
@@ -894,27 +947,61 @@ class FeatureAnalysis(AnalysisCase):
         return np.array(l2_values)
 
     def build_w_lists(self):
-        try:
+        """Build the lists of mother and daughter words, as well as the
+        corresponding cluster ids.
 
+        The lists are stored respectively in `self.mothers`, `self.daughters`,
+        and `self.cl_ids`. If they were already computed earlier, nothing is
+        done.
+
+        These lists are used later in :meth:`build_f_lists`.
+
+        See Also
+        --------
+        build_f_lists
+
+        """
+
+        try:
+            # Have we already computed these before? If so, do nothing.
             self.mothers
             self.daughters
             self.cl_ids
 
         except AttributeError:
-
+            # Extract lists from the data
             self.mothers = [s[self.w1] for s in self.data]
             self.daughters = [s[self.w2] for s in self.data]
             self.cl_ids = [s.mother.cl_id for s in self.data]
 
     def build_f_lists(self):
-        try:
+        """Build the lists of feature values for mothers, daughters, and the
+        corresponding list of `(cluster id, mother)` tuples.
 
+        The lists are stored respectively in `self.f_mothers`,
+        `self.f_daughters`, and `self.f_cl_m_ids`. If they were already
+        computed earlier, nothing is done.
+
+        These lists and then used in :meth:`build_l2_f_lists` to compute the
+        corresponding level-2 values (see :meth:`build_l2_f_cl_m_ids` for an
+        explanation on level-1 and level-2 values). The list of `(cluster id,
+        mother)` tuples is especially used in :meth:`build_l2_f_cl_m_ids`,
+        necessary step to compute all further level-2 values.
+
+        See Also
+        --------
+        build_w_lists, build_l2_f_lists, build_l2_f_cl_m_ids
+
+        """
+
+        try:
+            # Have we already computed these before? If so, do nothing.
             self.f_mothers
             self.f_daughters
             self.f_cl_m_ids
 
         except AttributeError:
-
+            # First build the word lists, we use them here
             self.build_w_lists()
             self.f_mothers = []
             self.f_daughters = []
@@ -922,6 +1009,8 @@ class FeatureAnalysis(AnalysisCase):
 
             for m, d, cl_id in zip(self.mothers, self.daughters, self.cl_ids):
 
+                # If either mother or daughter is not found in the
+                # feature pool, skip silently
                 try:
                     f_m = self.feature(m)
                     f_d = self.feature(d)
@@ -936,13 +1025,30 @@ class FeatureAnalysis(AnalysisCase):
             self.f_daughters = np.array(self.f_daughters)
 
     def build_l2_f_lists(self):
-        try:
+        """Build level-2 feature values for mothers and daughters.
 
+        The feature values are stored respectively in `self.l2_f_mothers` and
+        `self.l2_f_daughters`. If they were already computed earlier, nothing
+        is done.
+
+        The level-2 values are computed in :meth:`l2_values` (see
+        :meth:`build_l2_f_cl_m_ids` for an explanation on level-1 and level-2
+        values).
+
+        See Also
+        --------
+        l2_values, build_f_lists, build_l2_f_cl_m_ids
+
+        """
+
+        try:
+            # Have we already computed these before? If so, do nothing.
             self.l2_f_mothers
             self.l2_f_daughters
 
         except AttributeError:
-
+            # First build level-1 feature lists and level-2 indices,
+            # we need them later on.
             self.build_f_lists()
             self.build_l2_f_cl_m_ids()
 
