@@ -871,7 +871,7 @@ class FeatureAnalysis(AnalysisCase):
                 # Only store the words which exist in our feature list
                 try:
                     self.f_susceptibilities.append([self.feature(w), ws])
-                except:
+                except KeyError:
                     pass
 
             # Sort by feature value for future use
