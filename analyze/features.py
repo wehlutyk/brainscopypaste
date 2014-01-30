@@ -558,5 +558,3 @@ class FeatureAnalysis(AnalysisCase):
 
             self.l2_f_mothers = self.l2_values(self.f_mothers)
             self.l2_f_daughters = self.l2_values(self.f_daughters)
-            self.l2_f_mothers = self.l2_values(self.f_mothers)
-            self.l2_f_daughters = self.l2_values(self.f_daughters)
