@@ -83,6 +83,10 @@ class AnalysisCase(object):
             ``True`` if the analysis was performed, ``False`` if it was aborted
             because of file existence.
 
+        See Also
+        --------
+        analyze_inner
+
         """
 
         if self.aa.save and not self.checkfile(filepath):
