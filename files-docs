@@ -6,7 +6,7 @@
 
 ├── analyze
 │   ├── __init__.py d
-│   ├── args.py GroupAnalysisArgs, .__init__, __iter__, MultipleAnalysisArgs, .__iter__, .build_aas_ndarray
+│   ├── args.py d
 │   ├── base.py v
 │   ├── features.py v
 │   ├── paths.py v
