@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Analyze variations of feature values upon substitution."""
+
+
 from __future__ import division
 
 import numpy as np
@@ -101,7 +107,7 @@ class Feature(object):
             features = []
             for w in words:
                 features_w = self.features_neighboring_word(w, distance)
-                if features_w != None:
+                if features_w is not None:
                     features.append(features_w.mean())
 
             if len(features) == 0:
@@ -136,8 +142,10 @@ class Feature(object):
             cls.inv_coords = inv_dict(cls.lem_coords)
             cls.G = nx.relabel_nodes(G, cls.inv_coords)
             neighbors_walker = caching_neighbors_walker(cls.G)
+
             def wrapped_neighbors_walker(c, node, distance):
                 return neighbors_walker(node, distance)
+
             cls.walk_neighbors = wrapped_neighbors_walker
 
     @classmethod
@@ -264,14 +272,17 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        #ax.plot(self.bin_middles, self.v_d_h0, 'r', label='$H_0$ ' + self.aa.ingraph_text)
-        #ax.plot(self.bin_middles, self.v_d_h0_n, 'c', label='$H_{0,n}$ ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d_h0, 'r',
+                #label='$H_0$ ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d_h0_n, 'c',
+                #label='$H_{0,n}$ ' + self.aa.ingraph_text)
 
         ax.plot(self.bin_middles, self.v_d,
                 #'b',
                 linewidth=2,
                 label='$<f(daughter) - f(mother)>$ ' + self.aa.ingraph_text)
-        #ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm', label='IC-95\\% ' + self.aa.ingraph_text)
+        #ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm',
+                #label='IC-95\\% ' + self.aa.ingraph_text)
         #ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_xlabel('Mother feature')
@@ -287,20 +298,24 @@ class FeatureAnalysis(AnalysisCase):
 
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0,
-                'b', linewidth=2, label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
+                'b', linewidth=2,
+                label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
-                'b', linewidth=0.5, alpha=0.5, label='IC-95\\% ' + self.aa.ingraph_text)
+                'b', linewidth=0.5, alpha=0.5,
+                label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
                 'b', linewidth=0.5, alpha=0.5)
 
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
-                'c', linewidth=2, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
+                'c', linewidth=2,
+                label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
-                'c', linewidth=0.5, alpha=0.5, label='IC-95\\% ' + self.aa.ingraph_text)
+                'c', linewidth=0.5, alpha=0.5,
+                label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
                 'c', linewidth=0.5, alpha=0.5)
@@ -314,18 +329,21 @@ class FeatureAnalysis(AnalysisCase):
         self.build_h0()
         self.build_variations()
 
-        ax.plot(self.bin_middles, np.zeros(self.nbins))#, 'k')
+        ax.plot(self.bin_middles, np.zeros(self.nbins))  # , 'k')
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0,
                 #color=color or 'b',
-                linewidth=2 if self.aa.POS == 'all' else 1, label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
+                linewidth=2 if self.aa.POS == 'all' else 1,
+                label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
 
         if chrome:
             #ax.plot(self.bin_middles,
-                    #self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                    #self.daughter_d - self.daughter_d_h0 - \
+                        #self.daughter_d_std,
                     #'m', label='IC-95\\% ' + self.aa.ingraph_text)
             #ax.plot(self.bin_middles,
-                    #self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                    #self.daughter_d - self.daughter_d_h0 + \
+                        #self.daughter_d_std,
                     #'m')
 
             ax.set_xlabel('Mother feature')
@@ -341,7 +359,8 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(self.bin_middles,
                 self.daughter_d - self.daughter_d_h0_n,
                 #'b',
-                linewidth=2 if self.aa.POS == 'all' else 1, label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
+                linewidth=2 if self.aa.POS == 'all' else 1,
+                label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         #ax.plot(self.bin_middles,
                 #self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
                 #'m', label='IC-95\\% ' + self.aa.ingraph_text)
@@ -372,11 +391,12 @@ class FeatureAnalysis(AnalysisCase):
             for i in range(self.nbins):
                 bin_ = (float(self.bins[i]), float(self.bins[i + 1]))
 
-                neighbors_feature = self.feature.mean_feature_neighboring_range(bin_, 1)
+                neighbors_feature = \
+                    self.feature.mean_feature_neighboring_range(bin_, 1)
                 idx = indices_in_range(self.feature.values, bin_)
 
                 if len(idx) > 0:
-                    if neighbors_feature != None:
+                    if neighbors_feature is not None:
                         self.daughter_d_h0_n[i] = neighbors_feature
                         self.v_d_h0_n[i] = (neighbors_feature
                                             - self.feature.values[idx].mean())
@@ -420,7 +440,8 @@ class FeatureAnalysis(AnalysisCase):
 
                     daughter_dd = self.l2_f_daughters[idx]
                     self.daughter_d[i] = daughter_dd.mean()
-                    self.daughter_d_std[i] = 1.96 * daughter_dd.std() / np.sqrt(len(idx) - 1)
+                    self.daughter_d_std[i] = (1.96 * daughter_dd.std() /
+                                              np.sqrt(len(idx) - 1))
 
                     v_dd = (self.l2_f_daughters[idx]
                             - self.l2_f_mothers[idx])
@@ -486,7 +507,7 @@ class FeatureAnalysis(AnalysisCase):
 
             # Sort by feature value for future use
             self.f_susceptibilities = np.array(self.f_susceptibilities)
-            o = np.argsort(self.f_susceptibilities[:,0])
+            o = np.argsort(self.f_susceptibilities[:, 0])
             self.f_susceptibilities = self.f_susceptibilities[o]
 
     def build_l2_f_cl_m_ids(self):
