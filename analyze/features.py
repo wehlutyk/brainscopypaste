@@ -55,9 +55,9 @@ class Feature(object):
         Whether or not to plot with a log-scale when showing graphs using this
         feature.
     _cache_fnw : dict
-    Cache dict for :meth:`features_neighboring_word` values.
+        Cache dict for :meth:`features_neighboring_word` values.
     _cache_fnr : dict
-    Cache dict for :meth:`features_neighboring_range` values.
+        Cache dict for :meth:`mean_feature_neighboring_range` values.
 
     See Also
     --------
@@ -281,11 +281,11 @@ class Feature(object):
     @classmethod
     def iter_features(cls, aa):
         """Iterate over all features specified in `aa`, yielding a
-        `Feature` instance for each.
+        :class:`Feature` instance for each.
 
         Parameters
         ----------
-        aa : :class:`AnalysisArgs` instance
+        aa : :class:`analyze.args.AnalysisArgs` instance
             The `AnalysisArgs` specifying the features to iterate over.
 
         See Also
@@ -347,8 +347,8 @@ class Feature(object):
 
         Returns
         -------
-        :class:`Feature` instance
-            The created instance.
+        feature
+            The created :class:`Feature` instance.
 
         """
 
