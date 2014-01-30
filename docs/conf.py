@@ -265,7 +265,8 @@ texinfo_documents = [
 intersphinx_mapping = {'networkx': ('http://networkx.lanl.gov/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy-1.8.0/',
                                  None),
-                       'python': ('http://docs.python.org/2.7/', None)}
+                       'python': ('http://docs.python.org/2.7/', None),
+                       'matplotlib': ('http://matplotlib.org/', None)}
 
 # Show todo items
 todo_include_todos = True
