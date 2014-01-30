@@ -68,7 +68,7 @@ class AnalysisArgs(BaseArgs):
         init_dict : dict, optional
             Dictionary of arguments to fill the instance with. If not provided,
             the arguments will be taken from the command line. Defaults to
-            `None`.
+            ``None``.
 
         """
 
@@ -132,7 +132,7 @@ class AnalysisArgs(BaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`~baseargs.BaseArgs`'s constructor.
+        This method is used by :class:`baseargs.BaseArgs`'s constructor.
 
         Returns
         -------
@@ -331,7 +331,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
     It defines all necessary arguments for analysis of substitutions mined
     with several sets of arguments, and is usable with the
-    :class:`.base.SubstitutionsAnalyzer`. This class inherits from
+    :class:`.substitutions.SubstitutionsAnalyzer`. This class inherits from
     :class:`baseargs.MultipleBaseArgs`.
 
     Attributes
@@ -462,7 +462,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         an instance of :class:`AnalysisArgs`, merging the parameters provided
         and the arguments stored in attributes of `self`.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -498,7 +498,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     def create_args_instance(self, init_dict):
         """Create an :class:`AnalysisArgs` instance.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -518,7 +518,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Returns

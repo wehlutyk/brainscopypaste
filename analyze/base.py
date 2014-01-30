@@ -3,8 +3,7 @@
 
 """Base analysis objects upon which analysis classes build.
 
-See example usages in :mod:`analyze.features`, :mod:`analyze.paths`,
-and :mod:`analyze.positions`.
+See example usages in :mod:`.features`, :mod:`.paths`, and :mod:`.positions`.
 
 """
 
@@ -22,26 +21,28 @@ class AnalysisCase(object):
     """Base analysis class on which you build an analysis case.
 
     This class defines the interface that an analysis case should implement,
-    interface which is later used in :mod:`analyze.substitutions`.
+    interface which is later used in :mod:`.substitutions`.
 
     Parameters
     ----------
     aa : :class:`AnalysisArgs` instance
         Arguments for the analysis to be run.
-    data : any
-        The data to be analyzed by the `analyze` and `analyze_inner` methods.
+    data : list
+        The data to be analyzed by the `analyze` and `analyze_inner` methods,
+        usually a list of :class:`mine.substitutions.Substitution`'s.
 
     Attributes
     ----------
     aa : :class:`AnalysisArgs` instance
         The arguments passed to the constructor.
-    data : any
-        The data passed to the constructor.
+    data : list
+        The data to be analyzed by the `analyze` and `analyze_inner` methods, \
+        usually a list of :class:`mine.substitutions.Substitution`'s.
 
     See Also
     --------
-    analyze.args.AnalysisArgs, analyze.features.FeatureAnalysis,
-    analyze.paths.PathsAnalysis, analyze.positions.PositionsAnalysis
+    .args.AnalysisArgs, .features.FeatureAnalysis,
+    .paths.PathsAnalysis, .positions.PositionsAnalysis
 
     """
 
@@ -52,9 +53,10 @@ class AnalysisCase(object):
         ----------
         aa : :class:`AnalysisArgs` instance
             Arguments for the analysis to be run.
-        data : any
+        data : list
             The data to be analyzed by the `analyze` and `analyze_inner`
-            methods.
+            methods, usually a list of
+            :class:`mine.substitutions.Substitution`'s.
 
         """
 

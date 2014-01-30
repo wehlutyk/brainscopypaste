@@ -61,7 +61,7 @@ class Feature(object):
 
     See Also
     --------
-    FeatureAnalysis
+    FeatureAnalysis, .substitutions.SubstitutionsAnalyzer
 
     """
 
@@ -290,7 +290,7 @@ class Feature(object):
 
         See Also
         --------
-        get_instance
+        .substitutions.SubstitutionsAnalyzer
 
         """
 
@@ -363,7 +363,66 @@ class Feature(object):
 
 class FeatureAnalysis(AnalysisCase):
 
+    """Analyze the evolution of a feature upon substitution.
+
+    This class holds all the necessary methods to plot the variations of a
+    feature upon substitutions and the susceptibility of a feature to be
+    substituted, for a given set of analysis arguments. It also hold the
+    methods to compute the :math:`H_0` and :math:`H_{0,n}`
+    (or :math:`H_{00}` in the paper) null hypotheses.
+
+    Parameters
+    ----------
+    aa : :class:`AnalysisArgs` instance
+        The set of arguments to analyze for.
+    data : list
+        List of :class:`mine.substitutions.Substitution`'s to analyze.
+    feature : :class:`Feature` instance
+        The feature to analyze for.
+
+    Attributes
+    ----------
+    tagger : :class:`linguistics.treetagger.TreeTaggerTags` instance
+        Caching tagger to use during the analysis.
+    feature : :class:`Feature` instance
+        The `Feature` instance given to the constructor.
+    log_text : string
+        Text included in figure titles if we are using log values.
+    nbins : int
+        Number of bins for the feature values, used in all plots.
+    bins : np.ndarray
+        The actual bins.
+    bin_middles : np.ndarray
+        Array of the middle of the bins.
+    w1 : string
+        Either `lem1` if words are to be lemmatized, or `word1` otherwise.
+        Used to retrieve the right value from
+        :class:`mine.substitutions.Substitution` instances.
+    w2 : string
+        Either `lem2` if words are to be lemmatized, or `word2` otherwise.
+        Used to retrieve the right value from
+        :class:`mine.substitutions.Substitution` instances.
+
+    See Also
+    --------
+    .base.AnalysisCase, .substitutions.SubstitutionsAnalyzer
+
+    """
+
     def __init__(self, aa, data, feature):
+        """Initialize the structure with arguments, data, and a feature.
+
+        Parameters
+        ----------
+        aa : :class:`AnalysisArgs` instance
+            The set of arguments to analyze for.
+        data : list
+            List of :class:`mine.substitutions.Substitution`'s to analyze.
+        feature : :class:`Feature` instance
+            The feature to analyze for.
+
+        """
+
         self.tagger = TaggerBuilder.get_tagger()
 
         # We need the feature to be calling savefile_postfix in super
@@ -384,9 +443,14 @@ class FeatureAnalysis(AnalysisCase):
             self.w2 = 'word2'
 
     def build_axes(self, fig):
+        """Return a list of :class:`matplotlib.axes.Axes` instances in `fig`
+        to plot on."""
+
         return [fig.add_subplot(111)]
 
     def analyze_inner(self, axs):
+        """Run the analysis in itself, plotting on the axes in `axs`."""
+
         print 'Analyzing feature ' + self.feature.fullname
 
         self.feature.load()
@@ -400,21 +464,33 @@ class FeatureAnalysis(AnalysisCase):
 
         #ax = self.fig.add_subplot(224)
         #ax = self.fig.add_subplot(111)
-        #self.plot_susceptibilities(axs[0])
+        self.plot_susceptibilities(axs[0])
         #self.plot_variations_from_h0_h0_n(axs[0])
         #self.plot_variations_from_h0(axs[0])
-        self.plot_variations(axs[0])
+        #self.plot_variations(axs[0])
 
     def print_fig_text(self, fig, title):
+        """Print `title` and this analysis' feature name on `fig`."""
+
         fig.text(0.5, 0.95,
                  self.latexize(title +
                                ' --- ' + self.feature.fullname),
                  ha='center')
 
     def savefile_postfix(self):
+        """Return the postfix for the file to which the figure
+        could be saved."""
+
         return self.feature.fullname
 
     def _plot_distribution(self, ax, values):
+        """Plot the distriution of `values` on `ax`.
+
+        The distribution is estimated with a gaussian kernel, and plotted above
+        the histogram of `values`.
+
+        """
+
         ax.hist(values, bins=self.bins, normed=True,
                 log=self.feature.log)
         kde = gaussian_kde(values)
@@ -422,6 +498,8 @@ class FeatureAnalysis(AnalysisCase):
         ax.plot(x, kde(x), 'g')
 
     def plot_mothers_distribution(self, ax):
+        """Plot the distribution of mother features on `ax`."""
+
         self.build_l2_f_lists()
 
         self._plot_distribution(ax, self.l2_f_mothers)
@@ -430,6 +508,8 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_ylabel('\\# mothers' + self.log_text)
 
     def plot_daughters_distribution(self, ax):
+        """Plot the distribution of daughter features on `ax`."""
+
         self.build_l2_f_lists()
 
         self._plot_distribution(ax, self.l2_f_daughters)
@@ -438,6 +518,18 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_ylabel('\\# daughters' + self.log_text)
 
     def plot_susceptibilities(self, ax):
+        """Build the susceptibility plot for our feature on `ax`.
+
+        This build a colored histogram representing the susceptibility of each
+        feature value to attract a substitution (the colors represent the
+        susceptibility, the histogram is that of the feature values
+        distribution).
+
+        See the paper for the formal definition of what susceptibility means
+        here.
+
+        """
+
         self.build_susceptibilities()
 
         # Set the backdrop
@@ -700,7 +792,7 @@ class FeatureAnalysis(AnalysisCase):
                     ws = 0
                 self.w_susceptibilities[w] = ws
 
-                # Only store the words which exit in our feature list
+                # Only store the words which exist in our feature list
                 try:
                     self.f_susceptibilities.append([self.feature(w), ws])
                 except:

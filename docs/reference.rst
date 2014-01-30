@@ -8,6 +8,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   reference/root-scripts
    reference/analyze
    reference/datainterface
    reference/datastructure
