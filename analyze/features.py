@@ -561,6 +561,8 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_ylabel('Susceptibilities in color' + self.log_text)
 
     def plot_variations(self, ax):
+        """Plot the absolute feature variations upon subtitution, on `ax`."""
+
         self.build_h0()
         self.build_variations()
 
@@ -584,6 +586,9 @@ class FeatureAnalysis(AnalysisCase):
         ax.legend(loc='best', prop={'size': 8})
 
     def plot_variations_from_h0_h0_n(self, ax):
+        """Plot the deviation of feature variation compared to H0 and H0n,
+        on `ax`."""
+
         self.build_h0()
         self.build_variations()
 
@@ -618,7 +623,20 @@ class FeatureAnalysis(AnalysisCase):
         ax.set_xlim(self.bins[0], self.bins[-1])
         ax.legend(loc='best', prop={'size': 8})
 
-    def plot_variations_from_h0(self, ax, chrome=True, label=None, color=None):
+    def plot_variations_from_h0(self, ax, chrome=True, color=None):
+        """Plot the deviation of feature variation compared to H0, on `ax`.
+
+        Parameters
+        ----------
+        chrome : bool
+            Whether or not to add legend, title, and fix the x limits. Used for
+            stacking plots on one another.
+        color : matplotlib color
+            Color to be used for the main deviation curve. Used for stacking
+            plots on one another.
+
+        """
+
         self.build_h0()
         self.build_variations()
 
@@ -645,6 +663,8 @@ class FeatureAnalysis(AnalysisCase):
             ax.legend(loc='best', prop={'size': 8})
 
     def plot_variations_from_h0_n(self, ax):
+        """Plot the deviation of feature variation compared to H0n, on `ax`."""
+
         self.build_h0()
         self.build_variations()
 
@@ -667,15 +687,36 @@ class FeatureAnalysis(AnalysisCase):
         ax.legend(loc='best', prop={'size': 8})
 
     def build_h0(self):
-        try:
+        """Build values for the :math:`H_0` and :math:`H_{0,n}` hypotheses
+        for each bin.
 
+        :math:`H_0` supposes that words are chosen randomly in the pool of
+        words that have a value assigned for the considered feature.
+        :math:`H_{0,n}` supposes that words are chosen randomly in that same
+        pool restricted to synonyms of the mother word (neighbors at distance 1
+        on the WordNet graph). See the paper for more details.
+
+        This method builds the hypothesized daughter values and ``daughter -
+        mother`` variations for each bin.
+
+        The daughter values for :math:`H_0` and :math:`H_{0,n}` are stored in
+        `self.daughter_d_h0` and `self.daughter_d_h0_n` respectively. The
+        ``daughter - mother`` variations are stored in `self.v_d_h0` and
+        `self.v_d_h0_n` respectively.
+
+        If those values have already been computed, nothing is done.
+
+        """
+
+        try:
+            # Did we already compute these? If so, do nothing.
             self.daughter_d_h0
             self.daughter_d_h0_n
             self.v_d_h0
             self.v_d_h0_n
 
         except AttributeError:
-
+            # Create the arrays
             self.daughter_d_h0 = np.zeros(self.nbins)
             self.daughter_d_h0_n = np.zeros(self.nbins)
             self.v_d_h0 = np.zeros(self.nbins)
@@ -684,10 +725,12 @@ class FeatureAnalysis(AnalysisCase):
             for i in range(self.nbins):
                 bin_ = (float(self.bins[i]), float(self.bins[i + 1]))
 
+                # Compute the average neighbor feature for this bin
                 neighbors_feature = \
                     self.feature.mean_feature_neighboring_range(bin_, 1)
                 idx = indices_in_range(self.feature.values, bin_)
 
+                # Store if anything was found, skip otherwise
                 if len(idx) > 0:
                     if neighbors_feature is not None:
                         self.daughter_d_h0_n[i] = neighbors_feature
@@ -707,17 +750,42 @@ class FeatureAnalysis(AnalysisCase):
                     self.v_d_h0_n[i] = None
 
     def build_variations(self):
-        try:
+        """Build the variation and std of feature values upon substitution,
+        for each bin.
 
+        Four arrays are built: the daughter words feature values, the std of
+        that, the ``daughter - mother`` feature variations, and the std of
+        that, all stored respectively in `self.daughter_d`,
+        `self.daughter_d_std`, `self.v_d`, and `self.v_d_std`.
+
+        The feature values used are in fact averages over several
+        substitutions: substitutions occurring in the same cluster and on the
+        same start word are likely not independant, so we average arrival
+        feature values over same-cluster-same-start-word substitutions before
+        anything else. These values are called "level-2" values (as opposed to
+        the raw values called "level-1"), and are computed in
+        :meth:`build_l2_f_lists`.
+
+        If the arrays have already been computed previously, nothing is done.
+
+        See Also
+        --------
+        build_l2_f_lists
+
+        """
+
+        try:
+            # Have we already computed these? If so, do nothing.
             self.daughter_d
             self.daughter_d_std
             self.v_d
             self.v_d_std
 
         except AttributeError:
-
+            # Make sure l2 values have been computed
             self.build_l2_f_lists()
 
+            # The target arrays to be filled
             self.daughter_d = np.zeros(self.nbins)
             self.daughter_d_std = np.zeros(self.nbins)
             self.v_d = np.zeros(self.nbins)
@@ -728,7 +796,9 @@ class FeatureAnalysis(AnalysisCase):
 
                 idx = indices_in_range(self.l2_f_mothers, bin_)
 
-                # We need > 1 here to make sure the std computing works
+                # Compute the values if anything was found in that range,
+                # otherwise skip silently.
+                # We need > 1 here to make sure the std computing works.
                 if len(idx) > 1:
 
                     daughter_dd = self.l2_f_daughters[idx]
@@ -750,6 +820,12 @@ class FeatureAnalysis(AnalysisCase):
                     self.v_d_std[i] = None
 
     def build_susceptibilities(self):
+        """Compute susceptibility values for each bin.
+
+        TBD.
+
+        """
+
         try:
 
             self.f_susceptibilities
