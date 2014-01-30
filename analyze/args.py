@@ -4,7 +4,7 @@
 """Argument classes for analysis of substitutions.
 
 These classes are used to define arguments in the analysis scripts
-(:mod:`analyze_substitutions` and :mod:`analyze_substitutions_multiple`)
+(:mod:`analyze_substitutions` and :mod:`analyze_substitutions_multiple`).
 
 """
 
@@ -50,18 +50,7 @@ class AnalysisArgs(BaseArgs):
         Whether or not to overwrite existing files when saving plots.
     show : bool
         Whether or not to show the plots generated (vs. only saving them).
-        (``!show`` implies ``save``.)
-
-    Methods
-    -------
-    create_argparser()
-        Create the argument parser to extract arguments from command line.
-    parse_features()
-        Parse the ``features`` argument from the command line.
-    print_analysis()
-        Print details of the analysis specified by the instance.
-    title()
-        Build a title representing the type of analysis specified.
+        (`!show` implies `save`.)
 
     See Also
     --------
@@ -107,15 +96,15 @@ class AnalysisArgs(BaseArgs):
         self.save = self.save or (not self.show)
 
     def parse_features(self, f_strings):
-        """Parse the ``features`` argument from the command line.
+        """Parse the ``--features`` argument from the command line.
 
         The result, a subportion of the dict of features defined by
-        :mod:`settings`, is stored in ``self.features``.
+        :mod:`settings`, is stored in `self.features`.
 
         Parameters
         ----------
         f_strings : list of strings
-            The ``features`` argument extracted from the command line.
+            The ``--features`` argument extracted from the command line.
 
         """
 
@@ -143,7 +132,7 @@ class AnalysisArgs(BaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`~baseargs.BaseArgs`'s constructor.
+        This method is used by :class:`baseargs.BaseArgs`'s constructor.
 
         Returns
         -------
@@ -204,7 +193,75 @@ class AnalysisArgs(BaseArgs):
 
 class GroupAnalysisArgs(object):
 
+    """Group of :class:`AnalysisArgs` to be used in a same figure.
+
+    This class is how `AnalysisArgs`'s get grouped when plotting several
+    distinct `AnalysisArgs` on the same figure. When using the ``--ingraph``
+    option, the plots for different `AnalysisArgs` get grouped into single
+    figures. This class represents a group of such `AnalysisArgs` that is
+    yielded when iterating over an instance of :class:`MultipleAnalysisArgs`.
+
+    Parameters
+    ----------
+    aas : list
+        List of :class:`AnalysisArgs` that are to be grouped in the same
+        figure.
+    maa : :class:`MultipleAnalysisArgs` instance
+        The parent `MultipleAnalysisArgs` that is generating this
+        `GroupAnalysisArgs`.
+    s : tuple
+        The tuple of indices used to extract the `aas` list of
+        `AnalysisArgs` from the parent `MultipleAnalysisArgs`. This is
+        used to construct a title for the figure.
+
+    Attributes
+    ----------
+    aas : list
+        The `aas` parameter given to the constructor.
+    save : bool
+        Whether or not to save the generated plots to files. Extracted from
+        the parent `MultipleAnalysisArgs`.
+    ffs_text : string
+        String indicating the framings and filterings included in the group.
+        Used for the figure's title.
+    models_text : string
+        String indicating the models included in the group.
+        Used for the figure's title.
+    substringss_text : string
+        String indicating the substrings-handling behaviours included in the
+        group. Used for the figure's title.
+    POSs_text : string
+        String indicating the POSs included in the group. Used for the
+        figure's title.
+    has_fixedslicing_model : bool
+        Whether or not the group of `AnalysisArgs` includes a fixed slicing
+        model. Used for the figure's title.
+
+    See Also
+    --------
+    AnalysisArgs, MultipleAnalysisArgs
+
+    """
+
     def __init__(self, aas, maa, s):
+        """Initialize structure from a list of :class:`AnalysisArgs`, a
+        :class:`MultipleAnalysisArgs`, and the slicing of the latter.
+
+        Parameters
+        ----------
+        aas : list
+            List of :class:`AnalysisArgs` that are to be grouped in the same
+            figure.
+        maa : :class:`MultipleAnalysisArgs` instance
+            The parent `MultipleAnalysisArgs` that is generating this
+            `GroupAnalysisArgs`.
+        s : tuple
+            The tuple of indices used to extract the `aas` list of
+            `AnalysisArgs` from the parent `MultipleAnalysisArgs`. This is
+            used to construct a title for the figure.
+
+        """
+
         self.aas = aas
         self.save = maa.save
 
@@ -221,6 +278,8 @@ class GroupAnalysisArgs(object):
         self.POSs_text = ','.join(maa.POSs) \
             if s[3] is Ellipsis else maa.POSs[s[3]]
 
+        # If we have a fixed slicing model in the lot, remember it
+        # for later when we create the title
         fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
         if sum(fixedslicing_models):
             self.has_fixedslicing_model = True
@@ -243,6 +302,8 @@ class GroupAnalysisArgs(object):
             aa.ingraph_text = ' | '.join(text_to_include)
 
     def __iter__(self):
+        """Iterate over all included :class:`AnalysisArgs`."""
+
         for aa in self.aas:
             yield aa
 
@@ -270,14 +331,17 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
     It defines all necessary arguments for analysis of substitutions mined
     with several sets of arguments, and is usable with the
-    :class:`.base.SubstitutionsAnalyzer`. This class inherits from
+    :class:`.substitutions.SubstitutionsAnalyzer`. This class inherits from
     :class:`baseargs.MultipleBaseArgs`.
 
     Attributes
     ----------
     features : dict
-        Subportion of the dict of features defined by :mod:`settings`. \
-                Specifies which features to analyze for.
+        Subportion of the dictionary of features defined in :mod:`settings`, \
+        specifying which features to analyze for.
+    ingraph : list of strings
+        List of strings specifying which analysis dimensions to include in
+        single graphs.
     positions : bool
         Whether or not to analyze positions of substituted words.
     paths : bool
@@ -287,19 +351,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     overwrite : bool
         Whether or not to overwrite existing files when saving plots.
     show : bool
-        Whether or not to show the plots generated (vs. only saving them).
-        (``!show`` implies ``save``.)
-
-    Methods
-    -------
-    create_argparser()
-        Create the argument parser to extract arguments from command line.
-    create_args_instance()
-        Create a :class:`AnalysisArgs` instance.
-    create_init_dict()
-        Create an initialization dict.
-    print_analysis()
-        Print details of the analyses specified by the instance.
+        Whether or not to show the plots generated (v. only saving them)
+        (`!show` implies `save`).
 
     See Also
     --------
@@ -331,6 +384,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         self.build_aas_ndarray()
 
     def __iter__(self):
+        """Iterate over all :class:`GroupAnalysisArgs`, slicing the parameter
+        space as we go."""
+
         # Create the list of slicing tuples
         slices = set()
         for ff_idx in range(len(self.ffs)):
@@ -355,6 +411,17 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
                 yield GroupAnalysisArgs([y], self, s)
 
     def build_aas_ndarray(self):
+        """Build a 4-dimensional array of the :class:`AnalysisArgs` included
+        in this `MultipleAnalysisArgs`.
+
+        This structure lets the `__iter__` method create any kinds of slices
+        through the parameter space, to allow arbitrary grouping of parameters
+        in single figures as per the ``--ingraph`` command line option.
+
+        The result is stored in `self.aas_ndarray`.
+
+        """
+
         self.aas_shape = (len(self.ffs), len(self.models),
                           len(self.substringss), len(self.POSs))
         self.aas_ndarray = np.ndarray(self.aas_shape, dtype=AnalysisArgs)
@@ -393,9 +460,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
         This will produce an initialization dict suitable for creation of
         an instance of :class:`AnalysisArgs`, merging the parameters provided
-        and the arguments stored in attributes of ``self``.
+        and the arguments stored in attributes of `self`.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -418,10 +485,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         """
 
         init_dict = super(MultipleAnalysisArgs,
-                          self).create_init_dict(ff,
-                                                 model,
-                                                 substrings,
-                                                 POS)
+                          self).create_init_dict(ff, model,
+                                                 substrings, POS)
         init_dict['features'] = self.args.features
         init_dict['positions'] = self.args.positions
         init_dict['paths'] = self.args.paths
@@ -431,9 +496,9 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         return init_dict
 
     def create_args_instance(self, init_dict):
-        """Create a :class:`AnalysisArgs` instance.
+        """Create an :class:`AnalysisArgs` instance.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -453,7 +518,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`baseargs.MultipleBaseArgs`'s
         constructor.
 
         Returns

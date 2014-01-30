@@ -1,0 +1,4 @@
+Linguistics
+===========
+
+.. automodule:: linguistics
