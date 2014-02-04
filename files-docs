@@ -27,9 +27,9 @@
 │   ├── base.py dp
 │   ├── full.py dp
 ├── linguistics
-│   ├── __init__.py cn
-│   ├── cmu.py cn
-│   ├── distance.py cn
+│   ├── __init__.py dp
+│   ├── cmu.py dp
+│   ├── distance.py dp
 │   ├── fa.py cn
 │   ├── language.py cn
 │   ├── treetagger.py cn
