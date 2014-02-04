@@ -28,12 +28,6 @@ class MT_dataset(object):
     clusters : dict of :class:`~datastructure.full.Cluster`\ s
         Created when calling :meth:`load_clusters`.
 
-    Methods
-    -------
-    load_clusters()
-        Load the whole dataset into a dictionary of \
-                :class:`~datastructure.full.Cluster` objects.
-
     """
 
     def __init__(self, mt_filename):
@@ -54,7 +48,7 @@ class MT_dataset(object):
         """Load the whole dataset into a dictionary of
         :class:`~datastructure.full.Cluster` objects.
 
-        The dictionary of Cluster objects is stored in ``self.clusters``.
+        The dictionary of Cluster objects is stored in `self.clusters`.
 
         See Also
         --------
@@ -87,25 +81,6 @@ class ClustersFileParser(object):
     define what happens when a cluster-, a quote-, or a url-declaration is
     encountered in the dataset file; the rest of the parsing code is common
     for all classes and is implemented in this base class.
-
-    Methods
-    -------
-    parse()
-        Parse a file, using the defined cluster-, quote-, and url-handlers
-    handle_cluster()
-        Handle a cluster definition encountered in the dataset file; abstract
-        method.
-    handle_quote()
-        Handle a quote definition encountered in the dataset file; abstract
-        method.
-    handle_url()
-        Handle a url definition encountered in the dataset file; abstract
-        method.
-    _skip_lines()
-        Skip the first few lines in an open file (usually the syntax
-        definition lines).
-    _count_lines()
-        Count the number of lines in a file.
 
     See Also
     --------
@@ -220,7 +195,7 @@ class ClustersFileParser(object):
                 # Give some info about progress
 
                 if i % self._lineinfostep == 0:
-                    print int(round(i*100/self._n_lines)),
+                    print int(round(i * 100 / self._n_lines)),
 
                 line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
                 line_fields = re.split(r'[\t\r\n]', line)
@@ -257,15 +232,6 @@ class ClustersLoader(ClustersFileParser):
     clusters : dict of :class:`~datastructure.full.Cluster`\ s
         Filled up upon parsing.
 
-    Methods
-    -------
-    handle_cluster()
-        Handle a cluster definition in the dataset file.
-    handle_quote()
-        Handle a quote definition in the dataset file.
-    handle_url()
-        Handle a url definition in the dataset file.
-
     See Also
     --------
     ClustersFileParser
@@ -294,7 +260,7 @@ class ClustersLoader(ClustersFileParser):
         """Handle a cluster definition in the dataset file.
 
         Create the :class:`~datastructure.full.Cluster` from the
-        `line_fields`, and store it in ``self.clusters``.
+        `line_fields`, and store it in `self.clusters`.
 
         Parameters
         ----------

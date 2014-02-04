@@ -49,9 +49,9 @@ def check_file(filename, for_read=False):
     if os.path.exists(filename):
 
         if not for_read:
-            raise Exception(("File '" + filename + "' already exists! You should "
-                             "sort this out first: I'm not going to overwrite "
-                             'it. Aborting.'))
+            raise Exception(("File '" + filename + "' already exists! "
+                             "You should sort this out first: I'm not "
+                             'going to overwrite it. Aborting.'))
     else:
 
         if for_read:

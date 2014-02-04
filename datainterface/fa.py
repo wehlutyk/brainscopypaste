@@ -26,16 +26,8 @@ class FreeAssociationNorms(object):
     Attributes
     ----------
     norms : dict
-        Mapping of ``word, norms`` couples (words in lowercase). Created by \
+        Mapping of `word, norms` couples (words in lowercase). Created by \
                 :meth:`load_norms`.
-
-    Methods
-    -------
-    _skip_lines()
-        Skip the first few lines in an open file (usually the syntax \
-                definition lines).
-    load_norms()
-        Parse the Appendix A files.
 
     """
 
@@ -62,11 +54,11 @@ class FreeAssociationNorms(object):
     def load_norms(self):
         """Parse the Appendix A files.
 
-        After loading, ``self.norms`` is a dict containing, for each
+        After loading, `self.norms` is a dict containing, for each
         (lowercased) cue, a list of tuples. Each tuple represents a word
-        referenced by the cue, and is in format ``(word, ref, weight)``:
-        ``word`` is the referenced word; ``ref`` is a boolean indicating
-        if ``word`` has been normed or not; ``weight`` is the strength of
+        referenced by the cue, and is in format `(word, ref, weight)`:
+        `word` is the referenced word; `ref` is a boolean indicating
+        if `word` has been normed or not; `weight` is the strength of
         the referencing.
 
         """
