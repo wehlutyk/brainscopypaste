@@ -376,7 +376,7 @@ class FeatureAnalysis(AnalysisCase):
     aa : :class:`AnalysisArgs` instance
         The set of arguments to analyze for.
     data : list
-        List of :class:`mine.substitutions.Substitution`'s to analyze.
+        List of :class:`mine.substitutions.Substitution`\ s to analyze.
     feature : :class:`Feature` instance
         The feature to analyze for.
 
@@ -417,7 +417,7 @@ class FeatureAnalysis(AnalysisCase):
         aa : :class:`AnalysisArgs` instance
             The set of arguments to analyze for.
         data : list
-            List of :class:`mine.substitutions.Substitution`'s to analyze.
+            List of :class:`mine.substitutions.Substitution`\ s to analyze.
         feature : :class:`Feature` instance
             The feature to analyze for.
 

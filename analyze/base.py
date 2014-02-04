@@ -29,7 +29,7 @@ class AnalysisCase(object):
         Arguments for the analysis to be run.
     data : list
         The data to be analyzed by the `analyze` and `analyze_inner` methods,
-        usually a list of :class:`mine.substitutions.Substitution`'s.
+        usually a list of :class:`mine.substitutions.Substitution`\ s.
 
     Attributes
     ----------
@@ -37,7 +37,7 @@ class AnalysisCase(object):
         The arguments passed to the constructor.
     data : list
         The data to be analyzed by the `analyze` and `analyze_inner` methods, \
-        usually a list of :class:`mine.substitutions.Substitution`'s.
+        usually a list of :class:`mine.substitutions.Substitution`\ s.
 
     See Also
     --------
@@ -56,7 +56,7 @@ class AnalysisCase(object):
         data : list
             The data to be analyzed by the `analyze` and `analyze_inner`
             methods, usually a list of
-            :class:`mine.substitutions.Substitution`'s.
+            :class:`mine.substitutions.Substitution`\ s.
 
         """
 

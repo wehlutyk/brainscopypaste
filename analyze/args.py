@@ -195,7 +195,7 @@ class GroupAnalysisArgs(object):
 
     """Group of :class:`AnalysisArgs` to be used in a same figure.
 
-    This class is how `AnalysisArgs`'s get grouped when plotting several
+    This class is how `AnalysisArgs`\ s get grouped when plotting several
     distinct `AnalysisArgs` on the same figure. When using the ``--ingraph``
     option, the plots for different `AnalysisArgs` get grouped into single
     figures. This class represents a group of such `AnalysisArgs` that is
