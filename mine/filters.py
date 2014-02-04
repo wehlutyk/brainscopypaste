@@ -3,7 +3,7 @@ from __future__ import division
 import numpy as np
 
 from linguistics.treetagger import TaggerBuilder
-from linguistics.language import langdetector
+from linguistics.language import get_langdetector
 
 
 def frame_cluster_around_peak(cl, span_before=2 * 86400,
@@ -209,6 +209,7 @@ def filter_cluster(cl, min_tokens):
 
     import datastructure.full as ds_mt
     tagger = TaggerBuilder.get_tagger()
+    langdetector = get_langdetector()
 
     # If the root has less than wanted, filter the whole cluster.
 

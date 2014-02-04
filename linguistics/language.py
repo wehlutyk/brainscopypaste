@@ -17,6 +17,8 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.corpus.reader.api import CorpusReader
 from nltk.corpus.reader.util import StreamBackedCorpusView, concat
 
+from util.generic import memoize
+
 
 class LangIdCorpusReader(CorpusReader):
 
@@ -94,5 +96,8 @@ class LangDetect(object):
                 for trigram in nltk_trigrams(match) if trigram != None]
 
 
-langdetector = LangDetect()
+def _get_langdetector():
+    return LangDetect()
 
+
+get_langdetector = memoize(_get_langdetector)
