@@ -18,10 +18,6 @@ class Timeline(v_mt.TimelineVisualize):
     This full class pulls in the
     :class:`~visualize.mt.TimelineVisualize` mixin for visualization.
 
-    Methods
-    -------
-    Refer to mixins and their parent classes.
-
     See Also
     --------
     .base.TimelineBase, visualize.mt.TimelineVisualize
@@ -31,7 +27,7 @@ class Timeline(v_mt.TimelineVisualize):
     pass
 
 
-class Quote(v_mt.QuoteVisualize,m_mo.QuoteModels):
+class Quote(v_mt.QuoteVisualize, m_mo.QuoteModels):
 
     """Full quote object, used for analysis and visualization.
 
@@ -39,10 +35,6 @@ class Quote(v_mt.QuoteVisualize,m_mo.QuoteModels):
 
     * The :class:`~mine.models.QuoteModels` mixin for substitution analysis
     * The :class:`~visualize.mt.QuoteVisualize` mixin for visualization
-
-    Methods
-    -------
-    Refer to mixins and their parent classes.
 
     See Also
     --------
@@ -53,7 +45,7 @@ class Quote(v_mt.QuoteVisualize,m_mo.QuoteModels):
     pass
 
 
-class Cluster(m_mo.ClusterModels,v_mt.ClusterVisualize):
+class Cluster(m_mo.ClusterModels, v_mt.ClusterVisualize):
 
     """Full cluster object, used for analysis and visualization.
 
@@ -61,10 +53,6 @@ class Cluster(m_mo.ClusterModels,v_mt.ClusterVisualize):
 
     * The :class:`~mine.models.ClusterModels` mixin for substitution analysis
     * The :class:`~visualize.mt.ClusterVisualize` mixin for visualization
-
-    Methods
-    -------
-    Refer to mixins and their parent classes.
 
     See Also
     --------
@@ -82,10 +70,6 @@ class QtString(m_mo.QtStringModels):
     This full class pulls in the :class:`~mine.models.QtStringModels` mixin
     for substitution analysis.
 
-    Methods
-    -------
-    Refer to mixins and their parent classes.
-
     See Also
     --------
     mine.models.QtStringModels
@@ -101,10 +85,6 @@ class TimeBag(m_mo.TimeBagModels):
 
     This full class pulls in the :class:`~mine.models.TimeBagModels` mixin
     for substitution analysis.
-
-    Methods
-    -------
-    Refer to mixins and their parent classes.
 
     See Also
     --------
