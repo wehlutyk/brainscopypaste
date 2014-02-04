@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Web Quotes'
-copyright = u'2013, Sébastien Lerique & Camille Roth'
+copyright = u'2013—2014, Sébastien Lerique'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
