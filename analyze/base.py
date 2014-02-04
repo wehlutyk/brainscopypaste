@@ -29,7 +29,7 @@ class AnalysisCase(object):
         Arguments for the analysis to be run.
     data : list
         The data to be analyzed by the `analyze` and `analyze_inner` methods,
-        usually a list of :class:`mine.substitutions.Substitution`\ s.
+        usually a list of :class:`~mine.substitutions.Substitution`\ s.
 
     Attributes
     ----------
@@ -37,7 +37,7 @@ class AnalysisCase(object):
         The arguments passed to the constructor.
     data : list
         The data to be analyzed by the `analyze` and `analyze_inner` methods, \
-        usually a list of :class:`mine.substitutions.Substitution`\ s.
+        usually a list of :class:`~mine.substitutions.Substitution`\ s.
 
     See Also
     --------
@@ -56,7 +56,7 @@ class AnalysisCase(object):
         data : list
             The data to be analyzed by the `analyze` and `analyze_inner`
             methods, usually a list of
-            :class:`mine.substitutions.Substitution`\ s.
+            :class:`~mine.substitutions.Substitution`\ s.
 
         """
 
@@ -73,7 +73,7 @@ class AnalysisCase(object):
 
         Parameters
         ----------
-        axs : list of :class:`matplotlib.axes.Axes` instance
+        axs : list of :class:`~matplotlib.axes.Axes` instance
             The list of axes on which to plot the analysis.
         filepath : string
             The filepath to which the figure is saved if `self.aa.save`
@@ -98,7 +98,7 @@ class AnalysisCase(object):
         return True
 
     def build_axes(self):
-        """Return the (created) list of :class:`matplotlib.axes.Axes` on which
+        """Return the (created) list of :class:`~matplotlib.axes.Axes` on which
         to plot the analysis (abstract method)."""
 
         raise NotImplementedError
@@ -108,7 +108,7 @@ class AnalysisCase(object):
 
         Parameters
         ----------
-        axs : list of :class:`matplotlib.axes.Axes` instance
+        axs : list of :class:`~matplotlib.axes.Axes` instance
             The list of axes on which to plot the analysis.
 
         """
