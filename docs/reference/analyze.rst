@@ -34,7 +34,7 @@ Positions Analysis
 .. automodule:: analyze.positions
 
 
-Substitutions Analysis
-----------------------
+Substitutions Analyzing
+-----------------------
 
 .. automodule:: analyze.substitutions
