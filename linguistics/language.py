@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Detect the language in a text.
+"""Detect the language in a text using NLTK.
 
-TODO: this module needs more commenting.
+Adapted from https://github.com/vandanab/LangDetect written by vandanab.
 
 """
 
@@ -28,6 +28,7 @@ class LangIdCorpusReader(CorpusReader):
 
     def _get_trigram_weight(self, line):
         """Split a line in a trigram and its frequency count."""
+
         data = line.strip().split(' ')
 
         if len(data) == 2:
@@ -35,6 +36,7 @@ class LangIdCorpusReader(CorpusReader):
 
     def _read_trigram_block(self, stream):
         """Read a block of trigram frequencies."""
+
         freqs = []
 
         # Read 20 lines at a time.
@@ -42,15 +44,19 @@ class LangIdCorpusReader(CorpusReader):
         for i in range(20):
             freqs.append(self._get_trigram_weight(stream.readline()))
 
-        return filter(lambda x: x != None, freqs)
+        return filter(lambda x: x is not None, freqs)
 
     def freqs(self, fileids=None):
         """Return trigram frequencies for a language from the corpus."""
+
         return concat([self.CorpusView(path, self._read_trigram_block)
                        for path in self.abspaths(fileids=fileids)])
 
 
 class LangDetect(object):
+
+    """Detect language in a text."""
+
     language_trigrams = {}
     langid = LazyCorpusLoader('langid', LangIdCorpusReader, r'(?!\.).*\.txt')
 
@@ -64,6 +70,7 @@ class LangDetect(object):
 
     def detect(self, text):
         """Detect the text's language."""
+
         words = nltk_word_tokenize(text.lower())
         trigrams = {}
         scores = dict([(lang, 0) for lang in self.language_trigrams.keys()])
@@ -87,17 +94,21 @@ class LangDetect(object):
 
                 scores[lang] += ((float(frequencies[trigram]) /
                                   float(frequencies.N())) *
-                                  (float(count) / float(total)))
+                                 (float(count) / float(total)))
 
         return sorted(scores.items(), key=lambda x: x[1], reverse=True)[0][0]
 
     def get_word_trigrams(self, match):
         return [''.join(trigram)
-                for trigram in nltk_trigrams(match) if trigram != None]
+                for trigram in nltk_trigrams(match) if trigram is not None]
 
 
 def _get_langdetector():
+    """Get an instance of :class:`LangDetect`; but better use the singleton
+    returned by :meth:`get_langdetector`."""
+
     return LangDetect()
 
 
 get_langdetector = memoize(_get_langdetector)
+"""Get a singleton instance of :class:`LangDetect`."""
