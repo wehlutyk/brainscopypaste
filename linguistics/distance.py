@@ -8,7 +8,7 @@ from __future__ import division
 
 import numpy as np
 
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 
 
 def levenshtein(s1, s2):
@@ -45,7 +45,7 @@ def levenshtein_word(s1, s2):
     """Compute levenshtein distance between `s1` and `s2`, taking words as the
     editing unit."""
 
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
     return levenshtein(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
@@ -62,7 +62,7 @@ def hamming_word(s1, s2):
     """Compute the hamming distance between `s1` and `s2`, taking words as the
     editing unit."""
 
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
     return hamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
@@ -98,7 +98,7 @@ def subhamming_word(s1, s2):
     """Compute the subhamming distance between `s1` and `s2`, taking words as
     the editing unit."""
 
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
     return subhamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
