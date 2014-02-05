@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Analyze data in ways that are not specifically linguistic.
+"""Mine for substitutions in the dataset, with different sets of arguments.
 
-These modules use data loaded from raw dataset files by the datainterface
-package, and stored in objects defined in the datastructure package. They can
-plug into the objects defined in the datastructure package to provide an
-object-oriented interface to the data (see the datastructure package for
-details).
+Substitutions mining is a tricky art. It takes filtering, lemmatizing,
+grammatical tagging, substring analysis, multithreading, and source-destination
+modelling to make a good substitution miner.
 
-Modules:
-  * linalg: linear algebra tools, specifically to compute the PageRank
-            algorithm
-  * combinatorials: combinatorial tools, used particularly when working with
-                    quote transitions
-  * memetracker: analyze data from the MemeTracker dataset
+The :mod:`.args` module lets you define the way in which you combine all those
+subtools to mine your substitutions. The :mod:`.filters` module lets you sift
+through the cluster data before starting to mine, shaping and filtering your
+clusters to your needs. The :mod:`.models` module defines the different ways
+you can reconstruct the source-destination information which isn't present in
+the cluster data. The :mod:`.substitutions` brings all of these tools together
+to do the actual mining. Finally, the :mod:`.statistics` module lets you get an
+overview of some aspects of the cluster data, just a peak before diving in.
 
 """
