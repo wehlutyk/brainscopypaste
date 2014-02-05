@@ -1,6 +1,6 @@
 from __future__ import division
 
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 
 
 def build_n_quotes_to_clusterids(clusters):
@@ -38,7 +38,7 @@ def build_quotelengths_to_n_quote(clusters):
 
     """
 
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
 
     inv_qt_lengths = {}
 

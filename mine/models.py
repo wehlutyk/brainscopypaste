@@ -4,7 +4,7 @@ import numpy as np
 
 from datetime import datetime
 
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 from util.combinatorials import build_ordered_tuples
 from linguistics.distance import (distance_word_mother_nosub,
                                   distance_word_mother_sub,
@@ -37,7 +37,7 @@ class QtStringModels(str):
     def __init__(self, string, cl_id, qt_id, parse=True):
         """Parse the string for POS tags and tokens, if asked to ('parse'
         argument)."""
-        tagger = TaggerBuilder.get_tagger()
+        tagger = get_tagger()
         self.cl_id = cl_id
         self.qt_id = qt_id
         if parse:

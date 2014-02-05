@@ -1,22 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tag and tokenize sentences and quotes.
-
-Variables:
-  * tagger: an initialized instance of TreeTaggerTags
-
-Classes:
-  * TreeTaggerTags: wrapper for frequently-used functions of the TreeTagger
-                    methods
-
-"""
+"""Tag and tokenize sentences and quotes."""
 
 
 from __future__ import division
 
 from .treetaggerwrapper import TreeTagger, TreeTaggerError
-from util.generic import find_upper_rel_dir, NotFoundError
+from util.generic import find_upper_rel_dir, NotFoundError, memoize
 
 import settings as st
 
@@ -25,19 +16,14 @@ class TreeTaggerTags(TreeTagger):
 
     """Wrapper for frequently-used functions of the TreeTagger methods.
 
-    This is a subclass of treetaggerwrapper.TreeTagger, for convenience.
-
-    Methods:
-      * __init__: prepare caching of tagged strings
-      * _tag_cache: tag a sentence and cache the result
-      * Tags: tag a string and return the list of tags.
-      * Tokenize: tokenize a string and return the list of tokens
-      * Lemmatize: lemmatize a string a return the list of tokens
+    This is a convenience caching subclass of
+    :class:`~.treetaggerwrapper.TreeTagger`. See
+    :class:`~.treetaggerwrapper.TreeTagger` for initialization parameters.
 
     """
 
     def __init__(self, *args, **kwargs):
-        """Prepare caching of tagged strings."""
+        """Initialize the structure and prepare caching of tagged strings."""
         super(TreeTaggerTags, self).__init__(*args, **kwargs)
         self._cache = {}
 
@@ -60,21 +46,21 @@ class TreeTaggerTags(TreeTagger):
         return [t.split('\t')[2] for t in self._tag_cache(s)]
 
 
+def _get_tagger():
+    """Get an instance of :class:`TreeTaggerTags`; but better use the singleton
+    returned by :meth:`get_tagger`."""
 
-class TaggerBuilder(object):
+    try:
+        tagger = TreeTaggerTags(
+            TAGLANG='en',
+            TAGDIR=find_upper_rel_dir(st.treetagger_TAGDIR),
+            TAGINENC='utf-8', TAGOUTENC='utf-8')
+        return tagger
+    except NotFoundError:
+        raise TreeTaggerError('TreeTagger directory not found '
+                              '(searched parent directories '
+                              'recursively)')
 
-    tagger = None
 
-    @classmethod
-    def get_tagger(cls):
-        if not cls.tagger:
-            try:
-                cls.tagger = TreeTaggerTags(
-                        TAGLANG='en',
-                        TAGDIR=find_upper_rel_dir(st.treetagger_TAGDIR),
-                        TAGINENC='utf-8', TAGOUTENC='utf-8')
-            except NotFoundError:
-                raise TreeTaggerError('TreeTagger directory not found '
-                                      '(searched parent directories '
-                                      'recursively)')
-        return cls.tagger
+get_tagger = memoize(_get_tagger)
+"""Get a singleton instance of :class:`TreeTaggerTags`."""

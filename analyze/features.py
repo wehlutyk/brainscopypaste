@@ -15,7 +15,7 @@ import networkx as nx
 from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 import linguistics.wn as l_wn
 from analyze.base import AnalysisCase
 import settings as st
@@ -423,7 +423,7 @@ class FeatureAnalysis(AnalysisCase):
 
         """
 
-        self.tagger = TaggerBuilder.get_tagger()
+        self.tagger = get_tagger()
 
         # We need the feature to be calling savefile_postfix in super
         self.feature = feature
