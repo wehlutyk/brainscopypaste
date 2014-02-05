@@ -2,29 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """Compute PageRank scores and adjacency matrices corresponding to the Wordnet
-synonyms graph. Other tools with it.
+synonyms graph.
 
-Variables:
-  * lemmatize: an initizalized instance of Lemmatizer
-
-Methods:
-  * build_wn_coords: build a dictionary associating each lemma (in lowercase)
-                     in Wordnet to a coordinate
-  * build_wn_adjacency_matrix: build the adjacency matrix (in CSC or CSR
-                               format) for the WN synonyms graph
-  * build_wn_PR_scores: compute the PageRank scores corresponding to the WN
-                        synonyms graph
-  * build_wn_degrees: compute the degrees of lemmas in the WN graph (excluding
-                      lemmas not connected to other lemmas)
-
-Classes:
-  * Lemmatizer: a helper for caching lemmatizations from Wordnet
-
-The PageRank scores computed depend on the following details:
-  * The adjacency matrix is built for the lemmas in WN, with zeros on the
-    diagonal. Any non-linked lemma (i.e. which has no synonyms in WN) is
-    removed from the matrix. The constructed matrix is symmetric before
-    normalization. We then normalize on each column.
+The PageRank scores computed depend on the following details: the adjacency
+matrix is built for the lemmas in WN, with zeros on the diagonal. Any
+non-linked lemma (i.e. which has no synonyms in WN) is removed from the matrix.
+The constructed matrix is symmetric before normalization. We then normalize on
+each column.
 
 """
 
@@ -42,12 +26,14 @@ import util.linalg as u_la
 
 
 def _build_wn_coords(pos=None):
-    """Build a dictionary associating each lemma (in lowercase) in Wordnet to
+    """Build a dictionary associating each lemma (in lowercase) in WordNet to
     a coordinate.
 
-    Returns: a dict which keys are the lemmas (in lowercase) in Wordnet, and
-             the value for a key is the coordinate for that lemma, to be used
-             e.g. with an adjacency matrix.
+    Returns
+    -------
+    dict
+        Association of the lemmas (in lowercase) in WordNet to their
+        coordinate, to be used e.g. with an adjacency matrix.
 
     """
 
@@ -70,7 +56,7 @@ def _build_wn_coords(pos=None):
 
             for lem in lemma_names_lower:
 
-                if not lem_coords.has_key(lem):
+                if lem not in lem_coords:
 
                     lem_coords[lem] = i
                     i += 1
@@ -81,22 +67,29 @@ def _build_wn_coords(pos=None):
 
 
 build_wn_coords = memoize(_build_wn_coords)
+"""Caching version of :meth:`_build_wn_coords`, recommended to use over
+the latter."""
 
 
 def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
-    """Build the adjacency matrix (in CSC or CSR format) for the WN synonyms
-    graph.
+    """Build the adjacency matrix (in :class:`~scipy.sparse.csc_matrix` or
+    :class:`~scipy.sparse.csr_matrix` format) for the WN synonyms graph.
 
-    Arguments:
-      * lem_coords: the dict of lemma coordinates in the matrix, as return by
-                    'build_wn_coords'
-      * outfmt: a string specifying the compression format for the result
-                matrix; can be 'csc' or 'csr'.
+    Parameters
+    ----------
+    lem_coords : dict
+        Coordinates of the lemmas in the matrix (as created by
+        :meth:`build_wn_coords`).
+    outfmt : string
+        Compression format for the result matrix; either 'csc' or 'csr'.
 
-    Returns: the adjacency matrix, in Scipy CSC or CSR format, of the WN
-             synonyms graph, with zeros on the diagonal, omitting lemmas which
-             are not connected to any other (i.e. omitting lemmas that are
-             alone in their synset).
+    Returns
+    -------
+    csc_matrix or csr_matrix
+        The adjacency matrix, in :class:`~scipy.sparse.csc_matrix` or
+        :class:`~scipy.sparse.csr_matrix` format, of the WN synonyms graph,
+        with zeros on the diagonal, omitting lemmas which are not connected to
+        any other (i.e. omitting lemmas that are alone in their synset).
 
     """
 
@@ -138,7 +131,10 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
 def build_wn_PR_scores(pos):
     """Compute the PageRank scores corresponding to the WN synonyms graph.
 
-    Returns: a dict associating each WN lemma to its PageRank score
+    Returns
+    -------
+    dict
+        The association of each WN lemma to its PageRank score.
 
     """
 
@@ -193,7 +189,10 @@ def build_wn_degrees(pos):
     """Compute the degrees of lemmas in the WN graph (excluding lemmas not
     connected to other lemmas).
 
-    Returns: a dict associating each lemma to its degree.
+    Returns
+    -------
+    dict
+        The association of each lemma to its degree.
 
     """
 
@@ -226,6 +225,14 @@ def build_wn_degrees(pos):
 
 
 def _build_wn_nxgraph(pos=None):
+    """Build the undirected NetworkX :class:`networkx.classes.graph.Graph`
+    for the WordNet network.
+
+    See Also
+    --------
+    build_wn_nxgraph
+
+    """
 
     print 'Building NX graph...',
     if pos == 'all':
@@ -233,19 +240,24 @@ def _build_wn_nxgraph(pos=None):
 
     lem_coords = build_wn_coords(pos)
     M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
-    G =  nx.from_scipy_sparse_matrix(M)
+    G = nx.from_scipy_sparse_matrix(M)
 
     print 'OK'
     return (lem_coords, G)
 
 
 build_wn_nxgraph = memoize(_build_wn_nxgraph)
+"""Caching version of :meth:`_build_wn_nxgraph`, recommended to use over the
+latter."""
 
 
 def build_wn_CCs(pos):
-    """Compute clusterization coefficients of lemmas in the WN graph.
+    """Compute clustering coefficients of lemmas in the WN graph.
 
-    Returns: a dict associating each lemma to its CC.
+    Returns
+    -------
+    dict
+        The association of each lemma to its CC.
 
     """
 
@@ -272,6 +284,14 @@ def build_wn_CCs(pos):
 
 
 def build_wn_paths():
+    """Compute the shortest paths between each pair in the WN graph.
+
+    Returns
+    -------
+    dict
+        Dictionary of shortest path lengths keyed by source and target.
+
+    """
 
     lem_coords, G = build_wn_nxgraph()
     inv_coords = inv_dict(lem_coords)
@@ -287,6 +307,22 @@ def build_wn_paths():
 
 
 def build_wn_paths_distribution(path_lengths):
+    """Compute the distribution of path lengths in the WN graph.
+
+    Parameters
+    ----------
+    path_lengths : dict
+        The dictionary of path lengths between pairs as computed by
+        :meth:`build_wn_paths`.
+
+    Returns
+    -------
+    np.array
+        The distribution of path lengths, where the index in the array
+        is the path length in question.
+
+    """
+
     lengths_all = []
     for d in path_lengths.itervalues():
         lengths_all.extend(d.values())
@@ -301,7 +337,10 @@ def build_wn_paths_distribution(path_lengths):
 def build_wn_BCs(pos):
     """Compute betweenness centrality of lemmas in the WN graph.
 
-    Returns: a dict associating each lemma to its BC.
+    Returns
+    -------
+    dict
+        The association of each lemma to its BC.
 
     """
 
@@ -328,7 +367,8 @@ def build_wn_BCs(pos):
 
 
 def truncate_wn_features(features, pos):
-    """Truncate a dict of WN features to the words with POS == pos."""
+    """Truncate a dict of WN `features` to the words with `POS == pos`."""
+
     if pos == 'all':
         return features
 
@@ -336,7 +376,7 @@ def truncate_wn_features(features, pos):
     new_features = {}
 
     for lem in lem_coords.iterkeys():
-        if features.has_key(lem):
+        if lem in features:
             new_features[lem] = features[lem]
 
     return new_features
@@ -344,7 +384,13 @@ def truncate_wn_features(features, pos):
 
 class Lemmatizer(object):
 
-    """A helper for caching lemmatizations from Wordnet."""
+    """A helper for caching lemmatizations from WordNet.
+
+    An instance is provided as `lemmatize` and can be used as a function: call
+    ``lemmatize(word)`` to get the corresponding lemma (the result is cached so
+    it gradually gets faster).
+
+    """
 
     def __init__(self):
         self._cache = {}
@@ -353,7 +399,7 @@ class Lemmatizer(object):
         """Lemmatize a word."""
         if word not in self._cache:
             morph = wn.morphy(word)
-            self._cache[word] = morph if morph != None else word
+            self._cache[word] = morph if morph is not None else word
         return self._cache[word]
 
 

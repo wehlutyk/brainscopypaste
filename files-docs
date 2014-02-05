@@ -31,10 +31,10 @@
 │   ├── cmu.py dp
 │   ├── distance.py dp
 │   ├── fa.py dp
-│   ├── language.py cn
-│   ├── treetagger.py cn
-│   ├── treetaggerwrapper.py d
-│   ├── wn.py cn
+│   ├── language.py dp
+│   ├── treetagger.py dp
+│   ├── treetaggerwrapper.py d (unchanged format, so not pep8)
+│   ├── wn.py dp
 ├── mine
 │   ├── __init__.py cn
 │   ├── args.py v
