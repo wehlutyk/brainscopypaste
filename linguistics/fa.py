@@ -129,8 +129,8 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
 
 def _build_fa_nxgraph():
-    """Build the undirected NetworkX :class:`networkx.classes.graph.Graph`
-    for the Free Association network.
+    """Build the undirected :func:`networkx.Graph` for the Free Association
+    network.
 
     See Also
     --------

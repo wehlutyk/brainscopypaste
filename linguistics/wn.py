@@ -215,7 +215,7 @@ def build_wn_degrees(pos):
 
     for w, i in lem_coords.iteritems():
         # Use the unpondered graph
-        lem_degrees[w] = M.indptr[i+1] - M.indptr[i]
+        lem_degrees[w] = M.indptr[i + 1] - M.indptr[i]
         ## Use the pondered graph
         #lem_degrees[w] = sum(M.data[M.indptr[i]:M.indptr[i+1]])
 
@@ -225,8 +225,7 @@ def build_wn_degrees(pos):
 
 
 def _build_wn_nxgraph(pos=None):
-    """Build the undirected NetworkX :class:`networkx.classes.graph.Graph`
-    for the WordNet network.
+    """Build the undirected :func:`networkx.Graph` for the WordNet network.
 
     See Also
     --------
