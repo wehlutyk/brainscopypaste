@@ -95,7 +95,7 @@ class Substitution(object):
             The destination quote for the substitution.
         mining_info : dict or None
             Additional information about the substitution as given by
-            :meth:`~mine.models.ClusterModels.iter_substitutions` (it depends
+            :meth:`mine.models.ClusterModels.iter_substitutions` (it depends
             on the chosen source-destination model), for potential later use.
 
         """
@@ -298,13 +298,50 @@ def mine_multiple_mt(mma):
 
 class SubstitutionsMiner(object):
 
+    """Bring all tools together to do the actual substitution mining.
+
+    Parameters
+    ----------
+    ma : :class:`~mine.args.MiningArgs`
+        The mining arguments to mine for.
+    start : bool, optional
+        Whether or not to start mining straight after creation; defaults to
+        ``False``.
+
+    See Also
+    --------
+    mine.args.MiningArgs, Substitution, mine_multiple, mine_multiple_mt,
+    mine_substitutions, mine_substitutions_multiple
+
+    """
+
     def __init__(self, ma, start=False):
+        """Initialize the structure with mining args, and possibly start
+        mining.
+
+        Parameters
+        ----------
+        ma : :class:`~mine.args.MiningArgs`
+            The mining arguments to mine for.
+        start : bool, optional
+            Whether or not to start mining straight after creation; defaults to
+            ``False``.
+
+        """
+
         self.ma = ma
         if start:
             self.mine()
 
     def load_clusters(self):
-        """Load the data from pickle files.
+        """Connect to redis and load the correct pre-filtered clusters.
+
+        The :class:`~datainterface.redistools.RedisReader` (which behaves like
+        a dict) is stored in `self.clusters`.
+
+        See Also
+        --------
+        mine.filters
 
         """
 
@@ -320,8 +357,17 @@ class SubstitutionsMiner(object):
         print 'OK'
 
     def iter_substitutions(self):
-        """Iterate through all substitutions according to the given
-        MiningArgs."""
+        """Iterate over all substitutions according to the given mining args.
+
+        This iterator yields the exact same tuples as
+        :meth:`mine.models.ClusterModels.iter_substitutions` will.
+
+        See Also
+        --------
+        mine.models.ClusterModels
+
+        """
+
         progress = ProgressInfo(len(self.clusters), 100, 'clusters')
 
         for cl in self.clusters.itervalues():
@@ -332,9 +378,13 @@ class SubstitutionsMiner(object):
                 yield (mother, daughter, mining_info)
 
     def examine_substitutions(self):
-        """Examine substitutions and retain only those we want.
+        """Detect and examine substitutions, keeping only those we want.
 
-        Details: TODO
+        Substitutions are sequentially detected, and then examined further to
+        see if they're worth keeping (with :meth:`Substitution.test_POS` and
+        :meth:`Substitution.test_real`). Logging information is printed to
+        stdout. Finally, the complete list of retained substitutions is stored
+        in `self.substitutions`.
 
         """
 
@@ -364,7 +414,12 @@ class SubstitutionsMiner(object):
         print 'Stored {} of {} mined substitutions.'.format(n_stored, n_all)
 
     def save_substitutions(self):
-        """Save the mining results to pickle files.
+        """Save the mined and examined substitutions to pickle files.
+
+        The filename is determined by the mining args, and the list of
+        substitutions is saved directly to it using the
+        :mod:`~datainterface.picklesaver` module. This list can later be loaded
+        and quickly analyzed without having to re-detect all the substitutions.
 
         """
 
@@ -374,6 +429,33 @@ class SubstitutionsMiner(object):
         print 'OK'
 
     def checkfile(self):
+        """Check whether the target savefile already exists, and decide
+        whether to overwrite it or not.
+
+        If the file doesn't exist, it will be written to (the method returns
+        ``True``). If it does exist, there are two possibilities: If the mining
+        arguments are asking to resume a previous mining, the method returns
+        ``False``, and the whole substitution mining for this argument set
+        should be skipped. If the mining arguments are not asking to resume a
+        previous mining, an exception is raised to prevent from overwriting
+        previously mined substitutions.
+
+        Raises
+        ------
+        Exception
+            If the target file exists but can't be skipped because of the
+            mining args.
+
+        Returns
+        -------
+        bool
+            ``True`` if `self.savefile` should be written to (hence the
+            substitution mining performed), ``False`` if this mining
+            should be skipped because we were asked to resume a previous
+            mining and the file already exists..
+
+        """
+
         try:
             di_fs.check_file(self.savefile)
         except Exception, msg:
@@ -389,7 +471,8 @@ class SubstitutionsMiner(object):
         return True
 
     def mine(self):
-        """Load data, do the substitution mining, and save results."""
+        """Load data, do the substitution mining, and save results,
+        all according to our mining arguments."""
 
         self.ma.print_mining()
         self.savefile = di_fs.get_filename(self.ma)
