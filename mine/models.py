@@ -36,8 +36,41 @@ import datastructure.base as ds_mtb
 
 class QuoteModels(ds_mtb.QuoteBase):
 
+    """Mixin class for :class:`~datastructure.base.QuoteBase` to easily build
+    a :class:`~datastructure.full.QtString`.
+
+    See Also
+    --------
+    datastructure.base.QuoteBase, datastructure.full.Quote,
+    datastructure.full.QtString
+
+    """
+
     def to_qt_string_lower(self, cl_id, parse=True):
-        """Return a QtString built from this Quote, in lowercase."""
+        """Return a :class:`~datastructure.full.QtString` built from this
+        :class:`~datastructure.full.Quote`, in lowercase.
+
+        Parameters
+        ----------
+        cl_id : int
+            The cluster id to include in the new
+            :class:`~datastructure.full.QtString`.
+        parse : bool, optional
+            Whether to parse the newly created
+            :class:`~datastructure.full.QtString` for POS tags and tokens,
+            or not; defaults to ``True``.
+
+        Returns
+        -------
+        QtString
+            The newly created :class:`~datastructure.full.QtString`.
+
+        See Also
+        --------
+        datastructure.full.Quote, datastructure.full.QtString
+
+        """
+
         from datastructure.full import QtString
         return QtString(self.string.lower(), cl_id, self.id, parse=parse)
 
