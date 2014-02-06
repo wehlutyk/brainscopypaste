@@ -36,9 +36,9 @@
 │   ├── treetaggerwrapper.py d (unchanged format, so not pep8)
 │   ├── wn.py dp
 ├── mine
-│   ├── __init__.py cn
-│   ├── args.py v
-│   ├── filters.py cn
+│   ├── __init__.py dp
+│   ├── args.py dp
+│   ├── filters.py dp
 │   ├── models.py cn
 │   ├── statistics.py cn
 │   ├── substitutions.py cn

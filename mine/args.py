@@ -105,7 +105,7 @@ class MiningArgs(BaseArgs):
         return p
 
     def print_mining(self):
-        """Print details about this `MiningArgs` to stdout."""
+        """Print details about this :class:`MiningArgs` to stdout."""
 
         print
         print 'Mining with the following args:'
@@ -165,6 +165,35 @@ class MultipleMiningArgs(MultipleBaseArgs):
         self.multi_thread = self.args.multi_thread
 
     def create_init_dict(self, ff, model, substrings, POS):
+        """Create an initialization dict for use with :class:`MiningArgs`.
+
+        This is used when iterating over the :class:`MultipleMiningArgs`; this
+        method adds the `resume` argument extracted from the command line to
+        the `init_dict`.
+
+        Parameters
+        ----------
+        ff : string
+            The framing or filtering to use.
+        model : string
+            The source-destination reconstruction model to use.
+        substrings : bool
+            Whether or not to look for substrings with substitutions.
+        POS : string
+            The POS category to filter with.
+
+        Returns
+        -------
+        dict
+            The initialization dict to be fed to :class:`MiningArgs`'s
+            constructor.
+
+        See Also
+        --------
+        baseargs.MultipleBaseArgs.create_init_dict
+
+        """
+
         init_dict = super(MultipleMiningArgs,
                           self).create_init_dict(ff,
                                                  model,
@@ -174,9 +203,13 @@ class MultipleMiningArgs(MultipleBaseArgs):
         return init_dict
 
     def create_args_instance(self, init_dict):
+        """Create an instance of :class:`MiningArgs` based on `init_dict`."""
+
         return MiningArgs(init_dict)
 
     def create_argparser(self):
+        """Extend :class:`~baseargs.MultipleBaseArgs`'s argument parser with
+        possible `resume` and `no-multi-thread` arguments."""
 
         # Create the arguments parser.
 
@@ -196,7 +229,8 @@ class MultipleMiningArgs(MultipleBaseArgs):
         return p
 
     def print_mining(self):
-        """Print this MultipleMiningArgs to stdout."""
+        """Print details about this :class:`MultipleMiningArgs` to stdout."""
+
         print
         print 'Mining with the following lists of args:'
         print '  ffs = {}'.format(self.ffs)
