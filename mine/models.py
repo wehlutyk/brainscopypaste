@@ -77,10 +77,46 @@ class QuoteModels(ds_mtb.QuoteBase):
 
 class QtStringModels(str):
 
-    """Augment a string with POS tags, tokens, cluster id and quote id.
+    """Mixin class to augment a string with POS tags, tokens,
+    cluster id and quote id.
 
-    Methods:
-      * __init__: parse the string for POS tags and tokens, if asked to
+    This class adds a few attributes to a regular python string, giving quick
+    access to the parent cluster id, the id of the quote this string was taken
+    from, as well as the POS tags, tokens, and lemmas in the string.
+
+    Parameters
+    ----------
+    string : string
+        The string to be augmented to a :class:`QtString`.
+    cl_id : int, optional
+        The id of the :class:`~datastructure.full.Cluster` the quote was
+        taken from; defaults to -1.
+    qt_id : int, optional
+        The id of the :class:`~datastructure.full.Quote` the string
+        represents; defaults to -1.
+    parse : bool
+        Whether or not to parse `string` to extract POS tags, tokens, and
+        lemmas; defaults to ``True``.
+
+    Attributes
+    ----------
+    cl_id : int
+        The id of the parent :class:`~datastructure.full.Cluster`.
+    qt_id : int
+        The id of the parent :class:`~datastructure.full.Quote`.
+    POS_tags : list of strings
+        The list of POS tags extracted from the string, if parsing was
+        activated upon creation.
+    tokens : list of strings
+        The list of tokens extracted from the string, if parsing was
+        activated upon creation.
+    lemmas : list of strings
+        The list of lemmas extracted from the string, if parsing was
+        activated upon creation.
+
+    See Also
+    --------
+    datastructure.full.QtString
 
     """
 
@@ -88,8 +124,25 @@ class QtStringModels(str):
         return super(QtStringModels, cls).__new__(cls, string)
 
     def __init__(self, string, cl_id, qt_id, parse=True):
-        """Parse the string for POS tags and tokens, if asked to ('parse'
-        argument)."""
+        """Create the QtString and possibly parse the corresponding string
+        for POS tags and tokens.
+
+        Parameters
+        ----------
+        string : string
+            The string to be augmented to a :class:`QtString`.
+        cl_id : int, optional
+            The id of the :class:`~datastructure.full.Cluster` the quote was
+            taken from; defaults to -1.
+        qt_id : int, optional
+            The id of the :class:`~datastructure.full.Quote` the string
+            represents; defaults to -1.
+        parse : bool
+            Whether or not to parse `string` to extract POS tags, tokens, and
+            lemmas; defaults to ``True``.
+
+        """
+
         tagger = get_tagger()
         self.cl_id = cl_id
         self.qt_id = qt_id
@@ -101,20 +154,38 @@ class QtStringModels(str):
 
 class ClusterModels(ds_mtb.ClusterBase):
 
+    """Mixin class providing methods to iterate through substitutions
+    according to a given source-destination model.
+
+    See :class:`~datastructure.base.ClusterBase` for init parameters, and
+    attributes.
+
+    See Also
+    --------
+    datastructure.base.ClusterBase, datastructure.full.Cluster
+
+    """
+
     def __init__(self, *args, **kwargs):
         super(ClusterModels, self).__init__(*args, **kwargs)
 
     def build_timebags(self, n_bags, cumulative=False):
-        """Build a number of TimeBags from a Cluster.
+        """Build a number of even :class:`~datastructure.full.TimeBag`\ s from
+        a :class:`~datastructure.full.Cluster`.
 
-        Arguments:
-        * n_bags: the number of TimeBags to chop the Cluster into
+        Parameters
+        ----------
+        n_bags : int
+            The number of :class:`~datastructure.full.TimeBag`\ s to chop the
+            :class:`~datastructure.full.Cluster` into.
+        cumulative : bool, optional
+            Whether or not the :class:`~datastructure.full.TimeBag`\ s should
+            be time-cumulative or not; defaults to ``False``.
 
-        Keyword arguments:
-        * cumulative: boolean specifying if the timebags built should be
-                        time-cumulative or not. Defaults to False.
-
-        Returns: a list of TimeBags.
+        Returns
+        -------
+        list
+            The list of :class:`~datastructure.full.TimeBag`\ s built.
 
         """
 
@@ -140,17 +211,28 @@ class ClusterModels(ds_mtb.ClusterBase):
         return timebags
 
     def build_timebag(self, n_bags, end, cumulative=False):
-        """Build a TimeBag from a Cluster.
+        """Build an :class:`~datastructure.full.TimeBag` from a
+        :class:`~datastructure.full.Cluster`, ending at a chosen time.
 
-        Arguments:
-        * n_bags: the number of TimeBags we're slicing the cluster into
-        * end: the timestamp at which the timebag should end
+        Parameters
+        ----------
+        n_bags : int
+            The number of :class:`~datastructure.full.TimeBag`\ s we're
+            slicing the cluster into; this defines the size of the resulting
+            :class:`~datastructure.full.TimeBag` being built.
+        end : int
+            The timestamp at which the :class:`~datastructure.full.TimeBag`
+            should end.
+        cumulative : bool, optional
+            Whether or not the :class:`~datastructure.full.TimeBag` built
+            should be time-cumulative or not; if ``True``, the timebag built
+            starts at the beginning of the cluster, otherwise it starts at
+            `end - cluster_span / n_bags`; defaults to ``False``.
 
-        Keyword arguments:
-        * cumulative: boolean specifying if the timebag built should be
-                        time-cumulative or not. If True, the timebag built
-                        starts at the beginning of the cluster, else it starts
-                        at `end - cluster_span / n_bags`. Defaults to False.
+        Returns
+        -------
+        TimeBag
+            The built timebag.
 
         """
 
@@ -174,11 +256,34 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     @property
     def iter_substitutions(self):
+        """A dict of methods keyed by the different models available
+        to iterate over substitutions.
+
+        The dict includes all the methods defined in this class whose name
+        starts with `iter_substitutions_`. So you can use it as::
+
+            c = Cluster(...)      # Create a cluster (missing parameters)
+            ma = MiningArgs(...)  # Create a set of mining arguments
+            c.iter_substitutions['cumtbgs'](ma)  # Iterate over substitutions
+            # by using the 'cumtbgs' source-destination model and the provided
+            # mining arguments.
+
+        """
+
         return ds_mtb.dictionarize_attributes(self, 'iter_substitutions_')
 
     def iter_substitutions_root(self, ma):
-        """Iterate through substitutions taken as changes from root string;
-        yield (mother, string or substring, bag info) tuples."""
+        """Iterate through substitutions taken as changes from root string.
+
+        This iterator will yield `(effective mother, string or substring
+        of the original mother, timebag info)` tuples.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
 
         # This import goes here to prevent a circular import problem.
 
@@ -194,7 +299,17 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     def iter_substitutions_slidetbgs(self, ma):
         """Iterate through substitutions taken as changes from the preceding
-        time window. Yield (mother, string or substring, None) tuples."""
+        time window.
+
+        This iterator will yield `(effective mother, string or substring
+        of the original mother, None)` tuples.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
 
         for qt2 in self.quotes.itervalues():
 
@@ -211,7 +326,17 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     def iter_substitutions_growtbgs(self, ma):
         """Iterate through substitutions taken as changes from the cumulated
-        previous time window. Yield (mother, string or substring, None)"""
+        previous time window.
+
+        This iterator will yield `(effective mother, string or substring of
+        the original mother, None)` tuples.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
 
         for qt2 in self.quotes.itervalues():
 
@@ -228,7 +353,17 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     def iter_substitutions_tbgs(self, ma):
         """Iterate through substitutions taken as changes between timebags.
-        Yield (mother, string or substring, bag info) tuples."""
+
+        This iterator will yield `(effective mother, string or substring of
+        the original mother, timebag info)` tuples.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
+
         tbgs = self.build_timebags(ma.n_timebags)
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
         idx = np.where(tot_freqs)[0]
@@ -244,7 +379,18 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     def iter_substitutions_cumtbgs(self, ma):
         """Iterate through substitutions taken as changes between cumulated
-        timebags. Yield (mother, string or substring, bag info) tuples."""
+        timebags.
+
+        This iterator will yield `(effective mother, string or substring of
+        the original mother, timebag info)` tuples.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
+
         tbgs = self.build_timebags(ma.n_timebags)
         cumtbgs = self.build_timebags(ma.n_timebags, cumulative=True)
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
@@ -261,7 +407,20 @@ class ClusterModels(ds_mtb.ClusterBase):
 
     def iter_substitutions_time(self, ma):
         """Iterate through substitutions taken as transitions from earlier
-        quotes to older quotes (in order of appearance in time)."""
+        quotes to older quotes (in order of appearance in time).
+
+        This iterator will yield `(effective mother, string or substring of the
+        original mother, info dict)`, where the info dict contains two keys:
+        `mother_start` and `daughter_start`, specifying the timestamp at
+        which the mother and daughter respectively first started appearing
+        in the dataset.
+
+        Parameters
+        ----------
+        ma : :class:`~.args.MiningArgs`
+            The set of mining arguments to follow.
+
+        """
 
         distance_word_mother = {False: distance_word_mother_nosub,
                                 True: distance_word_mother_sub}
@@ -300,7 +459,35 @@ class ClusterModels(ds_mtb.ClusterBase):
 
 class TimeBagModels(ds_mtb.TimeBagBase):
 
+    """Mixin class to find substrings and strings at a given distance of a
+    given string in a :class:`~datastructure.full.TimeBag`.
+
+    See :class:`~datastructure.base.TimeBagBase` for init parameters and
+    base attributes.
+
+    Attributes
+    ----------
+    iter_sphere : dict
+        Association of the mining args `substrings` parameter to the right \
+        `iter_sphere_*` method; for instance, if mining args say to look \
+        at substrings, you can use ``self.iter_sphere[ma.substrings]`` to \
+        call `self.iter_sphere_sub`.
+    has_mother : dict
+        Association of the mining args `substrings` parameter to the right \
+        `has_mother_**` method; for instance, if mining args say to look \
+        at substrings, you can use ``self.has_mother[ma.substrings]`` to \
+        call `self.has_mother_sub`.
+
+    See Also
+    --------
+    datastructure.base.TimeBagBase, datastructure.full.TimeBag
+
+    """
+
     def __init__(self, *args, **kwargs):
+        """Initialize the structure from super and add the `iter_sphere` and
+        `has_mother` dicts of methods."""
+
         super(TimeBagModels, self).__init__(*args, **kwargs)
         self.iter_sphere = {False: self.iter_sphere_nosub,
                             True: self.iter_sphere_sub}
@@ -308,15 +495,17 @@ class TimeBagModels(ds_mtb.TimeBagBase):
                            True: self.has_mother_sub}
 
     def qt_string_lower(self, k, parse=True):
-        """Return a QtString corresponding to string number k of the Timebag,
-        in lowercase."""
+        """Build a parsed :class:`~datastructure.full.QtString` corresponding
+        to string number `k` of the timebag, in lowercase."""
+
         from datastructure.full import QtString
         return QtString(self.strings[k].lower(), self.id_fromcluster,
                         self.ids[k], parse=parse)
 
     def levenshtein_sphere(self, center_string, d):
-        """Get the indexes of the strings in a TimeBag that are at
-        levenshtein-distance == d from a string."""
+        """Get the indexes of the strings in the timebag that are at
+        `levenshtein-distance == d` from `center_string`."""
+
         distances = np.array([levenshtein(center_string, bag_string)
                               for bag_string in self.strings])
 
@@ -328,8 +517,9 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def levenshtein_word_sphere(self, center_string, d):
-        """Get the indexes of the strings in a TimeBag that are at
-        levenshtein_word-distance == d from a string."""
+        """Get the indexes of the strings in the timebag that are at
+        `levenshtein_word-distance == d` from `center_string`."""
+
         distances = np.array([levenshtein_word(center_string, bag_string)
                               for bag_string in self.strings])
 
@@ -341,8 +531,9 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def hamming_sphere(self, center_string, d):
-        """Get the indexes of the strings in a TimeBag that are at
-        hamming-distance == d from a string."""
+        """Get the indexes of the strings in the timebag that are at
+        `hamming-distance == d` from `center_string`."""
+
         distances = np.array([hamming(center_string, bag_string)
                               for bag_string in self.strings])
 
@@ -354,8 +545,9 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def hamming_word_sphere(self, center_string, d):
-        """Get the indexes of the strings in a TimeBag that are at
-        hamming_word-distance == d from a string."""
+        """Get the indexes of the strings in the timebag that are at
+        `hamming_word-distance == d` from `center_string`."""
+
         distances = np.array([hamming_word(center_string, bag_string)
                               for bag_string in self.strings])
 
@@ -367,8 +559,9 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def subhamming_sphere(self, center_string, d):
-        """Get the indices and motherstrings of the substrings in a TimeBag
-        that are at subhamming-distance == d from a string."""
+        """Get the indices and motherstrings of the substrings in the timebag
+        that are at `subhamming-distance == d` from `center_string`."""
+
         subhs = [subhamming(center_string, bag_string)
                  for bag_string in self.strings]
         distances = np.array([subh[0] for subh in subhs])
@@ -386,8 +579,9 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def subhamming_word_sphere(self, center_string, d):
-        """Get the indices and motherstrings of the substrings in a TimeBag
-        that are at subhamming_word-distance == d from a string."""
+        """Get the indices and motherstrings of the substrings in the timebag
+        that are at `subhamming_word-distance == d` from `center_string`."""
+
         subhs = [subhamming_word(center_string, bag_string)
                  for bag_string in self.strings]
         distances = np.array([subh[0] for subh in subhs])
@@ -405,15 +599,16 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def has_mother_nosub(self, dest):
-        """Test if this timebag's max freq string is a nosub mother for dest.
-        If so, yield a (mother, daughter) tuple. Else return."""
+        """Test if this timebag's max freq string is a nosub mother for `dest`;
+        if so, yield a `(mother, daughter)` tuple; else return."""
+
         base = self.qt_string_lower(self.argmax_freq_string)
         if hamming_word(base, dest) == 1:
             yield (base, dest)
 
     def has_mother_sub(self, dest):
-        """Test if this timebag's max freq string is a sub mother for dest.
-        If so, yield an (effective mother, daughter) tuple. Else return."""
+        """Test if this timebag's max freq string is a sub mother for `dest`;
+        if so, yield an `(effective mother, daughter)` tuple; else return."""
 
         import datastructure.full as ds_mt
 
@@ -429,14 +624,16 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             yield (mother, dest)
 
     def iter_sphere_nosub(self, base):
-        """Iterate through strings in timebag in a sphere centered at 'base'.
-        Yield (mother, string) tuples."""
+        """Iterate through strings in the timebag that are in a sphere
+        centered at `base`, yielding `(mother, string)` tuples."""
+
         for k in self.hamming_word_sphere(base, 1):
             yield (base, self.qt_string_lower(k))
 
     def iter_sphere_sub(self, base):
-        """Iterate through strings in timebag in a subsphere centered at
-        'base'. Yield the (effective mother, substring) tuples."""
+        """Iterate through strings in the timebag that are in a subsphere
+        centered at `base`, yielding the `(effective mother, substring)`
+        tuples."""
 
         # This import goes here to prevent a circular import problem.
 
