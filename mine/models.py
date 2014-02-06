@@ -1,3 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Reconstruct the source-destination information missing in the MemeTracker
+dataset.
+
+The MemeTracker includes only clustered quotes, as well as urls and timestamps
+for those quotes, but no information on where a quote was taken from when it
+appears in a blog or media outlet (this is because most posters don't cite
+their source, it's not the practice). But if we are to detect sustitutions from
+one quote to another, we must know wich substitution came from which other.
+
+So there is a reconstruction process involved, where we assume a few additional
+hypotheses to be able to connect each quote to a parent one. This can be done
+with a variety of hypotheses, each set leading to a reconstruction model. You
+can mine for substitutions using any one of these models.
+
+"""
+
+
 from __future__ import division
 
 import numpy as np
@@ -67,7 +87,8 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         import datastructure.full as ds_mt
 
-        # Build the Timeline for the Cluster, set the parameters for the TimeBags.
+        # Build the Timeline for the Cluster, set the parameters for the
+        # TimeBags.
 
         self.build_timeline()
 
@@ -81,7 +102,7 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         for i in xrange(n_bags):
             timebags.append(ds_mt.TimeBag(self, cl_start + i * step * dontcum,
-                                        cl_start + (i + 1) * step))
+                                          cl_start + (i + 1) * step))
 
         return timebags
 
@@ -123,8 +144,8 @@ class ClusterModels(ds_mtb.ClusterBase):
         return ds_mtb.dictionarize_attributes(self, 'iter_substitutions_')
 
     def iter_substitutions_root(self, ma):
-        """Iterate through substitutions taken as changes from root string. Yield
-        (mother, string or substring, bag info) tuples."""
+        """Iterate through substitutions taken as changes from root string;
+        yield (mother, string or substring, bag info) tuples."""
 
         # This import goes here to prevent a circular import problem.
 
@@ -151,7 +172,8 @@ class ClusterModels(ds_mtb.ClusterBase):
                 if prevtbg.tot_freq == 0:
                     continue
 
-                for mother, daughter in prevtbg.has_mother[ma.substrings](dest):
+                for mother, daughter in prevtbg.has_mother[
+                        ma.substrings](dest):
                     yield (mother, daughter, None)
 
     def iter_substitutions_growtbgs(self, ma):
@@ -167,7 +189,8 @@ class ClusterModels(ds_mtb.ClusterBase):
                 if prevtbg.tot_freq == 0:
                     continue
 
-                for mother, daughter in prevtbg.has_mother[ma.substrings](dest):
+                for mother, daughter in prevtbg.has_mother[
+                        ma.substrings](dest):
                     yield (mother, daughter, None)
 
     def iter_substitutions_tbgs(self, ma):
@@ -180,8 +203,10 @@ class ClusterModels(ds_mtb.ClusterBase):
         for i, j in zip(range(len(idx) - 1),
                         range(1, len(idx))):
 
-            base = tbgs[idx[i]].qt_string_lower(tbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[ma.substrings](base):
+            base = tbgs[idx[i]].qt_string_lower(
+                tbgs[idx[i]].argmax_freq_string)
+            for mother, daughter in tbgs[idx[j]].iter_sphere[
+                    ma.substrings](base):
                 yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
 
     def iter_substitutions_cumtbgs(self, ma):
@@ -196,13 +221,14 @@ class ClusterModels(ds_mtb.ClusterBase):
                         range(1, len(idx))):
 
             base = cumtbgs[idx[i]].qt_string_lower(
-                                            cumtbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[ma.substrings](base):
+                cumtbgs[idx[i]].argmax_freq_string)
+            for mother, daughter in tbgs[idx[j]].iter_sphere[
+                    ma.substrings](base):
                 yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
 
     def iter_substitutions_time(self, ma):
-        """Iterate through substitutions taken as transitions from earlier quotes
-        to older quotes (in order of appearance in time)."""
+        """Iterate through substitutions taken as transitions from earlier
+        quotes to older quotes (in order of appearance in time)."""
 
         distance_word_mother = {False: distance_word_mother_nosub,
                                 True: distance_word_mother_sub}
@@ -231,11 +257,11 @@ class ClusterModels(ds_mtb.ClusterBase):
                 mother_start = qt_starts[i]
                 daughter_start = qt_starts[j]
                 mother_d = datetime.fromtimestamp(
-                                    mother_start).strftime('%Y-%m-%d %H:%m:%S')
+                    mother_start).strftime('%Y-%m-%d %H:%m:%S')
                 daughter_d = datetime.fromtimestamp(
-                                    daughter_start).strftime('%Y-%m-%d %H:%m:%S')
+                    daughter_start).strftime('%Y-%m-%d %H:%m:%S')
                 yield (mother, daughter,
-                    {'mother_start': mother_d,
+                       {'mother_start': mother_d,
                         'daughter_start': daughter_d})
 
 
@@ -259,7 +285,7 @@ class TimeBagModels(ds_mtb.TimeBagBase):
         """Get the indexes of the strings in a TimeBag that are at
         levenshtein-distance == d from a string."""
         distances = np.array([levenshtein(center_string, bag_string)
-                            for bag_string in self.strings])
+                              for bag_string in self.strings])
 
         idx = np.where(distances == d)
 
@@ -272,7 +298,7 @@ class TimeBagModels(ds_mtb.TimeBagBase):
         """Get the indexes of the strings in a TimeBag that are at
         levenshtein_word-distance == d from a string."""
         distances = np.array([levenshtein_word(center_string, bag_string)
-                            for bag_string in self.strings])
+                              for bag_string in self.strings])
 
         idx = np.where(distances == d)
 
@@ -285,7 +311,7 @@ class TimeBagModels(ds_mtb.TimeBagBase):
         """Get the indexes of the strings in a TimeBag that are at
         hamming-distance == d from a string."""
         distances = np.array([hamming(center_string, bag_string)
-                            for bag_string in self.strings])
+                              for bag_string in self.strings])
 
         idx = np.where(distances == d)
 
@@ -298,7 +324,7 @@ class TimeBagModels(ds_mtb.TimeBagBase):
         """Get the indexes of the strings in a TimeBag that are at
         hamming_word-distance == d from a string."""
         distances = np.array([hamming_word(center_string, bag_string)
-                            for bag_string in self.strings])
+                              for bag_string in self.strings])
 
         idx = np.where(distances == d)
 
@@ -308,10 +334,10 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def subhamming_sphere(self, center_string, d):
-        """Get the indices and motherstrings of the substrings in a TimeBag that
-        are at subhamming-distance == d from a string."""
+        """Get the indices and motherstrings of the substrings in a TimeBag
+        that are at subhamming-distance == d from a string."""
         subhs = [subhamming(center_string, bag_string)
-                for bag_string in self.strings]
+                 for bag_string in self.strings]
         distances = np.array([subh[0] for subh in subhs])
         subindices = np.array([subh[1] for subh in subhs])
         lens = np.array([subh[2] for subh in subhs])
@@ -327,10 +353,10 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             return []
 
     def subhamming_word_sphere(self, center_string, d):
-        """Get the indices and motherstrings of the substrings in a TimeBag that
-        are at subhamming_word-distance == d from a string."""
+        """Get the indices and motherstrings of the substrings in a TimeBag
+        that are at subhamming_word-distance == d from a string."""
         subhs = [subhamming_word(center_string, bag_string)
-                for bag_string in self.strings]
+                 for bag_string in self.strings]
         distances = np.array([subh[0] for subh in subhs])
         subindices = np.array([subh[1] for subh in subhs])
         lens = np.array([subh[2] for subh in subhs])
@@ -388,9 +414,7 @@ class TimeBagModels(ds_mtb.TimeBagBase):
             mother_tok = base.tokens[m[0]:m[0] + m[1]]
             mother_pos = base.POS_tags[m[0]:m[0] + m[1]]
             mother = QtString(' '.join(mother_tok), base.cl_id, base.qt_id,
-                            parse=False)
+                              parse=False)
             mother.tokens = mother_tok
             mother.POS_tags = mother_pos
             yield (mother, self.qt_string_lower(k))
-
-
