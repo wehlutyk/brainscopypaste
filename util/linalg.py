@@ -17,18 +17,19 @@ from scipy import random
 
 
 def matrix_normalize_columns(M, outfmt):
-    """Normalize a CSC or CSR matrix on its columns.
+    """Normalize a :class:`~scipy.sparse.csc_matrix` or
+    :class:`~scipy.sparse.csr_matrix` matrix on its columns.
 
     Parameters
     ----------
-    M : :class:`scipy.sparse.csc.csc_matrix` or :class:`scipy.sparse.csr.csr_matrix`
+    M : :class:`~scipy.sparse.csc_matrix` or :class:`~scipy.sparse..csr_matrix`
         Matrix to normalize.
     outfmt : {'csc', 'csr'}
         Output format for the normalized matrix.
 
     Returns
     -------
-    M : :class:`scipy.sparse.csc.csc_matrix` or :class:`scipy.sparse.csr.csr_matrix`
+    M : :class:`~scipy.sparse.csc_matrix` or :class:`~scipy.sparse.csr_matrix`
         The *same* matrix (not a copy), normalized over its columns, in format
         `outfmt`.
 
@@ -78,7 +79,8 @@ def norm_l1(v):
 
 def matrix_eigen_solve(M, v0, max_it, tol, damp_v=0.0, d=1.0):
     """Solve the :math:`v = M \cdot v` eigenproblem using the
-    `Power Iteration <http://en.wikipedia.org/wiki/Power_iteration>`_ algorithm.
+    `Power Iteration <http://en.wikipedia.org/wiki/Power_iteration>`_
+    algorithm.
 
     This will only work on a stochastic matrix, since there is no vector
     renormalization (it creates precision problems). Note that to avoid

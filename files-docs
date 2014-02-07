@@ -43,12 +43,12 @@
 │   ├── statistics.py dp
 │   ├── substitutions.py dp
 ├── util
-│   ├── __init__.py d
-│   ├── combinatorials.py d
-│   ├── generic.py d
-│   ├── graph.py d
-│   ├── linalg.py d
-│   ├── mp.py d
+│   ├── __init__.py dp
+│   ├── combinatorials.py dp
+│   ├── generic.py dp
+│   ├── graph.py dp
+│   ├── linalg.py dp
+│   ├── mp.py dp
 ├── visualize
 │   ├── __init__.py cn
 │   ├── annotations.py cn

@@ -77,17 +77,6 @@ class LoggingPool(object):
     :class:`multiprocessing.Pool <multiprocessing.pool.multiprocessing.Pool>`'s
     constructor.
 
-    Methods
-    -------
-    apply_async()
-        Forward to \
-                :meth:`multiprocessing.Pool.apply_async <multiprocessing.pool.multiprocessing.Pool.apply_async>`, \
-                with wrapping for exception logging.
-    map_async()
-        Forward to \
-                :meth:`multiprocessing.Pool.map_async <multiprocessing.pool.multiprocessing.Pool.map_async>`, \
-                with wrapping for exception logging.
-
     See Also
     --------
     multiprocessing.pool.multiprocessing.Pool, LogExceptions
@@ -103,7 +92,8 @@ class LoggingPool(object):
         :meth:`multiprocessing.Pool.apply_async <multiprocessing.pool.multiprocessing.Pool.apply_async>`,
         with wrapping for exception logging."""
 
-        return self._pool.apply_async(LogExceptions(func), args, kwds, callback)
+        return self._pool.apply_async(LogExceptions(func), args,
+                                      kwds, callback)
 
     def map_async(self, func, args=[], callback=None):
         """Forward to
