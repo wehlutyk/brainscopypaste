@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Analyze multiple sets of previously mined substitutions, defined by a set of
+:class:`analyze.args.MultipleAnalysisArgs`.
+
+This script is meant to be used as a command line program. Run
+``python analyze_substitutions_multiple.py --help`` for more details on
+the arguments.
+
+"""
+
 
 from __future__ import division
 

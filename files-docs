@@ -54,8 +54,8 @@
 │   ├── annotations.py dp
 │   ├── annotations_new.py vp
 │   ├── mt.py dp
-├── analyze_substitutions.py v
-├── analyze_substitutions_multiple.py v
+├── analyze_substitutions.py dp
+├── analyze_substitutions_multiple.py dp
 ├── baseargs.py v
 ├── feature_correlations.ipynb v
 ├── install_datasets.sh d

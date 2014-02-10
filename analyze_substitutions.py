@@ -1,3 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Analyze a set of previously mined substitutions, defined by a set of
+:class:`analyze.args.AnalysisArgs`.
+
+This script is meant to be used as a command line program. Run
+``python analyze_substitutions.py --help`` for more details on the arguments.
+
+"""
+
+
 from __future__ import division
 
 import pylab as pl
