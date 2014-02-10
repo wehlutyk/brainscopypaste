@@ -623,8 +623,8 @@ class AnnoteFinderFlow(object):
                  drawtext=True):
         """Initialize the annotator.
 
-        Paramerters
-        -----------
+        Parameters
+        ----------
         l_xs : list of lists
             A list of lists of x coordinates of the flows, one for each
             data set.
