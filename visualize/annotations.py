@@ -1,20 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Add annotations to a plot.
-
-Classes:
-  * AnnoteFinder: display annotations in a Matplotlib plot
-  * AnnoteFinderBar: display annotations in a Matplotlib bar-plot
-  * AnnoteFinderFlow: display annotations in a Matplotlib flow bar-plot
-  * AnnoteFinderPlot: display a plot when clicking a data point in another
-                      Matplotlib plot
-
-Methods:
-  * linkAnnotationFinders: link a list of AnnoteFinder|AnnoteFinderBar objects
-                           together
-
-"""
+"""Add annotations to a plot."""
 
 
 from __future__ import division
@@ -33,43 +20,71 @@ class AnnoteFinder(object):
 
     This class defines a callback for Matplotlib to display an annotation when
     points are clicked on. The point which is closest to the click and within
-    xtol and ytol is identified.
+    `xtol` and `ytol` is identified.
 
-    Register this function like this:
+    Register this function like this::
 
-    >>> scatter(xdata, ydata)
-    >>> af = AnnoteFinder(xdata, ydata, annotes)
-    >>> connect('button_press_event', af)
+        scatter(xdata, ydata)
+        af = AnnoteFinder(xdata, ydata, annotes)
+        connect('button_press_event', af)
 
-    Methods:
-      * __init__: initialize the annotator
-      * distance: compute the distance between two points
-      * __call__: the callback called by Matplotlib on a click event (if we
-                  connect the AnnoteFinder to a click event)
-      * drawAnnote: draw an annotation on the plot
-      * drawSpecificAnnote: draw all the annotations corresponding to 'annote'
+    Parameters
+    ----------
+    xdata : list or ndarray
+        Data on the x axis.
+    ydata : list or ndarray
+        Data on the y axis.
+    annotes : list of strings
+        The annotations corresponding to data points defined by the couples
+        in ``zip(xdata, ydata)``.
+    axis : :class:`~matplotlib.axes.Axes` instance, optional
+        The :class:`~matplotlib.axes.Axes` object to draw on; defaults to
+        the current axis (as given by ``gca()``).
+    xtol : float, optional
+        Tolerance in the x direction for clicking on a point; defaults
+        to the mean distance between points on the x axis, divided by two.
+    ytol : float, optional
+        Tolerance in the y direction for clicking on a point; defaults to
+        the mean distance between points on the y axis, divided by two.
+
+    Attributes
+    ----------
+    data : list of tuples
+        Equal to ``zip(xdata, ydata, annotes)``.
+    xtol : float
+        The x tolerance passed to the contructor.
+    ytol : float
+        The y tolerance passed to the contructor.
+    axis : :class:`~matplotlib.axes.Axes`
+        The axes to draw on.
+
+    See Also
+    --------
+    AnnoteFinderBar, AnnoteFinderFlow, AnnoteFinderPlot
 
     """
 
-    def __init__(self, xdata, ydata, annotes, axis=None,
-                  xtol=None, ytol=None):
+    def __init__(self, xdata, ydata, annotes, axis=None, xtol=None, ytol=None):
         """Initialize the annotator.
 
-        Arguments:
-          * xdata: data on the x axis
-          * ydata: data on the y axis
-          * annotes: the annotations corresponding to data points defined by
-                     the couple in zip(xdata, ydata)
-
-        Optional arguments:
-          * axis: the matplotlib.axes.AxesSubplot object to draw on. Defaults
-                  to the current axis (as given by gca()).
-          * xtol: tolerance in the x direction for clicking on a point.
-                  Defaults to the mean distance between points on the x axis,
-                  divided by two.
-          * ytol: tolerance in the y direction for clicking on a point.
-                  Defaults to the mean distance between points on the y axis,
-                  divided by two.
+        Parameters
+        ----------
+        xdata : list or ndarray
+            Data on the x axis.
+        ydata : list or ndarray
+            Data on the y axis.
+        annotes : list of strings
+            The annotations corresponding to data points defined by the couples
+            in ``zip(xdata, ydata)``.
+        axis : :class:`~matplotlib.axes.AxesSubplot` instance, optional
+            The :class:`~matplotlib.axes.AxesSubplot` object to draw on;
+            defaults to the current axis (as given by ``gca()``).
+        xtol : float, optional
+            Tolerance in the x direction for clicking on a point; defaults
+            to the mean distance between points on the x axis, divided by two.
+        ytol : float, optional
+            Tolerance in the y direction for clicking on a point; defaults to
+            the mean distance between points on the y axis, divided by two.
 
         """
 
@@ -100,18 +115,21 @@ class AnnoteFinder(object):
         self.plotlinks = []
 
     def distance(self, x1, x2, y1, y2):
-        """Compute the distance between two points."""
+        """Compute the distance between `(x1, y1)` and `(x2, y2)`."""
+
         return pl.norm([x1 - x2, y1 - y2])
 
     def __call__(self, event):
         """The callback called by Matplotlib on a click event (if we connect
         the AnnoteFinder to a click event).
 
-        Arguments:
-          * event: the event object sent by Matplotlib
-
         This function finds the data point nearest to the click point, and
         draws the corresponding annotation in all the connected plots.
+
+        Parameters
+        ----------
+        event : Matplotlib event
+            The event object sent by Matplotlib.
 
         """
 
@@ -133,7 +151,7 @@ class AnnoteFinder(object):
                 for (x, y, a) in self.data:
 
                     if (clickX - self.xtol < x < clickX + self.xtol and
-                        clickY - self.ytol < y < clickY + self.ytol):
+                            clickY - self.ytol < y < clickY + self.ytol):
                         annotes.append((self.distance(x, clickX, y, clickY),
                                         x, y, a))
 
@@ -152,11 +170,16 @@ class AnnoteFinder(object):
     def drawAnnote(self, axis, x, y, annote):
         """Draw an annotation on the plot.
 
-        Arguments:
-          * axis: the axis to draw on
-          * x: the x coordinate of the data point
-          * y: the y coordinate of the data point
-          * annote: the annotation to draw
+        Parameters
+        ----------
+        axis : :class:`~matplotlib.axes.Axes`
+            The axis to draw on.
+        x : float
+            The x coordinate of the data point.
+        y : float
+            The y coordinate of the data point.
+        annote : string
+            The annotation to draw.
 
         """
 
@@ -190,7 +213,7 @@ class AnnoteFinder(object):
             for plotlink in self.plotlinks:
                 plotlink.drawSpecificAnnote(annote)
 
-            t = axis.annotate('({}, {})\n{}'.format(x, y ,annote),
+            t = axis.annotate('({}, {})\n{}'.format(x, y, annote),
                               xy=(x, y),
                               xycoords='data',
                               xytext=(0, -100),
@@ -198,20 +221,21 @@ class AnnoteFinder(object):
                               bbox=dict(boxstyle='round',
                                         fc=(0.95, 0.8, 1.0, 0.8),
                                         ec=(0.85, 0.4, 1.0, 0.8)),
-                             arrowprops=dict(arrowstyle='wedge,tail_width=1.',
-                                             fc=(0.95, 0.8, 1.0, 0.8),
-                                             ec=(0.85, 0.4, 1.0, 0.8),
-                                             patchA=None,
-                                             patchB=None,
-                                             relpos=(0.1, 1.0),
-                                             connectionstyle='arc3,rad=0'))
+                              arrowprops=dict(arrowstyle='wedge,tail_width=1.',
+                                              fc=(0.95, 0.8, 1.0, 0.8),
+                                              ec=(0.85, 0.4, 1.0, 0.8),
+                                              patchA=None,
+                                              patchB=None,
+                                              relpos=(0.1, 1.0),
+                                              connectionstyle='arc3,rad=0'))
             m = axis.plot([x], [y], marker='o', color='yellow', zorder=100,
                           markersize=10)[0]
             self.drawnAnnotations[(x, y)] = (t, m)
             self.axis.figure.canvas.draw()
 
     def drawSpecificAnnote(self, annote):
-        """Draw all the annotations corresponding to 'annote'."""
+        """Draw all the annotations corresponding to `annote` (misnomer)."""
+
         annotesToDraw = [(x, y, a) for (x, y, a) in self.data if a == annote]
         for (x, y, a) in annotesToDraw:
             self.drawAnnote(self.axis, x, y, a)
@@ -223,57 +247,102 @@ class AnnoteFinderBar(object):
 
     This class defines a callback for Matplotlib to display an annotation when
     bars are clicked on. The data set which is closest to the click and within
-    xtol and ytol is identified.
+    `xtol` and `ytol` is identified.
 
-    Register this function like this:
+    Register this function like this::
 
-    >>> for i in range(num_data_series):
-    >>>     bar(l_lefts[i], l_heights[i], l_widths[i], l_bottoms[i])
-    >>> af = AnnoteFinder(l_heights, l_lefts + l_widths[-1], l_bottoms,
+        for i in range(num_data_series):
+            bar(l_lefts[i], l_heights[i], l_widths[i], l_bottoms[i])
+        af = AnnoteFinder(l_heights, l_lefts + l_widths[-1], l_bottoms,
                           annotes)
-    >>> connect('button_press_event', af)
+        connect('button_press_event', af)
 
-    Methods:
-      * __init__: initialize the annotator
-      * distance: compute the distance between two points
-      * is_in_bars: detect if a click is within tolerance range of a bar-plot
-      * __call__: the callback called by Matplotlib on a click event (if we
-                  connect the AnnoteFinderBar to a click event)
-      * drawAnnote: draw an annotation on the plot
+    Parameters
+    ----------
+    l_heights : list of floats
+        A list of heights of the bars in the bar-plot, one for each
+        data set.
+    l_bins : list of list of bins
+        A list of lists of bin limits used in the bar-plots, one for each
+        data set.
+    l_bottoms : list of floats
+        A list of bottoms of the bars in the bar-plot, one for each
+        data set.
+    annotes : list of objects
+        A list of annotations, each one corresponding to a data set; each
+        annote object should have an `id` attribute, to be displayed after
+        formatting as ``'{}'.format(annote)``.
+    axis : :class:`~matplotlib.axes.Axes` instance, optional
+        The :class:`~matplotlib.axes.Axes` object to draw on; defaults
+        to the current axis (as given by ``gca()``).
+    xtol : float, optional
+        Tolerance in the x direction for clicking on a point; defaults to
+        the minimum width of a bin divided by two.
+    ytol : float, optional
+        Tolerance in the y direction for clicking on a point; defaults to
+        the maximum height of a bar in the bar-plot divided by five.
+    drawtext : bool
+        Wehter or not the text of the annotes should be shown; if not,
+        the bars are only highlighted when clicked on, and no additional
+        text is shown; this is meant to be used when linking with another
+        bar-plot of the same data, which will show the text (meaning
+        there is no need for the text to be shown again in this plot);
+        defaults to ``True``.
+
+    Attributes
+    ----------
+    data : list of tuples
+        Equal to ``zip(l_heights, l_bins, l_bottoms, annotes)``.
+    xtol : float
+        The x tolerance passed to the contructor.
+    ytol : float
+        The y tolerance passed to the contructor.
+    axis : :class:`~matplotlib.axes.Axes`
+        The axes to draw on.
+    drawtext : bool
+        The `drawtext` parameter passed to the constructor.
+
+    See Also
+    --------
+    AnnoteFinder, AnnoteFinderFlow, AnnoteFinderPlot
 
     """
 
     def __init__(self, l_heights, l_bins, l_bottoms, annotes, axis=None,
-                  xtol=None, ytol=None, drawtext=True):
+                 xtol=None, ytol=None, drawtext=True):
         """Initialize the annotator.
 
-        Arguments:
-          * l_heights: a list of heights of the bars in the bar-plot, one for
-                       each data set
-          * l_bins: a list of bins used in the bar-plots, one for each data
-                    set
-          * l_bottoms: a list of bottoms of the bars in the bar-plot, one for
-                       each data set
-          * annotes: a list of annotations, each one corresponding to a data
-                     set. Each annote object should have an 'id' attribute,
-                     will be displayed after formatting as
-                     '{}'.format(annote).
-
-        Optional arguments:
-          * axis: the matplotlib.axes.AxesSubplot object to draw on. Defaults
-                  to the current axis (as given by gca()).
-          * xtol: tolerance in the x direction for clicking on a point.
-                  Defaults to the minimum width of a bin divided by two.
-          * ytol: tolerance in the y direction for clicking on a point.
-                  Defaults to the maximum height of a bar in the bar-plot
-                  divided by five.
-          * drawtext: a boolean specifying if the text of the annotes should
-                      be shown of not. If not, the bars are only highlighted
-                      when clicked on, and no additional text is shown. This
-                      is meant to be used when linking with another bar-plot
-                      of the same data, which will show the text (meaning
-                      there is no need for the text to be shown again in this
-                      plot). Defaults to True.
+        Parameters
+        ----------
+        l_heights : list of floats
+            A list of heights of the bars in the bar-plot, one for each
+            data set.
+        l_bins : list of list of bins
+            A list of lists of bin limits used in the bar-plots, one for each
+            data set.
+        l_bottoms : list of floats
+            A list of bottoms of the bars in the bar-plot, one for each
+            data set.
+        annotes : list of objects
+            A list of annotations, each one corresponding to a data set; each
+            annote object should have an `id` attribute, to be displayed after
+            formatting as ``'{}'.format(annote)``.
+        axis : :class:`~matplotlib.axes.Axes` instance, optional
+            The :class:`~matplotlib.axes.Axes` object to draw on; defaults
+            to the current axis (as given by ``gca()``).
+        xtol : float, optional
+            Tolerance in the x direction for clicking on a point; defaults to
+            the minimum width of a bin divided by two.
+        ytol : float, optional
+            Tolerance in the y direction for clicking on a point; defaults to
+            the maximum height of a bar in the bar-plot divided by five.
+        drawtext : bool
+            Wehter or not the text of the annotes should be shown; if not,
+            the bars are only highlighted when clicked on, and no additional
+            text is shown; this is meant to be used when linking with another
+            bar-plot of the same data, which will show the text (meaning
+            there is no need for the text to be shown again in this plot);
+            defaults to ``True``.
 
         """
 
@@ -305,25 +374,34 @@ class AnnoteFinderBar(object):
         self.links = []
 
     def distance(self, x1, x2, y1, y2):
-        """Compute the distance between two points."""
+        """Compute the distance between `(x1, y1)` and `(x2, y2)`."""
+
         return pl.norm([x1 - x2, y1 - y2])
 
     def is_in_bars(self, x, y, heights, bins, bottoms):
         """Detect if a click is within tolerance range of a bar-plot.
 
-        Arguments:
-          * x: the x coordinate of the click
-          * y: the y coordinate of the click
-          * heights: the heights of the bars
-          * bins: the bins used in plotting the bars
-          * bottoms: the bottoms of the bars
+        Parameters
+        ----------
+        x : float
+            The x coordinate of the click.
+        y : float
+            The y coordinate of the click.
+        heights : list of floats
+            The heights of the bars.
+        bins : list of floats
+            The bin limits used in plotting the bars.
+        bottoms : list of floats
+            The bottoms of the bars.
 
-        Returns: a tuple consisting of:
-          * is_in_bars: a boolean saying if the click is within tolerance of
-                        the bar-plot
-          * dj: either None (if is_in_bars == False), or a tuple consisting
-                of the distance between the click point and the closest bar,
-                and the x-index of that closest bar (if is_in_bars == True)
+        Returns
+        -------
+        (is_in_bars, dj) : tuple
+            `is_in_bars` is a boolean saying if the click is within tolerance
+            of the bar-plot; `dj` is either `None` (if
+            ``is_in_bars == False``), or a tuple consisting of the distance
+            between the click point and the closest bar, and the x-index of
+            that closest bar (if ``is_in_bars == True``).
 
         """
 
@@ -337,8 +415,8 @@ class AnnoteFinderBar(object):
             # ... if we're in the tolerance, store the distance to that bar
 
             if (bins[j] - self.xtol < x < bins[j + 1] + self.xtol and
-                bottoms[j] - self.ytol < y < bottoms[j] +
-                                             heights[j] + self.ytol):
+                    bottoms[j] - self.ytol < y < bottoms[j] +
+                    heights[j] + self.ytol):
 
                 is_in_bars = True
 
@@ -355,15 +433,17 @@ class AnnoteFinderBar(object):
 
     def __call__(self, event):
         """The callback called by Matplotlib on a click event (if we connect
-        the AnnoteFinderBar to a click event).
-
-        Arguments:
-          * event: the event object sent by Matplotlib
+        the :class:`AnnoteFinderBar` to a click event).
 
         This function finds the data set corresponding to the bars nearest to
         the click point, and draws the corresponding annotation in all the
         connected plots. The drawn annotations consist of a highlighting of
-        the bars, and a text (if self.drawtext == True).
+        the bars, and a text (if ``self.drawtext == True``).
+
+        Parameters
+        ----------
+        event : Matplolib event
+            The event object sent by Matplotlib.
 
         """
 
@@ -408,14 +488,19 @@ class AnnoteFinderBar(object):
     def drawAnnote(self, axis, i, j, x, annote):
         """Draw an annotation on the plot.
 
-        Arguments:
-          * axis: the axis to draw on
-          * i: the index of the data series for which we're to draw the annote
-          * j: the x-index of the bar which is to receive the text-anchor
-          * x: the x coordinate for the annote - not used
-          * annote: the annotation to draw. It should have an 'id' attribute.
-                    The text shown will be formatted using
-                    '{}'.format(annote).
+        Parameters
+        ----------
+        axis : :class:`~matplolib.axes.Axes`
+            The axis to draw on.
+        i : int
+            The index of the data series for which we're to draw the annote.
+        j : int
+            The x-index of the bar which is to receive the text-anchor.
+        x : float
+            The x coordinate for the annote - deprecated.
+        annote : string
+            The annotation to draw; it should have an `id` attribute; the
+            text shown will be formatted using ``'{}'.format(annote)``.
 
         """
 
@@ -444,28 +529,26 @@ class AnnoteFinderBar(object):
         else:
 
             (heights, bins, bottoms) = self.data[i][:3]
-            x = (bins[j] + bins[j+1]) / 2
+            x = (bins[j] + bins[j + 1]) / 2
             y = bottoms[j] + heights[j] / 2
 
             # Create the text if asked for.
 
             if self.drawtext:
-                t = axis.annotate(textwrap.fill('{}'.format(annote), 70),
-                                  xy=(x, y),
-                                  xycoords='data',
-                                  xytext=(0, 200),
-                                  textcoords='offset points',
-                                  bbox=dict(boxstyle='round',
-                                            fc=(0.95, 0.8, 1.0, 0.8),
-                                            ec=(0.85, 0.4, 1.0, 0.8)),
-                                  arrowprops=
-                                      dict(arrowstyle='wedge,tail_width=1.',
-                                           fc=(0.95, 0.8, 1.0, 0.8),
-                                           ec=(0.85, 0.4, 1.0, 0.8),
-                                           patchA=None,
-                                           patchB=None,
-                                           relpos=(0.1, 1.0),
-                                           connectionstyle='arc3,rad=0'))
+                t = axis.annotate(
+                    textwrap.fill('{}'.format(annote), 70),
+                    xy=(x, y), xycoords='data', xytext=(0, 200),
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round',
+                              fc=(0.95, 0.8, 1.0, 0.8),
+                              ec=(0.85, 0.4, 1.0, 0.8)),
+                    arrowprops=dict(arrowstyle='wedge,tail_width=1.',
+                                    fc=(0.95, 0.8, 1.0, 0.8),
+                                    ec=(0.85, 0.4, 1.0, 0.8),
+                                    patchA=None,
+                                    patchB=None,
+                                    relpos=(0.1, 1.0),
+                                    connectionstyle='arc3,rad=0'))
             else:
                 t = None
 
