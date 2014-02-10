@@ -196,7 +196,41 @@ class BaseArgs(object):
 
 class MultipleBaseArgs(object):
 
+    """A arrayed version of :class:`BaseArgs`, allowing to specify multiple
+    :class:`BaseArgs` at once.
+
+    The class gets all its attributes and arguments from the command-line.
+    Each parameter is essentially a plural form of the parameters for
+    :class:`BaseArgs`, and the class will then build an array of all possible
+    combinations of the values given for those parameters.
+
+    Attributes
+    ----------
+    args : namespace
+        The arguments parsed from the command line.
+    ffs : list of strings
+        List of values for the `ff` argument.
+    models : list of strings
+        List of values for the `model` argument.
+    substringss : list of bools
+        List of values for the `substrings` argument.
+    POSs : list of strings
+        List of values for the `POS` argument.
+    n_timebagss : list of ints
+        List of values for the `n_timebags` argument.
+    alist : list of :class:`BaseArgs`
+        The computed list of all argument sets, covering all possible
+        combinations of the above attributes.
+
+    See Also
+    --------
+    BaseArgs, analyze.args.MultipleAnalysisArgs, mine.args.MultipleMiningArgs
+
+    """
+
     description = '(not filled)'
+    """Description of the command for the help screen at the command-line;
+    meant to be filled in by subclasses."""
 
     def __init__(self):
 
@@ -237,17 +271,27 @@ class MultipleBaseArgs(object):
                                 self.create_args_instance(init_dict))
 
     def __iter__(self):
+        """Iterate over all the argument sets in these
+        :class:`MultipleBaseArgs`."""
+
         for a in self.alist:
             yield a
 
     def __len__(self):
+        """Number of argument sets in these :class:`MultipleBaseArgs`."""
+
         return len(self.alist)
 
     def has_fixedslicing_model(self):
+        """Whether or not there is at least one fixed-slicing model
+        in our argument sets (returns a bool)."""
+
         return not set(self.models).isdisjoint(
             set(st.mt_mining_fixedslicing_models))
 
     def set_n_timebagss(self):
+        """Set the `n_timebagss` attribute from command-line arguments."""
+
         if self.has_fixedslicing_model():
             try:
                 self.n_timebagss = [int(n) for n in self.args.n_timebagss]
@@ -257,13 +301,69 @@ class MultipleBaseArgs(object):
                     "{}.".format(st.mt_mining_fixedslicing_models))
 
     def create_init_dict(self, ff, model, substrings, POS):
+        """Create an initialization dict for later creation of an individual
+        argument set.
+
+        This method is meant to be overridden by subclasses that need an
+        extended initialization dict for their extended argument set.
+
+        Parameters
+        ----------
+        ff : string
+            The `ff` parameter from :class:`BaseArgs`.
+        model : string
+            The `model` parameter from :class:`BaseArgs`.
+        substrings : bool
+            The `substrings` parameter from :class:`BaseArgs`.
+        POS : string
+            The `POS` parameter from :class:`BaseArgs`.
+
+        Returns
+        -------
+        dict
+            An initialization dict to be passed to an argument set constructor.
+
+        See Also
+        --------
+        mine.args.MultipleMiningArgs.create_init_dict,
+        analyze.args.MultipleAnalysisArgs.create_init_dict
+
+        """
+
         return {'ff': ff, 'model': model,
                 'substrings': bool(int(substrings)), 'POS': POS}
 
     def create_args_instance(self, init_dict):
+        """Create an argument set instance.
+
+        This method is meant to be overridden by subclasses that need their
+        argument sets to be instances of a subclass of :class:`BaseArgs`.
+
+        Parameters
+        ----------
+        init_dict : dict
+            The initialization dict passed to the argument set constructor.
+
+        See Also
+        --------
+        mine.args.MultipleMiningArgs.create_args_instance,
+        analyze.args.MultipleAnalysisArgs.create_args_instance
+
+        """
+
         return BaseArgs(init_dict)
 
     def create_argparser(self):
+        """Create the :class:`~argparse.ArgumentParser` that can parse our
+        multiple arguments.
+
+        Returns
+        -------
+        ArgumentParser
+            The created argument parser, which can be further extended by
+            subclasses.
+
+        """
 
         # Create the arguments parser.
 
