@@ -55,8 +55,8 @@ class AnnoteFinder(object):
         The x tolerance passed to the contructor.
     ytol : float
         The y tolerance passed to the contructor.
-    axis : :class:`~matplotlib.axes.Axes`
-        The axes to draw on.
+    axis : :class:`~matplotlib.axes.Axes` instance
+        The :class:`~matplotlib.axes.Axes` to draw on.
 
     See Also
     --------
@@ -76,8 +76,8 @@ class AnnoteFinder(object):
         annotes : list of strings
             The annotations corresponding to data points defined by the couples
             in ``zip(xdata, ydata)``.
-        axis : :class:`~matplotlib.axes.AxesSubplot` instance, optional
-            The :class:`~matplotlib.axes.AxesSubplot` object to draw on;
+        axis : :class:`~matplotlib.axes.Axes` instance, optional
+            The :class:`~matplotlib.axes.Axes` object to draw on;
             defaults to the current axis (as given by ``gca()``).
         xtol : float, optional
             Tolerance in the x direction for clicking on a point; defaults
@@ -172,8 +172,8 @@ class AnnoteFinder(object):
 
         Parameters
         ----------
-        axis : :class:`~matplotlib.axes.Axes`
-            The axis to draw on.
+        axis : :class:`~matplotlib.axes.Axes` instance
+            The :class:`~matplotlib.axes.Axes` to draw on.
         x : float
             The x coordinate of the data point.
         y : float
@@ -281,8 +281,8 @@ class AnnoteFinderBar(object):
     ytol : float, optional
         Tolerance in the y direction for clicking on a point; defaults to
         the maximum height of a bar in the bar-plot divided by five.
-    drawtext : bool
-        Wehter or not the text of the annotes should be shown; if not,
+    drawtext : bool, optional
+        Whether or not the text of the annotes should be shown; if not,
         the bars are only highlighted when clicked on, and no additional
         text is shown; this is meant to be used when linking with another
         bar-plot of the same data, which will show the text (meaning
@@ -297,8 +297,8 @@ class AnnoteFinderBar(object):
         The x tolerance passed to the contructor.
     ytol : float
         The y tolerance passed to the contructor.
-    axis : :class:`~matplotlib.axes.Axes`
-        The axes to draw on.
+    axis : :class:`~matplotlib.axes.Axes` instance
+        The :class:`~matplotlib.axes.Axes` to draw on.
     drawtext : bool
         The `drawtext` parameter passed to the constructor.
 
@@ -336,8 +336,8 @@ class AnnoteFinderBar(object):
         ytol : float, optional
             Tolerance in the y direction for clicking on a point; defaults to
             the maximum height of a bar in the bar-plot divided by five.
-        drawtext : bool
-            Wehter or not the text of the annotes should be shown; if not,
+        drawtext : bool, optional
+            Whether or not the text of the annotes should be shown; if not,
             the bars are only highlighted when clicked on, and no additional
             text is shown; this is meant to be used when linking with another
             bar-plot of the same data, which will show the text (meaning
@@ -442,7 +442,7 @@ class AnnoteFinderBar(object):
 
         Parameters
         ----------
-        event : Matplolib event
+        event : Matplotlib event
             The event object sent by Matplotlib.
 
         """
@@ -490,15 +490,15 @@ class AnnoteFinderBar(object):
 
         Parameters
         ----------
-        axis : :class:`~matplolib.axes.Axes`
-            The axis to draw on.
+        axis : :class:`~matplotlib.axes.Axes` instance
+            The :class:`~matplotlib.axes.Axes` to draw on.
         i : int
             The index of the data series for which we're to draw the annote.
         j : int
             The x-index of the bar which is to receive the text-anchor.
         x : float
             The x coordinate for the annote - deprecated.
-        annote : string
+        annote : object
             The annotation to draw; it should have an `id` attribute; the
             text shown will be formatted using ``'{}'.format(annote)``.
 
@@ -571,48 +571,83 @@ class AnnoteFinderFlow(object):
     This class defines a callback for Matplotlib to display an annotation when
     flows are clicked on. The data set where the click was is identified.
 
-    Register this function like this:
+    Register this function like this::
 
-    >>> for i in range(num_data_series):
-    >>>     fill_between(l_xs[i], l_bottoms[i], l_heights[i] + l_bottoms[i])
-    >>> af = AnnoteFinder(l_xs, l_bottoms, l_heights, annotes)
-    >>> connect('button_press_event', af)
+        for i in range(num_data_series):
+            fill_between(l_xs[i], l_bottoms[i], l_heights[i] + l_bottoms[i])
+        af = AnnoteFinder(l_xs, l_bottoms, l_heights, annotes)
+        connect('button_press_event', af)
 
-    Methods:
-      * __init__: initialize the annotator
-      * distance: compute the distance between two points
-      * is_in_flow: detect if a click is within tolerance range of a flow
-      * __call__: the callback called by Matplotlib on a click event (if we
-                  connect the AnnoteFinderFlow to a click event)
-      * drawAnnote: draw an annotation on the plot
+    Parameters
+    -----------
+    l_xs : list of lists
+        A list of lists of x coordinates of the flows, one for each
+        data set.
+    l_bottoms : list of lists
+        A list of bottoms of the flow in the flow-plot, one for each
+        data set.
+    l_heights : list of lists
+        A list of heights of the flows in the flow-plot, one for each
+        data set.
+    annotes : list of objects
+        A list of annotations, each one corresponding to a data set;
+        each annote object should have an `id` attribute, will be
+        displayed after formatting as ``'{}'.format(annote)``.
+    axis : :class:`~matplotlib.axes.Axes` instance, optional
+        The :class:`~matplotlib.axes.Axes` object to draw on; defaults
+        to the current axis (as given by ``gca()``).
+    drawtext : bool, optional
+        Whether or not the text of the annotes should be shown; if not,
+        the bars are only highlighted when clicked on, and no additional
+        text is shown; this is meant to be used when linking with another
+        bar-plot of the same data, which will show the text (meaning
+        there is no need for the text to be shown again in this plot);
+        defaults to ``True``.
+
+    Attributes
+    ----------
+    data : list of tuples
+        Equal to ``zip(l_xs, l_bottoms, l_heights, annotes)``.
+    axis : :class:`~matplotlib.axes.Axes`
+        The :class:`~matplotlib.axes.Axes` to draw on.
+    drawtext : bool
+        The `drawtext` parameter passed to the constructor.
+
+    See Also
+    --------
+    AnnoteFinder, AnnoteFinderBar, AnnoteFinderPlot
 
     """
 
     def __init__(self, l_xs, l_bottoms, l_heights, annotes, axis=None,
-                  drawtext=True):
+                 drawtext=True):
         """Initialize the annotator.
 
-        Arguments:
-          * l_xs: a list of x coordinates of the flows, one for each data set
-          * l_bottoms: a list of bottoms of the flow in the flow-plot, one for
-                       each data set
-          * l_heights: a list of heights of the flows in the flow-plot, one
-                       for each data set
-          * annotes: a list of annotations, each one corresponding to a data
-                     set. Each annote object should have an 'id' attribute,
-                     will be displayed after formatting as
-                     '{}'.format(annote).
-
-        Optional arguments:
-          * axis: the matplotlib.axes.AxesSubplot object to draw on. Defaults
-                  to the current axis (as given by gca()).
-          * drawtext: a boolean specifying if the text of the annotes should
-                      be shown of not. If not, the bars are only highlighted
-                      when clicked on, and no additional text is shown. This
-                      is meant to be used when linking with another bar-plot
-                      of the same data, which will show the text (meaning
-                      there is no need for the text to be shown again in this
-                      plot). Defaults to True.
+        Paramerters
+        -----------
+        l_xs : list of lists
+            A list of lists of x coordinates of the flows, one for each
+            data set.
+        l_bottoms : list of lists
+            A list of bottoms of the flow in the flow-plot, one for each
+            data set.
+        l_heights : list of lists
+            A list of heights of the flows in the flow-plot, one for each
+            data set.
+        annotes : list of objects
+            A list of annotations, each one corresponding to a data set;
+            each annote object should have an `id` attribute, will be
+            displayed after formatting as ``'{}'.format(annote)``.
+        axis : :class:`~matplotlib.axes.Axes` instance, optional
+            The :class:`~matplotlib.axes.Axes` object to draw on; defaults
+            to the current axis (as given by ``gca()``).
+        drawtext : bool, optional
+            Whether or not the text of the annotes should be shown; if not,
+            the bars are only highlighted when clicked on, and no additional
+            text is shown; this is meant to be used when linking with another
+            bar-plot of the same data, which will show the text (meaning
+            there is no need for the text to be shown again in this plot);
+            defaults to ``True``.
 
         """
 
@@ -633,24 +668,33 @@ class AnnoteFinderFlow(object):
         self.links = []
 
     def distance(self, x1, x2, y1, y2):
-        """Compute the distance between two points."""
+        """Compute the distance between `(x1, y1)` and `(x2, y2)`."""
+
         return pl.norm([x1 - x2, y1 - y2])
 
     def is_in_flow(self, x, y, xs, bottoms, heights):
         """Detect if a click is within tolerance range of a flow.
 
-        Arguments:
-          * x: the x coordinate of the click
-          * y: the y coordinate of the click
-          * xs: the x coordinates of the flow
-          * bottoms: the bottoms of the flow
-          * heights: the heights of the flow
+        Parameters
+        ----------
+        x : float
+            The x coordinate of the click.
+        y : float
+            The y coordinate of the click.
+        xs : list of floats
+            The x coordinates of the flow.
+        bottoms : list of floats
+            The bottoms of the flow.
+        heights : list of floats
+            The heights of the flow.
 
-        Returns: a tuple consisting of:
-          * is_in_flow: a boolean saying if the click is within tolerance of
-                        the bar-plot
-          * j: the x-index of the closest point in the flow data to the left
-               of the click, if is_in_flow == True (None otherwise)
+        Returns
+        -------
+        (is_in_flow, j) : tuple
+            `is_in_flow` is a boolean saying if the click is within tolerance
+            of the bar-plot; `j` is the x-index of the closest point in the
+            flow data to the left of the click, if ``is_in_flow == True``
+            (`None` otherwise).
 
         """
 
@@ -658,7 +702,7 @@ class AnnoteFinderFlow(object):
 
         for j in range(len(xs) - 1):
 
-            if xs[j] <= x <= xs[j+1]:
+            if xs[j] <= x <= xs[j + 1]:
 
                 h_interp = (heights[j] +
                             ((heights[j + 1] - heights[j]) /
@@ -676,15 +720,17 @@ class AnnoteFinderFlow(object):
 
     def __call__(self, event):
         """The callback called by Matplotlib on a click event (if we connect
-        the AnnoteFinderFlow to a click event).
-
-        Arguments:
-          * event: the event object sent by Matplotlib
+        the :class:`AnnoteFinderFlow` to a click event).
 
         This function finds the data set corresponding to the bars nearest to
         the click point, and draws the corresponding annotation in all the
         connected plots. The drawn annotations consist of a highlighting of
-        the flow, and a text (if self.drawtext == True).
+        the flow, and a text (if ``self.drawtext == True``).
+
+        Parameters
+        ----------
+        event : Matplotlib event
+            The event object sent by Matplotlib.
 
         """
 
@@ -725,15 +771,20 @@ class AnnoteFinderFlow(object):
     def drawAnnote(self, axis, i, j, x, annote):
         """Draw an annotation on the plot.
 
-        Arguments:
-          * axis: the axis to draw on
-          * i: the index of the data series for which we're to draw the annote
-          * j: the x index of the closest point in the flow data to the left
-               of x (see next argument).
-          * x: the x-coordinate for the annote to draw
-          * annote: the annotation to draw. It should have an 'id' attribute.
-                    The text shown will be formatted using
-                    '{}'.format(annote).
+        Parameters
+        ----------
+        axis : :class:`~matplotlib.axes.Axes` instance
+            The :class:`~matplotlib.axes.Axes` to draw on.
+        i : int
+            The index of the data series for which we're to draw the annote.
+        j : int
+            The x index of the closest point in the flow data to the left
+            of `x` (see next argument).
+        x : float
+            The x-coordinate for the annote to draw.
+        annote : object
+            The annotation to draw; it should have an `id` attribute; the
+            text shown will be formatted using ``'{}'.format(annote)``.
 
         """
 
@@ -757,8 +808,8 @@ class AnnoteFinderFlow(object):
             (xs, bottoms, heights) = self.data[i][:3]
 
             # If j is out of bounds (meaning it probably comes from a linked
-            # AnnoteFinderBar object, where j can be 1 + the max here), set it to
-            # the max.
+            # AnnoteFinderBar object, where j can be 1 + the max here), set it
+            # to the max.
 
             if j >= len(xs) - 1:
                 j = len(xs) - 2
@@ -774,22 +825,22 @@ class AnnoteFinderFlow(object):
             # Create the text if asked for.
 
             if self.drawtext:
-                t = axis.annotate(textwrap.fill('{}'.format(annote), 70),
-                                  xy=(x, y),
-                                  xycoords='data',
-                                  xytext=(0, 200),
-                                  textcoords='offset points',
-                                  bbox=dict(boxstyle='round',
-                                            fc=(0.95, 0.8, 1.0, 0.8),
-                                            ec=(0.85, 0.4, 1.0, 0.8)),
-                                  arrowprops=
-                                      dict(arrowstyle='wedge,tail_width=1.',
-                                           fc=(0.95, 0.8, 1.0, 0.8),
-                                           ec=(0.85, 0.4, 1.0, 0.8),
-                                           patchA=None,
-                                           patchB=None,
-                                           relpos=(0.1, 1.0),
-                                           connectionstyle='arc3,rad=0'))
+                t = axis.annotate(
+                    textwrap.fill('{}'.format(annote), 70),
+                    xy=(x, y),
+                    xycoords='data',
+                    xytext=(0, 200),
+                    textcoords='offset points',
+                    bbox=dict(boxstyle='round',
+                              fc=(0.95, 0.8, 1.0, 0.8),
+                              ec=(0.85, 0.4, 1.0, 0.8)),
+                    arrowprops=dict(arrowstyle='wedge,tail_width=1.',
+                                    fc=(0.95, 0.8, 1.0, 0.8),
+                                    ec=(0.85, 0.4, 1.0, 0.8),
+                                    patchA=None,
+                                    patchB=None,
+                                    relpos=(0.1, 1.0),
+                                    connectionstyle='arc3,rad=0'))
             else:
                 t = None
 
@@ -805,7 +856,9 @@ class AnnoteFinderFlow(object):
 
 
 def linkAnnotationFinders(afs):
-    """Link a list of AnnoteFinder|AnnoteFinderBar objects together."""
+    """Link a list of :class:`AnnoteFinder`\ s or :class:`AnnoteFinderBar`\ s
+    together."""
+
     for i in range(len(afs)):
 
         allButSelfAfs = afs[:i] + afs[i + 1:]
@@ -816,35 +869,65 @@ class AnnoteFinderPlot(object):
 
     """Display a plot when clicking a data point in another Matplotlib plot.
 
-    This class defines drawSpecificAnnote function, to be called by other
+    This class defines the `drawSpecificAnnote` function, to be called by other
     AnnoteFinders when clicked on.
 
-    Register this function like this:
+    Register this function like this::
 
-    >>> scatter(xdata, ydata)
-    >>> af = AnnoteFinder(xdata, ydata, annotes)
-    >>> connect('button_press_event', af)
-    >>> af2 = AnnoteFinderPlot(second_annotes, second_fig, second_axis,
+        scatter(xdata, ydata)
+        af = AnnoteFinder(xdata, ydata, annotes)
+        connect('button_press_event', af)
+        af2 = AnnoteFinderPlot(second_annotes, second_fig, second_axis,
                                second_plot)
-    >>> af.links.append(af2)
+        af.links.append(af2)
 
-    Methods:
-      * __init__: initialize the annotator
-      * drawSpecificAnnote: draw a plot, corresponding to an annote from
-                            another AnnoteFinder
-      * cla: clear the axes
+    Parameters
+    ----------
+    annotes : dict
+        A dict of parameters; keys are `(x, y)` tuples, and values are
+        parameters passed to the `second_plot` function.
+    second_fig : :class:`~matplotlib.figure.Figure` instance
+        The :class:`~matplotlib.figure.Figure` on which the auxiliary
+        plotting is to be done.
+    second_axis : :class:`~matplotlib.axes.Axes` instance
+        The :class:`~matplotlib.axes.Axes` where the auxiliary plotting
+        is to be done.
+    second_plot : function
+        The plotting function for the auxiliary axis.
+
+    Attributes
+    ----------
+    annotes : dict
+        The dict of parameters passed to the constructor.
+    second_fig : :class:`~matplotlib.figure.Figure` instance
+        The :class:`~matplotlib.figure.Figure` passed to the constructor.
+    second_axis : :class:`~matplotlib.axes.Axes` instance
+        The :class:`~matplotlib.axes.Axes` passed to the constructor.
+    second_plot : function
+        The function passed to the constructor.
+
+    See Also
+    --------
+    AnnoteFinder, AnnoteFinderBar, AnnoteFinderFlow, linkAnnotationFinders
 
     """
 
-    def __init__(self, annotes, second_fig, second_axis, second_plot,
-                  axis=None, xtol=None, ytol=None):
+    def __init__(self, annotes, second_fig, second_axis, second_plot):
         """Initialize the annotator.
 
-        Arguments:
-          * annotes: a dict of parameters; keys are (x, y) tuples, and values
-                     are parameters passed to the second_plot function
-          * second_axis: the axes where the auxiliary plotting is to be done
-          * second_plot: the plotting function for the auxiliary axis
+        Parameters
+        ----------
+        annotes : dict
+            A dict of parameters; keys are `(x, y)` tuples, and values are
+            parameters passed to the `second_plot` function.
+        second_fig : :class:`~matplotlib.figure.Figure` instance
+            The :class:`~matplotlib.figure.Figure` on which the auxiliary
+            plotting is to be done.
+        second_axis : :class:`~matplotlib.axes.Axes` instance
+            The :class:`~matplotlib.axes.Axes` where the auxiliary plotting
+            is to be done.
+        second_plot : function
+            The plotting function for the auxiliary axis.
 
         """
 
@@ -858,12 +941,14 @@ class AnnoteFinderPlot(object):
 
     def drawSpecificAnnote(self, annote):
         """Draw a plot, corresponding to an annote from another
-        AnnoteFinder."""
+        :class:`AnnoteFinder`."""
+
         self.second_plot(self.second_axis, self.annotes[annote])
         self.second_fig.canvas.draw()
 
     def cla(self):
-        """Clear the axes."""
+        """Clear the secondary axes."""
+
         if type(self.second_axis) == list:
             for ax in self.second_axis:
                 ax.cla()
