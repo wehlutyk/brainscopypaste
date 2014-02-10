@@ -27,13 +27,11 @@ if __name__ == '__main__':
     filename = st.mt_full_rel
     picklefile = st.mt_full_pickle
 
-
     # Load the data.
 
     print 'Connecting to redis server for access to the data...',
     clusters = rt.RedisReader(st.redis_mt_clusters_pref)
     print 'done'
-
 
     # FIRST: Distribution of number of quotes/clusters.
 
@@ -52,7 +50,6 @@ if __name__ == '__main__':
 
     print 'OK'
 
-
     # Plot it all.
 
     figure()
@@ -62,12 +59,10 @@ if __name__ == '__main__':
     ylabel('Nombre de clusters')
     legend()
 
-
     # SECOND: Distribution of number of words/quote.
 
     print 'Computing distribution of number of words/quote...',
     inv_qt_lengths = a_mt.build_quotelengths_to_n_quote(clusters)
-
 
     # Put that into plottable format.
 
@@ -81,7 +76,6 @@ if __name__ == '__main__':
 
     print 'OK'
 
-
     # Plot it all.
 
     figure()
@@ -90,7 +84,6 @@ if __name__ == '__main__':
     xlabel('Nombre de mots')
     ylabel('Nombre de quotes')
     legend()
-
 
     # Show it all.
 
