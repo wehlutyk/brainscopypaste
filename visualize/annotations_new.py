@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Add annotations to a plot.
-
-"""
+"""Add annotations to a plot, new module being rewritten."""
 
 
 from __future__ import division
@@ -77,7 +75,7 @@ class BaseAnnoteFinder(object):
 class AnnoteFinderPoint(BaseAnnoteFinder):
 
     def __init__(self, xdata, ydata, annotes, formatter, xtol=None,
-                  ytol=None, unique=False, axis=None):
+                 ytol=None, unique=False, axis=None):
 
         self.unique = unique
         self.formatter = formatter
@@ -111,7 +109,7 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
         for i, (xd, yd) in enumerate(self.data):
 
             if (xc - self.xtol <= xd <= xc + self.xtol and
-                yc - self.ytol <= yd <= yc + self.ytol):
+                    yc - self.ytol <= yd <= yc + self.ytol):
 
                 idx.append(i)
                 distances.append(self.distance((xc, xd), (yc, yd)))
@@ -141,7 +139,7 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
 
     def show_annote(self, an_idx, xyd):
 
-        if self.annotes_markers.has_key(an_idx):
+        if an_idx in self.annotes_markers:
 
             for m in self.annotes_markers[an_idx]:
                 m.set_visible(True)
@@ -150,19 +148,19 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
             return
 
         xd, yd = xyd
-        t = self.axis.annotate('({}, {})\n{}'.format(xd, yd,
-                                     self.formatter(self.annotes[an_idx])),
-                           xy=(xd, yd), xycoords='data', xytext=(0, -100),
-                           textcoords='offset points',
-                           bbox=dict(boxstyle='round',
-                                     fc=(0.95, 0.8, 1.0, 0.8),
-                                     ec=(0.85, 0.4, 1.0, 0.8)),
-                           arrowprops=dict(arrowstyle='wedge,tail_width=1.',
-                                           fc=(0.95, 0.8, 1.0, 0.8),
-                                           ec=(0.85, 0.4, 1.0, 0.8),
-                                           patchA=None, patchB=None,
-                                           relpos=(0.1, 1.0),
-                                           connectionstyle='arc3,rad=0'))
+        t = self.axis.annotate(
+            '({}, {})\n{}'.format(xd, yd,
+                                  self.formatter(self.annotes[an_idx])),
+            xy=(xd, yd), xycoords='data', xytext=(0, -100),
+            textcoords='offset points',
+            bbox=dict(boxstyle='round', fc=(0.95, 0.8, 1.0, 0.8),
+                      ec=(0.85, 0.4, 1.0, 0.8)),
+            arrowprops=dict(arrowstyle='wedge,tail_width=1.',
+                            fc=(0.95, 0.8, 1.0, 0.8),
+                            ec=(0.85, 0.4, 1.0, 0.8),
+                            patchA=None, patchB=None,
+                            relpos=(0.1, 1.0),
+                            connectionstyle='arc3,rad=0'))
         p = self.axis.plot([xd], [yd], marker='o', color='yellow',
                            zorder=100, markersize=10)[0]
         self.annotes_markers[an_idx] = [t, p]
@@ -178,7 +176,7 @@ class AnnoteFinderPoint(BaseAnnoteFinder):
 class AnnoteFinderPointPlot(AnnoteFinderPoint):
 
     def __init__(self, xdata, ydata, annotes, formatter, side_plotter,
-                  xtol=None, ytol=None, axis=None):
+                 xtol=None, ytol=None, axis=None):
 
         self.side_fig = None
         self.side_plotter = side_plotter
@@ -192,8 +190,8 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
                                                     axis=axis)
 
     def check_init(self):
-        if (self.side_fig == None or
-            not pl.fignum_exists(self.side_fig.number)):
+        if (self.side_fig is None or
+                not pl.fignum_exists(self.side_fig.number)):
             self.oldfigure = False
             self.annotes_axes = {}
             self.side_fig = pl.figure()
@@ -216,7 +214,7 @@ class AnnoteFinderPointPlot(AnnoteFinderPoint):
 
     def show_annote(self, an_idx, xyd):
         self.isshowing = True
-        if self.annotes_axes.has_key(an_idx):
+        if an_idx in self.annotes_axes:
 
             for ax in self.annotes_axes[an_idx]:
                 self.side_fig.add_axes(ax)
