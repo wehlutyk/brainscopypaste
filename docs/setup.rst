@@ -58,10 +58,6 @@ On any other architecture, you must install and build the dependencies from sour
 
    Detail build dependencies (e.g. ``tk-dev`` for matplotlib, but also ``build-essentials``, ``python-dev``, the fortran toolchain, etc.)
 
-.. todo::
-
-   Add a note about installing from wheels if you're on x86-64 linux
-
 .. note::
 
    All further shell commands are assumed to be running inside this new virtual environment. It is activated automatically after the ``mkvirtualenv webquotes`` command, but you can activate it manually in a new shell by running ``workon webquotes``.

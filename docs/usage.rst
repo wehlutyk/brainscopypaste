@@ -51,10 +51,6 @@ You can now start the actual substitution mining. ``mine_substitutions.py`` will
   * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
   * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
 
-.. todo::
-
-   Add link to precise reference doc
-
 So to mine with all imaginable models, settings,  and filtered versions of the clusters::
 
    python -u mine_substitutions_multiple.py \
