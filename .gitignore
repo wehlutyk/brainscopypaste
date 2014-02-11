@@ -1,5 +1,6 @@
 *.pyc
 *~
+.ipynb_checkpoints/
 .ropeproject
 docs/_build
 data
