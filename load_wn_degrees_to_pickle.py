@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the degrees for the lemmas in Wordnet, and save the scores dict to
+"""Compute the degrees for the lemmas in WordNet, and save the scores dict to
 a pickle file."""
 
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     else:
 
         print
-        print ('*** Computing degrees for all the lemmas in Wordnet '
+        print ('*** Computing degrees for all the lemmas in WordNet '
                "(POS = 'all') ***")
         degrees_all = l_wn.build_wn_degrees('all')
 

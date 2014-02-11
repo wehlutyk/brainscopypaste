@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute PageRank scores and adjacency matrices corresponding to the Wordnet
+"""Compute PageRank scores and adjacency matrices corresponding to the WordNet
 synonyms graph.
 
 The PageRank scores computed depend on the following details: the adjacency
@@ -96,7 +96,7 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
     if pos == 'all':
         pos = None
 
-    print 'Building Wordnet adjacency matrix...',
+    print 'Building WordNet adjacency matrix...',
 
     ij = ([], [])
 

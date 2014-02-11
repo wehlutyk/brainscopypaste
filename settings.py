@@ -1,21 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Global settings for files and folders, for the scripts to run.
-
-Sections:
-  * Utilities: check if files or folders are present
-  * Data root: root folder for all data
-  * Memetracker data: files to load from and save to for raw Memetracker data
-  * Memetracker substitution analysis: files to save to for the Memetracker
-                                       substitution analysis
-  * Treetagger settings: folder where the treetagger executables and libs live
-  * Wordnet data: files to save to for Wordnet network data
-  * Free Association norms data: files to load from and save to for Free
-                                 Association norms network data
-  * Redis settings: prefixes to store data in the Redis key-value store
-
-"""
+"""Global settings for files, folders, resources and data locations,
+for the scripts to run."""
 
 
 from __future__ import division
@@ -29,10 +16,7 @@ from datainterface.fs import check_folder
 # DATA ROOT #
 #############
 #
-# Root folder for all the data. If we do this properly, this could be the only
-# setting to change between computers :-). This could be changed to
-# '~/Code/cogmaster-stage/data', or even better '../data'.
-# But we should check that it works...
+#: Root folder for all the data (computed at runtime).
 
 data_root = os.path.abspath('data')
 if not os.path.exists(data_root):
@@ -43,28 +27,28 @@ if not os.path.exists(data_root):
 # WORDNET DATA #
 ################
 #
-# Root folder for Wordnet scores data, relative to data_root
+#: Root folder for WordNet scores data, relative to :attr:`data_root`.
 
-wn_root_rel = 'Wordnet'
+wn_root_rel = 'WordNet'
 wn_root = os.path.join(data_root, wn_root_rel)
 check_folder(wn_root)
 
 
-# Pickle file for the Wordnet PageRank scores, relative to wordnet root.
+#: Pickle file for the WordNet PageRank scores, relative to wordnet root.
 
 wn_PR_scores_pickle_rel = 'wordnet_PR_scores_{}.pickle'
 wn_PR_scores_pickle = os.path.join(wn_root,
                                    wn_PR_scores_pickle_rel)
 
 
-# Pickle file for the Wordnet degrees, relative to wordnet root.
+#: Pickle file for the WordNet degrees, relative to wordnet root.
 
 wn_degrees_pickle_rel = 'wordnet_degrees_{}.pickle'
 wn_degrees_pickle = os.path.join(wn_root,
                                  wn_degrees_pickle_rel)
 
 
-# Pickle file for the Wordnet clusterization coefficients, relative to wordnet
+# Pickle file for the WordNet clustering coefficients, relative to wordnet
 # root.
 
 wn_CCs_pickle_rel = 'wordnet_CCs_{}.pickle'
@@ -72,14 +56,14 @@ wn_CCs_pickle = os.path.join(wn_root,
                              wn_CCs_pickle_rel)
 
 
-# Pickle file for the Wordnet betweenness, relative to wordnet root.
+# Pickle file for the WordNet betweenness, relative to wordnet root.
 
 wn_BCs_pickle_rel = 'wordnet_BCs_{}.pickle'
 wn_BCs_pickle = os.path.join(wn_root,
                              wn_BCs_pickle_rel)
 
 
-# Pickle file for the Wordnet Number of significations, relative to wordnet
+# Pickle file for the WordNet Number of significations, relative to wordnet
 # root
 
 wn_NSigns_pickle_rel = 'wordnet_NSigns_{}.pickle'
@@ -87,14 +71,14 @@ wn_NSigns_pickle = os.path.join(wn_root,
                                 wn_NSigns_pickle_rel)
 
 
-# Pickle file for the Wordnet Mean Number of Synonyms, relative to wordnet root
+# Pickle file for the WordNet Mean Number of Synonyms, relative to wordnet root
 
 wn_MNSyns_pickle_rel = 'wordnet_MNSyns_{}.pickle'
 wn_MNSyns_pickle = os.path.join(wn_root,
                                 wn_MNSyns_pickle_rel)
 
 
-# Pickle file for the Wordnet path lengths distribution, relative to wordnet
+# Pickle file for the WordNet path lengths distribution, relative to wordnet
 # root
 
 wn_lengths_pickle_rel = 'wordnet_lengths.pickle'
@@ -271,8 +255,8 @@ mt_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
 # mt_mining_root.
 
 mt_mining_substitutions_pickle_rel = '{}substitutions.pickle'
-mt_mining_substitutions_pickle = os.path.join(mt_mining_root,
-                                              mt_mining_substitutions_pickle_rel)
+mt_mining_substitutions_pickle = os.path.join(
+    mt_mining_root, mt_mining_substitutions_pickle_rel)
 
 
 # List of available POS tags, taken as options for the analysis scripts.
