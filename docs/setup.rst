@@ -19,8 +19,8 @@ The installation breaks down into three steps:
 
 Now let's get started. If you haven't done so already, open a shell, clone the main repository and ``cd`` into it::
 
-   git clone https://github.com/wehlutyk/webquotes
-   cd webquotes
+   git clone https://github.com/wehlutyk/brainscopypaste
+   cd brainscopypaste
 
 
 Creating the environment
@@ -33,7 +33,7 @@ You need ``virtualenv`` (`documentation <http://www.virtualenv.org/en/latest/>`_
 
 You can then create a virtual environment where we'll install the dependencies::
 
-   mkvirtualenv webquotes
+   mkvirtualenv brainscopypaste
 
 
 Quick environment setup on a 64-bit machine
@@ -60,7 +60,7 @@ On any other architecture, you must install and build the dependencies from sour
 
 .. note::
 
-   All further shell commands are assumed to be running inside this new virtual environment. It is activated automatically after the ``mkvirtualenv webquotes`` command, but you can activate it manually in a new shell by running ``workon webquotes``.
+   All further shell commands are assumed to be running inside this new virtual environment. It is activated automatically after the ``mkvirtualenv brainscopypaste`` command, but you can activate it manually in a new shell by running ``workon brainscopypaste``.
 
 
 .. _treetagger-installation:
