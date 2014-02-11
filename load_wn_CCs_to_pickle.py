@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the clusterization coefficients for the lemmas in Wordnet, and save
+"""Compute the clustering coefficients for the lemmas in Wordnet, and save
 the scores dict to a pickle file."""
 
 

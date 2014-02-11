@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Compute all the shortest path lengths in the WordNet network,
+their distribution, and save that to pickle."""
+
 from __future__ import division
 
 import datainterface.picklesaver as ps
@@ -21,6 +27,7 @@ if __name__ == '__main__':
     print '*** Computing WN path length distribution ***'
     distribution = l_wn.build_wn_paths_distribution(lengths_detail)
 
-    print "*** Saving the WN path length distribution to '" + picklefile + "'...",
+    print "*** Saving the WN path length distribution to '" + \
+        picklefile + "'...",
     ps.save(distribution, picklefile)
     print 'OK'

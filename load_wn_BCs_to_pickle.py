@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the clusterization coefficients for the lemmas in Wordnet, and save
-the scores dict to a pickle file."""
+"""Compute the betweenness centralities for the lemmas in Wordnet, and save the
+scores dict to a pickle file."""
 
 
 from __future__ import division
