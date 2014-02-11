@@ -81,4 +81,4 @@
 ├── mine_statistics.py dp
 ├── mine_substitutions.py dp
 ├── mine_substitutions_multiple.py dp
-├── settings.py n
+├── settings.py dp
