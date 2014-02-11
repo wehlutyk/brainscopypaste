@@ -27,7 +27,10 @@ import mock
 MOCK_MODULES = ['numpy', 'pylab', 'scipy', 'scipy.stats', 'scipy.sparse',
                 'scipy.interpolate', 'matplotlib', 'matplotlib.dates',
                 'matplotlib.cm', 'matplotlib.colors', 'matplotlib.container',
-                'networkx', 'nltk', 'nltk.corpus', 'redis']
+                'networkx', 'nltk', 'nltk.util', 'nltk.corpus',
+                'nltk.corpus.util', 'nltk.corpus.reader',
+                'nltk.corpus.reader.api', 'nltk.corpus.reader.util',
+                'nltk.tokenize', 'nltk.probability', 'redis']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -265,6 +268,8 @@ texinfo_documents = [
 intersphinx_mapping = {'networkx': ('http://networkx.lanl.gov/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy-1.8.0/',
                                  None),
+                       'scipy': ('http://docs.scipy.org/doc/scipy-0.13.0/'
+                                 'reference/', None),
                        'python': ('http://docs.python.org/2.7/', None),
                        'matplotlib': ('http://matplotlib.org/', None)}
 

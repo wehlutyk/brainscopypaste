@@ -9,7 +9,7 @@ echo "[WebQuotes installer] Installing WordNet and CMU data..."
 echo
 echo "                      'sudo' will ask you for your password "
 echo "                      to install the nltk data in /usr/share/nltk_data."
-sudo $PY -m nltk.downloader -d /usr/local/share/nltk_data cmudict wordnet wordnet_ic
+sudo $PY -m nltk.downloader -d /usr/local/share/nltk_data cmudict wordnet wordnet_ic langid
 
 # Download Free Association Norms
 echo

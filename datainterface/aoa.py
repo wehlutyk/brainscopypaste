@@ -20,7 +20,7 @@ def load_aoa_Kuperman_csv():
     Returns
     -------
     aoas : dict
-        Mapping of ``word, AoA`` couples (words in lowercase).
+        Mapping of `word, AoA` couples (words in lowercase).
 
     """
 

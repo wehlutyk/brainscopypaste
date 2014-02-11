@@ -8,11 +8,11 @@ from __future__ import division
 
 import numpy as np
 
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 
 
 def levenshtein(s1, s2):
-    """Compute levenshtein distance between s1 and s2."""
+    """Compute levenshtein distance between `s1` and `s2`."""
 
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
@@ -42,14 +42,16 @@ def levenshtein(s1, s2):
 
 
 def levenshtein_word(s1, s2):
-    """Compute levenshtein distance between s1 and s2, taking words as the
+    """Compute levenshtein distance between `s1` and `s2`, taking words as the
     editing unit."""
-    tagger = TaggerBuilder.get_tagger()
+
+    tagger = get_tagger()
     return levenshtein(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
 def hamming(s1, s2):
-    """Compute the hamming distance between s1 and s2."""
+    """Compute the hamming distance between `s1` and `s2`."""
+
     if len(s1) != len(s2):
         return -1
     else:
@@ -57,20 +59,23 @@ def hamming(s1, s2):
 
 
 def hamming_word(s1, s2):
-    """Compute the hamming distance between s1 and s2, taking words as the
+    """Compute the hamming distance between `s1` and `s2`, taking words as the
     editing unit."""
-    tagger = TaggerBuilder.get_tagger()
+
+    tagger = get_tagger()
     return hamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
 def sublists(s, l):
-    """Get all sublists of s of length l."""
+    """Get all sublists of `s` of length `l`."""
+
     return [s[i:i + l] for i in range(len(s) - l + 1)]
 
 
 def subhamming(s1, s2):
-    """Compute the minimum hamming distance between s2 and all sublists of
-    s1."""
+    """Compute the minimum hamming distance between `s2` and all sublists of
+    `s1`, returning the
+    `(distance, substring position in s1, substring length)` tuple."""
 
     l1 = len(s1)
     l2 = len(s2)
@@ -90,21 +95,23 @@ def subhamming(s1, s2):
 
 
 def subhamming_word(s1, s2):
-    """Compute the subhamming distance between s1 and s2, taking words as the
-    editing unit."""
-    tagger = TaggerBuilder.get_tagger()
+    """Compute the subhamming distance between `s1` and `s2`, taking words as
+    the editing unit."""
+
+    tagger = get_tagger()
     return subhamming(tagger.Tokenize(s1), tagger.Tokenize(s2))
 
 
 def distance_word_mother_nosub(base, daughter):
     """Get distance between two strings (without substrings), and return the
-    (distance, mother) tuple."""
+    `(distance, mother)` tuple."""
+
     return (hamming_word(base, daughter), base)
 
 
 def distance_word_mother_sub(base, daughter):
     """Get distance between two strings (with substrings), and return the
-    (distance, effective mother) tuple."""
+    `(distance, effective mother)` tuple."""
 
     # This import goes here to prevent a circular import problem.
 
@@ -118,4 +125,3 @@ def distance_word_mother_sub(base, daughter):
     mother.tokens = mother_tok
     mother.POS_tags = mother_pos
     return (d, mother)
-

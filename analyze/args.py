@@ -26,7 +26,7 @@ class AnalysisArgs(BaseArgs):
     It defines all necessary arguments for an analysis of mined substitutions,
     and is pluggable into most structures that are related to such an
     analysis. It is also the main object that :class:`MultipleAnalysisArgs`
-    manipulates. This class inherits from :class:`baseargs.BaseArgs`.
+    manipulates. This class inherits from :class:`~baseargs.BaseArgs`.
 
     Parameters
     ----------
@@ -132,11 +132,11 @@ class AnalysisArgs(BaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`baseargs.BaseArgs`'s constructor.
+        This method is used by :class:`~baseargs.BaseArgs`'s constructor.
 
         Returns
         -------
-        p : :class:`argparse.ArgumentParser`
+        p : :class:`~argparse.ArgumentParser`
             The argument parser used to parse the command line arguments.
 
         """
@@ -195,7 +195,7 @@ class GroupAnalysisArgs(object):
 
     """Group of :class:`AnalysisArgs` to be used in a same figure.
 
-    This class is how `AnalysisArgs`'s get grouped when plotting several
+    This class is how `AnalysisArgs`\ s get grouped when plotting several
     distinct `AnalysisArgs` on the same figure. When using the ``--ingraph``
     option, the plots for different `AnalysisArgs` get grouped into single
     figures. This class represents a group of such `AnalysisArgs` that is
@@ -331,8 +331,8 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
     It defines all necessary arguments for analysis of substitutions mined
     with several sets of arguments, and is usable with the
-    :class:`.substitutions.SubstitutionsAnalyzer`. This class inherits from
-    :class:`baseargs.MultipleBaseArgs`.
+    :class:`~.substitutions.SubstitutionsAnalyzer`. This class inherits from
+    :class:`~baseargs.MultipleBaseArgs`.
 
     Attributes
     ----------
@@ -462,7 +462,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         an instance of :class:`AnalysisArgs`, merging the parameters provided
         and the arguments stored in attributes of `self`.
 
-        This method is used by :class:`baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -498,7 +498,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     def create_args_instance(self, init_dict):
         """Create an :class:`AnalysisArgs` instance.
 
-        This method is used by :class:`baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
         constructor.
 
         Parameters
@@ -518,12 +518,12 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
     def create_argparser(self):
         """Create the argument parser to extract arguments from command line.
 
-        This method is used by :class:`baseargs.MultipleBaseArgs`'s
+        This method is used by :class:`~baseargs.MultipleBaseArgs`'s
         constructor.
 
         Returns
         -------
-        p : :class:`argparse.ArgumentParser`
+        p : :class:`~argparse.ArgumentParser`
             The argument parser used to parse the command line arguments.
 
         """

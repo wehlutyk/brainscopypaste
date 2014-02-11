@@ -2,17 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Compute PageRank scores and adjacency matrices corresponding to the Free
-Association norms.
-
-Methods:
-  * build_fa_coords: build a dictionary associating each normed word (in
-                     lowercase) in the Free Association norms to a coordinate
-  * build_fa_adjacency_matrix: build the adjacency matrix (in CSC or CSR
-                               format) for the Free Association graph
-  * build_fa_PR_scores: compute the PageRank scores corresponding to the Free
-                        Association graph
-
-"""
+Association norms."""
 
 
 from __future__ import division
@@ -29,6 +19,14 @@ import settings as st
 
 
 def _load_fa_norms():
+    """Load Free Association norms from pickle file, and return them.
+
+    See Also
+    --------
+    load_fa_norms
+
+    """
+
     print 'Loading Free Association norms from pickle...',
     norms = ps.load(st.fa_norms_pickle)
     print 'OK'
@@ -36,13 +34,22 @@ def _load_fa_norms():
 
 
 load_fa_norms = memoize(_load_fa_norms)
+"""Caching version of :meth:`_load_fa_norms`, recommended to use over the
+latter."""
 
 
 def _build_fa_coords():
     """Build a dictionary associating each normed word (in lowercase) in the
     Free Association norms to a coordinate.
 
-    Returns: a dict associating each normed word to its coordinate.
+    Returns
+    -------
+    dict
+        The association of each normed word to its coordinate.
+
+    See Also
+    --------
+    build_fa_coords
 
     """
 
@@ -57,11 +64,11 @@ def _build_fa_coords():
 
         for w2, ref, weight in assoc:
 
-            if not word_coords.has_key(w1):
+            if w1 not in word_coords:
                 word_coords[w1] = i
                 i += 1
 
-            if not word_coords.has_key(w2):
+            if w2 not in word_coords:
                 word_coords[w2] = i
                 i += 1
 
@@ -71,20 +78,28 @@ def _build_fa_coords():
 
 
 build_fa_coords = memoize(_build_fa_coords)
+"""Caching version of :meth:`_build_fa_coords`, recommended to use over the
+latter."""
 
 
 def build_fa_adjacency_matrix(word_coords, outfmt):
-    """Build the adjacency matrix (in CSC or CSR format) for the Free
-    Association graph.
+    """Build the adjacency matrix (in :class:`~scipy.sparse.csc_matrix` or
+    :class:`~scipy.sparse.csr_matrix` format) for the Free Association graph.
 
-    Arguments:
-      * word_coords: the dict of coordinates for the norms (as created by
-                     'build_fa_coords')
-      * outfmt: a string specifying the compression format for the result
-                matrix; can be 'csc' or 'csr'.
+    Parameters
+    ----------
+    word_coords : dict
+        Coordinates for the norms (as created by :meth:`build_fa_coords`).
+    outfmt : string
+        Compression format for the result matrix; either 'csc' or 'csr'.
 
-    Returns: the adjacency matrix, in Scipy CSC or CSR format, of the Free
-             Association graph.
+    Returns
+    -------
+    csc_matrix or csr_matrix
+        The adjacency matrix, in :class:`~scipy.sparse.csc_matrix` or
+        :class:`~scipy.sparse.csr_matrix` format, of the Free
+        Association graph.
+
     """
 
     norms = load_fa_norms()
@@ -114,6 +129,14 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
 
 def _build_fa_nxgraph():
+    """Build the undirected :func:`networkx.Graph` for the Free Association
+    network.
+
+    See Also
+    --------
+    build_fa_nxgraph
+
+    """
 
     print 'Building Undirected NX graph...',
 
@@ -121,20 +144,27 @@ def _build_fa_nxgraph():
     M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
     # The format for loading into nx is transposed from scipy's, but this isn't
     # important here since we're symetrising the graph anyway
-    G =  nx.from_scipy_sparse_matrix(M.transpose())
+    # (from_scipy_sparse_matrix creates a undirected graph unless instructed
+    # otherwise)
+    G = nx.from_scipy_sparse_matrix(M.transpose())
 
     print 'OK'
     return (lem_coords, G)
 
 
 build_fa_nxgraph = memoize(_build_fa_nxgraph)
+"""Caching version of :meth:`_build_fa_nxgraph`, recommended to use over the
+latter."""
 
 
 def build_fa_PR_scores():
     """Compute the PageRank scores corresponding to the Free Association
     graph.
 
-    Returns: a dict associating each normed word to its PageRank score.
+    Returns
+    -------
+    dict
+        The association of each normed word to its PageRank score.
 
     """
 
@@ -186,7 +216,10 @@ def build_fa_PR_scores():
 def build_fa_BCs():
     """Compute betweenness centrality of lemmas in the FA graph.
 
-    Returns: a dict associating each lemma to its BC.
+    Returns
+    -------
+    dict
+        The association of each lemma to its BC.
 
     """
 
@@ -210,6 +243,15 @@ def build_fa_BCs():
 
 
 def build_fa_degrees():
+    """Compute the degrees of lemmas in the FA graph.
+
+    Returns
+    -------
+    dict
+        The association of each lemma to its degree.
+
+    """
+
     lem_coords, G = build_fa_nxgraph()
 
     print 'Computing degree of each lemma...',
@@ -226,7 +268,10 @@ def build_fa_degrees():
 def build_fa_CCs():
     """Compute clustering coefficients of lemmas in the FA graph.
 
-    Returns: a dict associating each lemma to its CC.
+    Returns
+    -------
+    dict
+        The association of each lemma to its CC.
 
     """
 
@@ -250,6 +295,14 @@ def build_fa_CCs():
 
 
 def build_fa_paths():
+    """Compute the shortest paths between each pair in the FA graph.
+
+    Returns
+    -------
+    dict
+        Dictionary of shortest path lengths keyed by source and target.
+
+    """
 
     lem_coords, G = build_fa_nxgraph()
     inv_coords = inv_dict(lem_coords)
@@ -265,6 +318,22 @@ def build_fa_paths():
 
 
 def build_fa_paths_distribution(path_lengths):
+    """Compute the distribution of path lengths in the FA graph.
+
+    Parameters
+    ----------
+    path_lengths : dict
+        The dictionary of path lengths between pairs as computed by
+        :meth:`build_fa_paths`.
+
+    Returns
+    -------
+    np.array
+        The distribution of path lengths, where the index in the array
+        is the path length in question.
+
+    """
+
     lengths_all = []
     for d in path_lengths.itervalues():
         lengths_all.extend(d.values())

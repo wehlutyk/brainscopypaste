@@ -9,6 +9,7 @@ Contents:
    :maxdepth: 2
 
    reference/root-scripts
+   reference/root-modules
    reference/analyze
    reference/datainterface
    reference/datastructure

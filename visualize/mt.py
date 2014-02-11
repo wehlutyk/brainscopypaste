@@ -1,25 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Visualize data from the MemeTracker dataset
-
-Methods:
-  * mean_smooth: compute a moving average of a histogram (used in
-                 'plot_timeline')
-  * dt_toordinal: convert a datetime object to an ordinal, as used by
-                  Matplotlib
-  * fft_smooth: smooth a histogram by taking the first few Fourier frequencies
-  * spline_fft_smooth: smooth a histogram by FFT then splining
-  * timestamps_todt: convert a list of timestamps to a list of datetime object
-
-Classes:
-  * TimelineVisualize: visualizing methods for Timeline
-  * QuoteVisualize: visualizing methods for Quote
-  * ClusterVisualize: visualizing methods for Cluster
-  * ordTimeDelta: subclass of timedelta that defines the 'toordinal' method,
-                  for use in Matplotlib
-
-"""
+"""Visualize data from the MemeTracker dataset."""
 
 
 from __future__ import division
@@ -39,16 +21,22 @@ import visualize.annotations as v_an
 
 
 def mean_smooth(x_secs, ipd, smooth_res):
-    """Compute a moving average of a histogram (used in plot_timeline).
+    """Compute a moving average of a histogram.
 
-    Arguments:
-      * x_secs: the x values of the histogram (i.e. the middles of the bins)
-      * ipd: the histogram values to be smoothed (ipd stands for instances
-             per day)
-      * smooth_res: the width, in days, of the moving average to be computed
+    Parameters
+    ----------
+    x_secs : list
+        The x values of the histogram (i.e. the middles of the bins)
+    ipd : list
+        The histogram values to be smoothed (`ipd` stands for `instances
+        per day`)
+    smooth_res : int
+        The width, in days, of the moving average to be computed.
 
-    Returns: a tuple (x_secs_smooth, ipd_smooth) containing the x and y values
-             for the computed moving average.
+    Returns
+    -------
+    (x_secs_smooth, ipd_smooth) : tuple
+        The lists of x and y values for the computed moving average.
 
     """
 
@@ -65,16 +53,18 @@ def mean_smooth(x_secs, ipd, smooth_res):
 def fft_smooth(n, n_freqs=7):
     """Smooth a histogram by taking the first few Fourier frequencies.
 
-    Arguments:
-      * n: the values of the histogram to smooth
+    Parameters
+    ----------
+    n : list
+        The values of the histogram to smooth.
+    n_freqs : int, optional
+        The number of positive and negative frequencies to include; the total
+        number of frequencies kept is ``2 * n_freqs + 1``; Defaults to 7.
 
-    Keyword arguments:
-      * n_freqs: the number of positive and negative frequencies to include.
-                 The total number of frequencies kept is 2 * n_freqs + 1.
-                 Defaults to 7.
-
-    Returns:
-      * out: the smoothed values of the histogram
+    Returns
+    -------
+    list
+        The smoothed values of the histogram.
 
     """
 
@@ -93,18 +83,22 @@ def fft_smooth(n, n_freqs=7):
 def spline_fft_smooth(x, n, xnew, n_freqs=7):
     """Smooth a histogram by FFT then splining.
 
-    Arguments:
-      * x: the x values of the histogram to smooth
-      * n: the values of the histogram to smooth
-      * xnew: the new x values for the smoothed data
+    Parameters
+    ----------
+    x : list
+        The x values of the histogram to smooth.
+    n : list
+        The values of the histogram to smooth.
+    xnew : list
+        The new x values for the smoothed data.
+    n_freqs : int, optional
+        The number of positive and negative frequencies to include; the total
+        number of frequencies kept is ``2 * n_freqs + 1``; defaults to 7.
 
-    Keyword arguments:
-      * n_freqs: the number of positive and negative frequencies to include.
-                 The total number of frequencies kept is 2 * n_freqs + 1.
-                 Defaults to 7.
-
-    Returns:
-      * out: the smoothed values of the histogram
+    Returns
+    -------
+    list
+        The smoothed values of the histogram.
 
     """
 
@@ -114,49 +108,71 @@ def spline_fft_smooth(x, n, xnew, n_freqs=7):
 
 class ordTimeDelta(timedelta):
 
-    """Subclass of timedelta that defines the 'toordinal' method, for use in
-    Matplotlib.
-
-    Methods:
-      * toordinal: return the ordinal representation of the TimeDelta object
+    """Subclass of :class:`~datetime.timedelta` that defines the
+    :meth:`toordinal` method, for use in plotting with Matplotlib.
 
     """
 
     def toordinal(self):
-        """Return the ordinal representation of the TimeDelta object."""
+        """Return the ordinal representation of this time delta.
+
+        In this case the ordinal representation is the floating number of days.
+
+        """
+
         return self.days + self.seconds / 86400
 
     def __truediv__(self, y):
-        """Make sure division is done even when __future__.division is on."""
+        """Make sure division is done even when `__future__.division` is on."""
+
         return self.__div__(y)
 
 
 def dt_toordinal(dt):
-    """Convert a datetime object to an ordinal, as used by Matplotlib."""
+    """Convert a :class:`~datetime.datetime` to an ordinal, as used by
+    Matplotlib."""
+
     return (dt.toordinal() + dt.hour / 24 + dt.minute / 1440 +
             dt.second / 86400)
 
 
 def timestamps_todt(timestamps):
-    """Convert a list of timestamps to a list of datetime object."""
+    """Convert a list of timestamps to a list of
+    :class:`~datetime.datetime`\ s."""
+
     return [datetime.utcfromtimestamp(t) for t in timestamps]
 
 
 class TimelineVisualize(ds_mtb.TimelineBase):
+
+    """Add visualization methods to a
+    :class:`~datastructure.base.TimelineBase`.
+
+    See :class:`~datastructure.base.TimelineBase` for initialization
+    parameters.
+
+    See Also
+    --------
+    datastructure.base.TimelineBase, datastructure.full.Timeline
+
+    """
 
     def plot(self, label='raw timeline, no info', smooth_res=5,
              legend_on=True, legend_size=10.0):
         """Plot the evolution of a Timeline, with an optional legend and an
         optional moving average.
 
-        Optional arguments:
-        * label: a legend label; defaults to 'raw timeline, no info'
-        * smooth_res: the width, in days, of the moving average; if -1 is given,
-                        no moving average is plotted. Defaults to 5 days.
-        * legend_on: boolean specifying if the legend is to be shown or not.
-                    Defaults to True.
-        * legend_size: float specifying the font size of the legend. Defaults
-                        to 10.0.
+        Parameters
+        ----------
+        label : string, optional
+            A legend label; defaults to `raw timeline, no info`.
+        smooth_res : int, optional
+            The width, in days, of the moving average; if -1 is given, no
+            moving average is plotted; defaults to 5 days.
+        legend_on : bool, optional
+            Whether the legend is to be shown or not; defaults to ``True``.
+        legend_size : float, optional
+            Font size for the legend; defaults to 10.0.
 
         """
 
@@ -172,7 +188,7 @@ class TimelineVisualize(ds_mtb.TimelineBase):
         # 'ipd' stands for Instances per Day.
 
         pl.plot_date(x_dates, self.ipd, xdate=True, fmt='-',
-                    label='{} (ipd)'.format(label))
+                     label='{} (ipd)'.format(label))
 
         # Show a smoothed curve if there's enough data, and if we weren't asked
         # not to.
@@ -187,8 +203,8 @@ class TimelineVisualize(ds_mtb.TimelineBase):
                 x_dates_smooth.append(datetime.fromtimestamp(d))
 
             pl.plot_date(x_dates_smooth, ipd_smooth, xdate=True, fmt='-',
-                        label='{} ({}-day moving average)'.format(label,
-                                                                smooth_res))
+                         label='{} ({}-day moving average)'.format(label,
+                                                                   smooth_res))
 
         if legend_on:
             pl.legend(loc='best', prop={'size': legend_size})
@@ -196,11 +212,15 @@ class TimelineVisualize(ds_mtb.TimelineBase):
     def barflow(self, bins=25):
         """Plot the bar-chart of a Timeline.
 
-        Optional arguments:
-        * bins: same argument as the pylab.histogram function (either a integer
-                or an array specifying the bin limits). Defaults to 25.
+        Parameters
+        ----------
+        bins : int or ndarray, optional
+            Specifies the number of bins or the bin limits; defaults to 25.
 
-        Returns: the bin limits as returned by pylab.histogram.
+        Returns
+        -------
+        ndarray
+            The bin limits as returned by the histogram plotting.
 
         """
 
@@ -239,16 +259,29 @@ class TimelineVisualize(ds_mtb.TimelineBase):
         return bins
 
 
-class QuoteVisualize(ds_mtb.QuoteBase,TimelineVisualize):
+class QuoteVisualize(ds_mtb.QuoteBase, TimelineVisualize):
+
+    """Add visualization methods to a :class:`~datastructure.base.QuoteBase`.
+
+    See :class:`~datastructure.base.QuoteBase` for initialization parameters.
+
+    See Also
+    --------
+    datastructure.base.QuoteBase, datastructure.full.Quote
+
+    """
 
     def plot(self, smooth_res=5):
-        """Plot the time evolution of the Quote (with a legend).
+        """Plot the time evolution of the :class:`~datastructure.full.Quote`
+        (with a legend).
 
-        Optional arguments:
-          * smooth_res: when plotting, a moving average of the evolution can
-                        be additionally plotted; this is the width, in days,
-                        of that moving average. If -1 is given, no moving
-                        average is plotted. Defaults to 5 days.
+        Parameters
+        ----------
+        smooth_res : int, optional
+            When plotting, a moving average of the evolution can be
+            additionally plotted; this is the width, in days, of that moving
+            average; if -1 is given, no moving average is plotted; defaults
+            to 5 days.
 
         """
 
@@ -258,15 +291,27 @@ class QuoteVisualize(ds_mtb.QuoteBase,TimelineVisualize):
 
 class ClusterVisualize(ds_mtb.ClusterBase):
 
-    def plot_quotes(self, smooth_res=-1):
-        """Plot the individual Quotes of the Cluster.
+    """Add visualization methods to a :class:`~datastructure.base.ClusterBase`.
 
-        Optional arguments:
-          * smooth_res: when plotting, a moving average of the evolution of
-                        the quotes can be additionally plotted; this is the
-                        width, in days, of that moving average. If -1 is
-                        given, no moving average is plotted. Defaults to -1
-                        (no moving average plotted).
+    See :class:`~datastructure.base.ClusterBase` for initialization parameters.
+
+    See Also
+    --------
+    datastructure.base.ClusterBase, datastructure.full.Cluster
+
+    """
+
+    def plot_quotes(self, smooth_res=-1):
+        """Plot the individual :class:`~datastructure.full.Quote`\ s of the
+        :class:`~datastructure.full.Cluster`.
+
+        Parameters
+        ----------
+        smooth_res : int, optional
+            When plotting, a moving average of the evolution of the quotes can
+            be additionally plotted; this is the width, in days, of that moving
+            average; if -1 is given, no moving average is plotted; defaults to
+            -1 (no moving average plotted).
 
         """
 
@@ -276,13 +321,16 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         pl.title(self.__unicode__())
 
     def plot(self, smooth_res=5):
-        """Plot the time evolution of the Cluster as a single Timeline.
+        """Plot the time evolution of the :class:`~datastructure.full.Cluster`
+        as a single Timeline.
 
-        Optional arguments:
-          * smooth_res: when plotting, a moving average of the evolution can
-                        be additionally plotted; this is the width, in days,
-                        of that moving average. If -1 is given, no moving
-                        average is plotted. Defaults to 5 days.
+        Parameters
+        ----------
+        smooth_res : int, optional
+            When plotting, a moving average of the evolution can be
+            additionally plotted; this is the width, in days, of that
+            moving average; if -1 is given, no moving average is plotted;
+            defaults to 5 days.
 
         """
 
@@ -290,30 +338,38 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         self.timeline.plot(label=self.__unicode__(), smooth_res=smooth_res)
 
     def barflow(self, bins=25):
-        """Plot the bar-chart of the Cluster Timeline."""
+        """Plot the bar-chart of the cluster's
+        :class:`~datastructure.full.Timeline`."""
+
         self.build_timeline()
         return self.timeline.barflow(bins)
 
     def bar_quotes(self, bins=25, drawtext=True):
-        """Plot the stacked bar-chart of Quotes in a Cluster, with added
-        annotations.
+        """Plot the stacked bar-chart of :class:`~datastructure.full.Quote`\ s
+        in a :class:`~datastructure.full.Cluster`, with added annotations.
 
-        Optional arguments:
-        * bins: same argument as the pylab.histogram function (either a integer
-                or an array specifying the bin limits). Defaults to 25.
-        * drawtext: boolean specifying if text should be displayed for the
-                    annotations
+        Parameters
+        ----------
+        bins : int or ndarray, optional
+            Specifies the number of bins or the bin limits; defaults to 25.
+        drawtext : bool, optional
+            Whether or not text should be displayed for the annotations.
 
-        Returns: a tuple consisting of the bins returned by pylab.histogram on the
-                Cluster's full Timeline, and of the AnnoteFinderBar object linked
-                to the plot.
+        Returns
+        -------
+        tuple
+            The first item consists of the bins returned by the histogram
+            plotting of the cluster's full
+            :class:`~datastructure.full.Timeline`; the second item is the
+            :class:`~.annotations.AnnoteFinderBar` instance linked to the plot.
 
         """
 
         fig = pl.gcf()
         ax = pl.gca()
 
-        # Get the bins, to be given as common argument for all Quotes, later on.
+        # Get the bins, to be given as common argument for all Quotes,
+        # later on.
 
         self.build_timeline()
         cl_heights, bins = pl.histogram(self.timeline.url_times, bins=bins)
@@ -329,7 +385,7 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         l_bottoms = []
         l_heights = []
         l_quotes = sorted(self.quotes.itervalues(), key=attrgetter('tot_freq'),
-                        reverse=True)
+                          reverse=True)
 
         # Do the Quote plotting.
 
@@ -337,7 +393,7 @@ class ClusterVisualize(ds_mtb.ClusterBase):
 
             heights = pl.histogram(qt.url_times, bins=bins)[0]
             ax.bar(left=bins_d[:-1], height=heights, width=widths_d,
-                bottom=bottoms, color=cm.YlOrBr(i / self.n_quotes))
+                   bottom=bottoms, color=cm.YlOrBr(i / self.n_quotes))
             l_bottoms.append(bottoms.copy())
             l_heights.append(heights.copy())
             bottoms += heights
@@ -358,33 +414,41 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         # Create and link the annotations.
 
         af = v_an.AnnoteFinderBar(l_heights,
-                                [[dt_toordinal(binlim)
+                                  [[dt_toordinal(binlim)
                                     for binlim in bins_d]] * self.n_quotes,
-                                l_bottoms, l_quotes, drawtext=drawtext)
+                                  l_bottoms, l_quotes, drawtext=drawtext)
         pl.connect('button_press_event', af)
 
         return (bins, af)
 
     def flow_quotes(self, bins=25, drawtext=True):
-        """Plot the flow of the stacked bar-chart of Quotes in a Cluster, with
-        added annotations.
+        """Plot the flow of the stacked bar-chart of
+        :class:`~datastructure.full.Quote`\ s in a
+        :class:`~datastructure.full.Cluster`, with added annotations.
 
-        Optional arguments:
-        * bins: same argument as the pylab.histogram function (either a integer
-                or an array specifying the bin limits). Defaults to 25.
-        * drawtext: boolean specifying if text should be displayed for the
-                    annotations
+        Parameters
+        ----------
+        bins : int or ndarray, optional
+            The number of bins or the bin limits; defaults to 25.
+        drawtext : bool, optional
+            Whether or not text should be displayed for the annotations.
 
-        Returns: a tuple consisting of the bins returned by pylab.histogram on the
-                Cluster's full Timeline, and of the AnnoteFinderFlow object
-                linked to the plot.
+        Returns
+        -------
+        tuple
+            The first item consists of the bins returned by the histogram
+            plotting of the cluster's full
+            :class:`~datastructure.full.Timeline`; the second item is the
+            :class:`~.annotations.AnnoteFinderFlow` instance linked to the
+            plot.
 
         """
 
         fig = pl.gcf()
         ax = pl.gca()
 
-        # Get the bins, to be given as common argument for all Quotes, later on.
+        # Get the bins, to be given as common argument for all Quotes,
+        # later on.
 
         self.build_timeline()
         bins = pl.histogram(self.timeline.url_times, bins=bins)[1]
@@ -400,7 +464,7 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         l_bottoms_sm = []
         l_heights_sm = []
         l_quotes = sorted(self.quotes.itervalues(), key=attrgetter('tot_freq'),
-                        reverse=True)
+                          reverse=True)
 
         # Do the Quote plotting.
 
@@ -433,36 +497,45 @@ class ClusterVisualize(ds_mtb.ClusterBase):
 
         af = v_an.AnnoteFinderFlow([[dt_toordinal(m)
                                     for m in middles_d]] * self.n_quotes,
-                                l_bottoms_sm, l_heights_sm, l_quotes,
-                                drawtext=drawtext)
+                                   l_bottoms_sm, l_heights_sm, l_quotes,
+                                   drawtext=drawtext)
         pl.connect('button_press_event', af)
 
         return (bins, af)
 
     def bar_quotes_norm(self, bins=25, drawtext=True):
-        """Plot the normalized stacked bar-chart of Quotes in a Cluster, with
-        added text-less annotations.
+        """Plot the normalized stacked bar-chart of
+        :class:`~datastructure.full.Quote`\ s in a
+        :class:`~datastructure.full.Cluster`, with added text-less annotations.
 
-        Optional arguments:
-        * bins: same argument as the pylab.histogram function (either a integer
-                or an array specifying the bin limits). Defaults to 25.
-        * drawtext: boolean specifying if text should be displayed for the
-                    annotations
+        Parameters
+        ----------
+        bins : int or ndarray, optional
+            The number of bins or the bin limits; defaults to 25.
+        drawtext : bool, optional
+            Whether or not text should be displayed for the annotations.
 
-        Returns: a tuple consisting of the bins returned by pylab.histogram on the
-                Cluster's full Timeline, and of the AnnoteFinderBar object linked
-                to the plot. The annotations linked to the plot display no text,
-                and will only highlight the bars corresponding to the selected
-                Quote. This is meant to be linked to the AnnoteFinderBar object
-                returned by bar_cluster, to have those two subplots linked
-                together in the same figure.
+        Returns
+        -------
+        tuple
+            The first item consists of the bins returned by the histogram
+            plotting of the cluster's full
+            :class:`~datastructure.full.Timeline`, and the second item is the
+            :class:`~.annotations.AnnoteFinderBar` instance linked to the plot;
+            the annotations linked to the plot display no text, and will only
+            highlight the bars corresponding to the selected
+            :class:`~datastructure.full.Quote`; this is meant to be linked to
+            the :class:`.annotations.AnnoteFinderBar` instance returned by
+            :meth:`bar_quotes`, to have those two subplots linked together in
+            the same figure.
 
         """
 
         fig = pl.gcf()
         ax = pl.gca()
 
-        # Get the bins, to be given as common argument for all Quotes, later on.
+        # Get the bins, to be given as common argument for all Quotes,
+        # later on.
 
         self.build_timeline()
         cl_heights, bins = pl.histogram(self.timeline.url_times, bins=bins)
@@ -482,7 +555,7 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         heights_qt = np.zeros((nbins, self.n_quotes))
         heights_qt_sm = np.zeros((nbins, self.n_quotes))
         l_quotes = sorted(self.quotes.itervalues(), key=attrgetter('tot_freq'),
-                        reverse=True)
+                          reverse=True)
 
         # Get the histogram data.
 
@@ -508,7 +581,7 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         for i in range(self.n_quotes):
 
             ax.bar(left=bins_d[:-1], height=heights_qt[:, i], width=widths_d,
-                bottom=bottoms, color=cm.YlOrBr(i / self.n_quotes))
+                   bottom=bottoms, color=cm.YlOrBr(i / self.n_quotes))
             ax.plot(middles_d, heights_qt_sm[:, i] + bottoms_sm,
                     color=cm.winter(i / self.n_quotes), lw=2)
             l_bottoms.append(bottoms.copy())
@@ -530,16 +603,24 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         # Create and link the annotations.
 
         af = v_an.AnnoteFinderBar(heights_qt.transpose(),
-                                [[dt_toordinal(binlim)
+                                  [[dt_toordinal(binlim)
                                     for binlim in bins_d]] * self.n_quotes,
-                                l_bottoms, l_quotes, drawtext=drawtext)
+                                  l_bottoms, l_quotes, drawtext=drawtext)
         pl.connect('button_press_event', af)
 
         return (bins, af)
 
     def barflow_all(self, bins=25):
         """Plot the bar-plot, stacked bar-plot, and flow of the stacked bar-
-        plot for the cluster, with annotations."""
+        plot for the cluster, with annotations.
+
+        Parameters
+        ----------
+        bins : int or ndarray, optional
+            Specifies the number of bins or the bin limits; defaults to 25.
+
+        """
+
         pl.subplot(311)
         pl.title(textwrap.fill('{}'.format(self), 70))
         self.barflow(bins)
@@ -548,4 +629,3 @@ class ClusterVisualize(ds_mtb.ClusterBase):
         pl.subplot(313)
         af2 = self.flow_quotes(bins)[1]
         v_an.linkAnnotationFinders([af1, af2])
-

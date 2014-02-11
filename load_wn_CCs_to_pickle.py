@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the clusterization coefficients for the lemmas in Wordnet, and save
+"""Compute the clustering coefficients for the lemmas in WordNet, and save
 the scores dict to a pickle file."""
 
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     else:
 
         print
-        print ('*** Computing CCs for all the lemmas in Wordnet '
+        print ('*** Computing CCs for all the lemmas in WordNet '
                "(POS = 'all') ***")
         CCs_all = l_wn.build_wn_CCs('all')
 

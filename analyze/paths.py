@@ -6,7 +6,7 @@
 These analysis produce probability densities for the number of hops made on a
 graph upon substitution. The graph can be either WordNet or Free Association.
 
-The classes are based on :class:`.analyze.AnalysisCase`.
+The classes are based on :class:`~.analyze.AnalysisCase`.
 
 """
 
@@ -38,7 +38,7 @@ class BasePathsAnalysis(AnalysisCase):
         The analysis arguments used for the whole analysis.
     data : list
         The data on which to perform the paths analysis; usually a list of
-        :class:`mine.substitutions.Substitution`'s.
+        :class:`~mine.substitutions.Substitution`\ s.
 
     See Also
     --------
@@ -55,7 +55,7 @@ class BasePathsAnalysis(AnalysisCase):
             The analysis arguments used for the whole analysis.
         data : list
             The data on which to perform the paths analysis; usually a list of
-            :class:`mine.substitutions.Substitution`'s.
+            :class:`~mine.substitutions.Substitution`\ s.
 
         """
 
@@ -149,7 +149,7 @@ class BasePathsAnalysis(AnalysisCase):
 
         Parameters
         ----------
-        axs : list of :class:`matplotlib.axes.Axes` instances
+        axs : list of :class:`~matplotlib.axes.Axes` instances
             The axes on which to put plot.
 
         """
@@ -223,7 +223,7 @@ class WNPathsAnalysis(BasePathsAnalysis):
         The analysis arguments used for the whole analysis.
     data : list
         The data on which to perform the paths analysis; usually a list of
-        :class:`mine.substitutions.Substitution`'s.
+        :class:`~mine.substitutions.Substitution`\ s.
 
     Attributes
     ----------
@@ -248,7 +248,7 @@ class WNPathsAnalysis(BasePathsAnalysis):
             The analysis arguments used for the whole analysis.
         data : list
             The data on which to perform the paths analysis; usually a list of
-            :class:`mine.substitutions.Substitution`'s.
+            :class:`~mine.substitutions.Substitution`\ s.
 
         """
 
@@ -275,7 +275,7 @@ class FAPathsAnalysis(BasePathsAnalysis):
         The analysis arguments used for the whole analysis.
     data : list
         The data on which to perform the paths analysis; usually a list of
-        :class:`mine.substitutions.Substitution`'s.
+        :class:`~mine.substitutions.Substitution`\ s.
 
     Attributes
     ----------
@@ -300,7 +300,7 @@ class FAPathsAnalysis(BasePathsAnalysis):
             The analysis arguments used for the whole analysis.
         data : list
             The data on which to perform the paths analysis; usually a list of
-            :class:`mine.substitutions.Substitution`'s.
+            :class:`~mine.substitutions.Substitution`\ s.
 
         """
 

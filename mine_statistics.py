@@ -3,9 +3,8 @@
 
 """Compute some statistics about the MemeTracker dataset.
 
-Statistics computed:
-  * The distribution of number of quotes per cluster
-  * The distribution of number of words per quote
+The distribution of number of quotes per cluster and the distribution of number
+of words per quote are computed and plotted.
 
 """
 
@@ -27,15 +26,14 @@ if __name__ == '__main__':
     filename = st.mt_full_rel
     picklefile = st.mt_full_pickle
 
-
     # Load the data.
 
     print 'Connecting to redis server for access to the data...',
     clusters = rt.RedisReader(st.redis_mt_clusters_pref)
     print 'done'
 
-
-    # FIRST: Distribution of number of quotes/clusters.
+    ## FIRST
+    # Distribution of number of quotes/clusters.
 
     print 'Computing distribution of number of quotes/cluster...',
     inv_cl_lengths = a_mt.build_n_quotes_to_clusterids(clusters)
@@ -52,7 +50,6 @@ if __name__ == '__main__':
 
     print 'OK'
 
-
     # Plot it all.
 
     figure()
@@ -62,12 +59,11 @@ if __name__ == '__main__':
     ylabel('Nombre de clusters')
     legend()
 
-
-    # SECOND: Distribution of number of words/quote.
+    ## SECOND
+    # Distribution of number of words/quote.
 
     print 'Computing distribution of number of words/quote...',
     inv_qt_lengths = a_mt.build_quotelengths_to_n_quote(clusters)
-
 
     # Put that into plottable format.
 
@@ -81,7 +77,6 @@ if __name__ == '__main__':
 
     print 'OK'
 
-
     # Plot it all.
 
     figure()
@@ -90,7 +85,6 @@ if __name__ == '__main__':
     xlabel('Nombre de mots')
     ylabel('Nombre de quotes')
     legend()
-
 
     # Show it all.
 

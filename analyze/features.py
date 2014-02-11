@@ -15,7 +15,7 @@ import networkx as nx
 from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 import linguistics.wn as l_wn
 from analyze.base import AnalysisCase
 import settings as st
@@ -285,7 +285,7 @@ class Feature(object):
 
         Parameters
         ----------
-        aa : :class:`analyze.args.AnalysisArgs` instance
+        aa : :class:`~analyze.args.AnalysisArgs` instance
             The `AnalysisArgs` specifying the features to iterate over.
 
         See Also
@@ -376,13 +376,13 @@ class FeatureAnalysis(AnalysisCase):
     aa : :class:`AnalysisArgs` instance
         The set of arguments to analyze for.
     data : list
-        List of :class:`mine.substitutions.Substitution`'s to analyze.
+        List of :class:`~mine.substitutions.Substitution`\ s to analyze.
     feature : :class:`Feature` instance
         The feature to analyze for.
 
     Attributes
     ----------
-    tagger : :class:`linguistics.treetagger.TreeTaggerTags` instance
+    tagger : :class:`~linguistics.treetagger.TreeTaggerTags` instance
         Caching tagger to use during the analysis.
     feature : :class:`Feature` instance
         The `Feature` instance given to the constructor.
@@ -397,11 +397,11 @@ class FeatureAnalysis(AnalysisCase):
     w1 : string
         Either `lem1` if words are to be lemmatized, or `word1` otherwise.
         Used to retrieve the right value from
-        :class:`mine.substitutions.Substitution` instances.
+        :class:`~mine.substitutions.Substitution` instances.
     w2 : string
         Either `lem2` if words are to be lemmatized, or `word2` otherwise.
         Used to retrieve the right value from
-        :class:`mine.substitutions.Substitution` instances.
+        :class:`~mine.substitutions.Substitution` instances.
 
     See Also
     --------
@@ -417,13 +417,13 @@ class FeatureAnalysis(AnalysisCase):
         aa : :class:`AnalysisArgs` instance
             The set of arguments to analyze for.
         data : list
-            List of :class:`mine.substitutions.Substitution`'s to analyze.
+            List of :class:`~mine.substitutions.Substitution`\ s to analyze.
         feature : :class:`Feature` instance
             The feature to analyze for.
 
         """
 
-        self.tagger = TaggerBuilder.get_tagger()
+        self.tagger = get_tagger()
 
         # We need the feature to be calling savefile_postfix in super
         self.feature = feature
@@ -443,7 +443,7 @@ class FeatureAnalysis(AnalysisCase):
             self.w2 = 'word2'
 
     def build_axes(self, fig):
-        """Return a list of :class:`matplotlib.axes.Axes` instances in `fig`
+        """Return a list of :class:`~matplotlib.axes.Axes` instances in `fig`
         to plot on."""
 
         return [fig.add_subplot(111)]

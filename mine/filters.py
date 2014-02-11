@@ -1,26 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Filter and frame the cluster data for future mining.
+
+The clusters in the MemeTracker dataset may need some cleaning up: some of them
+are not in English, some of them contain too few quotes, and one may want to
+frame them around their peak activity to make sure only really relevant quotes
+are included. This module allows for such preprocessing of the cluster data.
+
+"""
+
+
 from __future__ import division
 
 import numpy as np
 
-from linguistics.treetagger import TaggerBuilder
-from linguistics.language import langdetector
+from linguistics.treetagger import get_tagger
+from linguistics.language import get_langdetector
 
 
-def frame_cluster_around_peak(cl, span_before=2 * 86400,
-                                 span_after=2 * 86400):
-    """Cut off quote occurrences in a Cluster around the 24h window with
-    maximum activity.
+def frame_cluster_around_peak(cl, span_before=2 * 86400, span_after=2 * 86400):
+    """Cut off quote occurrences in a :class:`~datastructure.full.Cluster`
+    around the 24h window with maximum activity.
 
-    Arguments:
-      * cl: the Cluster to work on
+    Parameters
+    ----------
+    cl : :class:`~datastructure.full.Cluster`
+        The cluster to work on
+    span_before : int, optional
+        Time span (in seconds) to include before the beginning of the max 24h
+        window; defaults to 2 days.
+    span_after : int, optional
+        Time span (in seconds) to include after the end of the max 24h window;
+        defaults to 2 days.
 
-    Optional arguments:
-      * span_before: time span (in seconds) to include before the beginning of
-                     the max 24h window. Defaults to 2 days.
-      * span_after: time span (in seconds) to include after the end of the max
-                    24h window. Defaults to 2 days.
+    Returns
+    -------
+    Cluster
+        A new framed :class:`~datastructure.full.Cluster`.
 
-    Returns: a new framed Cluster.
+    See Also
+    --------
+    datastructure.full.Cluster, frame_cluster
 
     """
 
@@ -34,16 +55,28 @@ def frame_cluster_around_peak(cl, span_before=2 * 86400,
 
 
 def frame_cluster(cl, start, end):
-    """Cut off quote occurrences in a Cluster at the specified boundaries.
+    """Cut off quote occurrences in a :class:`~datastructure.full.Cluster` at
+    the specified boundaries.
 
-    Arguments:
-      * cl: the Cluster to work on
-      * start: time (in seconds from epoch) of the beginning of the target
-               time window
-      * end: time (in seconds from epoch) of the end of the target time window
+    Parameters
+    ----------
+    cl : :class:`~datastructure.full.Cluster`
+        The cluster to work on.
+    start : int
+        Time (in seconds from epoch) of the beginning of the target time
+        window.
+    end : int
+        Time (in seconds from epoch) of the end of the target time window.
 
-    Returns: a new framed Cluster. If no quotes were kept after framing, None
-             is returned.
+    Returns
+    -------
+    Cluster
+        A new framed :class:`~datastructure.full.Cluster`; if no quotes were
+        left after framing, `None` is returned.
+
+    See Also
+    --------
+    datastructure.full.Cluster
 
     """
 
@@ -67,7 +100,7 @@ def frame_cluster(cl, start, end):
             # occurrences between 'start' and 'end' (in which case
             # 'framed_quote' is empty), exclude it.
 
-            if framed_quote != None:
+            if framed_quote is not None:
                 framed_quotes[qt.id] = framed_quote
 
     # If no quotes were kept, return None.
@@ -87,15 +120,27 @@ def frame_cluster(cl, start, end):
 
 
 def frame_quote(qt, start, end):
-    """Cut off quote occurrences in a Quote at the specified boundaries.
+    """Cut off quote occurrences in a :class:`~datastructure.full.Quote`
+    at the specified boundaries.
 
-    Arguments:
-      * qt: the Quote to work on
-      * start: time (in seconds from epoch) of the beginning of the target
-               time window
-      * end: time (in seconds from epoch) of the end of the target time window
+    Parameters
+    ----------
+    qt : :class:`~datastructure.full.Quote`
+        The quote to work on.
+    start : int
+        Time (in seconds from epoch) of the beginning of the target time
+        window.
+    end : int
+        Time (in seconds from epoch) of the end of the target time window.
 
-    Returns: a new framed Quote.
+    Returns
+    -------
+    Quote
+        A new framed :class:`~datastructure.full.Quote`.
+
+    See Also
+    --------
+    datastructure.full.Quote
 
     """
 
@@ -127,15 +172,27 @@ def frame_quote(qt, start, end):
 
 
 def frame_timeline(tm, start, end):
-    """Cut off quote occurrences in a Timeline at the specified boundaries.
+    """Cut off quote occurrences in a :class:`~datastructure.full.Timeline`
+    at the specified boundaries.
 
-    Arguments:
-      * tm: the Timeline to work on
-      * start: time (in seconds from epoch) of the beginning of the target
-               time window
-      * end: time (in seconds from epoch) of the end of the target time window
+    Parameters
+    ----------
+    tm : :class:`~datastructure.full.Timeline`
+        The timeline to work on.
+    start : int
+        Time (in seconds from epoch) of the beginning of the target time
+        window.
+    end : int
+        Time (in seconds from epoch) of the end of the target time window.
 
-    Returns: a new framed Timeline.
+    Returns
+    -------
+    Timeline
+        A new framed :class:`~datastructure.full.Timeline`.
+
+    See Also
+    --------
+    datastructure.full.Timeline
 
     """
 
@@ -147,17 +204,26 @@ def frame_timeline(tm, start, end):
 
 
 def find_max_24h_window(timeline, prec=30 * 60):
-    """Find the 24h window of maximum activity in a Timeline.
+    """Find the 24h window of maximum activity in a
+    :class:`~datastructure.full.Timeline`.
 
-    Arguments:
-      * timeline: the Timeline to scan
+    Parameters
+    ----------
+    timeline : :class:`~datastructure.full.Timeline`
+        The timeline to scan.
+    prec : int, optional
+        The precision (in seconds) of the position of the returned time
+        window; defaults to half an hour.
 
-    Optional arguments:
-      * prec: the precision (in seconds) of the position of the returned time
-              window. Defaults to half an hour.
+    Returns
+    -------
+    int
+        The time (in seconds from epoch) of the beginning of the maximum
+        activity window.
 
-    Returns: the time (in seconds from epoch) of the beginning of the maximum
-             activity window.
+    See Also
+    --------
+    datastructure.full.Timeline
 
     """
 
@@ -192,28 +258,35 @@ def find_max_24h_window(timeline, prec=30 * 60):
 
 
 def filter_cluster(cl, min_tokens):
-    """Filter a cluster to keep only English quotes longer than 'min_tokens'.
+    """Filter a :class:`~datastructure.full.Cluster` to keep only English
+    quotes longer than `min_tokens`.
 
-    Arguments:
-      * cl: the cluster to filter
-      * min_tokens: the minimum required number of words
+    Parameters
+    ----------
+    cl : :class:`~datastructure.full.Cluster`
+        The cluster to filter.
+    min_tokens : int
+        The minimum required number of words to keep a quote.
 
-    Returns: a new cluster (referencing the old quotes, not newly created
-             ones) with only the quotes that have more than 'min_tokens'
-             tokens, and that were detected to be in English. If the root of
-             the cluster had less than 'min_tokens' or if was not detected as
-             being English, or if no quotes inside the cluster were kept,
-             None is returned.
+    Returns
+    -------
+    Cluster
+        A new cluster (referencing the old quotes, not newly created ones) with
+        only the quotes that have more than `min_tokens` tokens, and that were
+        detected to be in English; if the root of the cluster had less than
+        `min_tokens`, if was not detected as being English, or if no quotes
+        inside the cluster were kept, `None` is returned.
 
     """
 
     import datastructure.full as ds_mt
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
+    langdetector = get_langdetector()
 
     # If the root has less than wanted, filter the whole cluster.
 
     if (len(tagger.Tokenize(cl.root)) < min_tokens or
-        langdetector.detect(cl.root) != 'en'):
+            langdetector.detect(cl.root) != 'en'):
         return None
 
     # Else, examine each quote.
@@ -223,7 +296,7 @@ def filter_cluster(cl, min_tokens):
     for qt in cl.quotes.itervalues():
 
         if (len(tagger.Tokenize(qt.string)) >= min_tokens and
-            langdetector.detect(qt.string) == 'en'):
+                langdetector.detect(qt.string) == 'en'):
             filtered_quotes[qt.id] = qt
 
     # If no quotes where kept, filter the whole cluster.
@@ -240,5 +313,3 @@ def filter_cluster(cl, min_tokens):
     filtered_cluster.quotes = filtered_quotes
 
     return filtered_cluster
-
-

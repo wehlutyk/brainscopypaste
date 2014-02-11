@@ -1,16 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Compute basic statistics on the MemeTracker dataset to get an idea of what
+it looks like."""
+
+
 from __future__ import division
 
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 
 
 def build_n_quotes_to_clusterids(clusters):
-    """Build a dictionary associating number of Quotes to Cluster ids having
-    that number of quotes.
+    """Build a dictionary associating number of
+    :class:`~datastructure.full.Quote`\ s to
+    :class:`~datastructure.full.Cluster` ids having that number of quotes.
 
-    Arguments:
-      * The RedisDataAccess Clusters connection or dict of Clusters to work on
+    This can then be used to compute the distribution of number of quotes per
+    cluster, as in :mod:`mine_statistics`.
 
-    Returns: the dict of 'number of Quotes' -> 'sequence of Cluster ids'.
+    Parameters
+    ----------
+    clusters : dict or :class:`~datainterface.redistools.RedisReader`
+        The dict of :class:`~datastructure.full.Cluster`\ s to work on (can
+        also be a Redis connection behaving like a dict).
+
+    Returns
+    -------
+    dict
+        The association of `number of quotes` to `list of cluster ids having
+        that many quotes`.
+
+    See Also
+    --------
+    mine_statistics
 
     """
 
@@ -18,7 +40,7 @@ def build_n_quotes_to_clusterids(clusters):
 
     for cl_id, cl in clusters.iteritems():
 
-        if inv_cl_lengths.has_key(cl.n_quotes):
+        if cl.n_quotes in inv_cl_lengths:
             inv_cl_lengths[cl.n_quotes].append(cl_id)
         else:
             inv_cl_lengths[cl.n_quotes] = [cl_id]
@@ -27,18 +49,31 @@ def build_n_quotes_to_clusterids(clusters):
 
 
 def build_quotelengths_to_n_quote(clusters):
-    """Build a dict associating Quote string lengths to the number of Quotes
-    having that string length.
+    """Build a dict associating :class:`~datastructure.full.Quote` string
+    lengths to the number of :class:`~datastructure.full.Quotes` having that
+    string length.
 
-    Arguments:
-      * The RedisDataAccess Clusters connection or dict of Clusters to work on
+    This amounts to the distribution of quote string lengths.
 
-    Returns: the dict of 'Quote string lengths' -> 'number of Quotes having
-             that string length'.
+    Parameters
+    ----------
+    clusters : dict or :class:`~datainterface.redistools.RedisReader`
+        The dict of :class:`~datastructure.full.Cluster`\ s to work on (can
+        also be a Redis connection behaving like a dict).
+
+    Returns
+    -------
+    dict
+        The association of `quote string length` to `number of quotes having
+        that string length`.
+
+    See Also
+    --------
+    mine_statistics
 
     """
 
-    tagger = TaggerBuilder.get_tagger()
+    tagger = get_tagger()
 
     inv_qt_lengths = {}
 
@@ -48,11 +83,9 @@ def build_quotelengths_to_n_quote(clusters):
 
             n_words = len(tagger.Tokenize(qt.string.lower()))
 
-            if inv_qt_lengths.has_key(n_words):
+            if n_words in inv_qt_lengths:
                 inv_qt_lengths[n_words] += 1
             else:
                 inv_qt_lengths[n_words] = 1
 
     return inv_qt_lengths
-
-

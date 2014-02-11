@@ -20,10 +20,12 @@ def memoize(func):
     """Wrap `func` in a caching function."""
 
     cache = {}
+
     def inner(*args):
         if args not in cache:
             cache[args] = func(*args)
         return cache[args]
+
     return inner
 
 
@@ -54,7 +56,7 @@ def list_to_dict(l):
 
     for i, item in enumerate(l):
 
-        if out.has_key(item):
+        if item in out:
             out[item].append(i)
         else:
             out[item] = [i]
@@ -68,7 +70,7 @@ def list_to_dict(l):
 def dict_plusone(d, key):
     """Add one to `d[key]` or set to one if it does not exist."""
 
-    if d.has_key(key):
+    if key in d:
         d[key] += 1
     else:
         d[key] = 1
@@ -99,11 +101,6 @@ class ProgressInfo(object):
         Number of information messages to be printed.
     label : string, optional
         Label used for the progress information printed.
-
-    Methods
-    -------
-    next_step()
-        Increase progress counter and print info if needed.
 
     """
 

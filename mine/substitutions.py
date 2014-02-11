@@ -2,30 +2,6 @@
 
 """Analyze data from the MemeTracker dataset.
 
-Methods:
-  * frame_cluster_around_peak: cut off quote occurrences in a Cluster around
-                               the 24h window with maximum activity
-  * frame_cluster: cut off quote occurrences in a Cluster at the specified
-                   boundaries
-  * frame_quote: cut off quote occurrences in a Quote at the specified
-                 boundaries
-  * frame_timeline: cut off quote occurrences in a Timeline at the specified
-                    boundaries
-  * find_max_24h_window: find the 24h window of maximum activity in a Timeline
-  * build_n_quotes_to_clusterids: build a dict associating number of Quotes to
-                                  Cluster ids having that number of quotes
-  * build_quoteslengths_to_quoteids: build a dict associating Quote string
-                                     lengths to the number of Quotes having
-                                     that string length
-  * dict_plusone: add one to d[key] or set it to one if non-existent
-
-Classes:
-  * ProgressInfo: print progress information
-  * SubstitutionAnalysis: analyze the 1-word changes in the MemeTracker
-                          dataset
-  * ClusterAnalyze: mixin class to use in the full Cluster class. Includes
-                    analysis methods.
-
 """
 
 
@@ -37,7 +13,7 @@ from multiprocessing import cpu_count
 import numpy as np
 
 from linguistics.distance import levenshtein
-from linguistics.treetagger import TaggerBuilder
+from linguistics.treetagger import get_tagger
 from linguistics.wn import lemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
@@ -49,9 +25,81 @@ import settings as st
 
 class Substitution(object):
 
+    """Represent a substitution detected in the dataset, and provide useful
+    methods on it.
+
+    :class:`SubstitutionsMiner` creates instances of this class to be later
+    saved directly in pickle files.
+
+    Parameters
+    ----------
+    ma : :class:`~mine.args.MiningArgs`
+        The mining args with which the substitution was found, and to be
+        followed for future operations.
+    mother : :class:`~datastructure.full.QtString`
+        The source quote for the substitution.
+    daughter : :class:`~datastructure.full.QtString`
+        The destination quote for the substitution.
+    mining_info : dict or None
+        Additional information about the substitution as given by
+        :meth:`~mine.models.ClusterModels.iter_substitutions` (it depends
+        on the chosen source-destination model), for potential later use.
+
+    Attributes
+    ----------
+    pos_wn_to_tt
+    ma : :class:`~mine.args.MiningArgs`
+        The mining args given to the constructor.
+    mother : :class:`~datastructure.full.QtString`
+        The mother quote given to the constructor.
+    daughter : :class:`~datastructure.full.QtString`
+        The daughter quote given to the constructor.
+    mining_info : dict or None
+        The additional mining information given to the constructor.
+    qt_length : int
+        Length of the mother and daughter quotes, in number of words (the
+        mother and daughter are always the same size, even when mining
+        includes substrings since what we see here is the effective mother).
+    word1 : string
+        The word that disappeared.
+    word2 : string
+        The word that appeared instead of `word1`.
+    idx : int
+        The position of `word1` in `mother` (which is also the position of
+        `word2` in `daughter`).
+
+    See Also
+    --------
+    SubstitutionsMiner
+
+    """
+
+    #: Correspondence between WordNet POS tags and TreeTagger POS tags.
     pos_wn_to_tt = {'a': 'J', 'n': 'N', 'v': 'V', 'r': 'R'}
 
     def __init__(self, ma, mother, daughter, mining_info):
+        """Initialize the structure with substitution information.
+
+        Once the attributes are initialized, information is printed to stdout
+        (conditional on the provided mining args) and the words involved are
+        lemmatized (but usage of that is also conditional on the mining args).
+
+        Parameters
+        ----------
+        ma : :class:`~mine.args.MiningArgs`
+            The mining args with which the substitution was found, and to be
+            followed for future operations.
+        mother : :class:`~datastructure.full.QtString`
+            The source quote for the substitution.
+        daughter : :class:`~datastructure.full.QtString`
+            The destination quote for the substitution.
+        mining_info : dict or None
+            Additional information about the substitution as given by
+            :meth:`mine.models.ClusterModels.iter_substitutions` (it depends
+            on the chosen source-destination model), for potential later use.
+
+        """
+
         self.ma = ma
         self.mother = mother
         self.daughter = daughter
@@ -68,8 +116,15 @@ class Substitution(object):
         return self.__getattribute__(key)
 
     def lemmatize(self):
-        """Lemmatize the substitution using TreeTagger and Wordnet."""
-        tagger = TaggerBuilder.get_tagger()
+        """Lemmatize the words involved in the substitution and log that
+        information if asked to.
+
+        The lemmatized words are stored respectively in `self.lem1` and
+        `self.lem2`, but are only used later if the mining args say so.
+
+        """
+
+        tagger = get_tagger()
         t1 = tagger.Lemmatize(self.mother)[self.idx]
         t2 = tagger.Lemmatize(self.daughter)[self.idx]
 
@@ -78,34 +133,53 @@ class Substitution(object):
 
         if self.ma.verbose:
             print ("Lemmatized: '" + self.lem1 + "' -> '" +
-                    self.lem2 + "'")
+                   self.lem2 + "'")
 
     def print_info(self):
-        """Print information about the substitution if ma asks for it."""
+        """Print information about the substitution if the mining
+        args asks for it."""
+
         if self.ma.verbose:
 
             raw_input()
             print
-            print ("***** SUBST (cl #{} / {}) ***** '".format(self.mother.cl_id,
-                                                              self.mining_info) +
-                   '{}/{}'.format(self.mother.tokens[self.idx],
-                                  self.mother.POS_tags[self.idx]) +
-                   "' -> '" +
-                   '{}/{}'.format(self.daughter.tokens[self.idx],
-                                  self.daughter.POS_tags[self.idx]) +
-                   "'")
+            print ("***** SUBST (cl #{} / {}) ***** '".format(
+                self.mother.cl_id, self.mining_info) +
+                '{}/{}'.format(self.mother.tokens[self.idx],
+                               self.mother.POS_tags[self.idx]) +
+                "' -> '" +
+                '{}/{}'.format(self.daughter.tokens[self.idx],
+                               self.daughter.POS_tags[self.idx]) +
+                "'")
             print self.mother
             print '=>'
             print self.daughter
             print
 
     def test_POS(self):
-        """Test for correspondence of POS tags in a substitution."""
+        """Test for correspondence of POS tags in the substitution.
+
+        If the mining args ask for 'all' POS tags, we only check if the source
+        and destination words have same POS tag (returning ``True`` or
+        ``False``). If the mining args ask for a specific POS tag, we check
+        that both source and destination words have that POS tag, and return
+        ``False`` if not. In both cases, information is logged to stdout if the
+        mining args ask for it.
+
+        Returns
+        -------
+        bool
+            ``True`` if the POS tags correspond to what the mining args ask
+            for, ``False`` otherwise (see above for the detailed explanation).
+
+        """
+
         ret = True
 
         if self.ma.POS == 'all':
 
-            if self.daughter.POS_tags[self.idx][0] != self.mother.POS_tags[self.idx][0]:
+            if self.daughter.POS_tags[self.idx][0] != \
+                    self.mother.POS_tags[self.idx][0]:
                 if self.ma.verbose:
                     print 'Not kept (different POS)'
                 ret = False
@@ -113,8 +187,9 @@ class Substitution(object):
         else:
 
             if (self.daughter.POS_tags[self.idx][0] !=
-                self.pos_wn_to_tt[self.ma.POS] or
-                self.mother.POS_tags[self.idx][0] != self.pos_wn_to_tt[self.ma.POS]):
+                    self.pos_wn_to_tt[self.ma.POS] or
+                    self.mother.POS_tags[self.idx][0] !=
+                    self.pos_wn_to_tt[self.ma.POS]):
                 if self.ma.verbose:
                     print 'Not kept (wrong POS)'
                 ret = False
@@ -122,8 +197,23 @@ class Substitution(object):
         return ret
 
     def test_real(self):
-        """Test if the two words really form a substitution, or are in fact only
-        variations of the same root."""
+        """Test if the source and destination words really form a substitution,
+        or are in fact only variations of the same root.
+
+        Many detected substitutions are in fact a plural form changing to a
+        singular form, a minor grammatical conjugation change, or the like. We
+        don't want to keep these, and this method lets us filter them most of
+        those cases by rejecting the substitution if source and destination
+        word only differ by a single edit (levenshtein-distance 1).
+
+        Returns
+        -------
+        bool
+            ``True`` if the substitution is considered to really be a
+            substitution, ``False`` otherwise.
+
+        """
+
         ret = True
 
         if levenshtein(self.lem1, self.lem2) <= 1:
@@ -135,12 +225,35 @@ class Substitution(object):
 
 
 def instantiate_and_mine(ma):
+    """Create a :class:`SubstitutionsMiner` instance and start its mining
+    (used for multithreading).
+
+    Parameters
+    ----------
+    ma : :class:`~mine.args.MiningArgs`
+        The mining args to use.
+
+    See Also
+    --------
+    SubstitutionsMiner
+
+    """
+
     sm = SubstitutionsMiner(ma)
     sm.mine()
 
 
 def mine_multiple(mma):
-    """Run 'mine' with various argsets.
+    """Mine sequentially for a series of mining arguments.
+
+    Parameters
+    ----------
+    maa : :class:`~mine.args.MultipleMiningArgs`
+        All the mining argument sets to be mined for.
+
+    See Also
+    --------
+    SubstitutionsMiner
 
     """
 
@@ -151,7 +264,19 @@ def mine_multiple(mma):
 
 
 def mine_multiple_mt(mma):
-    """Run 'minee' with various argsets, multi-threaded."""
+    """Mine for a series of mining arguments, multi-threading over the
+    number of cores available minus one (so as not to block IO).
+
+    Parameters
+    ----------
+    maa : :class:`~mine.args.MultipleMiningArgs`
+        All the mining argument sets to be mined for.
+
+    See Also
+    --------
+    SubstitutionsMiner
+
+    """
 
     mma.print_mining()
     n_jobs = len(mma)
@@ -173,13 +298,50 @@ def mine_multiple_mt(mma):
 
 class SubstitutionsMiner(object):
 
+    """Bring all tools together to do the actual substitution mining.
+
+    Parameters
+    ----------
+    ma : :class:`~mine.args.MiningArgs`
+        The mining arguments to mine for.
+    start : bool, optional
+        Whether or not to start mining straight after creation; defaults to
+        ``False``.
+
+    See Also
+    --------
+    mine.args.MiningArgs, Substitution, mine_multiple, mine_multiple_mt,
+    mine_substitutions, mine_substitutions_multiple
+
+    """
+
     def __init__(self, ma, start=False):
+        """Initialize the structure with mining args, and possibly start
+        mining.
+
+        Parameters
+        ----------
+        ma : :class:`~mine.args.MiningArgs`
+            The mining arguments to mine for.
+        start : bool, optional
+            Whether or not to start mining straight after creation; defaults to
+            ``False``.
+
+        """
+
         self.ma = ma
         if start:
             self.mine()
 
     def load_clusters(self):
-        """Load the data from pickle files.
+        """Connect to redis and load the correct pre-filtered clusters.
+
+        The :class:`~datainterface.redistools.RedisReader` (which behaves like
+        a dict) is stored in `self.clusters`.
+
+        See Also
+        --------
+        mine.filters
 
         """
 
@@ -195,19 +357,34 @@ class SubstitutionsMiner(object):
         print 'OK'
 
     def iter_substitutions(self):
-        """Iterate through all substitutions according to the given MiningArgs."""
+        """Iterate over all substitutions according to the given mining args.
+
+        This iterator yields the exact same tuples as
+        :meth:`mine.models.ClusterModels.iter_substitutions` will.
+
+        See Also
+        --------
+        mine.models.ClusterModels
+
+        """
+
         progress = ProgressInfo(len(self.clusters), 100, 'clusters')
 
         for cl in self.clusters.itervalues():
 
             progress.next_step()
-            for mother, daughter, mining_info in cl.iter_substitutions[self.ma.model](self.ma):
+            for mother, daughter, mining_info in \
+                    cl.iter_substitutions[self.ma.model](self.ma):
                 yield (mother, daughter, mining_info)
 
     def examine_substitutions(self):
-        """Examine substitutions and retain only those we want.
+        """Detect and examine substitutions, keeping only those we want.
 
-        Details: TODO
+        Substitutions are sequentially detected, and then examined further to
+        see if they're worth keeping (with :meth:`Substitution.test_POS` and
+        :meth:`Substitution.test_real`). Logging information is printed to
+        stdout. Finally, the complete list of retained substitutions is stored
+        in `self.substitutions`.
 
         """
 
@@ -237,7 +414,12 @@ class SubstitutionsMiner(object):
         print 'Stored {} of {} mined substitutions.'.format(n_stored, n_all)
 
     def save_substitutions(self):
-        """Save the mining results to pickle files.
+        """Save the mined and examined substitutions to pickle files.
+
+        The filename is determined by the mining args, and the list of
+        substitutions is saved directly to it using the
+        :mod:`~datainterface.picklesaver` module. This list can later be loaded
+        and quickly analyzed without having to re-detect all the substitutions.
 
         """
 
@@ -247,14 +429,41 @@ class SubstitutionsMiner(object):
         print 'OK'
 
     def checkfile(self):
+        """Check whether the target savefile already exists, and decide
+        whether to overwrite it or not.
+
+        If the file doesn't exist, it will be written to (the method returns
+        ``True``). If it does exist, there are two possibilities: If the mining
+        arguments are asking to resume a previous mining, the method returns
+        ``False``, and the whole substitution mining for this argument set
+        should be skipped. If the mining arguments are not asking to resume a
+        previous mining, an exception is raised to prevent from overwriting
+        previously mined substitutions.
+
+        Raises
+        ------
+        Exception
+            If the target file exists but can't be skipped because of the
+            mining args.
+
+        Returns
+        -------
+        bool
+            ``True`` if `self.savefile` should be written to (hence the
+            substitution mining performed), ``False`` if this mining
+            should be skipped because we were asked to resume a previous
+            mining and the file already exists..
+
+        """
+
         try:
             di_fs.check_file(self.savefile)
         except Exception, msg:
 
             if self.ma.resume:
                 warn(('*** A file for parameters {} already exists, not '
-                    'overwriting it. Skipping this whole '
-                    'argset. ***').format(di_fs.get_fileprefix(self.ma)))
+                      'overwriting it. Skipping this whole '
+                      'argset. ***').format(di_fs.get_fileprefix(self.ma)))
                 return False
             else:
                 raise Exception(msg)
@@ -262,7 +471,8 @@ class SubstitutionsMiner(object):
         return True
 
     def mine(self):
-        """Load data, do the substitution mining, and save results."""
+        """Load data, do the substitution mining, and save results,
+        all according to our mining arguments."""
 
         self.ma.print_mining()
         self.savefile = di_fs.get_filename(self.ma)

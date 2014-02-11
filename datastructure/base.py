@@ -54,21 +54,13 @@ class TimelineBase(object):
     ipd_x_secs : list of ints
         The corresponding timestamps for number of occurrences per day (they \
                 are the times of the middles of the days used as bins for \
-                ``self.ipd``).
+                `self.ipd`).
     argmax_ipd : int
-        Index of maximum number of occurrences per day (index in ``self.ipd``).
+        Index of maximum number of occurrences per day (index in `self.ipd`).
     max_ipd : int
         Maximum number of occurrences per day.
     max_ipd_x_secs : int
         Corresponding timestamp for the maximum number of occurrences per day.
-
-    Methods
-    -------
-    add_url()
-        Add an url to the timeline.
-    compute_attrs()
-        Compute a histogram of the occurrences as well as a few useful \
-                pieces of information.
 
     See Also
     --------
@@ -223,9 +215,9 @@ class QuoteBase(TimelineBase):
 
         """
 
-        if line_fields != None:
-            if (n_urls != None or tot_freq != None or
-                string != None or qt_id != None):
+        if line_fields is not None:
+            if (n_urls is not None or tot_freq is not None or
+                    string is not None or qt_id is not None):
 
                 raise ValueError(('Bad set of arguments when creating this '
                                   'quote. You must specify either '
@@ -244,8 +236,8 @@ class QuoteBase(TimelineBase):
 
         else:
 
-            if (n_urls == None or tot_freq == None or
-                string == None or qt_id == None):
+            if (n_urls is None or tot_freq is None or
+                    string is None or qt_id is None):
 
                 raise ValueError(('Bad set of arguments when creating this '
                                   'quote. You must specify either '
@@ -276,7 +268,7 @@ class QuoteBase(TimelineBase):
         return self.__unicode__()
 
     def __unicode__(self):
-        """Define how we see a Quote object when printed with ``print``
+        """Define how we see a Quote object when printed with `print`
         (e.g. ``>>> print myquote``)."""
 
         return ('"' + self.string + '" (quote #{} ; '
@@ -306,7 +298,7 @@ class ClusterBase(object):
         Number of quotes in the cluster.
     tot_freq : int, optional
         Total number of occurrences in the cluster (i.e. sum of the
-        ``tot_freq``\ s of the quotes).
+        `tot_freq`\ s of the quotes).
     root : string, optional
         The root string for the cluster.
     cl_id : int, optional
@@ -324,16 +316,6 @@ class ClusterBase(object):
         The built timeline of the cluster. Created by :meth:`build_timeline`.
     timeline_built : bool
         Whether or not :meth:`build_timeline` has been called.
-
-    Methods
-    -------
-    add_quote()
-        Add a :class:`~.full.Quote` to the cluster (used when loading the data \
-                into the :class:`~.full.Cluster` object).
-    build_timeline()
-        Build the :class:`~.full.Timeline` representing the occurrences of the \
-                cluster as a single object (not categorized into quotes; \
-                this is used to plot the occurrences of the cluster).
 
     See Also
     --------
@@ -360,7 +342,7 @@ class ClusterBase(object):
             Number of quotes in the cluster.
         tot_freq : int, optional
             Total number of occurrences in the cluster (i.e. sum of the
-            ``tot_freq``\ s of the quotes).
+            `tot_freq`\ s of the quotes).
         root : string, optional
             The root string for the cluster.
         cl_id : int, optional
@@ -374,9 +356,9 @@ class ClusterBase(object):
 
         """
 
-        if line_fields != None:
-            if (n_quotes != None or tot_freq != None or
-                root != None or cl_id != None):
+        if line_fields is not None:
+            if (n_quotes is not None or tot_freq is not None or
+                    root is not None or cl_id is not None):
 
                 raise ValueError(('Bad set of arguments when creating this '
                                   'cluster. You must specify either '
@@ -395,8 +377,8 @@ class ClusterBase(object):
             self.id = int(line_fields[3])
 
         else:
-            if (n_quotes == None or tot_freq == None or
-                root == None or cl_id == None):
+            if (n_quotes is None or tot_freq is None or
+                    root is None or cl_id is None):
 
                 raise ValueError(('Bad set of arguments when creating this '
                                   'cluster. You must specify either '
@@ -429,7 +411,7 @@ class ClusterBase(object):
         return self.__unicode__()
 
     def __unicode__(self):
-        """Define how we see a Cluster object when printed with ``print``
+        """Define how we see a Cluster object when printed with `print`
         (e.g. ``>>> print mycluster``)."""
 
         return ('"' + self.root + '" (cluster #{} ; tot_quotes={} ; '
@@ -441,7 +423,7 @@ class ClusterBase(object):
         used to plot the occurrences of the cluster).
 
         The computed :class:`~.full.Timeline` object is stored in
-        ``self.timeline``, and its attributes are automatically computed.
+        `self.timeline`, and its attributes are automatically computed.
 
         See Also
         --------
@@ -473,7 +455,7 @@ class TimeBagBase(object):
     This object is used for analysis of the evolution of a cluster through
     time. It is a timebag containing all strings in `cluster` occurring
     between `start` and `end`. Attributes about the occurrences are also
-    stored: their ``tot_freq``\ s, their ``n_urls``\ s, and their ``id``\ s.
+    stored: their `tot_freq`\ s, their `n_urls`\ s, and their `id`\ s.
     The id of the parent cluster is kept, the total frequency of the timebag
     is computed, and the string with highest frequency is also found.
 
@@ -500,15 +482,15 @@ class TimeBagBase(object):
         List of the strings of the quotes that have occurrences in the timebag.
     tot_freqs : list of ints
         Number of occurrences for each of the quotes whose strings are listed
-        in ``self.strings`` (indices correspond).
+        in `self.strings` (indices correspond).
     n_urlss : list of ints
         Number of urls quoting the given quote, for each of the quotes whose
-        whose strings are listed in ``self.strings`` (indices correspond).
+        whose strings are listed in `self.strings` (indices correspond).
     ids : list of ints
-        Ids of the quotes whose strings are listed in ``self.strings`` (indices
+        Ids of the quotes whose strings are listed in `self.strings` (indices
         correspond).
     argmax_freq_string : int
-        Index (in ``self.strings``) of the string with highest number of
+        Index (in `self.strings`) of the string with highest number of
         occurrences.
     max_freq_string : string
         String with highest number of occurrences
@@ -526,7 +508,7 @@ class TimeBagBase(object):
 
         A TimeBag containing all strings occurring between start and end will
         be created. Attributes about the occurrences are also stored: their
-        ``tot_freq``\ s, their ``n_urls``\ s, and their ``id``\ s. The id of
+        `tot_freq`\ s, their `n_urls`\ s, and their `id`\ s. The id of
         the parent cluster is kept, the total frequency of the TimeBag is
         computed, and the string with highest frequency is also found.
 

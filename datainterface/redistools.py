@@ -46,22 +46,13 @@ copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 class PRedis(redis.Redis):
 
-    """Add methods to :class:`redis.Redis` (`ref`_) to load and save python objects to
-    a redis database.
+    """Add methods to :class:`redis.Redis` (`ref`_) to load and save python
+    objects to a redis database.
 
-    This subclass of :class:`redis.Redis` (`ref`_) makes storing and loading picklable
-    python objects straightforward.
+    This subclass of :class:`redis.Redis` (`ref`_) makes storing and loading
+    picklable python objects straightforward.
 
     .. _ref: https://pypi.python.org/pypi/redis
-
-    Methods
-    -------
-    pset()
-        Store an object serialized by pickle.
-    pget()
-        Load an object unserialized by pickle.
-    bgsave_wait()
-        Save the Redis db to disk in the background, waiting for it to finish.
 
     See Also
     --------
@@ -74,7 +65,7 @@ class PRedis(redis.Redis):
         """Store an object serialized by pickle.
 
         The object is first serialized using :mod:`pickle`, then stored in
-        Redis under the key ``pref + name``.
+        Redis under the key `pref + name`.
 
         Parameters
         ----------
@@ -103,7 +94,7 @@ class PRedis(redis.Redis):
         """Load an object unserialized by pickle.
 
         The serialized form is fetched from Redis under the key
-        ``pref + name``, then unserialized using :mod:`pickle`.
+        `pref + name`, then unserialized using :mod:`pickle`.
 
         Parameters
         ----------
@@ -193,21 +184,6 @@ class RedisReader(object):
     ------
     ValueError
         If a key under the given namespace does not represent an integer.
-
-    Methods
-    -------
-    iteritems()
-        Iterate through items like :meth:`dict.iteritems`.
-    itervalues()
-        Iterate through values like :meth:`dict.itervalues`.
-    iterkeys()
-        Iterate through keys like :meth:`dict.iterkeys`.
-    __iter__()
-        Iteration interface.
-    __len__()
-        Length interface.
-    __getitem__()
-        Item getter.
 
     See Also
     --------

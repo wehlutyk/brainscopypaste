@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Analyze a set of previously mined substitutions, defined by a set of
+:class:`analyze.args.AnalysisArgs`.
+
+This script is meant to be used as a command line program. It will load
+previously mined substitutions from pickle files (mined with
+:mod:`mine_substitutions` or :mod:`mine_substitutions_multiple`) according to
+its arguments, and plot various visualizations of those substitutions depending
+on its arguments.
+
+Run ``python analyze_substitutions.py --help`` for more details on the
+arguments.
+
+"""
+
+
 from __future__ import division
 
 import pylab as pl

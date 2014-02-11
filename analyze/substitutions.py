@@ -36,19 +36,19 @@ class SubstitutionsAnalyzer(object):
 
     Parameters
     ----------
-    aa : :class:`.args.AnalysisArgs` instance
+    aa : :class:`~.args.AnalysisArgs` instance
         The analysis arguments to use.
 
     Attributes
     ----------
-    aa : :class:`.args.AnalysisArgs` instance
+    aa : :class:`~.args.AnalysisArgs` instance
         The analysis arguemnts passed to the constructor.
     filename : string
         The filename of the data to be loaded, corresponding to the provided
         analysis args.
-    analyses : list of :class:`.base.AnalysisCase` instances
+    analyses : list of :class:`~.base.AnalysisCase` instances
         The analysis cases to perform.
-    substitutions : list of :class:`mine.substitutions.Substitution`
+    substitutions : list of :class:`~mine.substitutions.Substitution`
         The substitution list loaded from `filename`.
 
     See Also
@@ -63,7 +63,7 @@ class SubstitutionsAnalyzer(object):
 
         Parameters
         ----------
-        aa : :class:`.args.AnalysisArgs` instance
+        aa : :class:`~.args.AnalysisArgs` instance
             The analysis arguments to use.
 
         See Also
@@ -177,12 +177,12 @@ class SubstitutionsGroupAnalyzer(object):
 
     Parameters
     ----------
-    gaa : :class:`.args.GroupAnalysisArgs` instance
+    gaa : :class:`~.args.GroupAnalysisArgs` instance
         The grouped analysis args to analyze for.
 
     Attributes
     ----------
-    gaa : :class:`.args.GroupAnalysisArgs` instance
+    gaa : :class:`~.args.GroupAnalysisArgs` instance
         The grouped analysis args passed to the constructor.
     base_savefile_prefix : string
         The prefix to be used when saving graphs to file.
@@ -199,7 +199,7 @@ class SubstitutionsGroupAnalyzer(object):
 
         Parameters
         ----------
-        gaa : :class:`.args.GroupAnalysisArgs` instance
+        gaa : :class:`~.args.GroupAnalysisArgs` instance
             The grouped analysis args to analyze for.
 
         """
@@ -295,9 +295,9 @@ class SubstitutionsGroupAnalyzer(object):
 
         Parameters
         ----------
-        maa : :class:`.args.MultipleAnalysisArgs` instance
+        maa : :class:`~.args.MultipleAnalysisArgs` instance
             The multpile analysis args able to create
-            :class:`.args.GroupAnalysisArgs` instances when iterated over.
+            :class:`~.args.GroupAnalysisArgs` instances when iterated over.
 
         See Also
         --------
