@@ -9,7 +9,7 @@ argparse==1.2.1
 backports.ssl-match-hostname==3.4.0.2
 docutils==0.11
 ipython==1.1.0
-git+https://github.com/matplotlib/matplotlib@0fad023a682d575a85fb1e2c0aabf21611661fc1
+git+https://github.com/matplotlib/matplotlib.git@0fad023a682d575a85fb1e2c0aabf21611661fc1
 mock==1.0.1
 networkx==1.8.1
 nltk==2.0.4
