@@ -404,7 +404,7 @@ def build_wn_BCs(pos):
 
 
 def build_wn_NSigns():
-    """Compute the number of meanings for each lemma in WordNet
+    """Compute the number of meanings for each lemma in WordNet.
 
     Returns
     -------
@@ -427,6 +427,33 @@ def build_wn_NSigns():
     print 'OK'
 
     return NSigns
+
+
+def build_wn_MNSyns():
+    """Compute the mean number of synonyms for each lemma in WordNet.
+
+    Returns
+    -------
+    dict
+        The association of each word to its mean number of synonyms.
+
+    """
+
+    print 'Computing the MNSyn of each lemma...',
+
+    MNSyns = {}
+    all_lemma_names = set([])
+
+    for syn in wn.all_synsets():
+        all_lemma_names.update([lem.lower() for lem in syn.lemma_names])
+
+    for lem in all_lemma_names:
+        MNSyns[lem] = np.array([len(s.lemmas) - 1
+                                for s in wn.synsets(lem)]).mean()
+
+    print 'OK'
+
+    return MNSyns
 
 
 def truncate_wn_features(features, pos):
