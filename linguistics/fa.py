@@ -180,7 +180,8 @@ def build_fa_PR_scores():
     # Get the normalized adjacency matrix.
     # The matrix we get from build_fa_adjacency_matrix
     # is M[i, j] indicates links from node i to node j.
-    # But we want that transposed for the power iteration algorithm.
+    # But we want that transposed for the normalization and the
+    # power iteration algorithm.
 
     M = u_la.matrix_normalize_columns(
         build_fa_adjacency_matrix(word_coords, outfmt='csc').transpose(),
