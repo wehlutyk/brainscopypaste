@@ -86,6 +86,9 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
     """Build the adjacency matrix (in :class:`~scipy.sparse.csc_matrix` or
     :class:`~scipy.sparse.csr_matrix` format) for the Free Association graph.
 
+    The adjacency matrix built is for the *unweighted* and *undirected* FA
+    graph.
+
     Parameters
     ----------
     word_coords : dict
@@ -106,14 +109,19 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
     print 'Building Free Association adjacency matrix...',
 
-    ij = ([], [])
+    # Build the ij set and make sure each tuple only appears once
+    # (so that the graph is unweighted)
+    ij_set = set([])
 
     for w1, assoc in norms.iteritems():
 
         for (w2, ref, weight) in assoc:
 
-            ij[1].append(word_coords[w1])
-            ij[0].append(word_coords[w2])
+            ij_set.add((word_coords[w1], word_coords[w2]))
+            # Make the matrix symmetric (undirected graph)
+            ij_set.add((word_coords[w2], word_coords[w1]))
+
+    ij = ([coords[0] for coords in ij_set], [coords[1] for coords in ij_set])
 
     # Create the Scipy CSC/CSR matrix.
 
@@ -129,8 +137,8 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
 
 def _build_fa_nxgraph():
-    """Build the undirected :func:`networkx.Graph` for the Free Association
-    network.
+    """Build the undirected unweighted :func:`networkx.Graph` for the Free
+    Association network.
 
     See Also
     --------
@@ -142,11 +150,7 @@ def _build_fa_nxgraph():
 
     lem_coords = build_fa_coords()
     M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
-    # The format for loading into nx is transposed from scipy's, but this isn't
-    # important here since we're symetrising the graph anyway
-    # (from_scipy_sparse_matrix creates a undirected graph unless instructed
-    # otherwise)
-    G = nx.from_scipy_sparse_matrix(M.transpose())
+    G = nx.from_scipy_sparse_matrix(M)
 
     print 'OK'
     return (lem_coords, G)
@@ -174,10 +178,12 @@ def build_fa_PR_scores():
     num_words = len(word_coords)
 
     # Get the normalized adjacency matrix.
+    # The matrix we get is M[i, j] indicates links from node i to node j.
+    # But we want that transposed for the power iteration algorithm.
 
-    M = u_la.matrix_normalize_columns(build_fa_adjacency_matrix(word_coords,
-                                                                outfmt='csc'),
-                                      outfmt='csr')
+    M = u_la.matrix_normalize_columns(
+        build_fa_adjacency_matrix(word_coords, outfmt='csc').transpose(),
+        outfmt='csr')
 
     # Solve the eigenproblem.
 
