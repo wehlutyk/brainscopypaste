@@ -403,6 +403,32 @@ def build_wn_BCs(pos):
     return lem_BCs
 
 
+def build_wn_NSigns():
+    """Compute the number of meanings for each lemma in WordNet
+
+    Returns
+    -------
+    dict
+        The association of each word to its number of meanings.
+
+    """
+
+    print 'Computing the NSign of each lemma...',
+
+    NSigns = {}
+    all_lemma_names = set([])
+
+    for syn in wn.all_synsets():
+        all_lemma_names.update([lem.lower() for lem in syn.lemma_names])
+
+    for lem in all_lemma_names:
+        NSigns[lem] = len(wn.synsets(lem))
+
+    print 'OK'
+
+    return NSigns
+
+
 def truncate_wn_features(features, pos):
     """Truncate a dict of WN `features` to the words with `POS == pos`."""
 
