@@ -75,6 +75,9 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
     """Build the adjacency matrix (in :class:`~scipy.sparse.csc_matrix` or
     :class:`~scipy.sparse.csr_matrix` format) for the WN synonyms graph.
 
+    The adjacency matrix built is for the *unweighted* and *undirected* WN
+    graph.
+
     Parameters
     ----------
     lem_coords : dict
@@ -98,7 +101,7 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
 
     print 'Building WordNet adjacency matrix...',
 
-    ij = ([], [])
+    ij_set = set([])
 
     for syn in wn.all_synsets(pos):
 
@@ -112,8 +115,11 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
 
                     if lem1 != lem2:
 
-                        ij[0].append(lem_coords[lem1])
-                        ij[1].append(lem_coords[lem2])
+                        ij_set.add((lem_coords[lem1], lem_coords[lem2]))
+                        # Make the matrix symmetric
+                        ij_set.add((lem_coords[lem2], lem_coords[lem1]))
+
+    ij = ([coords[0] for coords in ij_set], [coords[1] for coords in ij_set])
 
     # Create the Scipy CSC/CSR matrix.
 
@@ -147,11 +153,14 @@ def build_wn_PR_scores(pos):
     num_lems = len(lem_coords)
 
     # Get the normalized adjacency matrix.
+    # The matrix we get from build_wn_adjacency_matrix
+    # is M[i, j] indicates links from node i to node j.
+    # But we want that transposed for the normalization and the
+    # power iteration algorithm.
 
-    M = u_la.matrix_normalize_columns(build_wn_adjacency_matrix(lem_coords,
-                                                                pos,
-                                                                outfmt='csc'),
-                                      outfmt='csr')
+    M = u_la.matrix_normalize_columns(
+        build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc').transpose(),
+        outfmt='csr')
 
     # Solve the eigenproblem.
 
@@ -201,27 +210,17 @@ def build_wn_degrees(pos):
     if pos == 'all':
         pos = None
 
-    lem_coords = build_wn_coords(pos)
-
-    # Get the WN adjacency matrix in Scipy CSC format.
-
-    M = build_wn_adjacency_matrix(lem_coords, pos, outfmt='csc')
-
-    # Compute the degree of each lemma name.
+    lem_coords, G = build_wn_nxgraph(pos)
 
     print 'Computing the degree of each lemma...',
 
-    lem_degrees = {}
+    degrees = {}
 
     for w, i in lem_coords.iteritems():
-        # Use the unpondered graph
-        lem_degrees[w] = M.indptr[i + 1] - M.indptr[i]
-        ## Use the pondered graph
-        #lem_degrees[w] = sum(M.data[M.indptr[i]:M.indptr[i+1]])
+        if G.degree(i) > 0:
+            degrees[w] = G.degree(i)
 
-    print 'OK'
-
-    return lem_degrees
+    return degrees
 
 
 def _build_wn_nxgraph(pos=None):
