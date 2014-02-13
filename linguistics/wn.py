@@ -29,6 +29,12 @@ def _build_wn_coords(pos=None):
     """Build a dictionary associating each lemma (in lowercase) in WordNet to
     a coordinate.
 
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
+
     Returns
     -------
     dict
@@ -83,6 +89,9 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
     lem_coords : dict
         Coordinates of the lemmas in the matrix (as created by
         :meth:`build_wn_coords`).
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
     outfmt : string
         Compression format for the result matrix; either 'csc' or 'csr'.
 
@@ -136,6 +145,12 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
 
 def build_wn_PR_scores(pos):
     """Compute the PageRank scores corresponding to the WN synonyms graph.
+
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
 
     Returns
     -------
@@ -198,6 +213,12 @@ def build_wn_degrees(pos):
     """Compute the degrees of lemmas in the WN graph (excluding lemmas not
     connected to other lemmas).
 
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
+
     Returns
     -------
     dict
@@ -226,6 +247,12 @@ def build_wn_degrees(pos):
 def _build_wn_nxgraph(pos=None):
     """Build the undirected :func:`networkx.Graph` for the WordNet network.
 
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
+
     See Also
     --------
     build_wn_nxgraph
@@ -251,6 +278,12 @@ latter."""
 
 def build_wn_CCs(pos):
     """Compute clustering coefficients of lemmas in the WN graph.
+
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
 
     Returns
     -------
@@ -334,6 +367,12 @@ def build_wn_paths_distribution(path_lengths):
 
 def build_wn_BCs(pos):
     """Compute betweenness centrality of lemmas in the WN graph.
+
+    Parameters
+    ----------
+    pos : string
+        A WordNet POS string, specifying the POS tag to which we should
+        restrict to pool of lemmas.
 
     Returns
     -------
