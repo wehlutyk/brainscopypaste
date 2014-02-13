@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compute the mean number of meanings for the lemmas in WordNet,
+"""Compute the number of meanings for the lemmas in WordNet,
 and save the scores dict to a pickle file."""
 
 

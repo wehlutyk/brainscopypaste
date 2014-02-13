@@ -93,6 +93,18 @@ Precompute WordNet-related features on words
 
 ----
 
+``load_wn_NSigns_to_pickle.py``
+
+.. automodule:: load_wn_NSigns_to_pickle
+
+----
+
+``load_wn_MNSyns_to_pickle.py``
+
+.. automodule:: load_wn_MNSyns_to_pickle
+
+----
+
 ``load_wn_degrees_to_pickle.py``
 
 .. automodule:: load_wn_degrees_to_pickle

@@ -126,7 +126,8 @@ Compute the four main features and path lengths distribution from the WordNet ne
    ## Compute features
    python -u load_wn_degrees_to_pickle.py          # Degrees of words
    python -u load_wn_CCs_to_pickle.py              # Clustering coefficients of words
-   python -u load_wn_NSigns_to_pickle.py              # Number of meanings of words
+   python -u load_wn_NSigns_to_pickle.py           # Number of meanings of words
+   python -u load_wn_MNSyns_to_pickle.py           # Mean number of synonyms of words
 
    # /!\ laptop: 2 hours
    python -u load_wn_PageRank_to_pickle.py         # PageRank of words
