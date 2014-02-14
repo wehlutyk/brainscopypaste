@@ -432,6 +432,8 @@ def build_wn_NSigns():
 def build_wn_MNSyns():
     """Compute the mean number of synonyms for each lemma in WordNet.
 
+    Words that have an average of no synonyms are discarded.
+
     Returns
     -------
     dict
@@ -448,8 +450,9 @@ def build_wn_MNSyns():
         all_lemma_names.update([lem.lower() for lem in syn.lemma_names])
 
     for lem in all_lemma_names:
-        MNSyns[lem] = np.array([len(s.lemmas) - 1
-                                for s in wn.synsets(lem)]).mean()
+        mnsyns = np.array([len(s.lemmas) - 1 for s in wn.synsets(lem)]).mean()
+        if mnsyns != 0.0:
+            MNSyns[lem] = mnsyns
 
     print 'OK'
 
