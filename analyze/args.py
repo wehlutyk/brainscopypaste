@@ -171,6 +171,22 @@ class AnalysisArgs(BaseArgs):
 
         return p
 
+    def title(self):
+        """Build a title representing the type of analysis specified.
+
+        Returns
+        -------
+        title : string
+            The built title.
+
+        """
+
+        title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(
+            self.ff, self.model, self.substrings, self.POS)
+        if self.is_fixedslicing_model():
+            title += ' | n: {}'.format(self.n_timebags)
+        return title
+
     def print_analysis(self):
         """Print details of the analysis specified by the instance."""
 

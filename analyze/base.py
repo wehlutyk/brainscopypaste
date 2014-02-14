@@ -108,7 +108,7 @@ class AnalysisCase(object):
 
         Parameters
         ----------
-        axs : list of :class:`~matplotlib.axes.Axes` instance
+        axs : list of :class:`~matplotlib.axes.Axes` instances
             The list of axes on which to plot the analysis.
 
         """
