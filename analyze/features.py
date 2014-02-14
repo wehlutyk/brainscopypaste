@@ -571,18 +571,22 @@ class FeatureAnalysis(AnalysisCase):
         self.build_variations()
 
         ax.plot(self.bin_middles, np.zeros(self.nbins), 'k')
-        #ax.plot(self.bin_middles, self.v_d_h0, 'r',
-                #label='$H_0$ ' + self.aa.ingraph_text)
-        #ax.plot(self.bin_middles, self.v_d_h0_n, 'c',
-                #label='$H_{0,n}$ ' + self.aa.ingraph_text)
+        try:
+            ingraph_text = ' ' + self.aa.ingraph_text
+        except AttributeError:
+            ingraph_text = ''
+        ax.plot(self.bin_middles, self.v_d_h0, 'r',
+                label='$H_0$' + ingraph_text)
+        ax.plot(self.bin_middles, self.v_d_h0_n, 'c',
+                label='$H_{0,n}$' + ingraph_text)
 
         ax.plot(self.bin_middles, self.v_d,
                 #'b',
                 linewidth=2,
-                label='$<f(daughter) - f(mother)>$ ' + self.aa.ingraph_text)
-        #ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm',
-                #label='IC-95\\% ' + self.aa.ingraph_text)
-        #ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
+                label='$<f(daughter) - f(mother)>$' + ingraph_text)
+        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm',
+                label='IC-95\\%' + ingraph_text)
+        ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
 
         ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from mother' + self.log_text)
