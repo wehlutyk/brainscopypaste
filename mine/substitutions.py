@@ -14,7 +14,7 @@ import numpy as np
 
 from linguistics.distance import levenshtein
 from linguistics.treetagger import get_tagger
-from linguistics.wn import lemmatize
+from linguistics.wn import lemmatize as relemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
@@ -119,6 +119,13 @@ class Substitution(object):
         """Lemmatize the words involved in the substitution and log that
         information if asked to.
 
+        Lemmatization is done in two steps: the TreeTagger lemmatizer is used
+        to lemmatize the whole sentence, then the two words involved in the
+        substitution are further lemmatized using the `wn.morphy` function (in
+        :class:`linguistics.wn.Lemmatizer`). This is to make sure we don't drop
+        substitutions stupidly, just because the words in question can't be
+        found in the WordNet pool of words (for instance).
+
         The lemmatized words are stored respectively in `self.lem1` and
         `self.lem2`, but are only used later if the mining args say so.
 
@@ -128,8 +135,8 @@ class Substitution(object):
         t1 = tagger.Lemmatize(self.mother)[self.idx]
         t2 = tagger.Lemmatize(self.daughter)[self.idx]
 
-        self.lem1 = lemmatize(t1)
-        self.lem2 = lemmatize(t2)
+        self.lem1 = relemmatize(t1)
+        self.lem2 = relemmatize(t2)
 
         if self.ma.verbose:
             print ("Lemmatized: '" + self.lem1 + "' -> '" +

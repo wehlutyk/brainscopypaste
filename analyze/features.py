@@ -16,6 +16,7 @@ from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
 from linguistics.treetagger import get_tagger
+from linguistics.wn import lemmatize as relemmatize
 import linguistics.wn as l_wn
 from analyze.base import AnalysisCase
 import settings as st
@@ -873,7 +874,15 @@ class FeatureAnalysis(AnalysisCase):
 
                 # Update possibilities
                 for w in words:
-                    dict_plusone(possibilities, w)
+                    # Be careful to relemmatize the word as is done during
+                    # the mining: the s[self.w1] word is doubly lemmatized
+                    # (see mine.substitutions.Substitution.Lemmatize), and
+                    # that must be done here also. Otherwise we catch more
+                    # realizations (since s[self.w1] is more lemmatized,
+                    # and used for the realizations) than possibilities
+                    # for some words.
+                    lw = relemmatize(w) if self.feature.lem else w
+                    dict_plusone(possibilities, lw)
 
                 # And realizations
                 dict_plusone(realizations, s[self.w1])
@@ -885,10 +894,7 @@ class FeatureAnalysis(AnalysisCase):
 
                 # Set susceptibility to zero if there were
                 # no realizations
-                try:
-                    ws = realizations[w] / possibilities[w]
-                except KeyError:
-                    ws = 0
+                ws = realizations.get(w, 0) / p
                 self.w_susceptibilities[w] = ws
 
                 # Only store the words which exist in our feature list
