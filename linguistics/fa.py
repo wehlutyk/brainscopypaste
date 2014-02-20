@@ -272,7 +272,7 @@ def build_fa_degrees():
 
 
 def build_fa_CCs():
-    """Compute clustering coefficients of lemmas in the FA graph.
+    """Compute clustering coefficients of lemmas in the undirected FA graph.
 
     Returns
     -------
@@ -287,7 +287,9 @@ def build_fa_CCs():
 
     print 'Computing the CC of each lemma...',
 
-    CCs = nx.clustering(G)
+    # Convert to an undirected graph in the process, since clustering is only
+    # defined on undirected graphs
+    CCs = nx.clustering(nx.Graph(G))
 
     lem_CCs = {}
 
