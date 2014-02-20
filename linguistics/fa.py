@@ -86,7 +86,7 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
     """Build the adjacency matrix (in :class:`~scipy.sparse.csc_matrix` or
     :class:`~scipy.sparse.csr_matrix` format) for the Free Association graph.
 
-    The adjacency matrix built is for the *unweighted* and *undirected* FA
+    The adjacency matrix built is for the *unweighted* and *directed* FA
     graph.
 
     Parameters
@@ -118,8 +118,6 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
         for (w2, ref, weight) in assoc:
 
             ij_set.add((word_coords[w1], word_coords[w2]))
-            # Make the matrix symmetric (undirected graph)
-            ij_set.add((word_coords[w2], word_coords[w1]))
 
     ij = ([coords[0] for coords in ij_set], [coords[1] for coords in ij_set])
 
@@ -137,7 +135,7 @@ def build_fa_adjacency_matrix(word_coords, outfmt):
 
 
 def _build_fa_nxgraph():
-    """Build the undirected unweighted :func:`networkx.Graph` for the Free
+    """Build the directed unweighted :func:`networkx.DiGraph` for the Free
     Association network.
 
     See Also
@@ -146,11 +144,11 @@ def _build_fa_nxgraph():
 
     """
 
-    print 'Building Undirected NX graph...',
+    print 'Building directed NX graph...',
 
     lem_coords = build_fa_coords()
     M = build_fa_adjacency_matrix(lem_coords, outfmt='csc')
-    G = nx.from_scipy_sparse_matrix(M)
+    G = nx.from_scipy_sparse_matrix(M, create_using=nx.DiGraph())
 
     print 'OK'
     return (lem_coords, G)
@@ -262,13 +260,13 @@ def build_fa_degrees():
 
     lem_coords, G = build_fa_nxgraph()
 
-    print 'Computing degree of each lemma...',
+    print 'Computing in-degree of each lemma...',
 
     degrees = {}
 
     for w, i in lem_coords.iteritems():
         if G.degree(i) > 0:
-            degrees[w] = G.degree(i)
+            degrees[w] = G.in_degree(i)
 
     return degrees
 
