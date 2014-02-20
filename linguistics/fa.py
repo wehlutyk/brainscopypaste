@@ -254,7 +254,8 @@ def build_fa_degrees():
     Returns
     -------
     dict
-        The association of each lemma to its degree.
+        The association of each lemma to its degree;
+        words with degree zero are left out.
 
     """
 
@@ -265,8 +266,9 @@ def build_fa_degrees():
     degrees = {}
 
     for w, i in lem_coords.iteritems():
-        if G.degree(i) > 0:
-            degrees[w] = G.in_degree(i)
+        d = G.in_degree(i)
+        if d > 0:
+            degrees[w] = d
 
     return degrees
 
