@@ -171,6 +171,19 @@ class QuoteBase(TimelineBase):
     qt_id : int, optional
         The quote id, as given by the dataset.
 
+    Attributes
+    ----------
+    n_urls : int
+        Number of urls quoting the quote.
+    tot_freq : int
+        Total number of occurrences of the quote.
+    string : string, optional
+        The quote string itself.
+    string_length : int
+        The length of the quote string itself.
+    id : int
+        The quote id, as given by the dataset.
+
     Raises
     ------
     ValueError
@@ -304,18 +317,30 @@ class ClusterBase(object):
     cl_id : int, optional
         The cluster id, as given by the dataset.
 
+    Attributes
+    ----------
+    n_quotes : int
+        The total number of quote objects in the cluster.
+    tot_freq : int
+        The total number of occurrences of quotes in the cluster.
+    root : string
+        The root quote for the cluster as given by the MemeTracker dataset.
+    root_length : int
+        The number of words in the root quote for the cluster.
+    id : int
+        The cluster id.
+    quotes : dict
+        Association of quote ids to :class:`~.full.Quote` objects.
+    timeline : :class:`~.full.Timeline`
+        The built timeline of the cluster. Created by :meth:`build_timeline`.
+    timeline_built : bool
+        Whether or not :meth:`build_timeline` has been called.
+
     Raises
     ------
     ValueError
         If the parameters to the constructor are not either only
         `line_fields`, or all of `n_quotes`, `tot_freq`, `root`, `cl_id`.
-
-    Attributes
-    ----------
-    timeline : :class:`~.full.Timeline`
-        The built timeline of the cluster. Created by :meth:`build_timeline`.
-    timeline_built : bool
-        Whether or not :meth:`build_timeline` has been called.
 
     See Also
     --------
