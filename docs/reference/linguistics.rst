@@ -10,6 +10,12 @@ Syllable and Phoneme counts
 .. automodule:: linguistics.cmu
 
 
+Word frequencies
+----------------
+
+.. automodule:: linguistics.mt
+
+
 Distance tools
 --------------
 

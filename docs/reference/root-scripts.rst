@@ -23,6 +23,12 @@ Parse, load, and filter MemeTracker data
 Precompute classical linguistical features on words
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+``load_mt_frequencies_to_pickle.py``
+
+.. automodule:: load_mt_frequencies_to_pickle
+
+----
+
 ``load_aoa_kuperman_to_pickle.py``
 
 .. automodule:: load_aoa_Kuperman_to_pickle

@@ -75,6 +75,15 @@ To measure what happens during a substitution (the ones you just mined), you nee
    Add a link to the computed data for those who don't have a workstation to compute it all.
 
 
+Word Frequencies
+^^^^^^^^^^^^^^^^
+
+Compute the word frequencies in the MemeTracker dataset, and save that to a pickle file::
+
+   ## Compute word frequencies
+   python -u load_mt_frequencies_to_pickle.py
+
+
 Age-of-Acquisition
 ^^^^^^^^^^^^^^^^^^
 
