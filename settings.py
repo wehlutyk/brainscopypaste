@@ -240,6 +240,13 @@ mt_test_filtered_pickle = mt_test + '_filtered.pickle'
 mt_test_ff_pickle = mt_test + '_ff.pickle'
 
 
+#: File for word frequencies computed from the MemeTracker dataset, relative
+#: to :attr:`mt_root_rel`.
+
+mt_frequencies_pickle_rel = 'mt_frequencies.pickle'
+mt_frequencies_pickle = os.path.join(mt_root, mt_frequencies_pickle_rel)
+
+
 ##############################################################################
 # MEMETRACKER SUBSTITUTION MINING #
 ###################################
@@ -317,7 +324,10 @@ mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
                                                'log': False}},
                         'aoa': {'Kuperman': {'file': aoa_Kuperman_pickle,
                                              'lem': True,
-                                             'log': False}}}
+                                             'log': False}},
+                        'mt': {'frequencies': {'file': mt_frequencies_pickle,
+                                               'lem': True,
+                                               'log': True}}}
 
 
 #: Folder to store figures into, relative to :attr:`data_root_rel`.
