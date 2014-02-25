@@ -44,18 +44,16 @@ class BaseArgs(object):
         correspondence between source and destination words in substitutions,
         or to filter further and remove all substitutions involving words that
         don't fit a specified POS tag. Can be any of `all`, `a`, `n`, `v`, `r`.
-    * `n_timebags`: in case the `model` involves slicing clusters into timebags
-        of a fixed length (usually a fraction of the duration of the cluster
-        itself), this parameters specifies in how many parts each cluster is
-        to be sliced to produce the timebags. Can be any integer greater or
-        equal to two.
+    * `timebag_size`: in case the `model` involves slicing clusters into
+        timebags of a fixed length, this parameters specifies the size of a
+        timebag, in days. Can be any strictly positive float.
 
     Parameters
     ----------
     init_dict : dict, optional
         If absent, arguments are collected from the command line; if present,
         this must be a dict whose keys are `ff`, `model`, `substrings`, `POS`,
-        and possibly `n_timebags` if `model` specifies a fixed-slicing model.
+        and possibly `timebag_size` if `model` specifies a fixed-slicing model.
 
     Attributes
     ----------
@@ -71,9 +69,9 @@ class BaseArgs(object):
         The `substrings` argument from the command line or from `init_dict`.
     POS : string
         The `POS` argument from the command line or from `init_dict`.
-    n_timebags : int
-        0 if `model` isn't a fixed-slicing model; otherwise, the number of
-        timebags specified at the command line or in `init_dict`.
+    timebag_size : float
+        0 if `model` isn't a fixed-slicing model; otherwise, the size of
+        timebags in days, specified at the command line or in `init_dict`.
 
     See Also
     --------
@@ -95,7 +93,7 @@ class BaseArgs(object):
             self.model = self.args.model[0]
             self.substrings = bool(int(self.args.substrings[0]))
             self.POS = self.args.POS[0]
-            self.set_n_timebags()
+            self.set_timebag_size()
 
         else:
 
@@ -103,7 +101,7 @@ class BaseArgs(object):
             self.model = init_dict['model']
             self.substrings = init_dict['substrings']
             self.POS = init_dict['POS']
-            self.set_n_timebags(init_dict)
+            self.set_timebag_size(init_dict)
 
     def create_argparser(self):
         """Create the :class:`~argparse.ArgumentParser` that can parse our
@@ -144,19 +142,21 @@ class BaseArgs(object):
                              'only substitutions where words have the same '
                              'POS are taken into account).'),
                        choices=st.mt_mining_POSs)
-        p.add_argument('--n_timebags', action='store', nargs=1, required=False,
-                       help=('number of timebags to slice the clusters into. '
+        p.add_argument('--timebag_size', action='store', nargs=1,
+                       required=False,
+                       help=('size of a timebag when slicing the clusters. '
                              'This is only necessary if the model is one of '
                              '{}.'.format(st.mt_mining_fixedslicing_models)))
 
         return p
 
-    def set_n_timebags(self, init_dict=None):
-        """Set the `n_timebags` attribute depending from where it was provided.
+    def set_timebag_size(self, init_dict=None):
+        """Set the `timebag_size` attribute depending from where it was
+        provided.
 
-        If `self.model` specifies a non fixed-slicing model, `self.n_timebags`
-        is set to 0. Otherwise it is taken from the command line or from
-        `init_dict` if provided.
+        If `self.model` specifies a non fixed-slicing model,
+        `self.timebag_size` is set to 0. Otherwise it is taken from the
+        command line or from `init_dict` if provided.
 
         Parameters
         ----------
@@ -169,23 +169,23 @@ class BaseArgs(object):
         if self.is_fixedslicing_model():
             try:
                 if not init_dict is None:
-                    self.n_timebags = init_dict['n_timebags']
+                    self.timebag_size = init_dict['timebag_size']
                 else:
-                    self.n_timebags = int(self.args.n_timebags[0])
+                    self.timebag_size = float(self.args.timebag_size[0])
 
-                if self.n_timebags < 2:
+                if self.timebag_size <= 0:
                     raise ValueError(
-                        "The requested 'n_timebags' must be at least 2 for a "
-                        "model in {}.".format(
+                        "The requested 'timebag_size' must be a strictly "
+                        "positive float for a model in {}.".format(
                             st.mt_mining_fixedslicing_models))
             except (KeyError, TypeError):
                 raise ValueError(
-                    "Need the 'n_timebags' argument when 'model' is one of "
+                    "Need the 'timebag_size' argument when 'model' is one of "
                     "{}.".format(st.mt_mining_fixedslicing_models))
 
         else:
             # This will be ignored during mining, but must be present
-            self.n_timebags = 0
+            self.timebag_size = 0
 
     def is_fixedslicing_model(self):
         """Whether or not `self.model` specifies a fixed-slicing model
@@ -216,8 +216,8 @@ class MultipleBaseArgs(object):
         List of values for the `substrings` argument.
     POSs : list of strings
         List of values for the `POS` argument.
-    n_timebagss : list of ints
-        List of values for the `n_timebags` argument.
+    timebag_sizes : list of floats
+        List of values for the `timebag_size` argument.
     alist : list of :class:`BaseArgs`
         The computed list of all argument sets, covering all possible
         combinations of the above attributes.
@@ -240,7 +240,7 @@ class MultipleBaseArgs(object):
         self.models = self.args.models
         self.substringss = [bool(int(s)) for s in self.args.substringss]
         self.POSs = self.args.POSs
-        self.set_n_timebagss()
+        self.set_timebag_sizes()
 
         self.alist = []
 
@@ -259,9 +259,9 @@ class MultipleBaseArgs(object):
 
                         if model in st.mt_mining_fixedslicing_models:
 
-                            for n_timebags in self.args.n_timebagss:
+                            for timebag_size in self.args.timebag_sizes:
 
-                                init_dict['n_timebags'] = int(n_timebags)
+                                init_dict['timebag_size'] = float(timebag_size)
                                 self.alist.append(
                                     self.create_args_instance(init_dict))
 
@@ -289,16 +289,17 @@ class MultipleBaseArgs(object):
         return not set(self.models).isdisjoint(
             set(st.mt_mining_fixedslicing_models))
 
-    def set_n_timebagss(self):
-        """Set the `n_timebagss` attribute from command-line arguments."""
+    def set_timebag_sizes(self):
+        """Set the `timebag_sizes` attribute from command-line arguments."""
 
         if self.has_fixedslicing_model():
             try:
-                self.n_timebagss = [int(n) for n in self.args.n_timebagss]
+                self.timebag_sizes = [float(s)
+                                      for s in self.args.timebag_sizes]
             except TypeError:
                 raise ValueError(
-                    "Need the 'n_timebagss' argument when 'models' has one of "
-                    "{}.".format(st.mt_mining_fixedslicing_models))
+                    "Need the 'timebag_sizes' argument when 'models' has one "
+                    "of {}.".format(st.mt_mining_fixedslicing_models))
 
     def create_init_dict(self, ff, model, substrings, POS):
         """Create an initialization dict for later creation of an individual
@@ -396,13 +397,13 @@ class MultipleBaseArgs(object):
                              '(in which case only substitutions where words '
                              'have the same POS are taken into account).'),
                        choices=st.mt_mining_POSs)
-        p.add_argument('--n_timebagss', action='store', nargs='+',
-                       help=('space-separated list of timebag slicings to '
-                             "examine. e.g. '2 3 4' will run the mining "
-                             'slicing clusters in 2, then 3, then 4 '
-                             'timebags, and examining all possible '
-                             'transitions each time. This parameter is '
-                             'ignored for non fixed-slicings models '
+        p.add_argument('--timebag_sizes', action='store', nargs='+',
+                       help=('space-separated list of timebag sizes to '
+                             "examine. e.g. '1.2 2 3.5' will run the mining "
+                             'slicing clusters into timebags that are 1.2, '
+                             'then 2, then 3.5 days long, and examining all '
+                             'possible transitions each time. This parameter '
+                             'is ignored for non fixed-slicings models '
                              '(i.e. a model not in '
                              '{})'.format(st.mt_mining_fixedslicing_models)))
 
