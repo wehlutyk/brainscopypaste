@@ -57,7 +57,6 @@ class BaseArgs(object):
 
     Attributes
     ----------
-    description
     args : namespace
         The namespace of args extracted from the command-line if `init_dict` \
         was `None`.
