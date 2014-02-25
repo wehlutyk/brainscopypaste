@@ -259,8 +259,8 @@ mt_mining_root = os.path.join(mt_root, mt_mining_root_rel)
 check_folder(mt_mining_root)
 
 
-#: List of mining models which are based on slicing the clusters into a given
-#: `n_timebags` number of timebags.
+#: List of mining models which are based on slicing the clusters into timebags
+#: that last a given `timebag_size` number of days.
 
 mt_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
 
