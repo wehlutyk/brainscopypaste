@@ -90,7 +90,7 @@ def get_fileprefix(args):
         file_prefix += 'P{}_'.format(args.POSs_text)
 
         try:
-            file_prefix += 'N{}_'.format(args.n_timebags_text)
+            file_prefix += 'D{}_'.format(args.timebag_size_text)
         except AttributeError:
             pass
 
@@ -103,7 +103,7 @@ def get_fileprefix(args):
         file_prefix += 'P{}_'.format(args.POS)
 
         if args.is_fixedslicing_model():
-            file_prefix += 'N{}_'.format(args.n_timebags)
+            file_prefix += 'D{}_'.format(args.timebag_size)
 
     return file_prefix
 
