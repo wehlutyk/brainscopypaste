@@ -114,7 +114,7 @@ class MiningArgs(BaseArgs):
         print '  substrings = {}'.format(self.substrings)
         print '  POS = {}'.format(self.POS)
         if self.is_fixedslicing_model():
-            print '  n_timebags = {}'.format(self.n_timebags)
+            print '  timebag_size = {}'.format(self.timebag_size)
         print '  resume = {}'.format(self.resume)
         print '  verbose = {}'.format(self.verbose)
 
@@ -238,6 +238,6 @@ class MultipleMiningArgs(MultipleBaseArgs):
         print '  substringss = {}'.format(self.substringss)
         print '  POSs = {}'.format(self.POSs)
         if self.has_fixedslicing_model():
-            print '  n_timebagss = {}'.format(self.n_timebagss)
+            print '  timebag_sizes = {}'.format(self.timebag_sizes)
         print '  resume = {}'.format(self.resume)
         print '  multi-thread = {}'.format(self.multi_thread)
