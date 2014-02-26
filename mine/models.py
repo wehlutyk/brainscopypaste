@@ -26,6 +26,7 @@ from datetime import datetime
 
 from linguistics.treetagger import get_tagger
 from util.combinatorials import build_ordered_tuples
+from util.generic import dictionarize_attributes
 from linguistics.distance import (distance_word_mother_nosub,
                                   distance_word_mother_sub,
                                   levenshtein, levenshtein_word,
@@ -270,7 +271,7 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         """
 
-        return ds_mtb.dictionarize_attributes(self, 'iter_substitutions_')
+        return dictionarize_attributes(self, 'iter_substitutions_')
 
     def iter_substitutions_root(self, ma):
         """Iterate through substitutions taken as changes from root string.
