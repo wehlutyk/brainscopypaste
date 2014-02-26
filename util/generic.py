@@ -154,7 +154,7 @@ def dictionarize_attributes(inst, prefix):
     beginning with `prefix`, with `attr_name` truncated from `prefix`."""
 
     keys = list_attributes_trunc(inst.__class__, prefix)
-    return dict([(k, inst.__getattribute__(k)) for k in keys])
+    return dict([(k, inst.__getattribute__(prefix + k)) for k in keys])
 
 
 def iter_upper_dirs(rel_dir):
