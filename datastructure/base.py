@@ -128,7 +128,7 @@ class TimelineBase(object):
             self.attrs_computed = True
 
     def add_url(self, line_fields):
-        """Add an url to the Timeline.
+        """Add a url to the Timeline.
 
         Parameters
         ----------
