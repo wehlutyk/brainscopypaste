@@ -184,7 +184,7 @@ class AnalysisArgs(BaseArgs):
         title = 'ff: {} | model: {} | sub: {} | POS: {}'.format(
             self.ff, self.model, self.substrings, self.POS)
         if self.is_fixedslicing_model():
-            title += ' | n: {}'.format(self.n_timebags)
+            title += ' | d: {}'.format(self.timebag_size)
         return title
 
     def print_analysis(self):
@@ -197,7 +197,7 @@ class AnalysisArgs(BaseArgs):
         print '  substrings = {}'.format(self.substrings)
         print '  POS = {}'.format(self.POS)
         if self.is_fixedslicing_model():
-            print '  n_timebags = {}'.format(self.n_timebags)
+            print '  timebag_size = {}'.format(self.timebag_size)
         if len(self.features) != 0:
             print '  features = {}'.format(self.features)
         print '  positions = {}'.format(self.positions)
@@ -299,8 +299,8 @@ class GroupAnalysisArgs(object):
         fixedslicing_models = [aa.is_fixedslicing_model() for aa in aas]
         if sum(fixedslicing_models):
             self.has_fixedslicing_model = True
-            self.n_timebags_text = \
-                aas[fixedslicing_models.index(True)].n_timebags
+            self.timebag_size_text = \
+                aas[fixedslicing_models.index(True)].timebag_size
         else:
             self.has_fixedslicing_model = False
 
@@ -337,7 +337,7 @@ class GroupAnalysisArgs(object):
             self.ffs_text, self.models_text, self.substringss_text,
             self.POSs_text)
         if self.has_fixedslicing_model:
-            title += ' | n: {}'.format(self.n_timebags_text)
+            title += ' | d: {}'.format(self.timebag_size_text)
         return title
 
 
@@ -457,12 +457,13 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
 
                         if model in st.mt_mining_fixedslicing_models:
 
-                            if len(self.args.n_timebagss) > 1:
+                            if len(self.args.timebag_sizes) > 1:
                                 raise ValueError("can't have multiple "
-                                                 "n_timebags values when "
+                                                 "timebag_size values when "
                                                  "using --ingraph option")
 
-                            init_dict['n_timebags'] = int(self.n_timebagss[0])
+                            init_dict['timebag_size'] = \
+                                float(self.timebag_sizes[0])
                             self.aas_ndarray[i, j, k, l] = \
                                 self.create_args_instance(init_dict)
 
@@ -589,7 +590,7 @@ class MultipleAnalysisArgs(MultipleBaseArgs):
         print '  POSs = {}'.format(self.POSs)
         print '  ingraph slicing = {}'.format(self.ingraph)
         if self.has_fixedslicing_model():
-            print '  n_timebagss = {}'.format(self.n_timebagss)
+            print '  timebag_sizes = {}'.format(self.timebag_sizes)
         print '  features = {}'.format(self.features)
         print '  positions = {}'.format(self.positions)
         print '  paths = {}'.format(self.paths)

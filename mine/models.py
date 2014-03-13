@@ -170,15 +170,18 @@ class ClusterModels(ds_mtb.ClusterBase):
     def __init__(self, *args, **kwargs):
         super(ClusterModels, self).__init__(*args, **kwargs)
 
-    def build_timebags(self, n_bags, cumulative=False):
+    def build_timebags(self, bag_duration, cumulative=False):
         """Build a number of even :class:`~datastructure.full.TimeBag`\ s from
-        a :class:`~datastructure.full.Cluster`.
+        a :class:`~datastructure.full.Cluster` (all even except the last).
 
         Parameters
         ----------
-        n_bags : int
-            The number of :class:`~datastructure.full.TimeBag`\ s to chop the
-            :class:`~datastructure.full.Cluster` into.
+        bag_duration : float
+            The default duration, in days, of the
+            :class:`~datastructure.full.TimeBag`\ s to build from the
+            :class:`~datastructure.full.Cluster` (if not cumulative; if
+            `cumulative` is ``True``, this parameter specifies the increment
+            size for each timebag)
         cumulative : bool, optional
             Whether or not the :class:`~datastructure.full.TimeBag`\ s should
             be time-cumulative or not; defaults to ``False``.
@@ -197,7 +200,9 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         self.build_timeline()
 
-        step = int(round(self.timeline.span.total_seconds() / n_bags))
+        step = int(round(bag_duration * 60 * 60 * 24))
+        total_seconds = int(self.timeline.span.total_seconds())
+        n_bags = (total_seconds // step) + (total_seconds % step > 0)
         cl_start = self.timeline.start
 
         # Create the sequence of TimeBags.
@@ -211,16 +216,16 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         return timebags
 
-    def build_timebag(self, n_bags, end, cumulative=False):
-        """Build an :class:`~datastructure.full.TimeBag` from a
+    def build_timebag(self, bag_duration, end, cumulative=False):
+        """Build a :class:`~datastructure.full.TimeBag` from a
         :class:`~datastructure.full.Cluster`, ending at a chosen time.
 
         Parameters
         ----------
-        n_bags : int
-            The number of :class:`~datastructure.full.TimeBag`\ s we're
-            slicing the cluster into; this defines the size of the resulting
-            :class:`~datastructure.full.TimeBag` being built.
+        bag_duration : float
+            The default duration of the :class:`~datastructure.full.TimeBag`
+            to be built (if not cumulative; if `cumulative` is ``True``, this
+            parameter is ignored).
         end : int
             The timestamp at which the :class:`~datastructure.full.TimeBag`
             should end.
@@ -228,7 +233,7 @@ class ClusterModels(ds_mtb.ClusterBase):
             Whether or not the :class:`~datastructure.full.TimeBag` built
             should be time-cumulative or not; if ``True``, the timebag built
             starts at the beginning of the cluster, otherwise it starts at
-            `end - cluster_span / n_bags`; defaults to ``False``.
+            `end - bag_duration`; defaults to ``False``.
 
         Returns
         -------
@@ -246,10 +251,7 @@ class ClusterModels(ds_mtb.ClusterBase):
         cl_start = self.timeline.start
 
         if not cumulative:
-
-            span = int(round(self.timeline.span.total_seconds() / n_bags))
-            start = max(cl_start, end - span)
-
+            start = max(cl_start, end - bag_duration)
         else:
             start = cl_start
 
@@ -291,11 +293,14 @@ class ClusterModels(ds_mtb.ClusterBase):
         from datastructure.full import QtString
 
         base = QtString(self.root.lower(), self.id, 0)
-        tbgs = self.build_timebags(ma.n_timebags)
+        tbgs = self.build_timebags(ma.timebag_size)
+        # If we don't have at least one timebag, there's no point going on.
+        if len(tbgs) == 0:
+            return
 
-        for j in range(0, ma.n_timebags):
+        for j, tbg in enumerate(tbgs):
 
-            for mother, daughter in tbgs[j].iter_sphere[ma.substrings](base):
+            for mother, daughter in tbg.iter_sphere[ma.substrings](base):
                 yield (mother, daughter, {'tobag': j})
 
     def iter_substitutions_slidetbgs(self, ma):
@@ -317,7 +322,10 @@ class ClusterModels(ds_mtb.ClusterBase):
             dest = qt2.to_qt_string_lower(self.id)
             for url_time in qt2.url_times:
 
-                prevtbg = self.build_timebag(ma.n_timebags, url_time)
+                prevtbg = self.build_timebag(ma.timebag_size, url_time)
+                # If no quotes were found in the previous time window, we
+                # consider qt2 to have appeared from elsewhere, instead of
+                # from an even earlier time window.
                 if prevtbg.tot_freq == 0:
                     continue
 
@@ -344,7 +352,11 @@ class ClusterModels(ds_mtb.ClusterBase):
             dest = qt2.to_qt_string_lower(self.id)
             for url_time in qt2.url_times:
 
-                prevtbg = self.build_timebag(ma.n_timebags, url_time, True)
+                prevtbg = self.build_timebag(ma.timebag_size, url_time, True)
+                # If no quotes were found in the previous time window, we
+                # consider qt2 to have appeared from elsewhere (there's no
+                # other possible explanation here, since the timebags are
+                # cumulative).
                 if prevtbg.tot_freq == 0:
                     continue
 
@@ -365,18 +377,25 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         """
 
-        tbgs = self.build_timebags(ma.n_timebags)
+        tbgs = self.build_timebags(ma.timebag_size)
+        n_bags = len(tbgs)
+        # If we don't have at least two timebags, there's no point going on.
+        if n_bags <= 1:
+            return
+
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
-        idx = np.where(tot_freqs)[0]
 
-        for i, j in zip(range(len(idx) - 1),
-                        range(1, len(idx))):
+        for i in range(n_bags - 1):
+            # If there are no quotes in either the first or the second timebag,
+            # we consider that there has been no substitution (instead of
+            # having substitutions that jump over empty timebags).
+            if tot_freqs[i] == 0 or tot_freqs[i + 1] == 0:
+                continue
 
-            base = tbgs[idx[i]].qt_string_lower(
-                tbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[
+            base = tbgs[i].qt_string_lower(tbgs[i].argmax_freq_string)
+            for mother, daughter in tbgs[i + 1].iter_sphere[
                     ma.substrings](base):
-                yield (mother, daughter, {'bag1': idx[i], 'bag2': idx[j]})
+                yield (mother, daughter, {'bag1': i, 'bag2': i + 1})
 
     def iter_substitutions_cumtbgs(self, ma):
         """Iterate through substitutions taken as changes between cumulated
@@ -392,19 +411,27 @@ class ClusterModels(ds_mtb.ClusterBase):
 
         """
 
-        tbgs = self.build_timebags(ma.n_timebags)
-        cumtbgs = self.build_timebags(ma.n_timebags, cumulative=True)
+        tbgs = self.build_timebags(ma.timebag_size)
+        n_bags = len(tbgs)
+        # If we don't have at least two timebags, there's no point going on.
+        if n_bags <= 1:
+            return
+
+        cumtbgs = self.build_timebags(ma.timebag_size, cumulative=True)
         tot_freqs = [tbg.tot_freq for tbg in tbgs]
-        idx = np.where(tot_freqs)[0]
+        tot_cumfreqs = [cumtbg.tot_freq for cumtbg in cumtbgs]
 
-        for i, j in zip(range(len(idx) - 1),
-                        range(1, len(idx))):
+        for i in range(n_bags - 1):
+            # If there are no quotes in either the first or the second timebag,
+            # we consider that there has been no substitution (instead of
+            # having substitutions that jump over empty timebags).
+            if tot_cumfreqs[i] == 0 or tot_freqs[i + 1] == 0:
+                continue
 
-            base = cumtbgs[idx[i]].qt_string_lower(
-                cumtbgs[idx[i]].argmax_freq_string)
-            for mother, daughter in tbgs[idx[j]].iter_sphere[
+            base = cumtbgs[i].qt_string_lower(cumtbgs[i].argmax_freq_string)
+            for mother, daughter in tbgs[i + 1].iter_sphere[
                     ma.substrings](base):
-                yield (mother, daughter, {'cumbag1': idx[i], 'bag2': idx[j]})
+                yield (mother, daughter, {'cumbag1': i, 'bag2': i + 1})
 
     def iter_substitutions_time(self, ma):
         """Iterate through substitutions taken as transitions from earlier
