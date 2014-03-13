@@ -585,9 +585,11 @@ class FeatureAnalysis(AnalysisCase):
                 #'b',
                 linewidth=2,
                 label='$<f(daughter) - f(mother)>$' + ingraph_text)
-        ax.plot(self.bin_middles, self.v_d - self.v_d_std, 'm',
-                label='IC-95\\%' + ingraph_text)
-        ax.plot(self.bin_middles, self.v_d + self.v_d_std, 'm')
+        ax.fill_between(self.bin_middles,
+                        self.v_d - self.v_d_std,
+                        self.v_d + self.v_d_std,
+                        color='grey', alpha=0.2,
+                        label='IC-95\\%' + ingraph_text)
 
         ax.set_xlabel('Mother feature')
         ax.set_ylabel('Variations from mother' + self.log_text)
