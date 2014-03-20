@@ -109,7 +109,7 @@ def get_fileprefix(args):
 
 
 def get_filename(args):
-    """Create a full mining data filename base on analysis parameters.
+    """Create a full mining data filename based on analysis parameters.
 
     Parameters
     ----------
