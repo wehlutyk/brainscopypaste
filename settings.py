@@ -247,6 +247,14 @@ mt_frequencies_pickle_rel = 'mt_frequencies.pickle'
 mt_frequencies_pickle = os.path.join(mt_root, mt_frequencies_pickle_rel)
 
 
+#: File for word frequencies computed from the start quotes involved in
+#: substitutions in the MemeTracker dataset, relative to :attr:`mt_root_rel`.
+
+mt_start_frequencies_pickle_rel = 'mt_start_frequencies.pickle'
+mt_start_frequencies_pickle = os.path.join(mt_root,
+                                           mt_start_frequencies_pickle_rel)
+
+
 ##############################################################################
 # MEMETRACKER SUBSTITUTION MINING #
 ###################################
@@ -327,7 +335,11 @@ mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
                                              'log': False}},
                         'mt': {'frequencies': {'file': mt_frequencies_pickle,
                                                'lem': True,
-                                               'log': True}}}
+                                               'log': True},
+                               'start_frequencies':
+                               {'file': mt_start_frequencies_pickle,
+                                'lem': True,
+                                'log': True}}}
 
 
 #: Folder to store figures into, relative to :attr:`data_root_rel`.
