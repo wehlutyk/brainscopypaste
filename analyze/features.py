@@ -586,8 +586,8 @@ class FeatureAnalysis(AnalysisCase):
                 linewidth=2,
                 label='$<f(daughter) - f(mother)>$' + ingraph_text)
         ax.fill_between(self.bin_middles,
-                        self.v_d - self.v_d_std,
-                        self.v_d + self.v_d_std,
+                        self.v_d - self.v_d_ci,
+                        self.v_d + self.v_d_ci,
                         color='grey', alpha=0.2,
                         label='IC-95\\%' + ingraph_text)
 
@@ -610,11 +610,11 @@ class FeatureAnalysis(AnalysisCase):
                 'b', linewidth=2,
                 label='$\\Delta - \\Delta_{H_0}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0 - self.daughter_d_std,
+                self.daughter_d - self.daughter_d_h0 - self.daughter_d_ci,
                 'b', linewidth=0.5, alpha=0.5,
                 label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0 + self.daughter_d_std,
+                self.daughter_d - self.daughter_d_h0 + self.daughter_d_ci,
                 'b', linewidth=0.5, alpha=0.5)
 
         ax.plot(self.bin_middles,
@@ -622,11 +622,11 @@ class FeatureAnalysis(AnalysisCase):
                 'c', linewidth=2,
                 label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
+                self.daughter_d - self.daughter_d_h0_n - self.daughter_d_ci,
                 'c', linewidth=0.5, alpha=0.5,
                 label='IC-95\\% ' + self.aa.ingraph_text)
         ax.plot(self.bin_middles,
-                self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
+                self.daughter_d - self.daughter_d_h0_n + self.daughter_d_ci,
                 'c', linewidth=0.5, alpha=0.5)
 
         ax.set_xlabel('Mother feature')
@@ -661,11 +661,11 @@ class FeatureAnalysis(AnalysisCase):
         if chrome:
             #ax.plot(self.bin_middles,
                     #self.daughter_d - self.daughter_d_h0 - \
-                        #self.daughter_d_std,
+                        #self.daughter_d_ci,
                     #'m', label='IC-95\\% ' + self.aa.ingraph_text)
             #ax.plot(self.bin_middles,
                     #self.daughter_d - self.daughter_d_h0 + \
-                        #self.daughter_d_std,
+                        #self.daughter_d_ci,
                     #'m')
 
             ax.set_xlabel('Mother feature')
@@ -686,10 +686,10 @@ class FeatureAnalysis(AnalysisCase):
                 linewidth=2 if self.aa.POS == 'all' else 1,
                 label='$\\Delta - \\Delta_{H_{0,n}}$ ' + self.aa.ingraph_text)
         #ax.plot(self.bin_middles,
-                #self.daughter_d - self.daughter_d_h0_n - self.daughter_d_std,
+                #self.daughter_d - self.daughter_d_h0_n - self.daughter_d_ci,
                 #'m', label='IC-95\\% ' + self.aa.ingraph_text)
         #ax.plot(self.bin_middles,
-                #self.daughter_d - self.daughter_d_h0_n + self.daughter_d_std,
+                #self.daughter_d - self.daughter_d_h0_n + self.daughter_d_ci,
                 #'m')
 
         ax.set_xlabel('Mother feature')
@@ -761,13 +761,13 @@ class FeatureAnalysis(AnalysisCase):
                     self.v_d_h0_n[i] = None
 
     def build_variations(self):
-        """Build the variation and std of feature values upon substitution,
+        """Build the variation and ci of feature values upon substitution,
         for each bin.
 
-        Four arrays are built: the daughter words feature values, the std of
-        that, the ``daughter - mother`` feature variations, and the std of
+        Four arrays are built: the daughter words feature values, the ci of
+        that, the ``daughter - mother`` feature variations, and the ci of
         that, all stored respectively in `self.daughter_d`,
-        `self.daughter_d_std`, `self.v_d`, and `self.v_d_std`.
+        `self.daughter_d_ci`, `self.v_d`, and `self.v_d_ci`.
 
         The feature values used are in fact averages over several
         substitutions: substitutions occurring in the same cluster and on the
@@ -789,9 +789,9 @@ class FeatureAnalysis(AnalysisCase):
         try:
             # Have we already computed these? If so, do nothing.
             self.daughter_d
-            self.daughter_d_std
+            self.daughter_d_ci
             self.v_d
-            self.v_d_std
+            self.v_d_ci
 
         except AttributeError:
             # Make sure l2 values have been computed
@@ -799,9 +799,9 @@ class FeatureAnalysis(AnalysisCase):
 
             # The target arrays to be filled
             self.daughter_d = np.zeros(self.nbins)
-            self.daughter_d_std = np.zeros(self.nbins)
+            self.daughter_d_ci = np.zeros(self.nbins)
             self.v_d = np.zeros(self.nbins)
-            self.v_d_std = np.zeros(self.nbins)
+            self.v_d_ci = np.zeros(self.nbins)
 
             for i in range(self.nbins):
                 bin_ = (self.bins[i], self.bins[i + 1])
@@ -810,26 +810,26 @@ class FeatureAnalysis(AnalysisCase):
 
                 # Compute the values if anything was found in that range,
                 # otherwise skip silently.
-                # We need > 1 here to make sure the std computing works.
+                # We need > 1 here to make sure the ci computing works.
                 if len(idx) > 1:
 
                     daughter_dd = self.l2_f_daughters[idx]
                     self.daughter_d[i] = daughter_dd.mean()
-                    self.daughter_d_std[i] = (1.96 * daughter_dd.std() /
-                                              np.sqrt(len(idx) - 1))
+                    self.daughter_d_ci[i] = (1.96 * daughter_dd.std() /
+                                             np.sqrt(len(idx) - 1))
 
                     v_dd = (self.l2_f_daughters[idx]
                             - self.l2_f_mothers[idx])
                     self.v_d[i] = v_dd.mean()
-                    self.v_d_std[i] = 1.96 * v_dd.std() / np.sqrt(len(idx) - 1)
+                    self.v_d_ci[i] = 1.96 * v_dd.std() / np.sqrt(len(idx) - 1)
 
                 else:
 
                     self.daughter_d[i] = None
-                    self.daughter_d_std[i] = None
+                    self.daughter_d_ci[i] = None
 
                     self.v_d[i] = None
-                    self.v_d_std[i] = None
+                    self.v_d_ci[i] = None
 
     def build_susceptibilities(self):
         """Compute susceptibility values for each bin.
