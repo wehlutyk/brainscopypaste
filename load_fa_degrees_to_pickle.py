@@ -20,7 +20,7 @@ if __name__ == '__main__':
     picklefile = st.fa_norms_degrees_pickle
     di_fs.check_file(picklefile)
 
-    # Compute the BCs.
+    # Compute the degrees.
 
     print '*** Computing degrees from the Free Association norms ***'
     degrees = l_fa.build_fa_degrees()
