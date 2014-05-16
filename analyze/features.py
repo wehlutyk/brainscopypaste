@@ -760,7 +760,7 @@ class FeatureAnalysis(AnalysisCase):
                     self.v_d_h0[i] = None
                     self.v_d_h0_n[i] = None
 
-    def build_variations(self):
+    def build_variations(self, min_n_points=1):
         """Build the variation and ci of feature values upon substitution,
         for each bin.
 
@@ -779,6 +779,12 @@ class FeatureAnalysis(AnalysisCase):
         are computed in :meth:`build_l2_f_lists`.
 
         If the arrays have already been computed previously, nothing is done.
+
+        Parameters
+        ----------
+        min_n_points : int, optional
+            Minimum number of points necessary in a bin so as that point is
+            not considered a `nan`; defaults to 1.
 
         See Also
         --------
@@ -811,7 +817,7 @@ class FeatureAnalysis(AnalysisCase):
                 # Compute the values if anything was found in that range,
                 # otherwise skip silently.
                 # We need > 1 here to make sure the ci computing works.
-                if len(idx) > 1:
+                if len(idx) > min_n_points:
 
                     daughter_dd = self.l2_f_daughters[idx]
                     self.daughter_d[i] = daughter_dd.mean()
