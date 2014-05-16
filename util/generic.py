@@ -16,6 +16,12 @@ import os
 import numpy as np
 
 
+def is_twelfth_int(values):
+    """Is `values` made of twefths of integers or not."""
+
+    return (map(int, 12 * values) == 12 * values).mean() > 0.99
+
+
 def memoize(func):
     """Wrap `func` in a caching function."""
 
