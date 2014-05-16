@@ -12,7 +12,8 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 import networkx as nx
 
-from util.generic import dict_plusone, indices_in_range, list_to_dict, inv_dict
+from util.generic import (dict_plusone, indices_in_range, list_to_dict,
+                          inv_dict, is_twelfth_int)
 from util.graph import caching_neighbors_walker
 import datainterface.picklesaver as ps
 from linguistics.treetagger import get_tagger
@@ -430,10 +431,15 @@ class FeatureAnalysis(AnalysisCase):
         self.feature = feature
         super(FeatureAnalysis, self).__init__(aa, data)
         self.log_text = ' [LOG]' if feature.log else ''
-        self.nbins = 20
-        self.bins = np.linspace(feature.values.min(),
-                                feature.values.max(),
-                                self.nbins + 1)
+        if is_twelfth_int(feature.values):
+            self.bins = np.arange(int(np.floor(feature.values.min())),
+                                  int(np.ceil(feature.values.max())) + 2) - 0.5
+            self.nbins = len(self.bins) - 1
+        else:
+            self.nbins = 20
+            self.bins = np.linspace(feature.values.min(),
+                                    feature.values.max(),
+                                    self.nbins + 1)
         self.bin_middles = (self.bins[1:] + self.bins[:-1]) / 2
 
         if feature.lem:
