@@ -344,7 +344,7 @@ mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
 
 #: Folder to store figures into, relative to :attr:`data_root_rel`.
 
-mt_analysis_figures_rel = 'figures'
+mt_analysis_figures_rel = 'figures_dev'
 mt_analysis_figures = os.path.join(data_root,
                                    mt_analysis_figures_rel)
 mt_analysis_figure_file = os.path.join(mt_analysis_figures, '{}.png')
