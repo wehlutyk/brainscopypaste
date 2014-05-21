@@ -203,6 +203,24 @@ class Substitution(object):
 
         return ret
 
+    def _is_same_ending_us_uk_spelling(self, w1, w2):
+        """Do `w1` and `w2` differ by only the last two letters inverted,
+        as in `center`/`centre`, or not (words must be at least 4 letters)."""
+
+        if len(w1) < 4 or len(w2) < 4:
+            # Words too short
+            return False
+
+        if w1[:-2] != w2[:-2]:
+            # There's a change before the last two letters
+            return False
+
+        if w1[:-3:-1] == w2[-2:]:
+            # The last two letters are inverted
+            return True
+
+        return False
+
     def test_real(self):
         """Test if the source and destination words really form a substitution,
         or are in fact only variations of the same root, or another trick or
@@ -234,9 +252,15 @@ class Substitution(object):
         if (self.word1 == self.word2[:3] or self.word2 == self.word1[:3] or
                 self.lem1 == self.lem2[:3] or self.lem2 == self.lem1[:3]):
             ret = False
-        if levenshtein(self.word1, self.word2) <= 2:
+        # 'centre'/'center', etc.
+        if self._is_same_ending_us_uk_spelling(self.word1, self.word2):
             ret = False
-        if levenshtein(self.lem1, self.lem2) <= 2:
+        if self._is_same_ending_us_uk_spelling(self.lem1, self.lem2):
+            ret = False
+        # Other minor spelling changes
+        if levenshtein(self.word1, self.word2) <= 1:
+            ret = False
+        if levenshtein(self.lem1, self.lem2) <= 1:
             ret = False
 
         if not ret and self.ma.verbose:
