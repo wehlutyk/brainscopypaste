@@ -111,7 +111,7 @@ if __name__ == '__main__':
     for cl_id, cl in framed_clusters.iteritems():
 
         progress.next_step()
-        ff_cl = m_fi.filter_cluster(cl, min_tokens)
+        ff_cl = m_fi.filter_cluster(cl, min_tokens, max_days)
         if ff_cl is not None:
             ff_clusters[cl_id] = ff_cl
 
