@@ -50,77 +50,59 @@ if __name__ == '__main__':
     ps.save(MT.clusters, picklefile)
     print 'OK'
 
-    # Frame the clusters.
+    # Frame the clusters, save, cleanup.
     print 'Computing framed Clusters...'
     framed_clusters = {}
     progress = ProgressInfo(len(MT.clusters), 100, 'clusters')
-
     for cl_id, cl in MT.clusters.iteritems():
-
         progress.next_step()
         framed_cl = m_fi.frame_cluster_around_peak(cl)
         if framed_cl is not None:
             framed_clusters[cl_id] = framed_cl
-
     print 'OK'
-
-    # Filter the clusters.
-    print ('Computing filtered Clusters (min_tokens={}, '
-           'max_days={})...').format(min_tokens, max_days)
-    filtered_clusters = {}
-    progress = ProgressInfo(len(MT.clusters), 100, 'clusters')
-
-    for cl_id, cl in MT.clusters.iteritems():
-
-        progress.next_step()
-        filtered_cl = m_fi.filter_cluster(cl, min_tokens, max_days)
-        if filtered_cl is not None:
-            filtered_clusters[cl_id] = filtered_cl
-
-    print 'OK'
-
-    # Clean up before saving, this stuff is hard on memory.
-    print ('Cleaning up before saving framed and filtered Clusters to pickle '
-           'files...'),
-    del MT
-    gc.collect()
-    print 'OK'
-
-    # And save the framed an filtered clusters.
     print ('Saving framed Clusters to pickle file (this might take quite '
            'some time, e.g. up to 30 minutes)...'),
     ps.save(framed_clusters, picklefile_framed)
     print 'OK'
+    print "Cleaning up framed Clusters we don't need any more...",
+    del framed_clusters
+    gc.collect()
+    print 'OK'
 
+    # Filter the clusters, save, clean up the full clusters we don't
+    # need any more.
+    print ('Computing filtered Clusters (min_tokens={}, '
+           'max_days={})...').format(min_tokens, max_days)
+    filtered_clusters = {}
+    progress = ProgressInfo(len(MT.clusters), 100, 'clusters')
+    for cl_id, cl in MT.clusters.iteritems():
+        progress.next_step()
+        filtered_cl = m_fi.filter_cluster(cl, min_tokens, max_days)
+        if filtered_cl is not None:
+            filtered_clusters[cl_id] = filtered_cl
+    print 'OK'
     print ('Saving filtered Clusters to pickle file (this might take quite '
            'some time, e.g. up to 30 minutes)...'),
     ps.save(filtered_clusters, picklefile_filtered)
     print 'OK'
-
-    print ('Cleaning up before doing the framed-filtered clusters...'),
-    del filtered_clusters
+    print "Cleaning up full Clusters we don't need any more...",
+    del MT
     gc.collect()
     print 'OK'
 
-    # Frame-Filter the clusters.
-    print ('Computing framed-filtered Clusters '
-           '(min_tokens={})...').format(min_tokens)
+    # Frame the filtered clusters, save, cleanup
+    print ('Computing framed-filtered Clusters (framing previously '
+           'filtered clusters)')
     ff_clusters = {}
-    progress = ProgressInfo(len(framed_clusters), 100, 'clusters')
-
-    for cl_id, cl in framed_clusters.iteritems():
-
+    progress = ProgressInfo(len(filtered_clusters), 100, 'clusters')
+    for cl_id, cl in filtered_clusters.iteritems():
         progress.next_step()
-        ff_cl = m_fi.filter_cluster(cl, min_tokens, max_days)
+        ff_cl = m_fi.frame_cluster_around_peak(cl)
         if ff_cl is not None:
             ff_clusters[cl_id] = ff_cl
-
     print 'OK'
-
-    # Clean up before saving, this stuff is hard on memory.
-    print ('Cleaning up before saving framed-filtered '
-           'Clusters to pickle file...'),
-    del framed_clusters
+    print "Cleaning up filtered Clusters we don't need any more...",
+    del filtered_clusters
     gc.collect()
     print 'OK'
 
