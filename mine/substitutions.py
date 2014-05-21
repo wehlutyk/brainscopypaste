@@ -166,9 +166,8 @@ class Substitution(object):
     def test_POS(self):
         """Test for correspondence of POS tags in the substitution.
 
-        If the mining args ask for 'all' POS tags, we only check if the source
-        and destination words have same POS tag (returning ``True`` or
-        ``False``). If the mining args ask for a specific POS tag, we check
+        If the mining args ask for 'all' POS tags, POS correspondance is
+        ignored. If the mining args ask for a specific POS tag, we check
         that both source and destination words have that POS tag, and return
         ``False`` if not. In both cases, information is logged to stdout if the
         mining args ask for it.
@@ -183,15 +182,7 @@ class Substitution(object):
 
         ret = True
 
-        if self.ma.POS == 'all':
-
-            if self.daughter.POS_tags[self.idx][0] != \
-                    self.mother.POS_tags[self.idx][0]:
-                if self.ma.verbose:
-                    print 'Not kept (different POS)'
-                ret = False
-
-        else:
+        if self.ma.POS != 'all':
 
             if (self.daughter.POS_tags[self.idx][0] !=
                     self.pos_wn_to_tt[self.ma.POS] or
