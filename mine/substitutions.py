@@ -18,7 +18,7 @@ from linguistics.wn import lemmatize as relemmatize
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
-from util.generic import ProgressInfo
+from util.generic import ProgressInfo, is_int
 from util.mp import LoggingPool
 import settings as st
 
@@ -205,13 +205,16 @@ class Substitution(object):
 
     def test_real(self):
         """Test if the source and destination words really form a substitution,
-        or are in fact only variations of the same root.
+        or are in fact only variations of the same root, or another trick or
+        the sort.
 
         Many detected substitutions are in fact a plural form changing to a
-        singular form, a minor grammatical conjugation change, or the like. We
+        singular form, a minor grammatical conjugation change, an abbreviation
+        ('sen'/'senator'), a number in letter or numerals
+        ('21st'/'twenty-first'), a change in UK/US spelling, or the like. We
         don't want to keep these, and this method lets us filter them most of
         those cases by rejecting the substitution if source and destination
-        word only differ by a single edit (levenshtein-distance 1).
+        word correspond to such a change.
 
         Returns
         -------
@@ -223,10 +226,21 @@ class Substitution(object):
 
         ret = True
 
-        if levenshtein(self.lem1, self.lem2) <= 1:
-            if self.ma.verbose:
-                print 'Not kept (not substitution)'
+        # '21st'/'twenty-first', etc.
+        if (is_int(self.word1[0]) or is_int(self.word2[0]) or
+                is_int(self.lem1[0]) or is_int(self.lem2[0])):
             ret = False
+        # 'sen'/'senator', 'gov'/'governor', 'nov'/'november', etc.
+        if (self.word1 == self.word2[:3] or self.word2 == self.word1[:3] or
+                self.lem1 == self.lem2[:3] or self.lem2 == self.lem1[:3]):
+            ret = False
+        if levenshtein(self.word1, self.word2) <= 2:
+            ret = False
+        if levenshtein(self.lem1, self.lem2) <= 2:
+            ret = False
+
+        if not ret and self.ma.verbose:
+            print 'Not kept (not substitution)'
 
         return ret
 
