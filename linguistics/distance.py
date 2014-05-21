@@ -11,6 +11,25 @@ import numpy as np
 from linguistics.treetagger import get_tagger
 
 
+def is_same_ending_us_uk_spelling(w1, w2):
+    """Do `w1` and `w2` differ by only the last two letters inverted,
+    as in `center`/`centre`, or not (words must be at least 4 letters)."""
+
+    if len(w1) < 4 or len(w2) < 4:
+        # Words too short
+        return False
+
+    if w1[:-2] != w2[:-2]:
+        # There's a change before the last two letters
+        return False
+
+    if w1[:-3:-1] == w2[-2:]:
+        # The last two letters are inverted
+        return True
+
+    return False
+
+
 def levenshtein(s1, s2):
     """Compute levenshtein distance between `s1` and `s2`."""
 
