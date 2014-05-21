@@ -257,9 +257,9 @@ def find_max_24h_window(timeline, prec=30 * 60):
     return start_times[np.argmax(ipd_all)]
 
 
-def filter_cluster(cl, min_tokens):
+def filter_cluster(cl, min_tokens, max_days):
     """Filter a :class:`~datastructure.full.Cluster` to keep only English
-    quotes longer than `min_tokens`.
+    quotes longer than `min_tokens` in clusters spanning less than `max_days`.
 
     Parameters
     ----------
@@ -267,6 +267,8 @@ def filter_cluster(cl, min_tokens):
         The cluster to filter.
     min_tokens : int
         The minimum required number of words to keep a quote.
+    max_days : int
+        The maximum span (in days) required to keep a cluster.
 
     Returns
     -------
@@ -274,14 +276,20 @@ def filter_cluster(cl, min_tokens):
         A new cluster (referencing the old quotes, not newly created ones) with
         only the quotes that have more than `min_tokens` tokens, and that were
         detected to be in English; if the root of the cluster had less than
-        `min_tokens`, if was not detected as being English, or if no quotes
-        inside the cluster were kept, `None` is returned.
+        `min_tokens`, if was not detected as being English, if no quotes
+        inside the cluster were kept, or if the cluster spanned more than
+        `max_days`, `None` is returned.
 
     """
 
     import datastructure.full as ds_mt
     tagger = get_tagger()
     langdetector = get_langdetector()
+
+    # If the cluster spans too many days, discard it.
+    cl.build_timeline()
+    if cl.timeline.span_days > max_days:
+        return None
 
     # If the root has less than wanted, filter the whole cluster.
 
