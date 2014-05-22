@@ -15,12 +15,16 @@ import numpy as np
 from linguistics.distance import levenshtein, is_same_ending_us_uk_spelling
 from linguistics.treetagger import get_tagger
 from linguistics.wn import lemmatize as relemmatize
+from linguistics.language import get_stopdetector
 import datainterface.picklesaver as ps
 import datainterface.redistools as rt
 import datainterface.fs as di_fs
 from util.generic import ProgressInfo, is_int
 from util.mp import LoggingPool
 import settings as st
+
+
+stopdetector = get_stopdetector()
 
 
 class Substitution(object):
@@ -225,10 +229,18 @@ class Substitution(object):
         if (self.word1 == self.word2[:3] or self.word2 == self.word1[:3] or
                 self.lem1 == self.lem2[:3] or self.lem2 == self.lem1[:3]):
             ret = False
+        # 'programme'/'program', etc.
+        if (self.word1[:-2] == self.word2 or self.word2[:-2] == self.word1 or
+                self.lem1[:-2] == self.lem2 or self.lem2[:-2] == self.lem1):
+            ret = False
         # 'centre'/'center', etc.
         if is_same_ending_us_uk_spelling(self.word1, self.word2):
             ret = False
         if is_same_ending_us_uk_spelling(self.lem1, self.lem2):
+            ret = False
+        # stopwords
+        if (stopdetector(self.word1) or stopdetector(self.word2) or
+                stopdetector(self.lem1) or stopdetector(self.lem2)):
             ret = False
         # Other minor spelling changes
         if levenshtein(self.word1, self.word2) <= 1:
