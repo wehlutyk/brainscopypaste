@@ -25,6 +25,15 @@ if not os.path.exists(data_root):
 
 
 ###############################################################################
+# STOPWORDS DATA #
+##################
+#
+#: Stopwords file, relative to :attr:`data_root_rel`
+stopwords_file_rel = 'stopwords.txt'
+stopwords_file = os.path.join(data_root, stopwords_file_rel)
+
+
+###############################################################################
 # WORDNET DATA #
 ################
 #
