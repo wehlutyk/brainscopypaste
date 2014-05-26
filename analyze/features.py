@@ -449,6 +449,46 @@ class FeatureAnalysis(AnalysisCase):
             self.w1 = 'word1'
             self.w2 = 'word2'
 
+    def set_bins(self, nbins, truncmin=None, truncmax=None):
+        """Recompute bins for histograms.
+
+        If the feature comes initially from integer values, the number of bins
+        is adapted to the the smallest value between `nbins` and the range
+        of integers in the initial set of values.
+
+        The feature values can be additionally truncated with `truncmin` and
+        `truncmax` to remove any outliers that can bias the bins.
+
+        Parameters
+        ----------
+        nbins : int
+            The number of bins to use.
+        truncmin : float, optional
+            If provided, the feature values are truncated to above this value.
+        truncmax : float, optional
+            If provided, the feature values are truncated to below this value.
+
+        """
+
+        if is_twelfth_int(self.feature.values):
+            size = (int(np.ceil(self.feature.values.max())) -
+                    int(np.floor(self.feature.values.min())) + 1)
+            self.nbins = min([size, nbins])
+        else:
+            self.nbins = nbins
+
+        if truncmin is None:
+            left = self.feature.values.min()
+        else:
+            left = max([self.feature.values.min(), truncmin])
+        if truncmax is None:
+            right = self.feature.values.max()
+        else:
+            right = min([self.feature.values.max(), truncmax])
+
+        self.bins = np.linspace(left, right, self.nbins + 1)
+        self.bin_middles = (self.bins[1:] + self.bins[:-1]) / 2
+
     def build_axes(self, fig):
         """Return a list of :class:`~matplotlib.axes.Axes` instances in `fig`
         to plot on."""
