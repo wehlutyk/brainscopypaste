@@ -39,7 +39,7 @@ You can then create a virtual environment where we'll install the dependencies::
 Quick environment setup on a 64-bit machine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you are using a 64-bit Linux OS, the binaries for all the environment are already included in the repository, in ``wheelhouse-x86_64``. Just run::
+If you are using a 64-bit Linux OS with by luck the same dependency versions as I use, the binaries for all the environment are already included in the repository, in ``wheelhouse``. Just run::
 
    ./install_wheels.sh
 

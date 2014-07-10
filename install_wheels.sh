@@ -5,7 +5,7 @@
 
 echo "*** Installing wheels ***"
 BASEDIR=$(dirname $0)
-WHEELSDIR="${BASEDIR}/wheelhouse-x86_64"
+WHEELSDIR="${BASEDIR}/wheelhouse"
 ls "${WHEELSDIR}"/*.whl $1 | while read x
 do
     pip install --use-wheel --no-index --find-links="${WHEELSDIR}" $x
