@@ -259,7 +259,8 @@ def find_max_24h_window(timeline, prec=30 * 60):
 
 def filter_cluster(cl, min_tokens, max_days):
     """Filter a :class:`~datastructure.full.Cluster` to keep only English
-    quotes longer than `min_tokens` in clusters spanning less than `max_days`.
+    quotes longer than `min_tokens` and spanning less than `max_days`, with the
+    final cluster spanning less than `max_days`.
 
     Parameters
     ----------
@@ -268,17 +269,17 @@ def filter_cluster(cl, min_tokens, max_days):
     min_tokens : int
         The minimum required number of words to keep a quote.
     max_days : int
-        The maximum span (in days) required to keep a cluster.
+        The maximum span (in days) required to keep a quote or a cluster.
 
     Returns
     -------
     Cluster
         A new cluster (referencing the old quotes, not newly created ones) with
-        only the quotes that have more than `min_tokens` tokens, and that were
-        detected to be in English; if the root of the cluster had less than
-        `min_tokens`, if was not detected as being English, if no quotes
-        inside the cluster were kept, or if the cluster spanned more than
-        `max_days`, `None` is returned.
+        only the quotes that have more than `min_tokens` tokens, span less than
+        `max_days`, and that were detected to be in English; if the root of the
+        cluster had less than `min_tokens`, if it was not detected as being
+        English, if no quotes inside the cluster were kept, or if the
+        post-filter cluster spanned more than `max_days`, `None` is returned.
 
     """
 
@@ -286,38 +287,35 @@ def filter_cluster(cl, min_tokens, max_days):
     tagger = get_tagger()
     langdetector = get_langdetector()
 
-    # If the cluster spans too many days, discard it.
-    cl.build_timeline()
-    if cl.timeline.span_days > max_days:
-        return None
-
-    # If the root has less than wanted, filter the whole cluster.
-
+    # If the root has less tokens than wanted, filter the whole cluster.
     if (len(tagger.Tokenize(cl.root)) < min_tokens or
             langdetector.detect(cl.root) != 'en'):
         return None
 
-    # Else, examine each quote.
-
+    # Else, examine each quote for min_tokens, max_days, and language
     filtered_quotes = {}
-
     for qt in cl.quotes.itervalues():
 
+        qt.compute_attrs()
         if (len(tagger.Tokenize(qt.string)) >= min_tokens and
+                qt.span_days <= max_days and
                 langdetector.detect(qt.string) == 'en'):
             filtered_quotes[qt.id] = qt
 
     # If no quotes where kept, filter the whole cluster.
-
     if len(filtered_quotes) == 0:
         return None
 
     # Else, create the new filtered Cluster.
-
     n_quotes = len(filtered_quotes)
     tot_freq = sum([qt.tot_freq for qt in filtered_quotes.values()])
     filtered_cluster = ds_mt.Cluster(n_quotes=n_quotes, tot_freq=tot_freq,
                                      root=cl.root, cl_id=cl.id)
     filtered_cluster.quotes = filtered_quotes
+
+    # Finally, if the new cluster spans too many days, discard it.
+    filtered_cluster.build_timeline()
+    if filtered_cluster.timeline.span_days > max_days:
+        return None
 
     return filtered_cluster
