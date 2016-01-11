@@ -79,14 +79,14 @@ class LangDetect(object):
     """Detect language in a text."""
 
     language_trigrams = {}
-    langid = LazyCorpusLoader('langid', LangIdCorpusReader, r'(?!\.).*\.txt')
+    crubadan = LazyCorpusLoader('crubadan', LangIdCorpusReader, r'(?!\.).*\.txt')
 
     def __init__(self, languages=['nl', 'en', 'fr', 'de', 'es']):
         for lang in languages:
 
             self.language_trigrams[lang] = FreqDist()
 
-            for f in self.langid.freqs(fileids=lang + "-3grams.txt"):
+            for f in self.crubadan.freqs(fileids=lang + "-3grams.txt"):
                 self.language_trigrams[lang].inc(f[0], f[1])
 
     def detect(self, text):

@@ -1,19 +1,14 @@
 #!/usr/bin/env bash
-
-# Don't be fooled by sudo
-PY=$(which python)
+set -e
 
 # Download NLTK data
 echo
-echo "[WebQuotes installer] Installing WordNet and CMU data..."
-echo
-echo "                      'sudo' will ask you for your password "
-echo "                      to install the nltk data in /usr/share/nltk_data."
-sudo $PY -m nltk.downloader -d /usr/local/share/nltk_data cmudict wordnet wordnet_ic langid
+echo "[BrainsCopyPaste installer] Installing WordNet and CMU data..."
+python -m nltk.downloader cmudict wordnet wordnet_ic crubadan
 
 # Download Free Association Norms
 echo
-echo "[WebQuotes installer] Installing Free Association Norms data..."
+echo "[BrainsCopyPaste installer] Installing Free Association Norms data..."
 echo
 mkdir -p data/FreeAssociation
 cd data/FreeAssociation
@@ -29,13 +24,13 @@ cd ../..
 
 # Copy Age-of-Acquisition Norms
 echo
-echo "[WebQuotes installer] Installing Age-of-Acquisition Norms data..."
+echo "[BrainsCopyPaste installer] Installing Age-of-Acquisition Norms data..."
 echo
 #This is already present in the repository (since it needs conversion from xlsx to csv)
 
 # Download MemeTracker data
 echo
-echo "[WebQuotes installer] Installing MemeTracker dataset..."
+echo "[BrainsCopyPaste installer] Installing MemeTracker dataset..."
 echo
 mkdir -p data/MemeTracker
 cd data/MemeTracker
