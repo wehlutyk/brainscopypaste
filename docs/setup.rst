@@ -36,20 +36,10 @@ You can then create a virtual environment where we'll install the dependencies::
    mkvirtualenv brainscopypaste
 
 
-Quick environment setup on a 64-bit machine
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Environment setup
+^^^^^^^^^^^^^^^^^
 
-If you are using a 64-bit Linux OS with by luck the same dependency versions as I use, the binaries for all the environment are already included in the repository, in ``wheelhouse``. Just run::
-
-   ./install_wheels.sh
-
-which should last only a few seconds, and you're good to go. You can jump directly to :ref:`treetagger-installation`.
-
-
-Environment setup from source
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-On any other architecture, you must install and build the dependencies from source. Run the following::
+Run the following::
 
    pip install -r requirements_numpy.txt   # Required for the next line to work
    pip install -r requirements.txt         # Needs numpy to be completely installed
