@@ -4,7 +4,7 @@ set -e
 # Download NLTK data
 echo
 echo "[BrainsCopyPaste installer] Installing WordNet and CMU data..."
-python -m nltk.downloader cmudict wordnet wordnet_ic crubadan
+python -m nltk.downloader cmudict wordnet wordnet_ic
 
 # Download Free Association Norms
 echo

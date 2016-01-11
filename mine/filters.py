@@ -14,9 +14,9 @@ are included. This module allows for such preprocessing of the cluster data.
 from __future__ import division
 
 import numpy as np
+from langdetect import detect as langdetector
 
 from linguistics.treetagger import get_tagger
-from linguistics.language import get_langdetector
 
 
 def frame_cluster_around_peak(cl, span_before=2 * 86400, span_after=2 * 86400):
@@ -285,7 +285,6 @@ def filter_cluster(cl, min_tokens, max_days):
 
     import datastructure.full as ds_mt
     tagger = get_tagger()
-    langdetector = get_langdetector()
 
     # If the root has less tokens than wanted, filter the whole cluster.
     if (len(tagger.Tokenize(cl.root)) < min_tokens or
