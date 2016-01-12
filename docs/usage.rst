@@ -155,6 +155,10 @@ Compute the four main features and path lengths distribution from the WordNet ne
 
    Again, lines marked with a ``/!\`` sign are pretty resource-demanding. The workserver used has 48 CPUs and 500G of RAM, and the last two commands used up to half the RAM.
 
+.. todo::
+
+   Of those features, only ``MNSyns`` is still used, so we can remove the rest from these instructions and save the computations.
+
 
 Plot the results
 ----------------
