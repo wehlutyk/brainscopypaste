@@ -6,8 +6,18 @@
 """
 
 
+from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
+
 from util.generic import memoize
 import settings as st
+
+
+def langdetect(string):
+    try:
+        return detect(string)
+    except LangDetectException:
+        return None
 
 
 class StopwordsDetector(object):
