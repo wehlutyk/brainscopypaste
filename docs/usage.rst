@@ -36,7 +36,7 @@ You can already get some preliminary statistics on the data by running the follo
 
 .. note::
 
-   For most graphing, you will also need to install a working LaTeX distribution since text rendering is done through LaTeX. On Arch: ``sudo pacman -S texlive-core texlive-latexextra`` does the trick. Alternatively, you can comment out line 154 of the ``matplotlibrc`` file at the root of this repository, which will disable LaTeX rendering.
+   For most graphing, you will also need to install a working LaTeX distribution since text rendering is done through LaTeX. On Arch, ``sudo pacman -S texlive-core texlive-latexextra`` does the trick. Alternatively, you can comment out line 154 of the ``matplotlibrc`` file at the root of this repository, which will disable LaTeX rendering.
 
 
 Run substitution mining
