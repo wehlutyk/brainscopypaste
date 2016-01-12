@@ -157,7 +157,7 @@ Compute the four main features and path lengths distribution from the WordNet ne
 
 .. todo::
 
-   Of those features, only ``MNSyns`` is still used, so we can remove the rest from these instructions and save the computations.
+   We're using the FA network for network measures, so ``degree``, ``CC`, ``PageRank``, ``BC``, and ``path`` on WordNet are not used any more. We can remove them from these instructions and save the computations.
 
 
 Plot the results
