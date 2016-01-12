@@ -53,7 +53,7 @@ You can now start the actual substitution mining. ``mine_substitutions.py`` will
   * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
   * ``--substrings[s]``: indicates whether or not to include susbtitutions of substrings of quotes
   * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
-  * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
+  * ``--timebag_size[s]``: selects the size (in days) of the timebags the clusters are sliced into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
 
 So to mine with all imaginable models, settings,  and filtered versions of the clusters::
 
@@ -62,7 +62,7 @@ So to mine with all imaginable models, settings,  and filtered versions of the c
        --models tbgs cumtbgs slidetbgs growtbgs time root \    # All detection models
        --substringss 0 1 \                                     # Include or don't include substitutions on substrings
        --POSs a n v r all \                                    # All filters on POS tags
-       --n_timebagss 2 3 4 5                                   # Various slicings of clusters into timebags
+       --timebag_sizes 1 2 3                                   # Various slicings of clusters into timebags
 
 .. note::
 
