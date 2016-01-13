@@ -401,6 +401,13 @@ mt_analysis_figure_file = os.path.join(mt_analysis_figures, '{}.png')
 check_folder(mt_analysis_figures)
 
 
+#: Folder to store macro analysis into, relative to :attr:`mt_root_rel`.
+
+mt_analysis_macro_rel = 'macro'
+mt_analysis_macro = os.path.join(mt_root, mt_analysis_macro_rel)
+check_folder(mt_analysis_macro)
+
+
 ##############################################################################
 # TREETAGGER SETTINGS #
 #######################
