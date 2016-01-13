@@ -34,6 +34,10 @@ You can already get some preliminary statistics on the data by running the follo
 
    python -u mine_statistics.py
 
+.. note::
+
+   For most graphing, you will also need to install a working LaTeX distribution since text rendering is done through LaTeX. On Arch, ``sudo pacman -S texlive-core texlive-latexextra`` does the trick. Alternatively, you can comment out line 154 of the ``matplotlibrc`` file at the root of this repository, which will disable LaTeX rendering.
+
 
 Run substitution mining
 -----------------------
@@ -49,7 +53,7 @@ You can now start the actual substitution mining. ``mine_substitutions.py`` will
   * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
   * ``--substrings[s]``: indicates whether or not to include susbtitutions of substrings of quotes
   * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
-  * ``--n_timebags[s]``: selects the number of timebags to slice the clusters into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
+  * ``--timebag_size[s]``: selects the size (in days) of the timebags the clusters are sliced into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
 
 So to mine with all imaginable models, settings,  and filtered versions of the clusters::
 
@@ -58,7 +62,7 @@ So to mine with all imaginable models, settings,  and filtered versions of the c
        --models tbgs cumtbgs slidetbgs growtbgs time root \    # All detection models
        --substringss 0 1 \                                     # Include or don't include substitutions on substrings
        --POSs a n v r all \                                    # All filters on POS tags
-       --n_timebagss 2 3 4 5                                   # Various slicings of clusters into timebags
+       --timebag_sizes 1 2 3                                   # Various slicings of clusters into timebags
 
 .. note::
 
@@ -150,6 +154,10 @@ Compute the four main features and path lengths distribution from the WordNet ne
 .. note::
 
    Again, lines marked with a ``/!\`` sign are pretty resource-demanding. The workserver used has 48 CPUs and 500G of RAM, and the last two commands used up to half the RAM.
+
+.. todo::
+
+   We're using the FA network for network measures, so ``degree``, ``CC`, ``PageRank``, ``BC``, and ``path`` on WordNet are not used any more. We can remove them from these instructions and save the computations.
 
 
 Plot the results

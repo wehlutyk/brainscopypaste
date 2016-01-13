@@ -56,7 +56,7 @@ def _build_wn_coords(pos=None):
 
     for syn in wn.all_synsets(pos):
 
-        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names])
+        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names()])
 
         if len(lemma_names_lower) > 1:
 
@@ -114,7 +114,7 @@ def build_wn_adjacency_matrix(lem_coords, pos, outfmt):
 
     for syn in wn.all_synsets(pos):
 
-        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names])
+        lemma_names_lower = set([lem.lower() for lem in syn.lemma_names()])
 
         if len(lemma_names_lower) > 1:
 
@@ -419,7 +419,7 @@ def build_wn_NSigns():
     all_lemma_names = set([])
 
     for syn in wn.all_synsets():
-        all_lemma_names.update([lem.lower() for lem in syn.lemma_names])
+        all_lemma_names.update([lem.lower() for lem in syn.lemma_names()])
 
     for lem in all_lemma_names:
         NSigns[lem] = len(wn.synsets(lem))
@@ -447,10 +447,10 @@ def build_wn_MNSyns():
     all_lemma_names = set([])
 
     for syn in wn.all_synsets():
-        all_lemma_names.update([lem.lower() for lem in syn.lemma_names])
+        all_lemma_names.update([lem.lower() for lem in syn.lemma_names()])
 
     for lem in all_lemma_names:
-        mnsyns = np.array([len(s.lemmas) - 1 for s in wn.synsets(lem)]).mean()
+        mnsyns = np.array([len(s.lemmas()) - 1 for s in wn.synsets(lem)]).mean()
         if mnsyns != 0.0:
             MNSyns[lem] = mnsyns
 

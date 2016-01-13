@@ -16,7 +16,7 @@ from __future__ import division
 import numpy as np
 
 from linguistics.treetagger import get_tagger
-from linguistics.language import get_langdetector
+from linguistics.language import langdetect
 
 
 def frame_cluster_around_peak(cl, span_before=2 * 86400, span_after=2 * 86400):
@@ -285,11 +285,10 @@ def filter_cluster(cl, min_tokens, max_days):
 
     import datastructure.full as ds_mt
     tagger = get_tagger()
-    langdetector = get_langdetector()
 
     # If the root has less tokens than wanted, filter the whole cluster.
-    if (len(tagger.Tokenize(cl.root)) < min_tokens or
-            langdetector.detect(cl.root) != 'en'):
+    if (len(tagger.Tokenize(cl.root)) < min_tokens
+            or langdetect(cl.root) != 'en'):
         return None
 
     # Else, examine each quote for min_tokens, max_days, and language
@@ -298,8 +297,8 @@ def filter_cluster(cl, min_tokens, max_days):
 
         qt.compute_attrs()
         if (len(tagger.Tokenize(qt.string)) >= min_tokens and
-                qt.span_days <= max_days and
-                langdetector.detect(qt.string) == 'en'):
+                qt.span_days <= max_days
+                and langdetect(qt.string) == 'en'):
             filtered_quotes[qt.id] = qt
 
     # If no quotes where kept, filter the whole cluster.

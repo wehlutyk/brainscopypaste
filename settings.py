@@ -303,52 +303,93 @@ mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
 #: which souldn't (computed at runtime, so the value shown here will change
 #: depending on the folder hierarchy when the docs were built).
 
-mt_analysis_features = {'wn': {'PR_scores': {'file': wn_PR_scores_pickle,
-                                             'lem': True,
-                                             'log': True},
-                               'degrees': {'file': wn_degrees_pickle,
-                                           'lem': True,
-                                           'log': True},
-                               'CCs': {'file': wn_CCs_pickle,
-                                       'lem': True,
-                                       'log': True},
-                               'BCs': {'file': wn_BCs_pickle,
-                                       'lem': True,
-                                       'log': True},
-                               'NSigns': {'file': wn_NSigns_pickle,
-                                          'lem': True,
-                                          'log': True},
-                               'MNSyns': {'file': wn_MNSyns_pickle,
-                                          'lem': True,
-                                          'log': True}},
-                        'fa': {'PR_scores': {'file': fa_norms_PR_scores_pickle,
-                                             'lem': True,
-                                             'log': True},
-                               'BCs': {'file': fa_norms_BCs_pickle,
-                                       'lem': True,
-                                       'log': True},
-                               'CCs': {'file': fa_norms_CCs_pickle,
-                                       'lem': True,
-                                       'log': True},
-                               'degrees': {'file': fa_norms_degrees_pickle,
-                                           'lem': True,
-                                           'log': True}},
-                        'cmu': {'MNsyllables': {'file': cmu_MNsyllables_pickle,
-                                                'lem': False,
-                                                'log': False},
-                                'MNphonemes': {'file': cmu_MNphonemes_pickle,
-                                               'lem': False,
-                                               'log': False}},
-                        'aoa': {'Kuperman': {'file': aoa_Kuperman_pickle,
-                                             'lem': True,
-                                             'log': False}},
-                        'mt': {'frequencies': {'file': mt_frequencies_pickle,
-                                               'lem': True,
-                                               'log': True},
-                               'start_frequencies':
-                               {'file': mt_start_frequencies_pickle,
-                                'lem': True,
-                                'log': True}}}
+mt_analysis_features = {
+    'wn': {
+#        'PR_scores': {
+#            'file': wn_PR_scores_pickle,
+#            'lem': True,
+#            'log': True
+#        },
+#        'degrees': {
+#            'file': wn_degrees_pickle,
+#            'lem': True,
+#            'log': True
+#        },
+#        'CCs': {
+#            'file': wn_CCs_pickle,
+#            'lem': True,
+#            'log': True
+#        },
+#        'BCs': {
+#            'file': wn_BCs_pickle,
+#            'lem': True,
+#            'log': True
+#        },
+        'NSigns': {
+            'file': wn_NSigns_pickle,
+            'lem': True,
+            'log': True
+        },
+        'MNSyns': {
+            'file': wn_MNSyns_pickle,
+            'lem': True,
+            'log': True
+        }
+    },
+    'fa': {
+        'PR_scores': {
+            'file': fa_norms_PR_scores_pickle,
+            'lem': True,
+            'log': True
+        },
+        'BCs': {
+            'file': fa_norms_BCs_pickle,
+            'lem': True,
+            'log': True
+        },
+        'CCs': {
+            'file': fa_norms_CCs_pickle,
+            'lem': True,
+            'log': True
+        },
+        'degrees': {
+            'file': fa_norms_degrees_pickle,
+            'lem': True,
+            'log': True
+        }
+    },
+    'cmu': {
+        'MNsyllables': {
+            'file': cmu_MNsyllables_pickle,
+            'lem': False,
+            'log': False
+        },
+        'MNphonemes': {
+            'file': cmu_MNphonemes_pickle,
+            'lem': False,
+            'log': False
+        }
+    },
+    'aoa': {
+        'Kuperman': {
+            'file': aoa_Kuperman_pickle,
+            'lem': True,
+            'log': False
+        }
+    },
+    'mt': {
+        'frequencies': {
+            'file': mt_frequencies_pickle,
+            'lem': True,
+            'log': True
+#        },
+#        'start_frequencies': {
+#            'file': mt_start_frequencies_pickle,
+#            'lem': True,
+#            'log': True
+        }
+    }
+}
 
 
 #: Folder to store figures into, relative to :attr:`data_root_rel`.
@@ -358,6 +399,13 @@ mt_analysis_figures = os.path.join(data_root,
                                    mt_analysis_figures_rel)
 mt_analysis_figure_file = os.path.join(mt_analysis_figures, '{}.png')
 check_folder(mt_analysis_figures)
+
+
+#: Folder to store macro analysis into, relative to :attr:`mt_root_rel`.
+
+mt_analysis_macro_rel = 'macro'
+mt_analysis_macro = os.path.join(mt_root, mt_analysis_macro_rel)
+check_folder(mt_analysis_macro)
 
 
 ##############################################################################

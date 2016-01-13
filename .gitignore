@@ -4,3 +4,4 @@
 .ropeproject
 docs/_build
 treetagger
+.venv
