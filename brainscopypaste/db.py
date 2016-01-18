@@ -19,6 +19,7 @@ class BaseMixin:
 
 class Cluster(Base, BaseMixin):
 
+    source = Column(String, nullable=False)
     quotes = relationship('Quote', back_populates='cluster')
 
     @property

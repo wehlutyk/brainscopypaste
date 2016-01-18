@@ -18,7 +18,7 @@ def some_clusters():
 
     ids = range(5)
     with session_scope() as session:
-        session.add_all(Cluster(id=i) for i in ids)
+        session.add_all(Cluster(id=i, source='test') for i in ids)
 
     return ids
 
