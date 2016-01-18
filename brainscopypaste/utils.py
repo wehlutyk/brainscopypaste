@@ -2,8 +2,9 @@ import collections
 from contextlib import contextmanager
 import functools
 from itertools import zip_longest
+import os
 
-from db import Session
+from brainscopypaste.db import Session
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -75,3 +76,9 @@ def session_scope():
         raise
     finally:
         session.close()
+
+
+def mkdirp(folder):
+    """Create `folder` if it doesn't exist."""
+    if not os.path.exists(folder):
+        os.makedirs(folder)

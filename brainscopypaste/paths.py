@@ -1,15 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Paths for data resources."""
 
-"""Global settings for files, folders, resources and data locations,
-for the scripts to run."""
-
-
-from __future__ import division
 
 import os
 
-from datainterface.fs import check_folder
+from brainscopypaste.utils import mkdirp
 
 
 ##############################################################################
@@ -20,8 +14,7 @@ from datainterface.fs import check_folder
 
 data_root_rel = 'data'
 data_root = os.path.abspath(data_root_rel)
-if not os.path.exists(data_root):
-    os.makedirs(data_root)
+mkdirp(data_root)
 
 
 ###############################################################################
@@ -41,7 +34,7 @@ stopwords_file = os.path.join(data_root, stopwords_file_rel)
 
 wn_root_rel = 'WordNet'
 wn_root = os.path.join(data_root, wn_root_rel)
-check_folder(wn_root)
+mkdirp(wn_root)
 
 
 #: Pickle file for the WordNet PageRank scores, relative to
@@ -107,7 +100,7 @@ wn_lengths_pickle = os.path.join(wn_root,
 
 cmu_root_rel = 'CMU'
 cmu_root = os.path.join(data_root, cmu_root_rel)
-check_folder(cmu_root)
+mkdirp(cmu_root)
 
 
 #: Pickle file for the CMU number of syllables, relative to
@@ -132,7 +125,7 @@ cmu_MNphonemes_pickle = os.path.join(cmu_root, cmu_MNphonemes_pickle_rel)
 
 aoa_root_rel = 'AoA'
 aoa_root = os.path.join(data_root, aoa_root_rel)
-check_folder(aoa_root)
+mkdirp(aoa_root)
 
 
 #: Source csv file for the Kuperman AoA data, relative to :attr:`aoa_root_rel`.
@@ -155,7 +148,7 @@ aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
 
 fa_root_rel = 'FreeAssociation'
 fa_root = os.path.join(data_root, fa_root_rel)
-check_folder(fa_root)
+mkdirp(fa_root)
 
 
 #: Files for raw Free Association data, relative to :attr:`fa_root_rel`.
@@ -224,7 +217,7 @@ fa_lengths_pickle = os.path.join(fa_root,
 
 mt_root_rel = 'MemeTracker'
 mt_root = os.path.join(data_root, mt_root_rel)
-check_folder(mt_root)
+mkdirp(mt_root)
 
 
 #: File for the complete MemeTracker dataset, relative to :attr:`mt_root_rel`.
@@ -273,7 +266,7 @@ mt_start_frequencies_pickle = os.path.join(mt_root,
 
 mt_mining_root_rel = 'mining'
 mt_mining_root = os.path.join(mt_root, mt_mining_root_rel)
-check_folder(mt_mining_root)
+mkdirp(mt_mining_root)
 
 
 #: List of mining models which are based on slicing the clusters into timebags
@@ -398,14 +391,7 @@ mt_analysis_figures_rel = 'figures_dev'
 mt_analysis_figures = os.path.join(data_root,
                                    mt_analysis_figures_rel)
 mt_analysis_figure_file = os.path.join(mt_analysis_figures, '{}.png')
-check_folder(mt_analysis_figures)
-
-
-#: Folder to store macro analysis into, relative to :attr:`mt_root_rel`.
-
-mt_analysis_macro_rel = 'macro'
-mt_analysis_macro = os.path.join(mt_root, mt_analysis_macro_rel)
-check_folder(mt_analysis_macro)
+mkdirp(mt_analysis_figures)
 
 
 ##############################################################################
@@ -416,29 +402,3 @@ check_folder(mt_analysis_macro)
 #: root.
 
 treetagger_TAGDIR = 'treetagger'
-
-
-##############################################################################
-# REDIS SETTINGS #
-##################
-#
-#: Prefix for storing data from the Memetracker dataset in Redis.
-
-redis_mt_pref = 'memetracker:'
-
-#: Prefix for storing raw clusters from the MemeTracker dataset in Redis.
-
-redis_mt_clusters_pref = redis_mt_pref + 'clusters:'
-
-#: Prefix for storing framed clusters from the MemeTracker dataset in Redis.
-
-redis_mt_clusters_framed_pref = redis_mt_pref + 'clusters-framed:'
-
-#: Prefix for storing filtered clusters from the MemeTracker dataset in Redis.
-
-redis_mt_clusters_filtered_pref = redis_mt_pref + 'clusters-filtered:'
-
-#: Prefix for storing framed and filtered clusters from the MemeTracker dataset
-#: in Redis.
-
-redis_mt_clusters_ff_pref = redis_mt_pref + 'clusters-ff:'
