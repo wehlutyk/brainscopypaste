@@ -43,7 +43,7 @@ class MemeTrackerParser:
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
         n_lines = (self.n_lines if not testrun else self.n_test_lines) - \
-            self.header_size
+            self.header_size + 1
         click.echo('Parsing MemeTracker data file into database{}... '
                    .format('' if not testrun else ' (test run)'))
         bar = ProgressBar(max_value=n_lines, redirect_stdout=True)
@@ -61,9 +61,9 @@ class MemeTrackerParser:
                 self.session = session
 
                 for i, line in enumerate(infile):
-                    if testrun and i > n_lines - self.header_size:
-                        break
                     bar.update(i)
+                    if testrun and i >= n_lines:
+                        break
 
                     line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
                     line_fields = re.split(r'[\t\r\n]', line)
