@@ -1,6 +1,7 @@
 click==6.2
 cycler==0.9.0
 decorator==4.0.6
+fancycompleter==0.4
 ipykernel==4.2.2
 ipython==4.0.2
 ipython-genutils==0.1.0
@@ -17,8 +18,10 @@ nbformat==4.0.1
 nltk==3.1
 notebook==4.1.0
 numpy==1.10.4
+ordereddict==1.1
 pandas==0.17.1
 path.py==8.1.2
+pdbpp==0.8.3
 pexpect==4.0.1
 pickleshare==0.5
 progressbar2==3.6.0
@@ -41,3 +44,4 @@ terminado==0.6
 tornado==4.3
 traitlets==4.0.0
 wheel==0.26.0
+wmctrl==0.3
