@@ -21,10 +21,11 @@ class MemeTrackerParser:
 
     # Number of lines of the file
     n_lines = 8357595
-    n_test_lines = 20000
 
-    def __init__(self):
+    def __init__(self, filename):
         """Setup progress printing."""
+
+        self.filename = filename
 
         # Keep track of if we've already parsed or not.
         self.parsed = False
@@ -39,19 +40,19 @@ class MemeTrackerParser:
         for i in range(self.header_size):
             f.readline()
 
-    def parse(self, filename, testrun=False):
+    def parse(self, limitlines=None):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
-        n_lines = (self.n_lines if not testrun else self.n_test_lines) - \
+        n_lines = (self.n_lines if limitlines is None else limitlines) - \
             self.header_size + 1
         click.echo('Parsing MemeTracker data file into database{}... '
-                   .format('' if not testrun else ' (test run)'))
+                   .format('' if limitlines is None else ' (test run)'))
         bar = ProgressBar(max_value=n_lines, redirect_stdout=True)
 
         if self.parsed:
             raise ValueError('Parser has already run')
 
-        with open(filename, 'rb', encoding='utf-8') as infile:
+        with open(self.filename, 'rb', encoding='utf-8') as infile:
 
             # The first lines are not data.
             self.skip_header(infile)
@@ -62,7 +63,7 @@ class MemeTrackerParser:
 
                 for i, line in enumerate(infile):
                     bar.update(i)
-                    if testrun and i >= n_lines:
+                    if limitlines is not None and i >= n_lines:
                         break
 
                     line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
