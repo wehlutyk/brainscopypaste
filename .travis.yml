@@ -20,8 +20,10 @@ before_install:
 install:
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
-  - cat requirements.txt | grep "$CONDA_GREP" | sed 's/==/=/' | xargs conda install --yes
+  # Get conda requirements, without minor version numbers
+  - cat requirements.txt | grep "$CONDA_GREP" | sed 's/\([0-9]\+\.[0-9]\+\)\.[0-9]\+$/\1/' | sed 's/==/=/' | xargs conda install --yes
   - conda install --yes pip
+  # Get remaining pip requirements
   - cat requirements.txt | grep -v "$CONDA_GREP" | xargs pip install
 
 script:
