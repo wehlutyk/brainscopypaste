@@ -1,12 +1,15 @@
+from datetime import datetime, timedelta
+
+from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 import pytest
 
-from utils import session_scope
+from brainscopypaste.utils import session_scope
+from brainscopypaste.db import Base, Session, Cluster, Quote, Url
 
 
 @pytest.fixture(autouse=True)
 def tmpdb():
-    from sqlalchemy import create_engine
-    from db import Base, Session
     engine = create_engine('sqlite:///:memory:', echo=True)
     Session.configure(bind=engine)
     Base.metadata.create_all(engine)
@@ -14,8 +17,6 @@ def tmpdb():
 
 @pytest.fixture()
 def some_clusters():
-    from db import Cluster
-
     ids = range(5)
     with session_scope() as session:
         session.add_all(Cluster(id=i, source='test') for i in ids)
@@ -25,8 +26,6 @@ def some_clusters():
 
 @pytest.fixture()
 def some_quotes(some_clusters):
-    from db import Cluster, Quote
-
     ids = range(10)
     with session_scope() as session:
         clusters = session.query(Cluster)
@@ -40,9 +39,6 @@ def some_quotes(some_clusters):
 
 @pytest.fixture()
 def some_urls(some_clusters, some_quotes):
-    from datetime import datetime
-    from db import Quote, Url
-
     ids = range(20)
     with session_scope() as session:
         quotes = session.query(Quote)
@@ -58,16 +54,12 @@ def some_urls(some_clusters, some_quotes):
 
 
 def test_cluster(some_clusters):
-    from db import Cluster
-
     with session_scope() as session:
         assert session.query(Cluster).count() == 5
         assert session.query(Cluster.id).all() == [(i,) for i in some_clusters]
 
 
 def test_quote(some_quotes):
-    from db import Cluster, Quote
-
     with session_scope() as session:
         assert session.query(Quote).count() == 10
 
@@ -91,9 +83,6 @@ def test_quote(some_quotes):
 
 
 def test_url(some_urls):
-    from datetime import datetime, timedelta
-    from db import Cluster, Quote, Url
-
     with session_scope() as session:
         assert session.query(Url).count() == 20
 
@@ -113,8 +102,6 @@ def test_url(some_urls):
         assert [url.id for url in session.query(Quote).get(1).urls] == [1, 11]
         assert session.query(Cluster).get(0).size == 2
         assert session.query(Cluster).get(0).frequency == 8
-
-    from sqlalchemy.exc import IntegrityError
 
     with pytest.raises(IntegrityError):
         with session_scope() as session:
