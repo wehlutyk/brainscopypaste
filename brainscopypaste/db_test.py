@@ -15,7 +15,7 @@ def tmpdb():
     Base.metadata.create_all(engine)
 
 
-@pytest.fixture()
+@pytest.fixture
 def some_clusters():
     ids = range(5)
     with session_scope() as session:
@@ -24,7 +24,7 @@ def some_clusters():
     return ids
 
 
-@pytest.fixture()
+@pytest.fixture
 def some_quotes(some_clusters):
     ids = range(10)
     with session_scope() as session:
@@ -37,7 +37,7 @@ def some_quotes(some_clusters):
     return ids
 
 
-@pytest.fixture()
+@pytest.fixture
 def some_urls(some_clusters, some_quotes):
     ids = range(20)
     with session_scope() as session:
