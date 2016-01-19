@@ -26,7 +26,8 @@ install:
   - conda install --yes pip
   # Get remaining pip requirements
   - cat requirements.txt | grep -v "$CONDA_GREP" | xargs pip install
-  - python setup.py install
+  # FIXME: get a real package working instead of this
+  - pip install --editable .
 
 script:
   - py.test
