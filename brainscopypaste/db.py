@@ -14,11 +14,12 @@ class BaseMixin:
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(Integer, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True)
 
 
 class Cluster(Base, BaseMixin):
 
+    sid = Column(Integer, nullable=False)
     source = Column(String, nullable=False)
     quotes = relationship('Quote', back_populates='cluster')
 
@@ -37,6 +38,7 @@ class Quote(Base, BaseMixin):
 
     cluster_id = Column(Integer, ForeignKey('cluster.id'), nullable=False)
     cluster = relationship('Cluster', back_populates='quotes')
+    sid = Column(Integer, nullable=False)
     string = Column(String, nullable=False)
     urls = relationship('Url', back_populates='quote')
 

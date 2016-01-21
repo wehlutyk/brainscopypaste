@@ -16,24 +16,24 @@ def tmpdb():
 
 @pytest.fixture
 def some_clusters(tmpdb):
-    ids = range(5)
+    sids = range(5)
     with session_scope() as session:
-        session.add_all(Cluster(id=i, source='test') for i in ids)
+        session.add_all(Cluster(sid=i, source='test') for i in sids)
 
-    return ids
+    return sids
 
 
 @pytest.fixture
 def some_quotes(some_clusters):
-    ids = range(10)
+    sids = range(10)
     with session_scope() as session:
         clusters = session.query(Cluster)
-        session.add_all(Quote(id=i,
-                              cluster=clusters.get(i % 5),
+        session.add_all(Quote(sid=i,
+                              cluster=clusters.filter_by(sid=i % 5).one(),
                               string='Quote {}'.format(i))
-                        for i in ids)
+                        for i in sids)
 
-    return ids
+    return sids
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ def some_urls(some_clusters, some_quotes):
     with session_scope() as session:
         quotes = session.query(Quote)
         session.add_all(Url(id=i,
-                            quote=quotes.get(i % 10),
+                            quote=quotes.filter_by(sid=i % 10).one(),
                             timestamp=datetime.utcnow(),
                             frequency=2,
                             url_type='B',

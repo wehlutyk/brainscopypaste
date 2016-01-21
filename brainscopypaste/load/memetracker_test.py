@@ -141,11 +141,11 @@ def assert_loaded():
         assert session.query(Quote).count() == 3
         assert session.query(Url).count() == 6
 
-        c3 = session.query(Cluster).get(36543)
-        c4 = session.query(Cluster).get(43112)
-        q4 = session.query(Quote).get(43)
-        q9 = session.query(Quote).get(950238)
-        q1 = session.query(Quote).get(1485)
+        c3 = session.query(Cluster).filter_by(sid=36543).one()
+        c4 = session.query(Cluster).filter_by(sid=43112).one()
+        q4 = session.query(Quote).filter_by(sid=43).one()
+        q9 = session.query(Quote).filter_by(sid=950238).one()
+        q1 = session.query(Quote).filter_by(sid=1485).one()
 
         assert c3.quotes == [q4, q9]
         assert c4.quotes == [q1]
