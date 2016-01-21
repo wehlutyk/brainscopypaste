@@ -22,17 +22,23 @@ class MemeTrackerParser:
     # Number of lines of the file
     n_lines = 8357595
 
-    def __init__(self, filename):
+    def __init__(self, filename, limitlines=None, nochecksums=False):
         """Setup progress printing."""
 
         self.filename = filename
+        self.limitlines = limitlines
+        self.nochecksums = nochecksums
 
         # Keep track of if we've already parsed or not.
         self.parsed = False
 
         # Keep track of current cluster and quote.
         self.cluster = None
+        self.cluster_size = None
+        self.cluster_frequency = None
         self.quote = None
+        self.quote_size = None
+        self.quote_frequency = None
 
     def skip_header(self, f):
         """Skip the header lines in an open file."""
@@ -40,13 +46,13 @@ class MemeTrackerParser:
         for i in range(self.header_size):
             f.readline()
 
-    def parse(self, limitlines=None):
+    def parse(self):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
-        n_lines = (self.n_lines if limitlines is None else limitlines) - \
-            self.header_size + 1
+        n_lines = (self.n_lines if self.limitlines is None
+                   else self.limitlines) - self.header_size + 1
         click.echo('Parsing MemeTracker data file into database{}... '
-                   .format('' if limitlines is None else ' (test run)'))
+                   .format('' if self.limitlines is None else ' (test run)'))
         bar = ProgressBar(max_value=n_lines, redirect_stdout=True)
 
         if self.parsed:
@@ -63,7 +69,7 @@ class MemeTrackerParser:
 
                 for i, line in enumerate(infile):
                     bar.update(i)
-                    if limitlines is not None and i >= n_lines:
+                    if self.limitlines is not None and i >= n_lines:
                         break
 
                     line0 = re.split(r'[\xa0\s+\t\r\n]+', line)
@@ -87,12 +93,35 @@ class MemeTrackerParser:
 
     def handle_cluster(self, line_fields):
         if self.cluster is not None:
+            err_end = (' #{} does not match value'
+                       ' in file').format(self.cluster.id)
+            if (not self.nochecksums and
+                    self.cluster_size != self.cluster.size):
+                raise ValueError("Cluster size" + err_end)
+            if (not self.nochecksums and
+                    self.cluster_frequency != self.cluster.frequency):
+                raise ValueError("Cluster frequency" + err_end)
             self.session.commit()
+
         self.cluster = Cluster(id=int(line_fields[3]), source='memetracker')
+        self.cluster_size = int(line_fields[0])
+        self.cluster_frequency = int(line_fields[1])
         self.session.add(self.cluster)
 
     def handle_quote(self, line_fields):
+        if self.quote is not None:
+            err_end = ' #{} does not match value in file'.format(self.quote.id)
+            if (not self.nochecksums and
+                    self.quote_size != self.quote.size):
+                raise ValueError("Quote size" + err_end)
+            if (not self.nochecksums and
+                    self.quote_frequency != self.quote.frequency):
+                raise ValueError("Quote frequency" + err_end)
+            self.session.commit()
+
         self.quote = Quote(id=int(line_fields[4]), string=line_fields[3])
+        self.quote_size = int(line_fields[2])
+        self.quote_frequency = int(line_fields[1])
         self.cluster.quotes.append(self.quote)
 
     def handle_url(self, line_fields):

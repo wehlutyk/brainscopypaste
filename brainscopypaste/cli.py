@@ -49,8 +49,10 @@ def load():
 @click.option('--testrun', is_flag=True)
 def memetracker(testrun):
     """Load MemeTracker data into SQL."""
-    MemeTrackerParser(paths.mt_full)\
-        .parse(limitlines=20000 if testrun else None)
+    MemeTrackerParser(paths.mt_full,
+                      limitlines=20000 if testrun else None,
+                      nochecksums=testrun)\
+        .parse()
 
 
 if __name__ == '__main__':

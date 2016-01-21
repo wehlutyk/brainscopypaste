@@ -25,13 +25,11 @@ class Cluster(Base, BaseMixin):
     @property
     def size(self):
         # TODO: cache
-        # TODO: check at load
         return len(self.quotes)
 
     @property
     def frequency(self):
         # TODO: cache
-        # TODO: check at load
         return sum(quote.frequency for quote in self.quotes)
 
 
@@ -45,13 +43,11 @@ class Quote(Base, BaseMixin):
     @property
     def size(self):
         # TODO: cache
-        # TODO: check at load
         return len(self.urls)
 
     @property
     def frequency(self):
         # TODO: cache
-        # TODO: check at load
         return sum(url.frequency for url in self.urls)
 
 
