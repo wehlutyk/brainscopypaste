@@ -51,7 +51,7 @@ def memetracker(testrun):
     """Load MemeTracker data into SQL."""
     MemeTrackerParser(paths.mt_full,
                       limitlines=20000 if testrun else None,
-                      nochecksums=testrun)\
+                      nochecks=testrun)\
         .parse()
 
 

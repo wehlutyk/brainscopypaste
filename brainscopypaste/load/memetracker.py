@@ -22,12 +22,12 @@ class MemeTrackerParser:
     # Number of lines of the file
     n_lines = 8357595
 
-    def __init__(self, filename, limitlines=None, nochecksums=False):
+    def __init__(self, filename, limitlines=None, nochecks=False):
         """Setup progress printing."""
 
         self.filename = filename
         self.limitlines = limitlines
-        self.nochecksums = nochecksums
+        self.nochecks = nochecks
 
         # Keep track of if we've already parsed or not.
         self.parsed = False
@@ -86,21 +86,27 @@ class MemeTrackerParser:
                         # This is a url definition line.
                         self.handle_url(line_fields)
 
+                # Check final cluster and quote
+                self.check_cluster()
+                self.check_quote()
+
         # Don't do this twice.
         self.parsed = True
         bar.finish()
         click.secho('OK', fg='green', bold=True)
 
+    def check_cluster(self):
+        err_end = (' #{} does not match value'
+                   ' in file').format(self.cluster.id)
+        if not self.nochecks and self.cluster_size != self.cluster.size:
+            raise ValueError("Cluster size" + err_end)
+        if (not self.nochecks and
+                self.cluster_frequency != self.cluster.frequency):
+            raise ValueError("Cluster frequency" + err_end)
+
     def handle_cluster(self, line_fields):
         if self.cluster is not None:
-            err_end = (' #{} does not match value'
-                       ' in file').format(self.cluster.id)
-            if (not self.nochecksums and
-                    self.cluster_size != self.cluster.size):
-                raise ValueError("Cluster size" + err_end)
-            if (not self.nochecksums and
-                    self.cluster_frequency != self.cluster.frequency):
-                raise ValueError("Cluster frequency" + err_end)
+            self.check_cluster()
             self.session.commit()
 
         self.cluster = Cluster(id=int(line_fields[3]), source='memetracker')
@@ -108,15 +114,16 @@ class MemeTrackerParser:
         self.cluster_frequency = int(line_fields[1])
         self.session.add(self.cluster)
 
+    def check_quote(self):
+        err_end = ' #{} does not match value in file'.format(self.quote.id)
+        if not self.nochecks and self.quote_size != self.quote.size:
+            raise ValueError("Quote size" + err_end)
+        if not self.nochecks and self.quote_frequency != self.quote.frequency:
+            raise ValueError("Quote frequency" + err_end)
+
     def handle_quote(self, line_fields):
         if self.quote is not None:
-            err_end = ' #{} does not match value in file'.format(self.quote.id)
-            if (not self.nochecksums and
-                    self.quote_size != self.quote.size):
-                raise ValueError("Quote size" + err_end)
-            if (not self.nochecksums and
-                    self.quote_frequency != self.quote.frequency):
-                raise ValueError("Quote frequency" + err_end)
+            self.check_quote()
             self.session.commit()
 
         self.quote = Quote(id=int(line_fields[4]), string=line_fields[3])

@@ -30,13 +30,13 @@ content = '''format:
 
 
 contents_errored = {
-    'Cluster size #36543': '''format:
+    'Cluster size #43112': '''format:
 <ClSz>	<TotFq>	<Root>	<ClusterId>
 	<QtFq>	<Urls>	<QtStr>	<QuteId>
 	<Tm>	<Fq>	<UrlTy>	<Url>
 
 
-4	5	hate that i love you so	36543
+2	5	hate that i love you so	36543
 	3	2	i love you	43
 		2008-08-01 00:00:16	2	B	some-url-1
 		2008-08-01 00:24:08	1	M	some-url-2
@@ -45,7 +45,7 @@ contents_errored = {
 		2008-09-13 14:45:39	1	M	some-url-3
 		2008-09-17 04:09:03	1	B	some-url-4
 
-1	3	yes we can yes we can	43112
+2	3	yes we can yes we can	43112
 	3	2	yes we can	1485
 		2008-08-01 00:12:05	1	B	some-url-5
 		2008-08-01 00:31:56	2	M	some-url-6''',
@@ -87,14 +87,14 @@ contents_errored = {
 	3	2	yes we can	1485
 		2008-08-01 00:12:05	1	B	some-url-5
 		2008-08-01 00:31:56	2	M	some-url-6''',
-    'Quote frequency #43': '''format:
+    'Quote frequency #1485': '''format:
 <ClSz>	<TotFq>	<Root>	<ClusterId>
 	<QtFq>	<Urls>	<QtStr>	<QuteId>
 	<Tm>	<Fq>	<UrlTy>	<Url>
 
 
 2	5	hate that i love you so	36543
-	5	2	i love you	43
+	3	2	i love you	43
 		2008-08-01 00:00:16	2	B	some-url-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
@@ -103,7 +103,7 @@ contents_errored = {
 		2008-09-17 04:09:03	1	B	some-url-4
 
 1	3	yes we can yes we can	43112
-	3	2	yes we can	1485
+	4	2	yes we can	1485
 		2008-08-01 00:12:05	1	B	some-url-5
 		2008-08-01 00:31:56	2	M	some-url-6'''
 }
@@ -195,5 +195,5 @@ def test_parser_errored(tmpdb, memetracker_file_errored):
 def test_parser_errored_ignored(tmpdb, memetracker_file_errored):
     error, filepath = memetracker_file_errored
     n_lines = contents_errored[error].count('\n') + 1
-    MemeTrackerParser(filepath, limitlines=n_lines, nochecksums=True).parse()
+    MemeTrackerParser(filepath, limitlines=n_lines, nochecks=True).parse()
     assert_loaded()
