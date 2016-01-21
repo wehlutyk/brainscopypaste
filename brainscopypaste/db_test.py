@@ -31,6 +31,7 @@ def test_quote(some_quotes):
         assert session.query(Cluster.id)\
             .filter(Cluster.quotes.contains(q7)).one() == (2,)
 
+        assert session.query(Quote).get(0).size == 0
         assert session.query(Quote).get(0).frequency == 0
         assert session.query(Cluster).get(3).size == 2
         assert session.query(Cluster).get(3).frequency == 0
@@ -52,6 +53,7 @@ def test_url(some_urls):
         assert session.query(Url).get(0).timestamp - datetime.utcnow() < \
             timedelta(seconds=5)
 
+        assert session.query(Quote).get(0).size == 2
         assert session.query(Quote).get(0).frequency == 4
         assert [url.id for url in session.query(Quote).get(1).urls] == [1, 11]
         assert session.query(Cluster).get(0).size == 2

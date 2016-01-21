@@ -43,6 +43,12 @@ class Quote(Base, BaseMixin):
     urls = relationship('Url', back_populates='quote')
 
     @property
+    def size(self):
+        # TODO: cache
+        # TODO: check at load
+        return len(self.urls)
+
+    @property
     def frequency(self):
         # TODO: cache
         # TODO: check at load
