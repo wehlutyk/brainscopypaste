@@ -4,7 +4,8 @@ import functools
 from itertools import zip_longest
 import os
 
-from brainscopypaste.db import Session
+from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -13,6 +14,39 @@ def grouper(iterable, n, fillvalue=None):
 
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+
+class cache:
+    """Computes attribute value and caches it in the instance.
+
+    Python Cookbook (Denis Otkidach)
+    http://stackoverflow.com/users/168352/denis-otkidach This decorator allows
+    you to create a property which can be computed once and accessed many
+    times. Sort of like memoization.
+
+    """
+
+    def __init__(self, method, name=None):
+        # Record the unbound-method and the name
+        self.method = method
+        self.name = name or method.__name__
+        self.__doc__ = method.__doc__
+
+    def __get__(self, inst, cls):
+        # self: <__main__.cache object at 0xb781340c>
+        # inst: <__main__.Foo object at 0xb781348c>
+        # cls: <class '__main__.Foo'>
+        if inst is None:
+            # instance attribute accessed on class, return self
+            # You get here if you write `Foo.bar`
+            return self
+
+        # Compute, cache and return the instance's attribute value
+        result = self.method(inst)
+        # setattr redefines the instance's attribute so this doesn't
+        # get called again
+        setattr(inst, self.name, result)
+        return result
 
 
 class memoized(object):
@@ -67,6 +101,7 @@ def mpl_palette(n_colors, variation='Set2'):  # or variation='colorblind'
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
+    from brainscopypaste.db import Session
     session = Session()
     try:
         yield session
@@ -82,3 +117,61 @@ def mkdirp(folder):
     """Create `folder` if it doesn't exist."""
     if not os.path.exists(folder):
         os.makedirs(folder)
+
+
+def iter_parent_dirs(rel_dir):
+    """Iterate through parent directories of current working directory,
+    appending `rel_dir` to those successive directories."""
+
+    d = os.path.abspath('.')
+    pd = None
+    while pd != d:
+        yield os.path.join(d, rel_dir)
+        pd = d
+        d = os.path.split(d)[0]
+
+
+def find_parent_rel_dir(rel_dir):
+    """Find a relative directory in parent directories.
+
+    Searches for directory `rel_dir` in all parent directories of the current
+    directory.
+
+    Parameters
+    ----------
+    rel_dir : string
+        The relative directory to search for.
+
+    Returns
+    -------
+    d : string
+        Full path to the first found directory.
+
+    Raises
+    ------
+    NotFoundError
+        If no relative directory is found in the parent directories.
+
+    See Also
+    --------
+    iter_upper_dirs, NotFoundError
+
+    """
+
+    for d in iter_parent_dirs(rel_dir):
+        if os.path.exists(d) and os.path.isdir(d):
+            return d
+
+    raise NotFoundError('No relative directory found in parent directories')
+
+
+class NotFoundError(Exception):
+    """Signal a file or directory can't be found."""
+
+
+@memoized
+def langdetect(sentence):
+    try:
+        return detect(sentence)
+    except LangDetectException:
+        return None
