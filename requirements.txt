@@ -44,5 +44,6 @@ SQLAlchemy==1.0.11
 terminado==0.6
 tornado==4.3
 traitlets==4.0.0
+treetaggerwrapper==2.2.2
 wheel==0.26.0
 wmctrl==0.3
