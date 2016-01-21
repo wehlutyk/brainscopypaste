@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from sqlalchemy import create_engine
@@ -9,7 +9,7 @@ from brainscopypaste.db import Base, Session, Cluster, Quote, Url
 
 @pytest.fixture
 def tmpdb():
-    engine = create_engine('sqlite:///:memory:', echo=True)
+    engine = create_engine('sqlite:///:memory:')
     Session.configure(bind=engine)
     Base.metadata.create_all(engine)
 
@@ -43,7 +43,7 @@ def some_urls(some_clusters, some_quotes):
         quotes = session.query(Quote)
         session.add_all(Url(id=i,
                             quote=quotes.filter_by(sid=i % 10).one(),
-                            timestamp=datetime.utcnow(),
+                            timestamp=datetime.utcnow() + timedelta(days=i),
                             frequency=2,
                             url_type='B',
                             url='Url {}'.format(i))

@@ -1,5 +1,6 @@
 import os
 from tempfile import mkstemp
+from datetime import timedelta
 
 import pytest
 
@@ -151,15 +152,26 @@ def assert_loaded():
         assert c4.quotes == [q1]
         assert c3.size == 2
         assert c4.size == 1
+        assert c3.size_urls == 4
+        assert c4.size_urls == 2
         assert c3.frequency == 5
         assert c4.frequency == 3
+        assert c3.urls[0].timestamp.second == 16
+        assert c3.urls[0].frequency == 2
+        assert c3.urls[0].url_type == 'B'
+        assert c3.urls[0].url == 'some-url-1'
+        assert abs(c3.span - timedelta(days=47)) < timedelta(hours=5)
 
         assert q4.string == 'i love you'
         assert q9.string == 'that i love you'
         assert q1.string == 'yes we can'
+        assert q4.size == 2
+        assert q9.size == 2
+        assert q1.size == 2
         assert q4.frequency == 3
         assert q9.frequency == 2
         assert q1.frequency == 3
+        assert q4.span == timedelta(minutes=23, seconds=52)
 
         assert q4.urls[0].timestamp.second == 16
         assert q4.urls[0].frequency == 2
