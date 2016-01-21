@@ -25,6 +25,8 @@ def test_quote(some_quotes):
         assert session.query(Quote).filter_by(sid=2).one().cluster.sid == 2
         assert session.query(Quote).filter_by(sid=4).one().cluster.sid == 4
         assert session.query(Quote).filter_by(sid=6).one().cluster.sid == 1
+        assert session.query(Quote).filter_by(sid=6).one().tokens == \
+            ['Some', 'quote', 'to', 'tokenize', '6']
 
         assert [quote.sid for quote in
                 session.query(Cluster).filter_by(sid=3).one().quotes] == [3, 8]

@@ -2,7 +2,8 @@ import click
 from sqlalchemy import create_engine
 
 from brainscopypaste import paths
-from brainscopypaste.db import Base, Session
+from brainscopypaste.db import Base, Session, Cluster, Quote, Url
+from brainscopypaste.utils import session_scope
 from brainscopypaste.load.memetracker import MemeTrackerParser
 
 
@@ -21,22 +22,46 @@ def init_db():
     return engine
 
 
-@cli.command()
-def emptydb():
-    """Empty the database."""
-    engine = init_db()
-    click.secho("About to empty the whole database. "
-                "Are you sure? (type 'yes') ", nl=False,
-                fg='red', bold=True)
+@cli.group()
+@click.pass_obj
+def drop(obj):
+    """Drop parts of (or all) the database."""
+    obj['engine'] = init_db()
+
+
+def confirm(fillin):
+    text = "About to empty {}. Are you sure? (type 'yes') ".format(fillin)
+    click.secho(text, nl=False, fg='red', bold=True)
     answer = input()
 
-    if answer != 'yes':
+    if answer == 'yes':
+        return True
+    else:
         click.secho("Good. Aborting.")
-        return
+        return False
 
-    click.secho('Emptying database... ', nl=False)
-    Base.metadata.drop_all(bind=engine)
-    click.secho('OK', fg='green', bold=True)
+
+@drop.command()
+@click.pass_obj
+def all(obj):
+    """Empty the whole database."""
+    if confirm('the whole database'):
+        click.secho('Emptying database... ', nl=False)
+        Base.metadata.drop_all(bind=obj['engine'])
+        click.secho('OK', fg='green', bold=True)
+
+
+@drop.command()
+@click.pass_obj
+def filtered(obj):
+    """Drop filtered models (Clusters, Quotes, Urls)."""
+    if confirm('the filtered models (Clusters, Quotes, Urls)'):
+        with session_scope() as session:
+            click.secho('Dropping filtered models... ', nl=False)
+            session.query(Cluster).filter(Cluster.filtered.is_(True)).delete()
+            session.query(Quote).filter(Quote.filtered.is_(True)).delete()
+            session.query(Url).filter(Url.filtered.is_(True)).delete()
+        click.secho('OK', fg='green', bold=True)
 
 
 @cli.group()
@@ -45,9 +70,9 @@ def load():
     init_db()
 
 
-@load.command()
+@load.command(name='memetracker')
 @click.option('--testrun', is_flag=True)
-def memetracker(testrun):
+def load_memetracker(testrun):
     """Load MemeTracker data into SQL."""
     MemeTrackerParser(paths.mt_full,
                       limitlines=20000 if testrun else None,
@@ -55,5 +80,21 @@ def memetracker(testrun):
         .parse()
 
 
-if __name__ == '__main__':
+@cli.group()
+def filter():
+    """Source database filtering."""
+    init_db()
+
+
+@filter.command(name='memetracker')
+def filter_memetracker(testrun):
+    """Filter MemeTracker data."""
+    # TODO: implement
+
+
+def cliobj():
     cli(obj={})
+
+
+if __name__ == '__main__':
+    cliobj()

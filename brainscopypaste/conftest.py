@@ -30,7 +30,7 @@ def some_quotes(some_clusters):
         clusters = session.query(Cluster)
         session.add_all(Quote(sid=i,
                               cluster=clusters.filter_by(sid=i % 5).one(),
-                              string='Quote {}'.format(i))
+                              string='Some quote to tokenize {}'.format(i))
                         for i in sids)
 
     return sids

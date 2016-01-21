@@ -9,6 +9,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        brainscopypaste=brainscopypaste.cli:cli
+        brainscopypaste=brainscopypaste.cli:cliobj
     ''',
 )

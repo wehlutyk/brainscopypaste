@@ -1,9 +1,12 @@
 from datetime import timedelta
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, desc
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
+
+from brainscopypaste.utils import cache
+from brainscopypaste.filter import FilterMixin
 
 
 Base = declarative_base()
@@ -18,43 +21,58 @@ class BaseMixin:
 
     id = Column(Integer, primary_key=True)
 
+    def clone(self, **fields):
+        # TODO: test
+        columns = self.__mapper__.columns.keys()
+        columns.remove('id')
+        for field in fields.keys():
+            try:
+                columns.remove(field)
+            except ValueError:
+                pass
 
-class Cluster(Base, BaseMixin):
+        init = {}
+        for column in columns:
+            init[column] = getattr(self, column)
+
+        for arg, value in fields.items():
+            init[arg] = value
+
+        return self.__class__(**init)
+
+
+class Cluster(Base, BaseMixin, FilterMixin):
 
     sid = Column(Integer, nullable=False)
+    filtered = Column(Boolean, default=False, nullable=False)
     source = Column(String, nullable=False)
     quotes = relationship('Quote', back_populates='cluster')
 
-    @property
+    @cache
     def size(self):
-        # TODO: cache
         return len(self.quotes)
 
-    @property
+    @cache
     def size_urls(self):
-        # TODO: cache
         return self.urls.count()
 
-    @property
+    @cache
     def frequency(self):
-        # TODO: cache
         return sum(quote.frequency for quote in self.quotes)
 
-    @property
+    @cache
     def urls(self):
-        # TODO: cache
         from brainscopypaste.utils import session_scope
         with session_scope() as session:
             quote_ids = [quote.id for quote in self.quotes]
             return session.query(Url).filter(Url.quote_id.in_(quote_ids))
 
-    @property
+    @cache
     def span(self):
-        # TODO: cache
         if self.size_urls == 0:
             return timedelta(0)
-        return abs(self.urls.order_by('timestamp desc').first().timestamp -
-                   self.urls.order_by('timestamp').first().timestamp)
+        return abs(self.urls.order_by(desc(Url.timestamp)).first().timestamp -
+                   self.urls.order_by(Url.timestamp).first().timestamp)
 
 
 class Quote(Base, BaseMixin):
@@ -62,38 +80,41 @@ class Quote(Base, BaseMixin):
     cluster_id = Column(Integer, ForeignKey('cluster.id'), nullable=False)
     cluster = relationship('Cluster', back_populates='quotes')
     sid = Column(Integer, nullable=False)
+    filtered = Column(Boolean, default=False, nullable=False)
     string = Column(String, nullable=False)
     urls = relationship('Url', back_populates='quote', lazy='dynamic')
 
-    @property
+    @cache
     def size(self):
-        # TODO: cache
         return self.urls.count()
 
-    @property
+    @cache
     def frequency(self):
-        # TODO: cache
         return sum(url.frequency for url in self.urls)
 
-    @property
+    @cache
     def span(self):
-        # TODO: cache
         if self.size == 0:
             return timedelta(0)
-        return abs(self.urls.order_by('timestamp desc').first().timestamp -
-                   self.urls.order_by('timestamp').first().timestamp)
+        return abs(self.urls.order_by(desc(Url.timestamp)).first().timestamp -
+                   self.urls.order_by(Url.timestamp).first().timestamp)
+
+    @cache
+    def tokens(self):
+        from brainscopypaste import tagger
+        return tagger.tokens(self.string)
 
 
 class Url(Base, BaseMixin):
 
     quote_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
     quote = relationship('Quote', back_populates='urls')
+    filtered = Column(Boolean, default=False, nullable=False)
     timestamp = Column(DateTime, nullable=False)
     frequency = Column(Integer, nullable=False)
     url_type = Column(Enum('B', 'M', name='url_type'), nullable=False)
     url = Column(String, nullable=False)
 
-    @property
+    @cache
     def cluster(self):
-        # TODO: cache
         return self.quote.cluster
