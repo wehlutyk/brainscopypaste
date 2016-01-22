@@ -17,7 +17,7 @@ class MemeTrackerParser:
     """Parse the MemeTracker file into database."""
 
     # How many lines to skip at the beginning of the file.
-    header_size = 40036
+    header_size = 6
 
     def __init__(self, filename, line_count, limit=None):
         """Setup progress printing."""
