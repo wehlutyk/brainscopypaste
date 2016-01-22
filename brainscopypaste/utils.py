@@ -12,8 +12,26 @@ def grouper(iterable, n, fillvalue=None):
     """Iterate over `n`-wide slices of `iterable`, filling the
     last slice with `fillvalue`."""
 
+    # TODO: test
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+
+def grouper_adaptive(iterable, n):
+    # TODO: test
+    it = iter(iterable)
+    keepgoing = True
+
+    def block():
+        nonlocal keepgoing
+        for i in range(n):
+            try:
+                yield next(it)
+            except StopIteration:
+                keepgoing = False
+
+    while keepgoing:
+        yield block()
 
 
 class cache:

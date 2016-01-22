@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from brainscopypaste import paths
 from brainscopypaste.db import Base, Session, Cluster, Quote, Url
 from brainscopypaste.utils import session_scope
-from brainscopypaste.load.memetracker import MemeTrackerParser
+from brainscopypaste.load import MemeTrackerParser
 
 
 @click.group()
@@ -75,8 +75,8 @@ def load():
 def load_memetracker(testrun):
     """Load MemeTracker data into SQL."""
     MemeTrackerParser(paths.mt_full,
-                      limitlines=20000 if testrun else None,
-                      nochecks=testrun)\
+                      line_count=8357595,
+                      limit=3 if testrun else None)\
         .parse()
 
 

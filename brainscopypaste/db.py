@@ -1,6 +1,7 @@
 from datetime import timedelta
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, desc
+from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, desc,
+                        inspect)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
@@ -62,10 +63,15 @@ class Cluster(Base, BaseMixin, FilterMixin):
 
     @cache
     def urls(self):
-        from brainscopypaste.utils import session_scope
-        with session_scope() as session:
-            quote_ids = [quote.id for quote in self.quotes]
-            return session.query(Url).filter(Url.quote_id.in_(quote_ids))
+        session = inspect(self).session
+        quote_ids = [quote.id for quote in self.quotes]
+        # Not that the line above could work while not in a session,
+        # if the quotes were eagerly loaded, so we do need to check
+        # that the session we obtained is not None.
+        if session is None:
+            raise ValueError(("Instance {} is not bound to a Session; "
+                              "cannot load attributes.").format(self))
+        return session.query(Url).filter(Url.quote_id.in_(quote_ids))
 
     @cache
     def span(self):
