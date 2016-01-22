@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, desc,
-                        inspect)
+                        inspect, func)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
@@ -47,11 +47,11 @@ class Cluster(Base, BaseMixin, FilterMixin):
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
     source = Column(String, nullable=False)
-    quotes = relationship('Quote', back_populates='cluster')
+    quotes = relationship('Quote', back_populates='cluster', lazy='dynamic')
 
     @cache
     def size(self):
-        return len(self.quotes)
+        return self.quotes.count()
 
     @cache
     def size_urls(self):
@@ -96,14 +96,16 @@ class Quote(Base, BaseMixin):
 
     @cache
     def frequency(self):
-        return sum(url.frequency for url in self.urls)
+        if self.size == 0:
+            return 0
+        return self.urls.with_entities(func.sum(Url.frequency)).scalar()
 
     @cache
     def span(self):
         if self.size == 0:
             return timedelta(0)
-        return abs(self.urls.order_by(desc(Url.timestamp)).first().timestamp -
-                   self.urls.order_by(Url.timestamp).first().timestamp)
+        return abs(self.urls.with_entities(func.max(Url.timestamp)).scalar() -
+                   self.urls.with_entities(func.min(Url.timestamp)).scalar())
 
     @cache
     def tokens(self):

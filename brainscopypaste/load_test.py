@@ -150,8 +150,8 @@ def assert_loaded():
         q9 = session.query(Quote).filter_by(sid=950238).one()
         q1 = session.query(Quote).filter_by(sid=1485).one()
 
-        assert c3.quotes == [q4, q9]
-        assert c4.quotes == [q1]
+        assert c3.quotes.all() == [q4, q9]
+        assert c4.quotes.all() == [q1]
         assert c3.size == 2
         assert c4.size == 1
         assert c3.size_urls == 4
