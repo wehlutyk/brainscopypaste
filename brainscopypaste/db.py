@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, desc,
+from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey,
                         inspect, func)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
@@ -59,7 +59,9 @@ class Cluster(Base, BaseMixin, FilterMixin):
 
     @cache
     def frequency(self):
-        return sum(quote.frequency for quote in self.quotes)
+        if self.size_urls == 0:
+            return 0
+        return self.urls.with_entities(func.sum(Url.frequency)).scalar()
 
     @cache
     def urls(self):
@@ -77,8 +79,8 @@ class Cluster(Base, BaseMixin, FilterMixin):
     def span(self):
         if self.size_urls == 0:
             return timedelta(0)
-        return abs(self.urls.order_by(desc(Url.timestamp)).first().timestamp -
-                   self.urls.order_by(Url.timestamp).first().timestamp)
+        return abs(self.urls.with_entities(func.max(Url.timestamp)).scalar() -
+                   self.urls.with_entities(func.min(Url.timestamp)).scalar())
 
 
 class Quote(Base, BaseMixin):
