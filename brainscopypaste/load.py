@@ -97,7 +97,6 @@ class MemeTrackerParser:
                             # Check the cluster and quote we just finished
                             if self.cluster is not None:
                                 self.check_cluster()
-                            # TODO: comment to see failure
                             if self.quote is not None:
                                 self.check_quote()
 
