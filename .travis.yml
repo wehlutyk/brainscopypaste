@@ -18,6 +18,7 @@ before_install:
   - export CONDA_GREP="$(echo $CONDA_PACKAGES | sed 's/ /\\|/g')"
 
 install:
+  - bash install_treetagger.sh
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
   # Until conda can handle setuptools requirements.txt (https://github.com/conda/conda-env/pull/172), we separate conda and pip requirements
