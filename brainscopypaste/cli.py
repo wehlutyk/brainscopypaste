@@ -8,14 +8,18 @@ from brainscopypaste.load import MemeTrackerParser
 
 
 @click.group()
-def cli():
+@click.option('--echo-sql', is_flag=True)
+@click.pass_obj
+def cli(obj, echo_sql):
     """BrainsCopyPaste analysis of the MemeTracker data."""
+    obj['ECHO_SQL'] = echo_sql
 
 
-def init_db():
+def init_db(echo_sql):
     click.echo('Initializing database connection... ', nl=False)
     engine = create_engine('postgresql://brainscopypaste:'
-                           '@localhost:5432/brainscopypaste')
+                           '@localhost:5432/brainscopypaste',
+                           echo=echo_sql)
     Session.configure(bind=engine)
     Base.metadata.create_all(engine)
     click.secho('OK', fg='green', bold=True)
@@ -26,7 +30,7 @@ def init_db():
 @click.pass_obj
 def drop(obj):
     """Drop parts of (or all) the database."""
-    obj['engine'] = init_db()
+    obj['engine'] = init_db(obj['ECHO_SQL'])
 
 
 def confirm(fillin):
@@ -41,9 +45,9 @@ def confirm(fillin):
         return False
 
 
-@drop.command()
+@drop.command(name='all')
 @click.pass_obj
-def all(obj):
+def drop_all(obj):
     """Empty the whole database."""
     if confirm('the whole database'):
         click.secho('Emptying database... ', nl=False)
@@ -51,9 +55,9 @@ def all(obj):
         click.secho('OK', fg='green', bold=True)
 
 
-@drop.command()
+@drop.command(name='filtered')
 @click.pass_obj
-def filtered(obj):
+def drop_filtered(obj):
     """Drop filtered models (Clusters, Quotes, Urls)."""
     if confirm('the filtered models (Clusters, Quotes, Urls)'):
         with session_scope() as session:
@@ -65,9 +69,10 @@ def filtered(obj):
 
 
 @cli.group()
-def load():
+@click.pass_obj
+def load(obj):
     """Source database loading."""
-    init_db()
+    init_db(obj['ECHO_SQL'])
 
 
 @load.command(name='memetracker')
@@ -81,12 +86,14 @@ def load_memetracker(testrun):
 
 
 @cli.group()
-def filter():
+@click.pass_obj
+def filter(obj):
     """Source database filtering."""
-    init_db()
+    init_db(obj['ECHO_SQL'])
 
 
 @filter.command(name='memetracker')
+@click.option('--testrun', is_flag=True)
 def filter_memetracker(testrun):
     """Filter MemeTracker data."""
     # TODO: implement
