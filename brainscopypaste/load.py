@@ -20,7 +20,7 @@ class MemeTrackerParser:
     header_size = 6
 
     # We save to database and check every `block_size` clusters.
-    block_size = 100
+    block_size = 20
 
     def __init__(self, filename, line_count, limit=None):
         """Setup progress printing."""
