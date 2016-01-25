@@ -19,6 +19,9 @@ class MemeTrackerParser:
     # How many lines to skip at the beginning of the file.
     header_size = 6
 
+    # We save to database and check every `block_size` clusters.
+    block_size = 100
+
     def __init__(self, filename, line_count, limit=None):
         """Setup progress printing."""
 
@@ -65,12 +68,58 @@ class MemeTrackerParser:
 
         # Initialize the parsing with the first line.
         self._cluster_line = self._file.readline()
-        self._clusters_seen = 1
+        self._clusters_read = 0
         self._lines_read = 1
         self._bar.update(self._lines_read)
 
+        # Results to be saved periodically.
+        self._objects = {'clusters': [], 'quotes': [], 'urls': []}
+        self._checks = {'clusters': {}, 'quotes': {}}
+
         while self._cluster_line is not None:
             self._parse_cluster_block()
+            if self._clusters_read % self.block_size == 0:
+                self._save()
+                self._check()
+
+        # Final save and check.
+        self._save()
+        self._check()
+
+    def _save(self):
+        with session_scope() as session:
+            # Order the objects inserted so the engine bulks them together.
+            objects = []
+            objects.extend(self._objects['clusters'])
+            objects.extend(self._objects['quotes'])
+            objects.extend(self._objects['urls'])
+            session.bulk_save_objects(objects)
+
+        self._objects = {'clusters': [], 'quotes': [], 'urls': []}
+
+    def _check(self):
+        with session_scope() as session:
+            for id, check in self._checks['clusters'].items():
+                # Check the cluster itself.
+                cluster = session.query(Cluster).get(id)
+                err_end = (' #{} does not match value'
+                           ' in file').format(cluster.sid)
+                if check['size'] != cluster.size:
+                    raise ValueError("Cluster size" + err_end)
+                if check['frequency'] != cluster.frequency:
+                    raise ValueError("Cluster frequency" + err_end)
+
+                # Check each quote.
+                for quote in cluster.quotes:
+                    check = self._checks['quotes'][quote.id]
+                    err_end = (' #{} does not match value'
+                               ' in file').format(quote.sid)
+                    if check['size'] != quote.size:
+                        raise ValueError("Quote size" + err_end)
+                    if check['frequency'] != quote.frequency:
+                        raise ValueError("Quote frequency" + err_end)
+
+        self._checks = {'clusters': {}, 'quotes': {}}
 
     def _parse_cluster_block(self):
         # Check we have a cluster line and parse it.
@@ -87,66 +136,31 @@ class MemeTrackerParser:
                      self._cluster_line, self._lines_read + self.header_size))
 
         # Create the cluster.
-        self._objects = {'cluster': [], 'quotes': [], 'urls': []}
-        self._checks = {'cluster': {}, 'quotes': {}}
         self._handle_cluster(fields)
 
-        # Keep reading until the next one, or exhaustion.
+        # Keep reading until the next cluster, or exhaustion.
         for line in self._file:
             self._lines_read += 1
             self._bar.update(self._lines_read)
 
             tipe, fields = self._parse_line(line)
             if tipe == 'cluster':
-                # Feed a new cluster_line to keep going, unless asked to stop.
-                if self.limit is None or self._clusters_seen < self.limit:
-                    self._cluster_line = line
-                    self._clusters_seen += 1
-                    # We can clean up the current quote straight away.
-                    self._quote = None
                 break
             elif tipe == 'quote':
                 self._handle_quote(fields)
             elif tipe == 'url':
                 self._handle_url(fields)
 
-        # Save everything.
-        with session_scope() as session:
-            objects = []
-            objects.extend(self._objects['cluster'])
-            objects.extend(self._objects['quotes'])
-            objects.extend(self._objects['urls'])
-            session.bulk_save_objects(objects)
-
-        # Check everything.
-        self._check_cluster_block()
+        # If we just saw a new cluster, feed that new cluster_line
+        # for the next cluster, unless asked to stop.
+        self._clusters_read += 1
+        if (tipe == 'cluster' and
+                (self.limit is None or self._clusters_read < self.limit)):
+            self._cluster_line = line
 
         # Clean up.
         self._cluster = None
-        self._checks = None
-        self._objects = None
-
-    def _check_cluster_block(self):
-        with session_scope() as session:
-            cluster = session.query(Cluster).get(self._cluster.id)
-
-            # Check the cluster itself.
-            check = self._checks['cluster'][cluster.id]
-            err_end = (' #{} does not match value'
-                       ' in file').format(cluster.sid)
-            if check['size'] != cluster.size:
-                raise ValueError("Cluster size" + err_end)
-            if check['frequency'] != cluster.frequency:
-                raise ValueError("Cluster frequency" + err_end)
-
-            # Check each quote.
-            for quote in cluster.quotes:
-                check = self._checks['quotes'][quote.id]
-                err_end = ' #{} does not match value in file'.format(quote.sid)
-                if check['size'] != quote.size:
-                    raise ValueError("Quote size" + err_end)
-                if check['frequency'] != quote.frequency:
-                    raise ValueError("Quote frequency" + err_end)
+        self._quote = None
 
     @classmethod
     def _parse_line(self, line):
@@ -164,12 +178,12 @@ class MemeTrackerParser:
     def _handle_cluster(self, fields):
         id = int(fields[3])
         self._cluster = Cluster(id=id, sid=id, source='memetracker')
-        self._objects['cluster'].append(self._cluster)
+        self._objects['clusters'].append(self._cluster)
 
         # Save checks for later on.
         cluster_size = int(fields[0])
         cluster_frequency = int(fields[1])
-        self._checks['cluster'][self._cluster.id] = {
+        self._checks['clusters'][self._cluster.id] = {
             'size': cluster_size,
             'frequency': cluster_frequency
         }
