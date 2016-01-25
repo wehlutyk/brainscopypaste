@@ -87,7 +87,7 @@ class MemeTrackerParser:
                      self._cluster_line, self._lines_read + self.header_size))
 
         # Create the cluster.
-        self._objects = []
+        self._objects = {'cluster': [], 'quotes': [], 'urls': []}
         self._checks = {'cluster': {}, 'quotes': {}}
         self._handle_cluster(fields)
 
@@ -112,7 +112,11 @@ class MemeTrackerParser:
 
         # Save everything.
         with session_scope() as session:
-            session.bulk_save_objects(self._objects)
+            objects = []
+            objects.extend(self._objects['cluster'])
+            objects.extend(self._objects['quotes'])
+            objects.extend(self._objects['urls'])
+            session.bulk_save_objects(objects)
 
         # Check everything.
         self._check_cluster_block()
@@ -160,7 +164,7 @@ class MemeTrackerParser:
     def _handle_cluster(self, fields):
         id = int(fields[3])
         self._cluster = Cluster(id=id, sid=id, source='memetracker')
-        self._objects.append(self._cluster)
+        self._objects['cluster'].append(self._cluster)
 
         # Save checks for later on.
         cluster_size = int(fields[0])
@@ -174,7 +178,7 @@ class MemeTrackerParser:
         id = int(fields[4])
         self._quote = Quote(cluster_id=self._cluster.id,
                             id=id, sid=id, string=fields[3])
-        self._objects.append(self._quote)
+        self._objects['quotes'].append(self._quote)
 
         # Save checks for later on.
         quote_size = int(fields[2])
@@ -191,4 +195,4 @@ class MemeTrackerParser:
         url = Url(quote_id=self._quote.id,
                   timestamp=timestamp, frequency=int(fields[3]),
                   url_type=fields[4], url=fields[5])
-        self._objects.append(url)
+        self._objects['urls'].append(url)
