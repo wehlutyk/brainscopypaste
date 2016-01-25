@@ -7,7 +7,6 @@ from brainscopypaste import settings
 class FilterMixin:
 
     def filter(self):
-        # TODO: test
         if self.filtered:
             raise ValueError('Cluster is already filtered')
 
@@ -16,8 +15,11 @@ class FilterMixin:
         fcluster = self.clone(filtered=True)
         furls = []
 
-        # Examine each quote for min_tokens, max_days, and language
+        # Examine each quote for min_tokens, max_days, and language.
         for quote in self.quotes:
+
+            if quote.frequency == 0:
+                continue
 
             if len(quote.tokens) < min_tokens:
                 continue
@@ -31,7 +33,7 @@ class FilterMixin:
             fquote = quote.clone(cluster_id=None, filtered=True)
             fcluster.quotes.append(fquote)
             fquote.urls = [url.clone(quote_id=None, filtered=True)
-                           for url in quote.urls.clone()]
+                           for url in quote.urls]
             furls.extend(fquote.urls)
 
         # If no quotes where kept, drop the whole cluster.

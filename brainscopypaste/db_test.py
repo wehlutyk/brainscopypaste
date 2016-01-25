@@ -103,8 +103,9 @@ def test_clone_cluster(some_urls):
         assert cloned.source == cluster.source
         assert cloned.quotes.all() == []
 
-        cloned = cluster.clone(filtered=True, source='another')
-        assert cloned.id is None
+        cloned = cluster.clone(id=500, filtered=True, source='another')
+        assert cloned.id == 500
+        assert cloned.id != cluster.id
         assert cloned.sid == cluster.sid
         assert cloned.filtered is True
         assert cloned.filtered != cluster.filtered
@@ -124,8 +125,10 @@ def test_clone_quote(some_urls):
         assert cloned.string == quote.string
         assert cloned.urls.all() == []
 
-        cloned = quote.clone(filtered=True, cluster_id=125, string='hello')
-        assert cloned.id is None
+        cloned = quote.clone(id=600, filtered=True,
+                             cluster_id=125, string='hello')
+        assert cloned.id == 600
+        assert cloned.id != quote.id
         assert cloned.cluster_id == 125
         assert cloned.cluster_id != quote.cluster_id
         assert cloned.sid == quote.sid
@@ -148,8 +151,9 @@ def test_clone_url(some_urls):
         assert cloned.url_type == url.url_type
         assert cloned.url == url.url
 
-        cloned = url.clone(filtered=True, quote_id=110, url='bla')
-        assert cloned.id is None
+        cloned = url.clone(id=700, filtered=True, quote_id=110, url='bla')
+        assert cloned.id == 700
+        assert cloned.id != url.id
         assert cloned.quote_id == 110
         assert cloned.quote_id != url.quote_id
         assert cloned.filtered is True
