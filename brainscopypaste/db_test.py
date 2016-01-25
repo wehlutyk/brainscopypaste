@@ -91,3 +91,71 @@ def test_url(some_urls):
                             frequency=1,
                             url_type='C',
                             url='some url'))
+
+
+def test_clone_cluster(some_urls):
+    with session_scope() as session:
+        cluster = session.query(Cluster).get(1)
+        cloned = cluster.clone()
+        assert cloned.id is None
+        assert cloned.sid == cluster.sid
+        assert cloned.filtered == cluster.filtered
+        assert cloned.source == cluster.source
+        assert cloned.quotes.all() == []
+
+        cloned = cluster.clone(filtered=True, source='another')
+        assert cloned.id is None
+        assert cloned.sid == cluster.sid
+        assert cloned.filtered is True
+        assert cloned.filtered != cluster.filtered
+        assert cloned.source == 'another'
+        assert cloned.source != cluster.source
+        assert cloned.quotes.all() == []
+
+
+def test_clone_quote(some_urls):
+    with session_scope() as session:
+        quote = session.query(Quote).get(1)
+        cloned = quote.clone()
+        assert cloned.id is None
+        assert cloned.cluster_id == quote.cluster_id
+        assert cloned.sid == quote.sid
+        assert cloned.filtered == quote.filtered
+        assert cloned.string == quote.string
+        assert cloned.urls.all() == []
+
+        cloned = quote.clone(filtered=True, cluster_id=125, string='hello')
+        assert cloned.id is None
+        assert cloned.cluster_id == 125
+        assert cloned.cluster_id != quote.cluster_id
+        assert cloned.sid == quote.sid
+        assert cloned.filtered is True
+        assert cloned.filtered != quote.filtered
+        assert cloned.string == 'hello'
+        assert cloned.string != quote.string
+        assert cloned.urls.all() == []
+
+
+def test_clone_url(some_urls):
+    with session_scope() as session:
+        url = session.query(Url).get(1)
+        cloned = url.clone()
+        assert cloned.id is None
+        assert cloned.quote_id == url.quote_id
+        assert cloned.filtered == url.filtered
+        assert cloned.timestamp == url.timestamp
+        assert cloned.frequency == url.frequency
+        assert cloned.url_type == url.url_type
+        assert cloned.url == url.url
+
+        cloned = url.clone(filtered=True, quote_id=110, url='bla')
+        assert cloned.id is None
+        assert cloned.quote_id == 110
+        assert cloned.quote_id != url.quote_id
+        assert cloned.filtered is True
+        assert cloned.filtered != url.filtered
+        assert cloned.timestamp == url.timestamp
+        assert cloned.frequency == url.frequency
+        assert cloned.url_type == url.url_type
+        assert cloned.url == 'bla'
+        assert cloned.url != url.url

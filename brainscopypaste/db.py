@@ -23,7 +23,6 @@ class BaseMixin:
     id = Column(Integer, primary_key=True)
 
     def clone(self, **fields):
-        # TODO: test
         columns = self.__mapper__.columns.keys()
         columns.remove('id')
         for field in fields.keys():
