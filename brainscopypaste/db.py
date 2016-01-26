@@ -46,7 +46,8 @@ class Cluster(Base, BaseMixin, FilterMixin):
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
     source = Column(String, nullable=False)
-    quotes = relationship('Quote', back_populates='cluster', lazy='dynamic')
+    quotes = relationship('Quote', back_populates='cluster', lazy='dynamic',
+                          cascade="all, delete-orphan")
 
     @cache
     def size(self):
@@ -89,7 +90,8 @@ class Quote(Base, BaseMixin):
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
     string = Column(String, nullable=False)
-    urls = relationship('Url', back_populates='quote', lazy='dynamic')
+    urls = relationship('Url', back_populates='quote', lazy='dynamic',
+                        cascade="all, delete-orphan")
 
     @cache
     def size(self):
