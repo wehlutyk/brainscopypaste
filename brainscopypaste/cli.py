@@ -18,7 +18,7 @@ def cli(obj, echo_sql):
 
 def init_db(echo_sql):
     click.echo('Initializing database connection... ', nl=False)
-    engine = create_engine('postgresql://brainscopypaste:'
+    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
                            '@localhost:5432/brainscopypaste',
                            echo=echo_sql)
     Session.configure(bind=engine)
