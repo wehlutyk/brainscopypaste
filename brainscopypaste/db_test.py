@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DataError
 import pytest
 
 from brainscopypaste.utils import session_scope
@@ -83,7 +83,7 @@ def test_url(some_urls):
         assert [url.id for url in session.query(Cluster).filter_by(sid=1)
                 .one().urls] == [1, 6, 11, 16]
 
-    with pytest.raises(IntegrityError):
+    with pytest.raises(DataError):
         with session_scope() as session:
             quote = session.query(Quote).filter_by(sid=1).one()
             session.add(Url(quote=quote,

@@ -4,11 +4,12 @@
 from datetime import datetime
 import re
 from codecs import open
+from io import StringIO
 
 import click
 from progressbar import ProgressBar
 
-from brainscopypaste.db import Cluster, Quote, Url
+from brainscopypaste.db import Session, Cluster, Quote, Url
 from brainscopypaste.utils import session_scope
 
 
@@ -20,7 +21,19 @@ class MemeTrackerParser:
     header_size = 6
 
     # We save to database and check every `block_size` clusters.
-    block_size = 20
+    block_size = None
+
+    # Format strings to create file lines from cluster, quote, url.
+    cluster_format = ('{cluster.id}\t{cluster.sid}\t{cluster.filtered}'
+                      '\t{cluster.source}\n')
+    cluster_columns = ('id', 'sid', 'filtered', 'source')
+    quote_format = ('{quote.id}\t{quote.cluster_id}\t{quote.sid}'
+                    '\t{quote.filtered}\t{quote.string}\n')
+    quote_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string')
+    url_format = ('{url.quote_id}\t{url.filtered}\t{url.timestamp}'
+                  '\t{url.frequency}\t{url.url_type}\t{url.url}\n')
+    url_columns = ('quote_id', 'filtered', 'timestamp', 'frequency',
+                   'url_type', 'url')
 
     def __init__(self, filename, line_count, limit=None):
         """Setup progress printing."""
@@ -45,20 +58,33 @@ class MemeTrackerParser:
     def parse(self):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
-        click.echo('Parsing MemeTracker data file into database{}... '
+        click.echo('Parsing MemeTracker data file into db-copyable file{}... '
                    .format('' if self.limit is None else ' (test run)'))
 
         if self.parsed:
             raise ValueError('Parser has already run')
 
-        lines_left = self.line_count - self.header_size
-        with open(self.filename, 'rb', encoding='utf-8') as self._file, \
+        # +100 is some margin for ProgressBar
+        lines_left = self.line_count - self.header_size + 100
+        with open(self.filename, 'rb', encoding='utf8') as self._file, \
                 ProgressBar(max_value=lines_left,
                             redirect_stdout=True) as self._bar:
             self._parse()
 
         # Don't do this twice.
         self.parsed = True
+        click.secho('OK', fg='green', bold=True)
+
+        # Vacuum analyze
+        click.echo('Vacuuming and analyzing anew... ', nl=False)
+        connection = Session.kw['bind'].connect()
+        raw_connection = connection.connection
+        old_isolation_level = raw_connection.isolation_level
+        raw_connection.set_isolation_level(0)
+        with raw_connection.cursor() as cursor:
+            cursor.execute('VACUUM ANALYZE')
+        raw_connection.set_isolation_level(old_isolation_level)
+        connection.close()
         click.secho('OK', fg='green', bold=True)
 
     def _parse(self):
@@ -78,7 +104,8 @@ class MemeTrackerParser:
 
         while self._cluster_line is not None:
             self._parse_cluster_block()
-            if self._clusters_read % self.block_size == 0:
+            if (self.block_size is not None and
+                    self._clusters_read % self.block_size == 0):
                 self._save()
                 self._check()
 
@@ -87,15 +114,29 @@ class MemeTrackerParser:
         self._check()
 
     def _save(self):
-        with session_scope() as session:
-            # Order the objects inserted so the engine bulks them together.
-            objects = []
-            objects.extend(self._objects['clusters'])
-            objects.extend(self._objects['quotes'])
-            objects.extend(self._objects['urls'])
-            session.bulk_save_objects(objects)
+        # Order the objects inserted so the engine bulks them together.
+        objects = StringIO()
+        objects.writelines(self._objects['clusters'])
+        self._copy(objects, Cluster.__tablename__, self.cluster_columns)
+        objects.close()
+
+        objects = StringIO()
+        objects.writelines(self._objects['quotes'])
+        self._copy(objects, Quote.__tablename__, self.quote_columns)
+        objects.close()
+
+        objects = StringIO()
+        objects.writelines(self._objects['urls'])
+        self._copy(objects, Url.__tablename__, self.url_columns)
+        objects.close()
 
         self._objects = {'clusters': [], 'quotes': [], 'urls': []}
+
+    def _copy(self, string, table, columns):
+        string.seek(0)
+        with session_scope() as session:
+            cursor = session.connection().connection.cursor()
+            cursor.copy_from(string, table, columns=columns)
 
     def _check(self):
         with session_scope() as session:
@@ -177,8 +218,10 @@ class MemeTrackerParser:
 
     def _handle_cluster(self, fields):
         id = int(fields[3])
-        self._cluster = Cluster(id=id, sid=id, source='memetracker')
-        self._objects['clusters'].append(self._cluster)
+        self._cluster = Cluster(id=id, sid=id, filtered=False,
+                                source='memetracker')
+        self._objects['clusters'].append(
+            self.cluster_format.format(cluster=self._cluster))
 
         # Save checks for later on.
         cluster_size = int(fields[0])
@@ -190,9 +233,15 @@ class MemeTrackerParser:
 
     def _handle_quote(self, fields):
         id = int(fields[4])
+        # Backslashes must be escaped otherwise PostgreSQL interprets them
+        # in its own way (see
+        # http://www.postgresql.org/docs/current/interactive/sql-copy.html).
         self._quote = Quote(cluster_id=self._cluster.id,
-                            id=id, sid=id, string=fields[3])
-        self._objects['quotes'].append(self._quote)
+                            id=id, sid=id,
+                            filtered=False,
+                            string=fields[3].replace('\\', '\\\\'))
+        self._objects['quotes'].append(
+            self.quote_format.format(quote=self._quote))
 
         # Save checks for later on.
         quote_size = int(fields[2])
@@ -206,7 +255,12 @@ class MemeTrackerParser:
         timestamp = datetime.strptime(fields[2], '%Y-%m-%d %H:%M:%S')
         assert timestamp.tzinfo is None
 
+        # Backslashes must be escaped otherwise PostgreSQL interprets them
+        # in its own way (see
+        # http://www.postgresql.org/docs/current/interactive/sql-copy.html).
         url = Url(quote_id=self._quote.id,
+                  filtered=False,
                   timestamp=timestamp, frequency=int(fields[3]),
-                  url_type=fields[4], url=fields[5])
-        self._objects['urls'].append(url)
+                  url_type=fields[4], url=fields[5].replace('\\', '\\\\'))
+        self._objects['urls'].append(
+            self.url_format.format(url=url))
