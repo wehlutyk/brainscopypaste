@@ -20,7 +20,7 @@ def init_db(echo_sql):
     click.echo('Initializing database connection... ', nl=False)
     engine = create_engine('postgresql+psycopg2://brainscopypaste:'
                            '@localhost:5432/brainscopypaste',
-                           echo=echo_sql)
+                           client_encoding='utf8', echo=echo_sql)
     Session.configure(bind=engine)
     Base.metadata.create_all(engine)
     click.secho('OK', fg='green', bold=True)
