@@ -6,6 +6,12 @@ language: python
 python:
   - 3.5
 
+addons:
+  postgresql: 9.4
+
+services:
+  - postgresql
+
 env:
   - CONDA_PACKAGES="numpy scipy matplotlib pandas pyzmq"
 
@@ -29,6 +35,11 @@ install:
   - cat requirements.txt | grep -v "$CONDA_GREP" | xargs pip install
   # FIXME: get a real package working instead of this
   - pip install --editable .
+
+before_script:
+  - psql -c 'create database brainscopypaste_test;' -U postgres
+  - psql -c 'create user brainscopypaste;' -U postgres
+  - psql -c 'alter database brainscopypaste owner to brainscopypaste;' -U postgres
 
 script:
   - py.test
