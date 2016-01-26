@@ -1,7 +1,37 @@
 from datetime import timedelta
 
-from brainscopypaste.utils import langdetect
+import click
+from progressbar import ProgressBar
+
+from brainscopypaste.utils import langdetect, session_scope
 from brainscopypaste import settings
+
+
+def filter_clusters(limit=None):
+    from brainscopypaste.db import Cluster
+
+    click.echo('Filtering all clusters{}...'
+               .format('' if limit is None else ' (test run)'))
+
+    # Check this isn't already done
+    with session_scope() as session:
+        if session.query(Cluster)\
+           .filter(Cluster.filtered.is_(True)).count() > 0:
+            raise Exception('There are already some filtered '
+                            'clusters, aborting.')
+
+        query = session.query(Cluster.id)
+        if limit is not None:
+            query = query.limit(limit)
+        cluster_ids = [id for (id,) in query]
+
+    for cluster_id in ProgressBar()(cluster_ids):
+        with session_scope() as session:
+            fcluster = session.query(Cluster).get(cluster_id).filter()
+            if fcluster is not None:
+                session.add(fcluster)
+
+    click.secho('OK', fg='green', bold=True)
 
 
 class FilterMixin:

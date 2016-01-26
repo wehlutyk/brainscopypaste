@@ -5,6 +5,7 @@ from brainscopypaste import paths
 from brainscopypaste.db import Base, Session, Cluster, Quote, Url
 from brainscopypaste.utils import session_scope
 from brainscopypaste.load import MemeTrackerParser
+from brainscopypaste.filter import filter_clusters
 
 
 @click.group()
@@ -96,7 +97,7 @@ def filter(obj):
 @click.option('--testrun', is_flag=True)
 def filter_memetracker(testrun):
     """Filter MemeTracker data."""
-    # TODO: implement
+    filter_clusters(limit=3 if testrun else None)
 
 
 def cliobj():
