@@ -39,7 +39,7 @@ install:
 before_script:
   - psql -c 'create database brainscopypaste_test;' -U postgres
   - psql -c 'create user brainscopypaste;' -U postgres
-  - psql -c 'alter database brainscopypaste owner to brainscopypaste;' -U postgres
+  - psql -c 'alter database brainscopypaste_test owner to brainscopypaste;' -U postgres
 
 script:
   - py.test
