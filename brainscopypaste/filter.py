@@ -89,7 +89,7 @@ class FilterMixin:
                 continue
 
             fquote = quote.clone(id=self.filter_quote_offset + quote.id,
-                                 cluster_id=None, filtered=True)
+                                 cluster_id=fcluster.id, filtered=True)
             fcluster.quotes.append(fquote)
 
         # If no quotes where kept, drop the whole cluster.
