@@ -4,13 +4,12 @@
 from datetime import datetime
 import re
 from codecs import open
-from io import StringIO
 
 import click
 from progressbar import ProgressBar
 
-from brainscopypaste.db import Cluster, Quote, Url
-from brainscopypaste.utils import session_scope
+from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
+from brainscopypaste.utils import session_scope, execute_raw
 
 
 class MemeTrackerParser:
@@ -58,8 +57,17 @@ class MemeTrackerParser:
 
         click.secho('OK', fg='green', bold=True)
 
-        # Final save and check.
-        self._save()
+        # Save.
+        save_by_copy(**self._objects)
+        self._objects = {'clusters': [], 'quotes': []}
+
+        # Vacuum analyze.
+        click.echo('Vacuuming and analyzing... ', nl=False)
+        execute_raw(Session.kw['bind'], 'VACUUM ANALYZE')
+        click.secho('OK', fg='green', bold=True)
+
+        # And check.
+        click.echo('Checking consistency...')
         self._check()
 
         # Don't do this twice.
@@ -84,34 +92,7 @@ class MemeTrackerParser:
         while self._cluster_line is not None:
             self._parse_cluster_block()
 
-    def _save(self):
-        # Order the objects inserted so the engine bulks them together.
-        click.echo('Saving clusters... ', nl=False)
-        objects = StringIO()
-        objects.writelines([cluster.format_copy() + '\n'
-                            for cluster in self._objects['clusters']])
-        self._copy(objects, Cluster.__tablename__, Cluster.format_copy_columns)
-        objects.close()
-        click.secho('OK', fg='green', bold=True)
-
-        click.echo('Saving quotes... ', nl=False)
-        objects = StringIO()
-        objects.writelines([quote.format_copy() + '\n'
-                            for quote in self._objects['quotes']])
-        self._copy(objects, Quote.__tablename__, Quote.format_copy_columns)
-        objects.close()
-        click.secho('OK', fg='green', bold=True)
-
-        self._objects = {'clusters': [], 'quotes': []}
-
-    def _copy(self, string, table, columns):
-        string.seek(0)
-        with session_scope() as session:
-            cursor = session.connection().connection.cursor()
-            cursor.copy_from(string, table, columns=columns)
-
     def _check(self):
-        click.echo('Checking consistency...')
         with session_scope() as session:
             for id, check in ProgressBar()(self._checks['clusters'].items()):
                 # Check the cluster itself.

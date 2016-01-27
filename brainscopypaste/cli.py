@@ -2,8 +2,8 @@ import click
 from sqlalchemy import create_engine
 
 from brainscopypaste import paths
-from brainscopypaste.db import Base, Session, Cluster, Quote, Url
-from brainscopypaste.utils import session_scope, execute_raw
+from brainscopypaste.db import Base, Session, Cluster, Quote
+from brainscopypaste.utils import session_scope
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.filter import filter_clusters
 
@@ -29,33 +29,9 @@ def init_db(echo_sql):
 
 @cli.group()
 @click.pass_obj
-def db(obj):
-    """Manage the database."""
-    obj['engine'] = init_db(obj['ECHO_SQL'])
-
-
-@db.command(name='vacuum')
-@click.pass_obj
-def db_vacuum(obj):
-    """Vacuum the whole database."""
-    click.echo('Vacuuming')
-    execute_raw(obj['engine'], 'VACUUM VERBOSE')
-    click.secho('OK', fg='green', bold=True)
-
-
-@db.command(name='analyze')
-@click.pass_obj
-def db_analyze(obj):
-    """Analyze the whole database."""
-    click.echo('Analyzing')
-    execute_raw(obj['engine'], 'ANALYZE VERBOSE')
-    click.secho('OK', fg='green', bold=True)
-
-
-@db.group(name='drop')
-@click.pass_obj
-def db_drop(obj):
+def drop(obj):
     """Drop parts of (or all) the database."""
+    obj['engine'] = init_db(obj['ECHO_SQL'])
 
 
 def confirm(fillin):
@@ -70,9 +46,9 @@ def confirm(fillin):
         return False
 
 
-@db_drop.command(name='all')
+@drop.command(name='all')
 @click.pass_obj
-def db_drop_all(obj):
+def drop_all(obj):
     """Empty the whole database."""
     if confirm('the whole database'):
         click.secho('Emptying database... ', nl=False)
@@ -80,16 +56,15 @@ def db_drop_all(obj):
         click.secho('OK', fg='green', bold=True)
 
 
-@db_drop.command(name='filtered')
+@drop.command(name='filtered')
 @click.pass_obj
-def db_drop_filtered(obj):
+def drop_filtered(obj):
     """Drop filtered models (Clusters, Quotes, Urls)."""
     if confirm('the filtered models (Clusters, Quotes, Urls)'):
         with session_scope() as session:
             click.secho('Dropping filtered models... ', nl=False)
             session.query(Cluster).filter(Cluster.filtered.is_(True)).delete()
             session.query(Quote).filter(Quote.filtered.is_(True)).delete()
-            session.query(Url).filter(Url.filtered.is_(True)).delete()
         click.secho('OK', fg='green', bold=True)
 
 

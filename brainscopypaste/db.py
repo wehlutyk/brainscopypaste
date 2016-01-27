@@ -1,6 +1,8 @@
 import re
 from datetime import timedelta
+from io import StringIO
 
+import click
 from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, cast)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
@@ -204,3 +206,29 @@ class Url:
                 self.frequency == other.frequency and
                 self.url_type == other.url_type and
                 self.url == other.url)
+
+
+def _copy(string, table, columns):
+    from brainscopypaste.utils import session_scope
+
+    string.seek(0)
+    with session_scope() as session:
+        cursor = session.connection().connection.cursor()
+        cursor.copy_from(string, table, columns=columns)
+
+
+def save_by_copy(clusters, quotes):
+    # Order the objects inserted so the engine bulks them together.
+    click.echo('Saving clusters... ', nl=False)
+    objects = StringIO()
+    objects.writelines([cluster.format_copy() + '\n' for cluster in clusters])
+    _copy(objects, Cluster.__tablename__, Cluster.format_copy_columns)
+    objects.close()
+    click.secho('OK', fg='green', bold=True)
+
+    click.echo('Saving quotes... ', nl=False)
+    objects = StringIO()
+    objects.writelines([quote.format_copy() + '\n' for quote in quotes])
+    _copy(objects, Quote.__tablename__, Quote.format_copy_columns)
+    objects.close()
+    click.secho('OK', fg='green', bold=True)

@@ -2,18 +2,21 @@ from datetime import timedelta
 
 import click
 from progressbar import ProgressBar
+from sqlalchemy import func
+import numpy as np
 
-from brainscopypaste.utils import langdetect, session_scope
+from brainscopypaste.utils import langdetect, session_scope, execute_raw, cache
 from brainscopypaste import settings
 
 
 def filter_clusters(limit=None):
-    from brainscopypaste.db import Cluster
+    # TODO: test
+    from brainscopypaste.db import Session, Cluster, save_by_copy
 
     click.echo('Filtering all clusters{}...'
                .format('' if limit is None else ' (test run)'))
 
-    # Check this isn't already done
+    # Check this isn't already done.
     with session_scope() as session:
         if session.query(Cluster)\
            .filter(Cluster.filtered.is_(True)).count() > 0:
@@ -25,16 +28,41 @@ def filter_clusters(limit=None):
             query = query.limit(limit)
         cluster_ids = [id for (id,) in query]
 
+    # Filter.
+    objects = {'clusters': [], 'quotes': []}
     for cluster_id in ProgressBar()(cluster_ids):
-        with session_scope() as session:
-            fcluster = session.query(Cluster).get(cluster_id).filter()
-            if fcluster is not None:
-                session.add(fcluster)
+        fcluster = session.query(Cluster).get(cluster_id).filter()
+        if fcluster is not None:
+            objects['clusters'].append(fcluster)
+            objects['quotes'].extend(fcluster.quotes)
+    click.secho('OK', fg='green', bold=True)
 
+    # Save.
+    save_by_copy(**objects)
+
+    # Vacuum analyze.
+    click.echo('Vacuuming and analyzing... ', nl=False)
+    execute_raw(Session.kw['bind'], 'VACUUM ANALYZE')
     click.secho('OK', fg='green', bold=True)
 
 
 class FilterMixin:
+
+    @cache
+    def filter_cluster_offset(self):
+        # TODO: test
+        from brainscopypaste.db import Cluster
+        with session_scope() as session:
+            maxid = session.query(func.max(Cluster.id)).scalar()
+            return 10 ** (np.floor(np.log10(maxid)) + 3)
+
+    @cache
+    def filter_quote_offset(self):
+        # TODO: test
+        from brainscopypaste.db import Quote
+        with session_scope() as session:
+            maxid = session.query(func.max(Quote.id)).scalar()
+            return 10 ** (np.floor(np.log10(maxid)) + 3)
 
     def filter(self):
         if self.filtered:
@@ -42,7 +70,8 @@ class FilterMixin:
 
         min_tokens = settings.mt_filter_min_tokens
         max_span = timedelta(days=settings.mt_filter_max_days)
-        fcluster = self.clone(filtered=True)
+        fcluster = self.clone(id=self.filter_cluster_offset + self.id,
+                              filtered=True)
 
         # Examine each quote for min_tokens, max_days, and language.
         for quote in self.quotes:
@@ -59,7 +88,8 @@ class FilterMixin:
             if langdetect(quote.string) != 'en':
                 continue
 
-            fquote = quote.clone(cluster_id=None, filtered=True)
+            fquote = quote.clone(id=self.filter_quote_offset + quote.id,
+                                 cluster_id=None, filtered=True)
             fcluster.quotes.append(fquote)
 
         # If no quotes where kept, drop the whole cluster.
@@ -67,8 +97,6 @@ class FilterMixin:
             return
 
         # Finally, if the new cluster spans too many days, discard it.
-        print(fcluster.span)
-        print(fcluster.urls)
         if fcluster.span > max_span:
             return
 
