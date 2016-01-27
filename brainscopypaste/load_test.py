@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 
 from brainscopypaste.utils import session_scope
-from brainscopypaste.db import Cluster, Quote, Url
+from brainscopypaste.db import Cluster, Quote
 from brainscopypaste.load import MemeTrackerParser
 
 
@@ -17,7 +17,7 @@ content = '''format:
 
 2	5	hate that i love you so	36543
 	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-1
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
 	2	2	that i love you	950238
@@ -39,7 +39,7 @@ contents_errored = {
 
 2	5	hate that i love you so	36543
 	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-1
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
 	2	2	that i love you	950238
@@ -58,7 +58,7 @@ contents_errored = {
 
 2	10	hate that i love you so	36543
 	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-1
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
 	2	2	that i love you	950238
@@ -77,7 +77,7 @@ contents_errored = {
 
 2	5	hate that i love you so	36543
 	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-1
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
 	2	4	that i love you	950238
@@ -96,7 +96,7 @@ contents_errored = {
 
 2	5	hate that i love you so	36543
 	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-1
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
 		2008-08-01 00:24:08	1	M	some-url-2
 
 	2	2	that i love you	950238
@@ -142,7 +142,6 @@ def assert_loaded():
     with session_scope() as session:
         assert session.query(Cluster).count() == 2
         assert session.query(Quote).count() == 3
-        assert session.query(Url).count() == 6
 
         c3 = session.query(Cluster).filter_by(sid=36543).one()
         c4 = session.query(Cluster).filter_by(sid=43112).one()
@@ -161,7 +160,7 @@ def assert_loaded():
         assert c3.urls[0].timestamp.second == 16
         assert c3.urls[0].frequency == 2
         assert c3.urls[0].url_type == 'B'
-        assert c3.urls[0].url == 'some-url-1'
+        assert c3.urls[0].url == 'some-url-with-"-and-\'-1'
         assert abs(c3.span - timedelta(days=47)) < timedelta(hours=5)
 
         assert q4.string == 'i love you'
@@ -178,7 +177,7 @@ def assert_loaded():
         assert q4.urls[0].timestamp.second == 16
         assert q4.urls[0].frequency == 2
         assert q4.urls[0].url_type == 'B'
-        assert q4.urls[0].url == 'some-url-1'
+        assert q4.urls[0].url == 'some-url-with-"-and-\'-1'
 
         assert q9.urls[1].timestamp.second == 3
         assert q9.urls[1].frequency == 1

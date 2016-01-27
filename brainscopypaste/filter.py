@@ -43,7 +43,6 @@ class FilterMixin:
         min_tokens = settings.mt_filter_min_tokens
         max_span = timedelta(days=settings.mt_filter_max_days)
         fcluster = self.clone(filtered=True)
-        furls = []
 
         # Examine each quote for min_tokens, max_days, and language.
         for quote in self.quotes:
@@ -62,17 +61,15 @@ class FilterMixin:
 
             fquote = quote.clone(cluster_id=None, filtered=True)
             fcluster.quotes.append(fquote)
-            fquote.urls = [url.clone(quote_id=None, filtered=True)
-                           for url in quote.urls]
-            furls.extend(fquote.urls)
 
         # If no quotes where kept, drop the whole cluster.
         if fcluster.size == 0:
             return
 
         # Finally, if the new cluster spans too many days, discard it.
-        furls = sorted(furls, key=lambda url: url.timestamp)
-        if abs(furls[0].timestamp - furls[-1].timestamp) > max_span:
+        print(fcluster.span)
+        print(fcluster.urls)
+        if fcluster.span > max_span:
             return
 
         return fcluster

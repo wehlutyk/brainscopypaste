@@ -1,10 +1,11 @@
+import re
 from datetime import timedelta
 
-from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey,
-                        inspect, func)
+from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, cast)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from brainscopypaste.utils import cache
 from brainscopypaste.filter import FilterMixin
@@ -49,38 +50,63 @@ class Cluster(Base, BaseMixin, FilterMixin):
     quotes = relationship('Quote', back_populates='cluster', lazy='dynamic',
                           cascade="all, delete-orphan")
 
+    format_copy_columns = ('id', 'sid', 'filtered', 'source')
+
+    def format_copy(self):
+        base = ('{cluster.id}\t{cluster.sid}\t{cluster.filtered}\t'
+                '{cluster.source}')
+        return base.format(cluster=self)
+
     @cache
     def size(self):
         return self.quotes.count()
 
     @cache
     def size_urls(self):
-        return self.urls.count()
+        return sum(quote.size for quote in self.quotes.all())
 
     @cache
     def frequency(self):
-        if self.size_urls == 0:
-            return 0
-        return self.urls.with_entities(func.sum(Url.frequency)).scalar()
+        return sum(url.frequency for url in self.urls)
 
     @cache
     def urls(self):
-        session = inspect(self).session
-        quote_ids = [quote.id for quote in self.quotes]
-        # Not that the line above could work while not in a session,
-        # if the quotes were eagerly loaded, so we do need to check
-        # that the session we obtained is not None.
-        if session is None:
-            raise ValueError(("Instance {} is not bound to a Session; "
-                              "cannot load attributes.").format(self))
-        return session.query(Url).filter(Url.quote_id.in_(quote_ids))
+        urls = []
+        for quote in self.quotes.all():
+            urls.extend(quote.urls)
+        return sorted(urls, key=lambda url: url.timestamp)
 
     @cache
     def span(self):
         if self.size_urls == 0:
             return timedelta(0)
-        return abs(self.urls.with_entities(func.max(Url.timestamp)).scalar() -
-                   self.urls.with_entities(func.min(Url.timestamp)).scalar())
+        timestamps = []
+        for quote in self.quotes.all():
+            timestamps.extend(quote.url_timestamps)
+        return abs(max(timestamps) - min(timestamps))
+
+
+class ArrayOfEnum(ARRAY):
+
+    def bind_expression(self, bindvalue):
+        return cast(bindvalue, self)
+
+    def result_processor(self, dialect, coltype):
+        super_rp = super(ArrayOfEnum, self).result_processor(
+            dialect, coltype)
+
+        def handle_raw_string(value):
+            inner = re.match(r"^{(.*)}$", value).group(1)
+            return inner.split(",") if inner else []
+
+        def process(value):
+            if value is None:
+                return None
+            return super_rp(handle_raw_string(value))
+        return process
+
+
+url_type = Enum('B', 'M', name='url_type', metadata=Base.metadata)
 
 
 class Quote(Base, BaseMixin):
@@ -90,42 +116,91 @@ class Quote(Base, BaseMixin):
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
     string = Column(String, nullable=False)
-    urls = relationship('Url', back_populates='quote', lazy='dynamic',
-                        cascade="all, delete-orphan")
+    url_timestamps = Column(ARRAY(DateTime), default=[], nullable=False)
+    url_frequencies = Column(ARRAY(Integer), default=[], nullable=False)
+    url_url_types = Column(ArrayOfEnum(url_type), default=[], nullable=False)
+    url_urls = Column(ARRAY(String), default=[], nullable=False)
+
+    format_copy_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string',
+                           'url_timestamps', 'url_frequencies',
+                           'url_url_types', 'url_urls')
+
+    def format_copy(self):
+        base = '{quote.id}\t{quote.cluster_id}\t{quote.sid}\t{quote.filtered}'
+        parts = [base.format(quote=self)]
+        # Backslashes must be escaped otherwise PostgreSQL interprets them
+        # in its own way (see
+        # http://www.postgresql.org/docs/current/interactive/sql-copy.html).
+        parts.append(self.string.replace('\\', '\\\\'))
+        parts.append('{' +
+                     ', '.join(map('{}'.format, self.url_timestamps)) +
+                     '}')
+        parts.append('{' +
+                     ', '.join(map('{}'.format, self.url_frequencies)) +
+                     '}')
+        parts.append('{' +
+                     ', '.join(map('{}'.format, self.url_url_types)) +
+                     '}')
+        # Two levels of escaping backslashes and double quotes too here.
+        # (See http://www.postgresql.org/docs/9.4/static/arrays.html).
+        url_urls = [url_url.replace('\\', '\\\\').replace('"', '\\"')
+                    for url_url in self.url_urls]
+        parts.append(
+            "{" +
+            ', '.join(map('"{}"'.format, url_urls)).replace('\\', '\\\\') +
+            "}"
+        )
+        return '\t'.join(parts)
 
     @cache
     def size(self):
-        return self.urls.count()
+        return len(self.url_timestamps)
 
     @cache
     def frequency(self):
-        if self.size == 0:
-            return 0
-        return self.urls.with_entities(func.sum(Url.frequency)).scalar()
+        return sum(self.url_frequencies)
 
     @cache
     def span(self):
         if self.size == 0:
             return timedelta(0)
-        return abs(self.urls.with_entities(func.max(Url.timestamp)).scalar() -
-                   self.urls.with_entities(func.min(Url.timestamp)).scalar())
+        timestamps = self.url_timestamps
+        return abs(max(timestamps) - min(timestamps))
 
     @cache
     def tokens(self):
         from brainscopypaste import tagger
         return tagger.tokens(self.string)
 
-
-class Url(Base, BaseMixin):
-
-    quote_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
-    quote = relationship('Quote', back_populates='urls')
-    filtered = Column(Boolean, default=False, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
-    frequency = Column(Integer, nullable=False)
-    url_type = Column(Enum('B', 'M', name='url_type'), nullable=False)
-    url = Column(String, nullable=False)
-
     @cache
-    def cluster(self):
-        return self.quote.cluster
+    def urls(self):
+        return sorted([Url(timestamp, frequency, url_type, url)
+                       for (timestamp, frequency, url_type, url)
+                       in zip(self.url_timestamps, self.url_frequencies,
+                              self.url_url_types, self.url_urls)],
+                      key=lambda url: url.timestamp)
+
+    def add_url(self, url):
+        self.url_timestamps = (self.url_timestamps or []) + [url.timestamp]
+        self.url_frequencies = (self.url_frequencies or []) + [url.frequency]
+        self.url_url_types = (self.url_url_types or []) + [url.url_type]
+        self.url_urls = (self.url_urls or []) + [url.url]
+
+    def add_urls(self, urls):
+        for url in urls:
+            self.add_url(url)
+
+
+class Url:
+
+    def __init__(self, timestamp, frequency, url_type, url):
+        self.timestamp = timestamp
+        self.frequency = frequency
+        self.url_type = url_type
+        self.url = url
+
+    def __eq__(self, other):
+        return (self.timestamp == other.timestamp and
+                self.frequency == other.frequency and
+                self.url_type == other.url_type and
+                self.url == other.url)

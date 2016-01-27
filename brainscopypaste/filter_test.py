@@ -24,29 +24,29 @@ def filterable_cluster(tmpdb):
             Quote(sid=4, string="a quote without any urls")
         ]
         # Quote 0 is good.
-        cluster.quotes[0].urls = [
+        cluster.quotes[0].add_urls([
             Url(timestamp=datetime.utcnow(), frequency=2,
                 url_type='M', url='some-url'),
             Url(timestamp=datetime.utcnow() + timedelta(days=80, hours=-1),
                 frequency=2, url_type='M', url='some-url')
-        ]
+        ])
         # Quote 1 has not enough words.
-        cluster.quotes[1].urls = [
+        cluster.quotes[1].add_urls([
             Url(timestamp=datetime.utcnow(), frequency=2,
                 url_type='M', url='some-url')
-        ]
+        ])
         # Quote 2 is not in English.
-        cluster.quotes[2].urls = [
+        cluster.quotes[2].add_urls([
             Url(timestamp=datetime.utcnow(), frequency=2,
                 url_type='M', url='some-url')
-        ]
+        ])
         # Quote 3 spans too long.
-        cluster.quotes[3].urls = [
+        cluster.quotes[3].add_urls([
             Url(timestamp=datetime.utcnow(), frequency=2,
                 url_type='M', url='some-url'),
             Url(timestamp=datetime.utcnow() + timedelta(days=80, hours=1),
                 frequency=2, url_type='M', url='some-url')
-        ]
+        ])
         # Quote 4 has no urls at all.
 
         # Save all this.
@@ -68,8 +68,9 @@ def test_cluster_emptied(filterable_cluster):
     # Modify our cluster to make it bad.
     with session_scope() as session:
         quote = session.query(Quote).filter(Quote.sid == 0).one()
-        quote.urls.order_by('timestamp')[1].timestamp = \
-            datetime.utcnow() + timedelta(days=81)
+        timestamps = quote.url_timestamps.copy()
+        timestamps[1] = datetime.utcnow() + timedelta(days=81)
+        quote.url_timestamps = timestamps
 
     # Now check our cluster gets filtered out.
     with session_scope() as session:
@@ -85,10 +86,10 @@ def test_cluster_too_long(filterable_cluster):
         # the cluster span to be too long.
         quote = Quote(sid=5, string='a string with enough '
                                     'words and no problems')
-        quote.urls = [
+        quote.add_url(
             Url(timestamp=datetime.utcnow() + timedelta(days=80, hours=1),
                 frequency=2, url_type='M', url='some-url')
-        ]
+        )
         cluster.quotes.append(quote)
 
     # Now check our cluster gets filtered out.

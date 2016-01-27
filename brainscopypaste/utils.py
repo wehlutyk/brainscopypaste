@@ -191,3 +191,14 @@ def langdetect(sentence):
         return detect(sentence)
     except LangDetectException:
         return None
+
+
+def execute_raw(engine, statement):
+    connection = engine.connect()
+    raw_connection = connection.connection
+    old_isolation_level = raw_connection.isolation_level
+    raw_connection.set_isolation_level(0)
+    with raw_connection.cursor() as cursor:
+        cursor.execute(statement)
+    raw_connection.set_isolation_level(old_isolation_level)
+    connection.close()

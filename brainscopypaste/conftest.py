@@ -13,6 +13,7 @@ def tmpdb(request):
                            '@localhost:5432/brainscopypaste_test',
                            client_encoding='utf8')
     Session.configure(bind=engine)
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
     def fin():
@@ -48,12 +49,11 @@ def some_urls(some_clusters, some_quotes):
     ids = range(20)
     with session_scope() as session:
         quotes = session.query(Quote)
-        session.add_all(Url(id=i,
-                            quote=quotes.filter_by(sid=i % 10).one(),
-                            timestamp=datetime.utcnow() + timedelta(days=i),
-                            frequency=2,
-                            url_type='B',
-                            url='Url {}'.format(i))
-                        for i in ids)
+        for i in ids:
+            quotes.filter_by(sid=i % 10).one()\
+                .add_url(Url(timestamp=(datetime(year=2008, month=1, day=1) +
+                                        timedelta(days=i)),
+                             frequency=2, url_type='B',
+                             url='Url with " and \' {}'.format(i)))
 
     return ids
