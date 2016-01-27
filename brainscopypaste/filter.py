@@ -54,7 +54,7 @@ class FilterMixin:
         from brainscopypaste.db import Cluster
         with session_scope() as session:
             maxid = session.query(func.max(Cluster.id)).scalar()
-            return 10 ** (np.floor(np.log10(maxid)) + 3)
+            return int(10 ** (np.floor(np.log10(maxid)) + 3))
 
     @cache
     def filter_quote_offset(self):
@@ -62,7 +62,7 @@ class FilterMixin:
         from brainscopypaste.db import Quote
         with session_scope() as session:
             maxid = session.query(func.max(Quote.id)).scalar()
-            return 10 ** (np.floor(np.log10(maxid)) + 3)
+            return int(10 ** (np.floor(np.log10(maxid)) + 3))
 
     def filter(self):
         if self.filtered:
