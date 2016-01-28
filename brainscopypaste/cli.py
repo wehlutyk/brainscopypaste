@@ -59,10 +59,10 @@ def drop_all(obj):
 @drop.command(name='filtered')
 @click.pass_obj
 def drop_filtered(obj):
-    """Drop filtered models (Clusters, Quotes)."""
-    if confirm('the filtered models (Clusters, Quotes)'):
+    """Drop filtered rows (Clusters, Quotes)."""
+    if confirm('the filtered rows (Clusters, Quotes)'):
         with session_scope() as session:
-            click.secho('Dropping filtered models... ', nl=False)
+            click.secho('Dropping filtered rows... ', nl=False)
             session.query(Quote).filter(Quote.filtered.is_(True)).delete()
             session.query(Cluster).filter(Cluster.filtered.is_(True)).delete()
         click.secho('OK', fg='green', bold=True)
