@@ -93,8 +93,8 @@ class MemeTrackerParser:
             self._parse_cluster_block()
 
     def _check(self):
-        with session_scope() as session:
-            for id, check in ProgressBar()(self._checks['clusters'].items()):
+        for id, check in ProgressBar()(self._checks['clusters'].items()):
+            with session_scope() as session:
                 # Check the cluster itself.
                 cluster = session.query(Cluster).get(id)
                 err_end = (' #{} does not match value'

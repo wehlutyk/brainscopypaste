@@ -31,10 +31,11 @@ def filter_clusters(limit=None):
     # Filter.
     objects = {'clusters': [], 'quotes': []}
     for cluster_id in ProgressBar()(cluster_ids):
-        fcluster = session.query(Cluster).get(cluster_id).filter()
-        if fcluster is not None:
-            objects['clusters'].append(fcluster)
-            objects['quotes'].extend(fcluster.quotes)
+        with session_scope() as session:
+            fcluster = session.query(Cluster).get(cluster_id).filter()
+            if fcluster is not None:
+                objects['clusters'].append(fcluster)
+                objects['quotes'].extend(fcluster.quotes)
     click.secho('OK', fg='green', bold=True)
 
     # Save.
