@@ -116,6 +116,12 @@ def test_clone_quote(some_urls):
         assert cloned.sid == quote.sid
         assert cloned.filtered == quote.filtered
         assert cloned.string == quote.string
+        for url in cloned.urls:
+            assert url.quote == cloned
+        # Urls are the same apart from parent quotes
+        for url1, url2 in zip(quote.urls, cloned.urls):
+            url1.quote = None
+            url2.quote = None
         assert cloned.urls == quote.urls
 
         cloned = quote.clone(id=600, filtered=True,
@@ -129,4 +135,10 @@ def test_clone_quote(some_urls):
         assert cloned.filtered != quote.filtered
         assert cloned.string == 'hello'
         assert cloned.string != quote.string
+        for url in cloned.urls:
+            assert url.quote == cloned
+        # Urls are the same apart from parent quotes
+        for url1, url2 in zip(quote.urls, cloned.urls):
+            url1.quote = None
+            url2.quote = None
         assert cloned.urls == quote.urls

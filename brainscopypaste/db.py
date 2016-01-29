@@ -176,7 +176,7 @@ class Quote(Base, BaseMixin):
 
     @cache
     def urls(self):
-        return sorted([Url(timestamp, frequency, url_type, url)
+        return sorted([Url(timestamp, frequency, url_type, url, quote=self)
                        for (timestamp, frequency, url_type, url)
                        in zip(self.url_timestamps, self.url_frequencies,
                               self.url_url_types, self.url_urls)],
@@ -195,14 +195,16 @@ class Quote(Base, BaseMixin):
 
 class Url:
 
-    def __init__(self, timestamp, frequency, url_type, url):
+    def __init__(self, timestamp, frequency, url_type, url, quote=None):
+        self.quote = quote
         self.timestamp = timestamp
         self.frequency = frequency
         self.url_type = url_type
         self.url = url
 
     def __eq__(self, other):
-        return (self.timestamp == other.timestamp and
+        return (self.quote == other.quote and
+                self.timestamp == other.timestamp and
                 self.frequency == other.frequency and
                 self.url_type == other.url_type and
                 self.url == other.url)
