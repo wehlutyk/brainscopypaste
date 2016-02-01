@@ -3,7 +3,8 @@ from datetime import timedelta
 from io import StringIO
 
 import click
-from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey, cast)
+from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey,
+                        PickleType, cast)
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
@@ -11,6 +12,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 
 from brainscopypaste.utils import cache
 from brainscopypaste.filter import FilterMixin
+from brainscopypaste.mine import ValidatorMixin
 
 
 Base = declarative_base()
@@ -122,6 +124,14 @@ class Quote(Base, BaseMixin):
     url_frequencies = Column(ARRAY(Integer), default=[], nullable=False)
     url_url_types = Column(ArrayOfEnum(url_type), default=[], nullable=False)
     url_urls = Column(ARRAY(String), default=[], nullable=False)
+    # TODO: test
+    substitutions_source = relationship(
+        'Substitution', back_populates='source', lazy='dynamic',
+        cascade="all, delete-orphan")
+    # TODO: test
+    substitutions_destination = relationship(
+        'Substitution', back_populates='destination', lazy='dynamic',
+        cascade="all, delete-orphan")
 
     format_copy_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string',
                            'url_timestamps', 'url_frequencies',
@@ -170,9 +180,21 @@ class Quote(Base, BaseMixin):
         return abs(max(timestamps) - min(timestamps))
 
     @cache
+    def tags(self):
+        # TODO: test
+        from brainscopypaste import tagger
+        return tagger.tags(self.string)
+
+    @cache
     def tokens(self):
         from brainscopypaste import tagger
         return tagger.tokens(self.string)
+
+    @cache
+    def lemmas(self):
+        # TODO: test
+        from brainscopypaste import tagger
+        return tagger.lemmas(self.string)
 
     @cache
     def urls(self):
@@ -208,6 +230,38 @@ class Url:
                 self.frequency == other.frequency and
                 self.url_type == other.url_type and
                 self.url == other.url)
+
+
+class Substitution(Base, BaseMixin, ValidatorMixin):
+
+    # TODO: test
+
+    source_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
+    source = relationship('Quote', back_populates='substitutions_source')
+    destination_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
+    destination = relationship('Quote',
+                               back_populates='substitutions_destination')
+    occurrence = Column(Integer, nullable=False)
+    position = Column(Integer, nullable=False)
+    model = Column(PickleType, nullable=False)
+
+    @cache
+    def tags(self):
+        # TODO: test
+        return (self.source.tags[self.position],
+                self.destination.tags[self.position])
+
+    @cache
+    def tokens(self):
+        # TODO: test
+        return (self.source.tokens[self.position],
+                self.destination.tokens[self.position])
+
+    @cache
+    def lemmas(self):
+        # TODO: test
+        return (self.source.lemmas[self.position],
+                self.destination.lemmas[self.position])
 
 
 def _copy(string, table, columns):
