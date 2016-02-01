@@ -127,10 +127,12 @@ class Quote(Base, BaseMixin):
     # TODO: test
     substitutions_source = relationship(
         'Substitution', back_populates='source', lazy='dynamic',
+        foreign_keys='Substitution.source_id',
         cascade="all, delete-orphan")
     # TODO: test
     substitutions_destination = relationship(
         'Substitution', back_populates='destination', lazy='dynamic',
+        foreign_keys='Substitution.destination_id',
         cascade="all, delete-orphan")
 
     format_copy_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string',
@@ -237,10 +239,12 @@ class Substitution(Base, BaseMixin, ValidatorMixin):
     # TODO: test
 
     source_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
-    source = relationship('Quote', back_populates='substitutions_source')
+    source = relationship('Quote', back_populates='substitutions_source',
+                          foreign_keys='Substitution.source_id')
     destination_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
     destination = relationship('Quote',
-                               back_populates='substitutions_destination')
+                               back_populates='substitutions_destination',
+                               foreign_keys='Substitution.destination_id')
     occurrence = Column(Integer, nullable=False)
     position = Column(Integer, nullable=False)
     model = Column(PickleType, nullable=False)
