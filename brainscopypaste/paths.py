@@ -3,8 +3,6 @@
 
 import os
 
-from brainscopypaste.utils import mkdirp
-
 
 ##############################################################################
 # DATA ROOT #
@@ -14,7 +12,6 @@ from brainscopypaste.utils import mkdirp
 
 data_root_rel = 'data'
 data_root = os.path.abspath(data_root_rel)
-mkdirp(data_root)
 
 
 ###############################################################################
@@ -34,7 +31,6 @@ stopwords_file = os.path.join(data_root, stopwords_file_rel)
 
 wn_root_rel = 'WordNet'
 wn_root = os.path.join(data_root, wn_root_rel)
-mkdirp(wn_root)
 
 
 #: Pickle file for the WordNet PageRank scores, relative to
@@ -100,7 +96,6 @@ wn_lengths_pickle = os.path.join(wn_root,
 
 cmu_root_rel = 'CMU'
 cmu_root = os.path.join(data_root, cmu_root_rel)
-mkdirp(cmu_root)
 
 
 #: Pickle file for the CMU number of syllables, relative to
@@ -125,7 +120,6 @@ cmu_MNphonemes_pickle = os.path.join(cmu_root, cmu_MNphonemes_pickle_rel)
 
 aoa_root_rel = 'AoA'
 aoa_root = os.path.join(data_root, aoa_root_rel)
-mkdirp(aoa_root)
 
 
 #: Source csv file for the Kuperman AoA data, relative to :attr:`aoa_root_rel`.
@@ -148,7 +142,6 @@ aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
 
 fa_root_rel = 'FreeAssociation'
 fa_root = os.path.join(data_root, fa_root_rel)
-mkdirp(fa_root)
 
 
 #: Files for raw Free Association data, relative to :attr:`fa_root_rel`.
@@ -217,7 +210,6 @@ fa_lengths_pickle = os.path.join(fa_root,
 
 mt_root_rel = 'MemeTracker'
 mt_root = os.path.join(data_root, mt_root_rel)
-mkdirp(mt_root)
 
 
 #: File for the complete MemeTracker dataset, relative to :attr:`mt_root_rel`.
@@ -261,28 +253,6 @@ mt_start_frequencies_pickle = os.path.join(mt_root,
 # MEMETRACKER SUBSTITUTION MINING #
 ###################################
 #
-#: Folder for files concerning the MemeTracker substitution mining, relative
-#: to :attr:`mt_root_rel`.
-
-mt_mining_root_rel = 'mining'
-mt_mining_root = os.path.join(mt_root, mt_mining_root_rel)
-mkdirp(mt_mining_root)
-
-
-#: List of mining models which are based on slicing the clusters into timebags
-#: that last a given `timebag_size` number of days.
-
-mt_mining_fixedslicing_models = ['slidetbgs', 'tbgs', 'cumtbgs', 'root']
-
-
-#: Pickle files for the MemeTracker substitution mining, relative to
-#: :attr:`mt_mining_root_rel`.
-
-mt_mining_substitutions_pickle_rel = '{}substitutions.pickle'
-mt_mining_substitutions_pickle = os.path.join(
-    mt_mining_root, mt_mining_substitutions_pickle_rel)
-
-
 #: List of available POS tags, taken as options for the analysis scripts.
 
 mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
@@ -391,7 +361,6 @@ mt_analysis_figures_rel = 'figures_dev'
 mt_analysis_figures = os.path.join(data_root,
                                    mt_analysis_figures_rel)
 mt_analysis_figure_file = os.path.join(mt_analysis_figures, '{}.png')
-mkdirp(mt_analysis_figures)
 
 
 ##############################################################################
@@ -402,3 +371,13 @@ mkdirp(mt_analysis_figures)
 #: root.
 
 treetagger_TAGDIR = 'treetagger'
+
+
+##############################################################################
+# PATHS TO CREATE #
+###################
+#
+#: Paths to create when the cli is first run
+
+paths_to_create = [data_root, wn_root, cmu_root, aoa_root, fa_root, mt_root,
+                   mt_analysis_figures]

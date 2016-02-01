@@ -3,9 +3,10 @@ from sqlalchemy import create_engine
 
 from brainscopypaste import paths
 from brainscopypaste.db import Base, Session, Cluster, Quote
-from brainscopypaste.utils import session_scope
+from brainscopypaste.utils import session_scope, mkdirp
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.filter import filter_clusters
+from brainscopypaste.paths import paths_to_create
 
 
 @click.group()
@@ -14,6 +15,8 @@ from brainscopypaste.filter import filter_clusters
 def cli(obj, echo_sql):
     """BrainsCopyPaste analysis of the MemeTracker data."""
     obj['ECHO_SQL'] = echo_sql
+    for path in paths_to_create:
+        mkdirp(path)
 
 
 def init_db(echo_sql):
