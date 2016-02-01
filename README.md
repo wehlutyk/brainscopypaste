@@ -13,3 +13,12 @@ For pipeline graph:
 - [Graffiti](https://github.com/SegFaultAX/graffiti)
 - [PyLeaf](http://www.francesconapolitano.it/leaf/lgl.html)
 - [Ruffus](https://github.com/bunbun/ruffus)
+
+Timings:
+- brainscoppypaste load memetracker
+  - parsing; 0:12:24
+  - saving; ~0:15:00?
+  - checking: 8:45:33
+- brainscoppypaste filter memetracker
+  - parsing: 3:37:41
+  - saving; ~0:15:00?
