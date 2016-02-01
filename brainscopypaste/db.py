@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 
 from brainscopypaste.utils import cache
 from brainscopypaste.filter import FilterMixin
-from brainscopypaste.mine import ValidatorMixin
+from brainscopypaste.mine import ValidatorMixin, MinerMixin
 
 
 Base = declarative_base()
@@ -46,7 +46,7 @@ class BaseMixin:
         return self.__class__(**init)
 
 
-class Cluster(Base, BaseMixin, FilterMixin):
+class Cluster(Base, BaseMixin, FilterMixin, MinerMixin):
 
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)

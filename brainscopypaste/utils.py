@@ -7,6 +7,8 @@ import os
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 
+from brainscopypaste import paths
+
 
 def grouper(iterable, n, fillvalue=None):
     """Iterate over `n`-wide slices of `iterable`, filling the
@@ -202,3 +204,89 @@ def execute_raw(engine, statement):
         cursor.execute(statement)
     raw_connection.set_isolation_level(old_isolation_level)
     connection.close()
+
+
+def is_same_ending_us_uk_spelling(w1, w2):
+    """Do `w1` and `w2` differ by only the last two letters inverted,
+    as in `center`/`centre`, or not (words must be at least 4 letters)."""
+    # TODO: test
+
+    if len(w1) < 4 or len(w2) < 4:
+        # Words too short
+        return False
+
+    if w1[:-2] != w2[:-2]:
+        # There's a change before the last two letters
+        return False
+
+    if w1[:-3:-1] == w2[-2:]:
+        # The last two letters are inverted
+        return True
+
+    return False
+
+
+def is_int(s):
+    """Test if `s` represents an integer."""
+    # TODO: test
+
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+def levenshtein(s1, s2):
+    """Compute levenshtein distance between `s1` and `s2`."""
+    # TODO: test
+
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    if not s2:
+        return len(s1)
+
+    previous_row = xrange(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            # previous_row and current_row are one character longer than s2,
+            # hence the 'j + 1'
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+
+        previous_row = current_row
+
+    return previous_row[-1]
+
+
+class Stopwords:
+
+    """Detect if a word is a stopword."""
+    # TODO: test
+
+    def __init__(self):
+        self._loaded = False
+
+    def _load(self):
+        """Read and load stopwords file."""
+
+        stopwords = set([])
+        with open(paths.stopwords_file) as f:
+            for l in f:
+                stopwords.add(l.strip().lower())
+
+        self._stopwords = stopwords
+        self._loaded = True
+
+    def __contains__(self, word):
+        """Is `word` a stopword or not."""
+        if not self._loaded:
+            self._load()
+        return word in self._stopwords
+
+
+stopwords = Stopwords()
