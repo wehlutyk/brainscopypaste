@@ -36,4 +36,5 @@ def tokens(sentence):
 
 def lemmas(sentence):
     """Get the lemmas of a sentence."""
+    # TODO: test relemmatizing with wordnet here (will apply everywhere)
     return [t[2] for t in tag(sentence)]
