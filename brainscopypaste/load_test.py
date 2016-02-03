@@ -9,6 +9,7 @@ from brainscopypaste.db import Cluster, Quote
 from brainscopypaste.load import MemeTrackerParser
 
 
+# Quotes and urls are intentionally not ordered to check for ordering later on.
 content = '''format:
 <ClSz>	<TotFq>	<Root>	<ClusterId>
 	<QtFq>	<Urls>	<QtStr>	<QuteId>
@@ -16,18 +17,18 @@ content = '''format:
 
 
 2	5	hate that i love you so	36543
-	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
-		2008-08-01 00:24:08	1	M	some-url-2
-
 	2	2	that i love you	950238
 		2008-09-13 14:45:39	1	M	some-url-3
 		2008-09-17 04:09:03	1	B	some-url-4
 
+	3	2	i love you	43
+		2008-08-01 00:24:08	1	M	some-url-2
+		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
+
 1	3	yes we can yes we can	43112
 	3	2	yes we can	1485
-		2008-08-01 00:12:05	1	B	some-url-5
-		2008-08-01 00:31:56	2	M	some-url-6'''
+		2008-08-01 00:31:56	2	M	some-url-6
+		2008-08-01 00:12:05	1	B	some-url-5'''
 
 
 contents_errored = {
@@ -149,7 +150,7 @@ def assert_loaded():
         q9 = session.query(Quote).filter_by(sid=950238).one()
         q1 = session.query(Quote).filter_by(sid=1485).one()
 
-        assert c3.quotes.all() == [q4, q9]
+        assert set(c3.quotes.all()) == set([q4, q9])
         assert c4.quotes.all() == [q1]
         assert c3.size == 2
         assert c4.size == 1

@@ -146,22 +146,25 @@ class Quote(Base, BaseMixin):
         # in its own way (see
         # http://www.postgresql.org/docs/current/interactive/sql-copy.html).
         parts.append(self.string.replace('\\', '\\\\'))
+        timestamps = [url.timestamp for url in self.urls]
+        frequencies = [url.frequency for url in self.urls]
+        url_types = [url.url_type for url in self.urls]
         parts.append('{' +
-                     ', '.join(map('{}'.format, self.url_timestamps)) +
+                     ', '.join(map('{}'.format, timestamps)) +
                      '}')
         parts.append('{' +
-                     ', '.join(map('{}'.format, self.url_frequencies)) +
+                     ', '.join(map('{}'.format, frequencies)) +
                      '}')
         parts.append('{' +
-                     ', '.join(map('{}'.format, self.url_url_types)) +
+                     ', '.join(map('{}'.format, url_types)) +
                      '}')
         # Two levels of escaping backslashes and double quotes too here.
         # (See http://www.postgresql.org/docs/9.4/static/arrays.html).
-        url_urls = [url_url.replace('\\', '\\\\').replace('"', '\\"')
-                    for url_url in self.url_urls]
+        urls = [url.url.replace('\\', '\\\\').replace('"', '\\"')
+                for url in self.urls]
         parts.append(
             "{" +
-            ', '.join(map('"{}"'.format, url_urls)).replace('\\', '\\\\') +
+            ', '.join(map('"{}"'.format, urls)).replace('\\', '\\\\') +
             "}"
         )
         return '\t'.join(parts)

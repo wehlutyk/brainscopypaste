@@ -31,8 +31,9 @@ def test_quote(some_quotes):
         assert session.query(Quote).filter_by(sid=6).one().tokens == \
             ['Some', 'quote', 'to', 'tokenize', '6']
 
-        assert [quote.sid for quote in
-                session.query(Cluster).filter_by(sid=3).one().quotes] == [3, 8]
+        assert set([quote.sid for quote in
+                    session.query(Cluster).filter_by(sid=3).one().quotes]) == \
+            set([3, 8])
         q1 = session.query(Quote).filter_by(sid=1).one()
         assert session.query(Cluster.sid)\
             .filter(Cluster.quotes.contains(q1)).one() == (1,)
@@ -49,30 +50,35 @@ def test_quote(some_quotes):
         assert session.query(Cluster)\
             .filter_by(sid=3).one().span == timedelta(0)
 
-        assert session.query(Quote).get(1).format_copy() == \
-            "1\t1\t0\tFalse\tSome quote to tokenize 0\t{}\t{}\t{}\t{}"
+        q0 = session.query(Quote).filter_by(sid=0).one()
+        assert q0.format_copy() == ('{}'.format(q0.id) +
+                                    "\t1\t0\tFalse\tSome quote to "
+                                    "tokenize 0\t{}\t{}\t{}\t{}")
 
 
 def test_url(some_urls):
     with session_scope() as session:
+        q0 = session.query(Quote).filter_by(sid=0).one()
+        q3 = session.query(Quote).filter_by(sid=3).one()
+
         basedate = datetime(year=2008, month=1, day=1)
-        assert session.query(Quote).get(1).urls[0].timestamp == basedate
-        assert session.query(Quote).get(4).urls[0].timestamp == \
-            basedate + timedelta(days=3)
+        assert q0.urls[0].timestamp == basedate
+        assert q3.urls[0].timestamp == basedate + timedelta(days=3)
 
-        assert session.query(Quote).filter_by(sid=0).one().size == 2
-        assert session.query(Quote).filter_by(sid=0).one().frequency == 4
-        assert session.query(Quote).filter_by(sid=0).one().span == \
-            timedelta(days=10)
+        assert q0.size == 2
+        assert q0.frequency == 4
+        assert q0.span == timedelta(days=10)
 
-        assert session.query(Cluster).filter_by(sid=0).one().size == 2
-        assert session.query(Cluster).filter_by(sid=0).one().size_urls == 4
-        assert session.query(Cluster).filter_by(sid=0).one().frequency == 8
-        assert session.query(Cluster).filter_by(sid=0).one().span == \
-            timedelta(days=15)
+        c0 = session.query(Cluster).filter_by(sid=0).one()
+        assert c0.size == 2
+        assert c0.size_urls == 4
+        assert c0.frequency == 8
+        assert c0.span == timedelta(days=15)
+        assert c0.urls[0].timestamp == basedate
 
-        assert session.query(Quote).get(1).format_copy() == \
-            ('1\t1\t0\tFalse\tSome quote to tokenize 0\t'
+        assert q0.format_copy() == \
+            ('{}'.format(q0.id) +
+             '\t1\t0\tFalse\tSome quote to tokenize 0\t'
              '{2008-01-01 00:00:00, 2008-01-11 00:00:00}\t'
              '{2, 2}\t{B, B}\t'
              '{"Url with \\\\" and \' 0", "Url with \\\\" and \' 10"}')
