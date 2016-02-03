@@ -2,11 +2,13 @@ import click
 from sqlalchemy import create_engine
 
 from brainscopypaste import paths
-from brainscopypaste.db import Base, Session, Cluster, Quote
+from brainscopypaste.db import Base, Session, Cluster, Quote, Substitution
 from brainscopypaste.utils import session_scope, mkdirp
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.paths import paths_to_create
+from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
+                                  Past, Destination, Model)
 
 
 @click.group()
@@ -15,6 +17,7 @@ from brainscopypaste.paths import paths_to_create
 def cli(obj, echo_sql):
     """BrainsCopyPaste analysis of the MemeTracker data."""
     obj['ECHO_SQL'] = echo_sql
+    obj['engine'] = init_db(obj['ECHO_SQL'])
     for path in paths_to_create:
         mkdirp(path)
 
@@ -31,14 +34,12 @@ def init_db(echo_sql):
 
 
 @cli.group()
-@click.pass_obj
-def drop(obj):
+def drop():
     """Drop parts of (or all) the database."""
-    obj['engine'] = init_db(obj['ECHO_SQL'])
 
 
 def confirm(fillin):
-    text = "About to empty {}. Are you sure? (type 'yes') ".format(fillin)
+    text = "About to drop {}. Are you sure? (type 'yes') ".format(fillin)
     click.secho(text, nl=False, fg='red', bold=True)
     answer = input()
 
@@ -71,11 +72,19 @@ def drop_filtered(obj):
         click.secho('OK', fg='green', bold=True)
 
 
-@cli.group()
+@drop.command(name='substitutions')
 @click.pass_obj
-def load(obj):
+def drop_substitutions(obj):
+    """Drop Substitutions."""
+    if confirm('the mined substitutions'):
+        click.secho('Dropping mined substitutions... ', nl=False)
+        Substitution.__table__.drop(bind=obj['engine'])
+        click.secho('OK', fg='green', bold=True)
+
+
+@cli.group()
+def load():
     """Source database loading."""
-    init_db(obj['ECHO_SQL'])
 
 
 @load.command(name='memetracker')
@@ -89,10 +98,8 @@ def load_memetracker(testrun):
 
 
 @cli.group()
-@click.pass_obj
-def filter(obj):
+def filter():
     """Source database filtering."""
-    init_db(obj['ECHO_SQL'])
 
 
 @filter.command(name='memetracker')
@@ -100,6 +107,27 @@ def filter(obj):
 def filter_memetracker(testrun):
     """Filter MemeTracker data."""
     filter_clusters(limit=3 if testrun else None)
+
+
+@cli.group()
+def mine():
+    """Mine the database."""
+
+
+@mine.command(name='substitutions')
+@click.argument('time', type=click.Choice(map('{}'.format, Time)))
+@click.argument('source', type=click.Choice(map('{}'.format, Source)))
+@click.argument('past', type=click.Choice(map('{}'.format, Past)))
+@click.argument('destination',
+                type=click.Choice(map('{}'.format, Destination)))
+@click.option('--testrun', is_flag=True)
+def mine_substitutions(time, source, past, destination, testrun):
+    """Mine the database for substitutions."""
+    time, source, past, destination = map(lambda s: s.split('.')[1],
+                                          [time, source, past, destination])
+    model = Model(time=Time[time], source=Source[source],
+                  past=Past[past], destination=Destination[destination])
+    mine_substitutions_with_model(model, limit=3 if testrun else None)
 
 
 def cliobj():

@@ -10,12 +10,12 @@ from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
                                    session_scope)
 
 
-def mine_substitutions(model, limit=None):
+def mine_substitutions_with_model(model, limit=None):
     # TODO: test
     from brainscopypaste.db import Cluster
 
-    click.echo('Mining clusters for substitutions{}...'
-               .format('' if limit is None else ' (test run)'))
+    click.echo('Mining clusters for substitutions with {}{}...'
+               .format(model, '' if limit is None else ' (test run)'))
 
     with session_scope() as session:
         if session.query(Cluster)\
@@ -99,6 +99,10 @@ class Model:
             Destination.all: self._ok,
             Destination.exclude_past: self._validate_destination_exclude_past
         }
+
+    def __repr__(self):
+        return ('Model(time={0.time}, source={0.source}, past={0.past}, '
+                'destination={0.destination})').format(self)
 
     def validate(self, source, destination):
         # TODO: test
