@@ -11,8 +11,8 @@ from sqlalchemy.types import DateTime, Enum
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from brainscopypaste.utils import cache
-from brainscopypaste.filter import FilterMixin
-from brainscopypaste.mine import ValidatorMixin, MinerMixin
+from brainscopypaste.filter import ClusterFilterMixin
+from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
 
 
 Base = declarative_base()
@@ -46,7 +46,7 @@ class BaseMixin:
         return self.__class__(**init)
 
 
-class Cluster(Base, BaseMixin, FilterMixin, MinerMixin):
+class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
 
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
@@ -236,8 +236,15 @@ class Url:
                 self.url_type == other.url_type and
                 self.url == other.url)
 
+    @cache
+    def occurrence(self):
+        # TODO: test
+        if self.quote is None:
+            raise ValueError('No quote defined on this Url')
+        return self.quote.urls.index(self)
 
-class Substitution(Base, BaseMixin, ValidatorMixin):
+
+class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
 
     # TODO: test
 
@@ -248,26 +255,33 @@ class Substitution(Base, BaseMixin, ValidatorMixin):
     destination = relationship('Quote',
                                back_populates='substitutions_destination',
                                foreign_keys='Substitution.destination_id')
+
+    # Index of the url in the destination quote.
     occurrence = Column(Integer, nullable=False)
+    # Index of the beginning of the substring in the source quote.
+    start = Column(Integer, nullable=False)
+    # Position of the substitution *in the substring of the source quote*
+    # (which is also the position in the destination quote).
     position = Column(Integer, nullable=False)
+    # Detection model that created this substitution.
     model = Column(PickleType, nullable=False)
 
     @cache
     def tags(self):
         # TODO: test
-        return (self.source.tags[self.position],
+        return (self.source.tags[self.start + self.position],
                 self.destination.tags[self.position])
 
     @cache
     def tokens(self):
         # TODO: test
-        return (self.source.tokens[self.position],
+        return (self.source.tokens[self.start + self.position],
                 self.destination.tokens[self.position])
 
     @cache
     def lemmas(self):
         # TODO: test
-        return (self.source.lemmas[self.position],
+        return (self.source.lemmas[self.start + self.position],
                 self.destination.lemmas[self.position])
 
 

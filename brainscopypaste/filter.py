@@ -47,7 +47,7 @@ def filter_clusters(limit=None):
     click.secho('OK', fg='green', bold=True)
 
 
-class FilterMixin:
+class ClusterFilterMixin:
 
     @cache
     def filter_cluster_offset(self):

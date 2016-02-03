@@ -4,6 +4,7 @@ import functools
 from itertools import zip_longest
 import os
 
+import numpy as np
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 
@@ -210,6 +211,7 @@ def is_same_ending_us_uk_spelling(w1, w2):
     """Do `w1` and `w2` differ by only the last two letters inverted,
     as in `center`/`centre`, or not (words must be at least 4 letters)."""
     # TODO: test
+    # TODO: cache
 
     if len(w1) < 4 or len(w2) < 4:
         # Words too short
@@ -229,6 +231,7 @@ def is_same_ending_us_uk_spelling(w1, w2):
 def is_int(s):
     """Test if `s` represents an integer."""
     # TODO: test
+    # TODO: cache
 
     try:
         int(s)
@@ -240,14 +243,14 @@ def is_int(s):
 def levenshtein(s1, s2):
     """Compute levenshtein distance between `s1` and `s2`."""
     # TODO: test
-
+    # TODO: cache
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
 
     if not s2:
         return len(s1)
 
-    previous_row = xrange(len(s2) + 1)
+    previous_row = range(len(s2) + 1)
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
@@ -261,6 +264,45 @@ def levenshtein(s1, s2):
         previous_row = current_row
 
     return previous_row[-1]
+
+
+def hamming(s1, s2):
+    """Compute the hamming distance between `s1` and `s2`."""
+    # TODO: test
+    # TODO: cache
+    if len(s1) != len(s2):
+        return -1
+    else:
+        return np.sum(c1 != c2 for c1, c2 in zip(s1, s2))
+
+
+def sublists(s, l):
+    """Get all sublists of `s` of length `l`."""
+    # TODO: test
+    # TODO: cache
+    return [s[i:i + l] for i in range(len(s) - l + 1)]
+
+
+def subhamming(s1, s2):
+    """Compute the minimum hamming distance between `s2` and all sublists of
+    `s1`, returning the `(distance, substring start in s1)` tuple."""
+    # TODO: test
+    # TODO: cache
+    l1 = len(s1)
+    l2 = len(s2)
+
+    if l1 < l2:
+        return -1, -1
+    if l1 == l2:
+        return hamming(s1, s2), 0
+
+    distances = np.zeros(l1 - l2 + 1)
+
+    for i, subs in enumerate(sublists(s1, l2)):
+        distances[i] = hamming(subs, s2)
+
+    amin = np.argmin(distances)
+    return distances[amin], amin
 
 
 class Stopwords:
