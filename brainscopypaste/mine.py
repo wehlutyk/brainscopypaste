@@ -216,13 +216,14 @@ class ClusterMinerMixin:
         from brainscopypaste.db import Substitution
 
         dlemmas = destination.quote.lemmas
-        slemmas = source.lemmas[start:len(dlemmas)]
+        slemmas = source.lemmas[start:start + len(dlemmas)]
         positions = np.where([c1 != c2
                               for (c1, c2) in zip(slemmas, dlemmas)])[0]
         assert len(positions) == 1
         return Substitution(source=source, destination=destination.quote,
-                            occurrence=destination.occurrence, start=start,
-                            position=positions[0], model=model)
+                            occurrence=destination.occurrence,
+                            start=int(start), position=int(positions[0]),
+                            model=model)
 
 
 class SubstitutionValidatorMixin:
@@ -230,32 +231,32 @@ class SubstitutionValidatorMixin:
     def validate(self):
         # TODO: test
 
-        word1, word2 = self.words
+        token1, token2 = self.tokens
         lem1, lem2 = self.lemmas
 
         # '21st'/'twenty-first', etc.
-        if (is_int(word1[0]) or is_int(word2[0]) or
+        if (is_int(token1[0]) or is_int(token2[0]) or
                 is_int(lem1[0]) or is_int(lem2[0])):
             return False
         # 'sen'/'senator', 'gov'/'governor', 'nov'/'november', etc.
-        if (word1 == word2[:3] or word2 == word1[:3] or
+        if (token1 == token2[:3] or token2 == token1[:3] or
                 lem1 == lem2[:3] or lem2 == lem1[:3]):
             return False
         # 'programme'/'program', etc.
-        if (word1[:-2] == word2 or word2[:-2] == word1 or
+        if (token1[:-2] == token2 or token2[:-2] == token1 or
                 lem1[:-2] == lem2 or lem2[:-2] == lem1):
             return False
         # 'centre'/'center', etc.
-        if is_same_ending_us_uk_spelling(word1, word2):
+        if is_same_ending_us_uk_spelling(token1, token2):
             return False
         if is_same_ending_us_uk_spelling(lem1, lem2):
             return False
         # stopwords
-        if (word1 in stopwords or word2 in stopwords or
+        if (token1 in stopwords or token2 in stopwords or
                 lem1 in stopwords or lem2 in stopwords):
             return False
         # Other minor spelling changes
-        if levenshtein(word1, word2) <= 1:
+        if levenshtein(token1, token2) <= 1:
             return False
         if levenshtein(lem1, lem2) <= 1:
             return False
