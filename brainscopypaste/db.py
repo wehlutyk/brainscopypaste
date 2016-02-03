@@ -229,12 +229,15 @@ class Url:
         self.url_type = url_type
         self.url = url
 
+    def __key(self):
+        return (self.quote, self.timestamp, self.frequency,
+                self.url_type, self.url)
+
     def __eq__(self, other):
-        return (self.quote == other.quote and
-                self.timestamp == other.timestamp and
-                self.frequency == other.frequency and
-                self.url_type == other.url_type and
-                self.url == other.url)
+        return self.__key() == other.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
 
     @cache
     def occurrence(self):

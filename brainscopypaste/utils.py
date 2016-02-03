@@ -207,11 +207,11 @@ def execute_raw(engine, statement):
     connection.close()
 
 
+@memoized
 def is_same_ending_us_uk_spelling(w1, w2):
     """Do `w1` and `w2` differ by only the last two letters inverted,
     as in `center`/`centre`, or not (words must be at least 4 letters)."""
     # TODO: test
-    # TODO: cache
 
     if len(w1) < 4 or len(w2) < 4:
         # Words too short
@@ -228,10 +228,10 @@ def is_same_ending_us_uk_spelling(w1, w2):
     return False
 
 
+@memoized
 def is_int(s):
     """Test if `s` represents an integer."""
     # TODO: test
-    # TODO: cache
 
     try:
         int(s)
@@ -240,10 +240,10 @@ def is_int(s):
         return False
 
 
+@memoized
 def levenshtein(s1, s2):
     """Compute levenshtein distance between `s1` and `s2`."""
     # TODO: test
-    # TODO: cache
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
 
@@ -266,28 +266,28 @@ def levenshtein(s1, s2):
     return previous_row[-1]
 
 
+@memoized
 def hamming(s1, s2):
     """Compute the hamming distance between `s1` and `s2`."""
     # TODO: test
-    # TODO: cache
     if len(s1) != len(s2):
         return -1
     else:
         return np.sum(c1 != c2 for c1, c2 in zip(s1, s2))
 
 
+@memoized
 def sublists(s, l):
     """Get all sublists of `s` of length `l`."""
     # TODO: test
-    # TODO: cache
     return [s[i:i + l] for i in range(len(s) - l + 1)]
 
 
+@memoized
 def subhamming(s1, s2):
     """Compute the minimum hamming distance between `s2` and all sublists of
     `s1`, returning the `(distance, substring start in s1)` tuple."""
     # TODO: test
-    # TODO: cache
     l1 = len(s1)
     l2 = len(s2)
 

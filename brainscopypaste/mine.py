@@ -7,7 +7,7 @@ import numpy as np
 
 from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
                                    stopwords, levenshtein, subhamming,
-                                   session_scope)
+                                   session_scope, memoized)
 
 
 def mine_substitutions_with_model(model, limit=None):
@@ -104,16 +104,15 @@ class Model:
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
                 'destination={0.destination})').format(self)
 
+    @memoized
     def validate(self, source, destination):
         # TODO: test
-        # TODO: cache
         return (self._validate_base(source, destination) and
                 self._validate_source(source, destination) and
                 self._validate_destination(source, destination))
 
     def _validate_base(self, source, destination):
         # TODO: test
-        # TODO: cache
         # - with empty source
         # - with source inside/outside past
         # - with source only at destination
@@ -155,13 +154,15 @@ class Model:
         return (destination.quote not in
                 self.past_quotes(source.cluster, destination))
 
+    @memoized
     def past_quotes(self, cluster, destination):
+        # TODO: test
         past = self._past(cluster, destination)
         return set(url.quote for url in cluster.urls if url.timestamp in past)
 
+    @memoized
     def _past(self, cluster, destination):
         # TODO: test
-        # TODO: cache
         # - with Time.continuous, Time.discrete, Past.all, Past.last_bin
         # - with destination at bin seam
         # - with destination the very first occurrence of the cluster
