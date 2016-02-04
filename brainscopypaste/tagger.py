@@ -20,7 +20,6 @@ except NotFoundError:
 @memoized
 def tag(sentence):
     """Tag a sentence."""
-    # TODO: test
     return tuple(t.split('\t') for t in
                  _treetagger.tag_text(sentence, notagdns=True))
 
@@ -28,20 +27,17 @@ def tag(sentence):
 @memoized
 def tags(sentence):
     """Get the tags of a sentence."""
-    # TODO: test
     return tuple(t[1] for t in tag(sentence))
 
 
 @memoized
 def tokens(sentence):
     """Get the tokens of a sentence."""
-    # TODO: test
     return tuple(t[0] for t in tag(sentence))
 
 
 @memoized
 def lemmas(sentence):
     """Get the lemmas of a sentence."""
-    # TODO: test
     # TODO: try relemmatizing with wordnet here (will apply everywhere)
     return tuple(t[2] for t in tag(sentence))
