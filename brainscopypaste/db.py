@@ -124,12 +124,10 @@ class Quote(Base, BaseMixin):
     url_frequencies = Column(ARRAY(Integer), default=[], nullable=False)
     url_url_types = Column(ArrayOfEnum(url_type), default=[], nullable=False)
     url_urls = Column(ARRAY(String), default=[], nullable=False)
-    # TODO: test
     substitutions_source = relationship(
         'Substitution', back_populates='source', lazy='dynamic',
         foreign_keys='Substitution.source_id',
         cascade="all, delete-orphan")
-    # TODO: test
     substitutions_destination = relationship(
         'Substitution', back_populates='destination', lazy='dynamic',
         foreign_keys='Substitution.destination_id',
@@ -186,7 +184,6 @@ class Quote(Base, BaseMixin):
 
     @cache
     def tags(self):
-        # TODO: test
         from brainscopypaste import tagger
         return tagger.tags(self.string)
 
@@ -197,7 +194,6 @@ class Quote(Base, BaseMixin):
 
     @cache
     def lemmas(self):
-        # TODO: test
         from brainscopypaste import tagger
         return tagger.lemmas(self.string)
 
@@ -241,15 +237,12 @@ class Url:
 
     @cache
     def occurrence(self):
-        # TODO: test
         if self.quote is None:
             raise ValueError('No quote defined on this Url')
         return self.quote.urls.index(self)
 
 
 class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
-
-    # TODO: test
 
     source_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
     source = relationship('Quote', back_populates='substitutions_source',
@@ -271,19 +264,16 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
 
     @cache
     def tags(self):
-        # TODO: test
         return (self.source.tags[self.start + self.position],
                 self.destination.tags[self.position])
 
     @cache
     def tokens(self):
-        # TODO: test
         return (self.source.tokens[self.start + self.position],
                 self.destination.tokens[self.position])
 
     @cache
     def lemmas(self):
-        # TODO: test
         return (self.source.lemmas[self.start + self.position],
                 self.destination.lemmas[self.position])
 

@@ -4,7 +4,8 @@ import pytest
 from sqlalchemy import create_engine
 
 from brainscopypaste.utils import session_scope
-from brainscopypaste.db import Base, Session, Cluster, Quote, Url
+from brainscopypaste.db import Base, Session, Cluster, Quote, Url, Substitution
+from brainscopypaste.mine import Model, Time, Source, Past, Destination
 
 
 @pytest.fixture
@@ -59,3 +60,20 @@ def some_urls(some_clusters, some_quotes):
                              url='Url with " and \' {}'.format(i)))
 
     return ids
+
+
+@pytest.fixture
+def some_substitutions(some_clusters, some_quotes, some_urls):
+    with session_scope() as session:
+        cluster = session.query(Cluster).filter_by(sid=0).one()
+        q10 = Quote(sid=10, cluster=cluster,
+                    string="Don't do it! I know I wouldn't")
+        q11 = Quote(sid=11, cluster=cluster, string="I know I hadn't")
+        session.add(q10)
+        session.add(q11)
+        model = Model(Time.discrete, Source.majority, Past.last_bin,
+                      Destination.all)
+        s = Substitution(source=q10, destination=q11,
+                         occurrence=0, start=5,
+                         position=3, model=model)
+        session.add(s)

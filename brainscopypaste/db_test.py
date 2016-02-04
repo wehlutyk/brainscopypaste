@@ -30,6 +30,10 @@ def test_quote(some_quotes):
         assert session.query(Quote).filter_by(sid=6).one().cluster.sid == 1
         assert session.query(Quote).filter_by(sid=6).one().tokens == \
             ('Some', 'quote', 'to', 'tokenize', '6')
+        assert session.query(Quote).filter_by(sid=6).one().tags == \
+            ('DT', 'NN', 'TO', 'VV', 'CD')
+        assert session.query(Quote).filter_by(sid=6).one().lemmas == \
+            ('some', 'quote', 'to', 'tokenize', '6')
 
         assert set([quote.sid for quote in
                     session.query(Cluster).filter_by(sid=3).one().quotes]) == \
@@ -69,6 +73,11 @@ def test_url(some_urls):
         assert q0.frequency == 4
         assert q0.span == timedelta(days=10)
 
+        assert q0.urls[0].occurrence == 0
+        assert q0.urls[1].occurrence == 1
+        assert q3.urls[0].occurrence == 0
+        assert q3.urls[1].occurrence == 1
+
         c0 = session.query(Cluster).filter_by(sid=0).one()
         assert c0.size == 2
         assert c0.size_urls == 4
@@ -90,6 +99,25 @@ def test_url(some_urls):
                               frequency=1,
                               url_type='C',
                               url='some url'))
+
+
+def test_substitution(some_substitutions):
+    with session_scope() as session:
+        q10 = session.query(Quote).filter_by(sid=10).one()
+        q11 = session.query(Quote).filter_by(sid=11).one()
+        assert q10.substitutions_source.count() == 1
+        assert q10.substitutions_destination.count() == 0
+        assert q11.substitutions_source.count() == 0
+        assert q11.substitutions_destination.count() == 1
+
+        s = q10.substitutions_source.first()
+        assert q11.substitutions_destination.first() == s
+        assert s.source == q10
+        assert s.destination == q11
+
+        assert s.tokens == ('would', 'had')
+        assert s.lemmas == ('would', 'have')
+        assert s.tags == ('MD', 'VHD')
 
 
 def test_clone_cluster(some_urls):
