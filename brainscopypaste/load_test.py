@@ -11,103 +11,103 @@ from brainscopypaste.load import MemeTrackerParser
 
 # Quotes and urls are intentionally not ordered to check for ordering later on.
 content = '''format:
-<ClSz>	<TotFq>	<Root>	<ClusterId>
-	<QtFq>	<Urls>	<QtStr>	<QuteId>
-	<Tm>	<Fq>	<UrlTy>	<Url>
+<ClSz>\t<TotFq>\t<Root>\t<ClusterId>
+\t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
+\t<Tm>\t<Fq>\t<UrlTy>\t<Url>
 
 
-2	5	hate that i love you so	36543
-	2	2	that i love you	950238
-		2008-09-13 14:45:39	1	M	some-url-3
-		2008-09-17 04:09:03	1	B	some-url-4
+2\t5\thate that i love you so\t36543
+\t2\t2\tthat i love you\t950238
+\t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
+\t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-	3	2	i love you	43
-		2008-08-01 00:24:08	1	M	some-url-2
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
+\t3\t2\ti love you\t43
+\t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
+\t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
 
-1	3	yes we can yes we can	43112
-	3	2	yes we can	1485
-		2008-08-01 00:31:56	2	M	some-url-6
-		2008-08-01 00:12:05	1	B	some-url-5'''
+1\t3\tyes we can yes we can\t43112
+\t3\t2\tyes we can\t1485
+\t\t2008-08-01 00:31:56\t2\tM\tsome-url-6
+\t\t2008-08-01 00:12:05\t1\tB\tsome-url-5'''
 
 
 contents_errored = {
     'Cluster size #43112': '''format:
-<ClSz>	<TotFq>	<Root>	<ClusterId>
-	<QtFq>	<Urls>	<QtStr>	<QuteId>
-	<Tm>	<Fq>	<UrlTy>	<Url>
+<ClSz>\t<TotFq>\t<Root>\t<ClusterId>
+\t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
+\t<Tm>\t<Fq>\t<UrlTy>\t<Url>
 
 
-2	5	hate that i love you so	36543
-	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
-		2008-08-01 00:24:08	1	M	some-url-2
+2\t5\thate that i love you so\t36543
+\t3\t2\ti love you\t43
+\t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
+\t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 
-	2	2	that i love you	950238
-		2008-09-13 14:45:39	1	M	some-url-3
-		2008-09-17 04:09:03	1	B	some-url-4
+\t2\t2\tthat i love you\t950238
+\t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
+\t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-2	3	yes we can yes we can	43112
-	3	2	yes we can	1485
-		2008-08-01 00:12:05	1	B	some-url-5
-		2008-08-01 00:31:56	2	M	some-url-6''',
+2\t3\tyes we can yes we can\t43112
+\t3\t2\tyes we can\t1485
+\t\t2008-08-01 00:12:05\t1\tB\tsome-url-5
+\t\t2008-08-01 00:31:56\t2\tM\tsome-url-6''',
     'Cluster frequency #36543': '''format:
-<ClSz>	<TotFq>	<Root>	<ClusterId>
-	<QtFq>	<Urls>	<QtStr>	<QuteId>
-	<Tm>	<Fq>	<UrlTy>	<Url>
+<ClSz>\t<TotFq>\t<Root>\t<ClusterId>
+\t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
+\t<Tm>\t<Fq>\t<UrlTy>\t<Url>
 
 
-2	10	hate that i love you so	36543
-	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
-		2008-08-01 00:24:08	1	M	some-url-2
+2\t10\thate that i love you so\t36543
+\t3\t2\ti love you\t43
+\t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
+\t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 
-	2	2	that i love you	950238
-		2008-09-13 14:45:39	1	M	some-url-3
-		2008-09-17 04:09:03	1	B	some-url-4
+\t2\t2\tthat i love you\t950238
+\t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
+\t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-1	3	yes we can yes we can	43112
-	3	2	yes we can	1485
-		2008-08-01 00:12:05	1	B	some-url-5
-		2008-08-01 00:31:56	2	M	some-url-6''',
+1\t3\tyes we can yes we can\t43112
+\t3\t2\tyes we can\t1485
+\t\t2008-08-01 00:12:05\t1\tB\tsome-url-5
+\t\t2008-08-01 00:31:56\t2\tM\tsome-url-6''',
     'Quote size #950238': '''format:
-<ClSz>	<TotFq>	<Root>	<ClusterId>
-	<QtFq>	<Urls>	<QtStr>	<QuteId>
-	<Tm>	<Fq>	<UrlTy>	<Url>
+<ClSz>\t<TotFq>\t<Root>\t<ClusterId>
+\t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
+\t<Tm>\t<Fq>\t<UrlTy>\t<Url>
 
 
-2	5	hate that i love you so	36543
-	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
-		2008-08-01 00:24:08	1	M	some-url-2
+2\t5\thate that i love you so\t36543
+\t3\t2\ti love you\t43
+\t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
+\t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 
-	2	4	that i love you	950238
-		2008-09-13 14:45:39	1	M	some-url-3
-		2008-09-17 04:09:03	1	B	some-url-4
+\t2\t4\tthat i love you\t950238
+\t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
+\t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-1	3	yes we can yes we can	43112
-	3	2	yes we can	1485
-		2008-08-01 00:12:05	1	B	some-url-5
-		2008-08-01 00:31:56	2	M	some-url-6''',
+1\t3\tyes we can yes we can\t43112
+\t3\t2\tyes we can\t1485
+\t\t2008-08-01 00:12:05\t1\tB\tsome-url-5
+\t\t2008-08-01 00:31:56\t2\tM\tsome-url-6''',
     'Quote frequency #1485': '''format:
-<ClSz>	<TotFq>	<Root>	<ClusterId>
-	<QtFq>	<Urls>	<QtStr>	<QuteId>
-	<Tm>	<Fq>	<UrlTy>	<Url>
+<ClSz>\t<TotFq>\t<Root>\t<ClusterId>
+\t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
+\t<Tm>\t<Fq>\t<UrlTy>\t<Url>
 
 
-2	5	hate that i love you so	36543
-	3	2	i love you	43
-		2008-08-01 00:00:16	2	B	some-url-with-"-and-'-1
-		2008-08-01 00:24:08	1	M	some-url-2
+2\t5\thate that i love you so\t36543
+\t3\t2\ti love you\t43
+\t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
+\t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 
-	2	2	that i love you	950238
-		2008-09-13 14:45:39	1	M	some-url-3
-		2008-09-17 04:09:03	1	B	some-url-4
+\t2\t2\tthat i love you\t950238
+\t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
+\t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-1	3	yes we can yes we can	43112
-	4	2	yes we can	1485
-		2008-08-01 00:12:05	1	B	some-url-5
-		2008-08-01 00:31:56	2	M	some-url-6'''
+1\t3\tyes we can yes we can\t43112
+\t4\t2\tyes we can\t1485
+\t\t2008-08-01 00:12:05\t1\tB\tsome-url-5
+\t\t2008-08-01 00:31:56\t2\tM\tsome-url-6'''
 }
 
 
