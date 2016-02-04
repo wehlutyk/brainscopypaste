@@ -212,10 +212,8 @@ def execute_raw(engine, statement):
 
 @memoized
 def is_same_ending_us_uk_spelling(w1, w2):
-    """Do `w1` and `w2` differ by only the last two letters inverted,
-    as in `center`/`centre`, or not (words must be at least 4 letters)."""
-    # TODO: test
-
+    """Test if `w1` and `w2` differ by only the last two letters inverted,
+    as in `center`/`centre` (words must be at least 4 letters)."""
     if len(w1) < 4 or len(w2) < 4:
         # Words too short
         return False
@@ -233,20 +231,19 @@ def is_same_ending_us_uk_spelling(w1, w2):
 
 @memoized
 def is_int(s):
-    """Test if `s` represents an integer."""
-    # TODO: test
-
+    """Test if `s` is a string that represents an integer."""
+    if not isinstance(s, str) or isinstance(s, bytes):
+        return False
     try:
         int(s)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
 
 @memoized
 def levenshtein(s1, s2):
     """Compute levenshtein distance between `s1` and `s2`."""
-    # TODO: test
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
 
@@ -272,9 +269,8 @@ def levenshtein(s1, s2):
 @memoized
 def hamming(s1, s2):
     """Compute the hamming distance between `s1` and `s2`."""
-    # TODO: test
     if len(s1) != len(s2):
-        return -1
+        raise ValueError('Strings must be the same length.')
     else:
         return np.sum(c1 != c2 for c1, c2 in zip(s1, s2))
 
@@ -282,20 +278,26 @@ def hamming(s1, s2):
 @memoized
 def sublists(s, l):
     """Get all sublists of `s` of length `l`."""
-    # TODO: test
-    return [s[i:i + l] for i in range(len(s) - l + 1)]
+    if l == 0:
+        return ()
+    if l > len(s):
+        raise ValueError('Sublists must be shorter or as long as source.')
+    return tuple(s[i:i + l] for i in range(len(s) - l + 1))
 
 
 @memoized
 def subhamming(s1, s2):
     """Compute the minimum hamming distance between `s2` and all sublists of
-    `s1`, returning the `(distance, substring start in s1)` tuple."""
-    # TODO: test
+    `s1` as long as `s2`, returning `(distance, sublist start in s1)`."""
     l1 = len(s1)
     l2 = len(s2)
 
+    if l2 == 0:
+        return l1, 0
+
     if l1 < l2:
-        return -1, -1
+        raise ValueError('The second string must be shorter or '
+                         'as long as the first one.')
     if l1 == l2:
         return hamming(s1, s2), 0
 
@@ -305,13 +307,12 @@ def subhamming(s1, s2):
         distances[i] = hamming(subs, s2)
 
     amin = np.argmin(distances)
-    return distances[amin], amin
+    return int(distances[amin]), amin
 
 
 class Stopwords:
 
     """Detect if a word is a stopword."""
-    # TODO: test
 
     def __init__(self):
         self._loaded = False
