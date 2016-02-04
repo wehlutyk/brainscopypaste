@@ -4,7 +4,8 @@ import pytest
 
 from brainscopypaste.utils import session_scope
 from brainscopypaste.db import Cluster, Quote, Url
-from brainscopypaste.filter import AlreadyFiltered, filter_clusters
+from brainscopypaste.filter import (AlreadyFiltered, filter_clusters, _top_id,
+                                    filter_cluster_offset, filter_quote_offset)
 
 
 @pytest.fixture
@@ -186,23 +187,26 @@ def test_filter_clusters_already_filtered(filterable_cluster):
 
 
 def test_top_id():
-    assert Cluster._top_id(1) == 1000
-    assert Cluster._top_id(10) == 10000
-    assert Cluster._top_id(25) == 10000
-    assert Cluster._top_id(75) == 10000
-    assert Cluster._top_id(100) == 100000
+    assert _top_id(1) == 1000
+    assert _top_id(10) == 10000
+    assert _top_id(25) == 10000
+    assert _top_id(75) == 10000
+    assert _top_id(100) == 100000
 
 
 def test_filter_cluster_offset_1(filterable_cluster):
     # With one unfiltered cluster.
-    assert Cluster().filter_cluster_offset == 1000
+    filter_cluster_offset.drop_cache()
+    assert filter_cluster_offset() == 1000
 
 
 def test_filter_cluster_offset_2(some_clusters):
     # With five unfiltered cluster.
-    assert Cluster().filter_cluster_offset == 1000
+    filter_cluster_offset.drop_cache()
+    assert filter_cluster_offset() == 1000
 
 
 def test_filter_quote_offset(some_quotes):
     # With ten unfiltered quotes.
-    assert Cluster().filter_quote_offset == 10000
+    filter_quote_offset.drop_cache()
+    assert filter_quote_offset() == 10000

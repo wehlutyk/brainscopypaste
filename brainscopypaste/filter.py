@@ -5,7 +5,8 @@ from progressbar import ProgressBar
 from sqlalchemy import func
 import numpy as np
 
-from brainscopypaste.utils import langdetect, session_scope, execute_raw, cache
+from brainscopypaste.utils import (langdetect, session_scope, execute_raw,
+                                   memoized)
 from brainscopypaste import settings
 
 
@@ -50,25 +51,28 @@ def filter_clusters(limit=None):
     click.secho('OK', fg='green', bold=True)
 
 
+def _top_id(id):
+    return int(10 ** (np.floor(np.log10(id)) + 3))
+
+
+@memoized
+def filter_cluster_offset():
+    from brainscopypaste.db import Cluster
+    with session_scope() as session:
+        maxid = session.query(func.max(Cluster.id)).scalar()
+        return _top_id(maxid)
+
+
+@memoized
+def filter_quote_offset():
+    from brainscopypaste.db import Quote
+    with session_scope() as session:
+        maxid = session.query(func.max(Quote.id)).scalar()
+        print(maxid)
+        return _top_id(maxid)
+
+
 class ClusterFilterMixin:
-
-    @classmethod
-    def _top_id(cls, id):
-        return int(10 ** (np.floor(np.log10(id)) + 3))
-
-    @cache
-    def filter_cluster_offset(self):
-        from brainscopypaste.db import Cluster
-        with session_scope() as session:
-            maxid = session.query(func.max(Cluster.id)).scalar()
-            return self._top_id(maxid)
-
-    @cache
-    def filter_quote_offset(self):
-        from brainscopypaste.db import Quote
-        with session_scope() as session:
-            maxid = session.query(func.max(Quote.id)).scalar()
-            return self._top_id(maxid)
 
     def filter(self):
         if self.filtered:
@@ -76,7 +80,7 @@ class ClusterFilterMixin:
 
         min_tokens = settings.mt_filter_min_tokens
         max_span = timedelta(days=settings.mt_filter_max_days)
-        fcluster = self.clone(id=self.filter_cluster_offset + self.id,
+        fcluster = self.clone(id=filter_cluster_offset() + self.id,
                               filtered=True)
 
         # Examine each quote for min_tokens, max_days, and language.
@@ -94,7 +98,7 @@ class ClusterFilterMixin:
             if langdetect(quote.string) != 'en':
                 continue
 
-            fquote = quote.clone(id=self.filter_quote_offset + quote.id,
+            fquote = quote.clone(id=filter_quote_offset() + quote.id,
                                  cluster_id=fcluster.id, filtered=True)
             fcluster.quotes.append(fquote)
 
