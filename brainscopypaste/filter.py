@@ -9,8 +9,11 @@ from brainscopypaste.utils import langdetect, session_scope, execute_raw, cache
 from brainscopypaste import settings
 
 
+class AlreadyFiltered(Exception):
+    pass
+
+
 def filter_clusters(limit=None):
-    # TODO: test
     from brainscopypaste.db import Session, Cluster, save_by_copy
 
     click.echo('Filtering all clusters{}...'
@@ -20,8 +23,8 @@ def filter_clusters(limit=None):
     with session_scope() as session:
         if session.query(Cluster)\
            .filter(Cluster.filtered.is_(True)).count() > 0:
-            raise Exception('There are already some filtered '
-                            'clusters, aborting.')
+            raise AlreadyFiltered('There are already some filtered '
+                                  'clusters, aborting.')
 
         query = session.query(Cluster.id)
         if limit is not None:
@@ -49,25 +52,27 @@ def filter_clusters(limit=None):
 
 class ClusterFilterMixin:
 
+    @classmethod
+    def _top_id(cls, id):
+        return int(10 ** (np.floor(np.log10(id)) + 3))
+
     @cache
     def filter_cluster_offset(self):
-        # TODO: test
         from brainscopypaste.db import Cluster
         with session_scope() as session:
             maxid = session.query(func.max(Cluster.id)).scalar()
-            return int(10 ** (np.floor(np.log10(maxid)) + 3))
+            return self._top_id(maxid)
 
     @cache
     def filter_quote_offset(self):
-        # TODO: test
         from brainscopypaste.db import Quote
         with session_scope() as session:
             maxid = session.query(func.max(Quote.id)).scalar()
-            return int(10 ** (np.floor(np.log10(maxid)) + 3))
+            return self._top_id(maxid)
 
     def filter(self):
         if self.filtered:
-            raise ValueError('Cluster is already filtered')
+            raise AlreadyFiltered('Cluster is already filtered')
 
         min_tokens = settings.mt_filter_min_tokens
         max_span = timedelta(days=settings.mt_filter_max_days)

@@ -4,6 +4,7 @@ import pytest
 
 from brainscopypaste.utils import session_scope
 from brainscopypaste.db import Cluster, Quote, Url
+from brainscopypaste.filter import AlreadyFiltered, filter_clusters
 
 
 @pytest.fixture
@@ -64,6 +65,33 @@ def test_cluster_kept(filterable_cluster):
         assert fcluster.quotes.first().sid == 0
 
 
+def test_filter_clusters_kept(filterable_cluster):
+    # Our cluster gets all its quotes filtered out but one (#0),
+    # and is then kept.
+    filter_clusters()
+    with session_scope() as session:
+        fcluster = session.query(Cluster)\
+            .filter(Cluster.filtered.is_(True)).one()
+        assert fcluster.size == 1
+        assert fcluster.quotes.first().sid == 0
+
+
+def test_filter_clusters_limit(filterable_cluster):
+    # Our cluster gets all its quotes filtered out but one (#0),
+    # and is then kept.
+    filter_clusters(limit=0)
+    with session_scope() as session:
+        assert session.query(Cluster)\
+            .filter(Cluster.filtered.is_(True)).count() == 0
+
+    filter_clusters(limit=1)
+    with session_scope() as session:
+        fcluster = session.query(Cluster)\
+            .filter(Cluster.filtered.is_(True)).one()
+        assert fcluster.size == 1
+        assert fcluster.quotes.first().sid == 0
+
+
 def test_cluster_emptied(filterable_cluster):
     # Modify our cluster to make it bad.
     with session_scope() as session:
@@ -76,6 +104,21 @@ def test_cluster_emptied(filterable_cluster):
     with session_scope() as session:
         cluster = session.query(Cluster).first()
         assert cluster.filter() is None
+
+
+def test_filter_clusters_emptied(filterable_cluster):
+    # Modify our cluster to make it bad.
+    with session_scope() as session:
+        quote = session.query(Quote).filter(Quote.sid == 0).one()
+        timestamps = quote.url_timestamps.copy()
+        timestamps[1] = datetime.utcnow() + timedelta(days=81)
+        quote.url_timestamps = timestamps
+
+    # Check our cluster gets filtered out.
+    filter_clusters()
+    with session_scope() as session:
+        assert session.query(Cluster)\
+            .filter(Cluster.filtered.is_(True)).count() == 0
 
 
 def test_cluster_too_long(filterable_cluster):
@@ -98,6 +141,27 @@ def test_cluster_too_long(filterable_cluster):
         assert cluster.filter() is None
 
 
+def test_filter_clusters_too_long(filterable_cluster):
+    # Modify our cluster to make it too long after quote filtering.
+    with session_scope() as session:
+        cluster = session.query(Cluster).first()
+        # This quote is all good, but is too far from quote sid=0, leading
+        # the cluster span to be too long.
+        quote = Quote(sid=5, string='a string with enough '
+                                    'words and no problems')
+        quote.add_url(
+            Url(timestamp=datetime.utcnow() + timedelta(days=80, hours=1),
+                frequency=2, url_type='M', url='some-url')
+        )
+        cluster.quotes.append(quote)
+
+    # Now check our cluster gets filtered out.
+    filter_clusters()
+    with session_scope() as session:
+        assert session.query(Cluster)\
+            .filter(Cluster.filtered.is_(True)).count() == 0
+
+
 def test_cluster_already_filtered(filterable_cluster):
     # Filter our good cluster.
     with session_scope() as session:
@@ -106,7 +170,39 @@ def test_cluster_already_filtered(filterable_cluster):
         session.add(fcluster)
 
     # Add check we can't filter it again.
-    with pytest.raises(ValueError):
+    with pytest.raises(AlreadyFiltered):
         with session_scope() as session:
             fcluster = session.merge(fcluster)
             fcluster.filter()
+
+
+def test_filter_clusters_already_filtered(filterable_cluster):
+    # Filter our good cluster.
+    filter_clusters()
+
+    # Add check we can't filter it again.
+    with pytest.raises(AlreadyFiltered):
+        filter_clusters()
+
+
+def test_top_id():
+    assert Cluster._top_id(1) == 1000
+    assert Cluster._top_id(10) == 10000
+    assert Cluster._top_id(25) == 10000
+    assert Cluster._top_id(75) == 10000
+    assert Cluster._top_id(100) == 100000
+
+
+def test_filter_cluster_offset_1(filterable_cluster):
+    # With one unfiltered cluster.
+    assert Cluster().filter_cluster_offset == 1000
+
+
+def test_filter_cluster_offset_2(some_clusters):
+    # With five unfiltered cluster.
+    assert Cluster().filter_cluster_offset == 1000
+
+
+def test_filter_quote_offset(some_quotes):
+    # With ten unfiltered quotes.
+    assert Cluster().filter_quote_offset == 10000
