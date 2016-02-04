@@ -107,6 +107,9 @@ class memoized:
         """Support instance methods."""
         return functools.partial(self.__call__, obj)
 
+    def drop_cache(self):
+        self.cache = {}
+
 
 def mpl_palette(n_colors, variation='Set2'):  # or variation='colorblind'
     """Get any seaborn palette as a usable matplotlib colormap."""

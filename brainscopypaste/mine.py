@@ -36,7 +36,8 @@ def mine_substitutions_with_model(model, limit=None):
                 seen += 1
                 if substitution.validate():
                     kept += 1
-                    session.add(substitution)
+                else:
+                    session.rollback()
 
     click.secho('OK', fg='green', bold=True)
     click.echo('Seen {} candidate substitutions, kept {}.'.format(seen, kept))
@@ -189,6 +190,11 @@ class Model:
             start = max(cluster_start, end - self.bin_span)
 
         return Span(start, end)
+
+    def drop_caches(self):
+        self.validate.drop_cache()
+        self.past_quotes.drop_cache()
+        self._past.drop_cache()
 
 
 class ClusterMinerMixin:
