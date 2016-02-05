@@ -5,22 +5,23 @@ from datetime import datetime
 import pytest
 
 from brainscopypaste.load import MemeTrackerParser
-from brainscopypaste.mine import Span, Model, Time, Source, Past, Destination
+from brainscopypaste.mine import (Interval, Model, Time, Source, Past,
+                                  Destination)
 from brainscopypaste.db import Quote
 from brainscopypaste.utils import session_scope
 
 
-def test_span():
-    span = Span(datetime(year=2008, month=1, day=1),
-                datetime(year=2008, month=2, day=5))
-    assert datetime(year=2007, month=10, day=5) not in span
-    assert datetime(year=2007, month=12, day=31, hour=23) not in span
-    assert datetime(year=2008, month=1, day=1) in span
-    assert datetime(year=2008, month=1, day=15) in span
-    assert datetime(year=2008, month=2, day=4, hour=23) in span
-    assert datetime(year=2008, month=2, day=5) not in span
-    assert datetime(year=2008, month=2, day=6) not in span
-    assert datetime(year=2008, month=5, day=1) not in span
+def test_interval():
+    interval = Interval(datetime(year=2008, month=1, day=1),
+                        datetime(year=2008, month=2, day=5))
+    assert datetime(year=2007, month=10, day=5) not in interval
+    assert datetime(year=2007, month=12, day=31, hour=23) not in interval
+    assert datetime(year=2008, month=1, day=1) in interval
+    assert datetime(year=2008, month=1, day=15) in interval
+    assert datetime(year=2008, month=2, day=4, hour=23) in interval
+    assert datetime(year=2008, month=2, day=5) not in interval
+    assert datetime(year=2008, month=2, day=6) not in interval
+    assert datetime(year=2008, month=5, day=1) not in interval
 
 
 def test_model_init():

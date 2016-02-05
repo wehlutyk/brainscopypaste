@@ -67,7 +67,7 @@ class Destination(Enum):
     exclude_past = 2
 
 
-class Span:
+class Interval:
 
     def __init__(self, start, end):
         assert start <= end
@@ -190,7 +190,7 @@ class Model:
             # The past is only the last bin.
             start = max(cluster_start, end - self.bin_span)
 
-        return Span(start, end)
+        return Interval(start, end)
 
     def drop_caches(self):
         self.validate.drop_cache()
