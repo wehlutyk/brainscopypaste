@@ -5,8 +5,7 @@ from datetime import datetime
 import pytest
 
 from brainscopypaste.load import MemeTrackerParser
-from brainscopypaste.mine import (Interval, Model, Time, Source, Past,
-                                  Destination)
+from brainscopypaste.mine import Interval, Model, Time, Source, Past, Durl
 from brainscopypaste.db import Quote
 from brainscopypaste.utils import session_scope
 
@@ -26,11 +25,11 @@ def test_interval():
 
 def test_model_init():
     with pytest.raises(AssertionError):
-        Model(1, Source.all, Past.all, Destination.all)
+        Model(1, Source.all, Past.all, Durl.all)
     with pytest.raises(AssertionError):
-        Model(Time.continuous, 1, Past.all, Destination.all)
+        Model(Time.continuous, 1, Past.all, Durl.all)
     with pytest.raises(AssertionError):
-        Model(Time.continuous, Source.all, 1, Destination.all)
+        Model(Time.continuous, Source.all, 1, Durl.all)
     with pytest.raises(AssertionError):
         Model(Time.continuous, Source.all, Past.all, 1)
 
@@ -62,7 +61,7 @@ empty_source = '''
 '''
 
 
-source_at_destination = '''
+source_at_durl = '''
 2\t2\toh yes it's real that i love pooda\t1
 \t1\t1\toh yes it's real that i love pooda\t1
 \t\t2008-08-01 00:00:00\t1\tB\tsome-url
@@ -107,7 +106,7 @@ contents_base = {
         },
         False: {
             'empty source': empty_source,
-            'source at destination': source_at_destination,
+            'source at durl': source_at_durl,
             'source after past':
                 raw_cluster.format(source1='2008-09-13 14:45:39',
                                    source2='2008-09-17 04:09:03',
@@ -123,7 +122,7 @@ contents_base = {
         },
         False: {
             'empty source': empty_source,
-            'source at destination': source_at_destination,
+            'source at durl': source_at_durl,
             'source before past':
                 raw_cluster.format(source1='2008-07-31 01:00:00',
                                    source2='2008-07-01 14:45:39',
@@ -147,13 +146,13 @@ contents_base = {
         },
         False: {
             'empty source': empty_source,
-            'source at destination': source_at_destination,
-            'source after past (before destination, non-empty first bin)':
+            'source at durl': source_at_durl,
+            'source after past (before durl, non-empty first bin)':
                 raw_cluster2.format(other='2008-07-01 00:00:00',
                                     source1='2008-08-01 01:00:00',
                                     source2='2008-08-01 01:30:00',
                                     dest='2008-08-01 02:00:00'),
-            'source after past (before destination, empty first bin)':
+            'source after past (before durl, empty first bin)':
                 raw_cluster.format(source1='2008-08-01 01:00:00',
                                    source2='2008-08-01 01:30:00',
                                    dest='2008-08-01 02:00:00'),
@@ -172,7 +171,7 @@ contents_base = {
         },
         False: {
             'empty source': empty_source,
-            'source at destination': source_at_destination,
+            'source at durl': source_at_durl,
             'source before past':
                 raw_cluster.format(source1='2008-07-30 01:00:00',
                                    source2='2008-07-30 23:00:00',
@@ -181,7 +180,7 @@ contents_base = {
                 raw_cluster.format(source1='2008-07-30 23:00:00',
                                    source2='2008-08-01 14:00:00',
                                    dest='2008-08-01 02:00:00'),
-            'source before and after past (before destination)':
+            'source before and after past (before durl)':
                 raw_cluster.format(source1='2008-07-30 23:00:00',
                                    source2='2008-08-01 01:30:00',
                                    dest='2008-08-01 02:00:00'),
@@ -189,12 +188,12 @@ contents_base = {
                 raw_cluster.format(source1='2008-07-30 23:00:00',
                                    source2='2008-08-02 01:30:00',
                                    dest='2008-08-01 02:00:00'),
-            'source after past (before destination, non-empty first bin)':
+            'source after past (before durl, non-empty first bin)':
                 raw_cluster2.format(other='2008-07-01 00:00:00',
                                     source1='2008-08-01 01:00:00',
                                     source2='2008-08-01 01:30:00',
                                     dest='2008-08-01 02:00:00'),
-            'source after past (before destination, empty first bin)':
+            'source after past (before durl, empty first bin)':
                 raw_cluster.format(source1='2008-08-01 01:00:00',
                                    source2='2008-08-01 01:30:00',
                                    dest='2008-08-01 02:00:00'),
@@ -230,5 +229,5 @@ def assert_validation(validate, success):
 
 def test_model_validate_base(content_base):
     time, past, success = content_base
-    model = Model(time, Source.all, past, Destination.all)
+    model = Model(time, Source.all, past, Durl.all)
     assert_validation(model._validate_base, success)

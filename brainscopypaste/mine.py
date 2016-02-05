@@ -62,7 +62,7 @@ class Past(Enum):
 
 
 @unique
-class Destination(Enum):
+class Durl(Enum):
     all = 1
     exclude_past = 2
 
@@ -82,51 +82,50 @@ class Model:
 
     bin_span = timedelta(days=1)
 
-    def __init__(self, time, source, past, destination):
+    def __init__(self, time, source, past, durl):
         assert time in Time
         self.time = time
         assert source in Source
         self.source = source
         assert past in Past
         self.past = past
-        assert destination in Destination
-        self.destination = destination
+        assert durl in Durl
+        self.durl = durl
 
         self._source_validation_table = {
             Source.all: self._ok,
             Source.majority: self._validate_source_majority
         }
-        self._destination_validation_table = {
-            Destination.all: self._ok,
-            Destination.exclude_past: self._validate_destination_exclude_past
+        self._durl_validation_table = {
+            Durl.all: self._ok,
+            Durl.exclude_past: self._validate_durl_exclude_past
         }
 
     def __repr__(self):
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
-                'destination={0.destination})').format(self)
+                'durl={0.durl})').format(self)
 
     @memoized
-    def validate(self, source, destination):
+    def validate(self, source, durl):
         # TODO: test
-        return (self._validate_base(source, destination) and
-                self._validate_source(source, destination) and
-                self._validate_destination(source, destination))
+        return (self._validate_base(source, durl) and
+                self._validate_source(source, durl) and
+                self._validate_durl(source, durl))
 
-    def _validate_base(self, source, destination):
-        past = self._past(source.cluster, destination)
+    def _validate_base(self, source, durl):
+        past = self._past(source.cluster, durl)
         return np.any([url.timestamp in past for url in source.urls])
 
-    def _validate_source(self, source, destination):
-        return self._source_validation_table[self.source](source, destination)
+    def _validate_source(self, source, durl):
+        return self._source_validation_table[self.source](source, durl)
 
-    def _validate_destination(self, source, destination):
-        return self._destination_validation_table[self.destination](
-            source, destination)
+    def _validate_durl(self, source, durl):
+        return self._durl_validation_table[self.durl](source, durl)
 
     def _ok(self, *args, **kwargs):
         return True
 
-    def _validate_source_majority(self, source, destination):
+    def _validate_source_majority(self, source, durl):
         # TODO: test
         # - with source majority with all combinations of past/time
         # - with source non majority with all combinations of past/time
@@ -134,34 +133,32 @@ class Model:
 
         # Source must be a majority quote in `past`.
         past_quote_ids = np.array([quote.id for quote in
-                                   self.past_quotes(source.cluster,
-                                                    destination)])
+                                   self.past_quotes(source.cluster, durl)])
         counts = dict((i, c) for (i, c) in
                       zip(*np.unique(past_quote_ids, return_counts=True)))
         return counts.get(source.id) == max(counts.values())
 
-    def _validate_destination_exclude_past(self, source, destination):
+    def _validate_durl_exclude_past(self, source, durl):
         # TODO: test
-        # - with destination in all combinations of past/time
-        # - with destination not in all combinations of past/time
-        # - with destination at seam of past/time
+        # - with durl in all combinations of past/time
+        # - with durl not in all combinations of past/time
+        # - with durl at seam of past/time
 
-        # Destination must not be in `past`.
-        return (destination.quote not in
-                self.past_quotes(source.cluster, destination))
+        # Durl must not be in `past`.
+        return durl.quote not in self.past_quotes(source.cluster, durl)
 
     @memoized
-    def past_quotes(self, cluster, destination):
+    def past_quotes(self, cluster, durl):
         # TODO: test
-        past = self._past(cluster, destination)
+        past = self._past(cluster, durl)
         return set(url.quote for url in cluster.urls if url.timestamp in past)
 
     @memoized
-    def _past(self, cluster, destination):
+    def _past(self, cluster, durl):
         # TODO: test
         # - with Time.continuous, Time.discrete, Past.all, Past.last_bin
-        # - with destination at bin seam
-        # - with destination the very first occurrence of the cluster
+        # - with durl at bin seam
+        # - with durl the very first occurrence of the cluster
         cluster_start = min([url.timestamp for url in cluster.urls])
         # The bins are aligned to midnight, so get the midnight
         # before cluster start.
@@ -173,10 +170,10 @@ class Model:
         assert self.time in [Time.continuous, Time.discrete]
         if self.time is Time.continuous:
             # Time is continuous.
-            end = destination.timestamp
+            end = durl.timestamp
         else:
             # Time is discrete.
-            previous_bin_count = (destination.timestamp -
+            previous_bin_count = (durl.timestamp -
                                   cluster_bin_start) // self.bin_span
             end = max(cluster_start,
                       cluster_bin_start + previous_bin_count * self.bin_span)
@@ -205,31 +202,31 @@ class ClusterMinerMixin:
         # - decide behaviour for multiple frequencies of urls
 
         # Iterate through candidate substitutions.
-        for destination in self.urls:
-            for source in model.past_quotes(self, destination):
+        for durl in self.urls:
+            for source in model.past_quotes(self, durl):
                 # Don't test against ourselves.
-                if destination.quote == source:
+                if durl.quote == source:
                     continue
 
                 # We allow for substrings.
                 distance, start = subhamming(source.lemmas,
-                                             destination.quote.lemmas)
+                                             durl.quote.lemmas)
 
-                # Check distance, source and destination validity.
-                if distance == 1 and model.validate(source, destination):
-                    yield self._substitution(source, destination, start, model)
+                # Check distance, source and durl validity.
+                if distance == 1 and model.validate(source, durl):
+                    yield self._substitution(source, durl, start, model)
 
-    def _substitution(self, source, destination, start, model):
+    def _substitution(self, source, durl, start, model):
         # TODO: test
         from brainscopypaste.db import Substitution
 
-        dlemmas = destination.quote.lemmas
+        dlemmas = durl.quote.lemmas
         slemmas = source.lemmas[start:start + len(dlemmas)]
         positions = np.where([c1 != c2
                               for (c1, c2) in zip(slemmas, dlemmas)])[0]
         assert len(positions) == 1
-        return Substitution(source=source, destination=destination.quote,
-                            occurrence=destination.occurrence,
+        return Substitution(source=source, destination=durl.quote,
+                            occurrence=durl.occurrence,
                             start=int(start), position=int(positions[0]),
                             model=model)
 

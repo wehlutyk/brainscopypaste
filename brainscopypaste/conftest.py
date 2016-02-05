@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 from brainscopypaste.utils import session_scope
 from brainscopypaste.db import Base, Session, Cluster, Quote, Url, Substitution
-from brainscopypaste.mine import Model, Time, Source, Past, Destination
+from brainscopypaste.mine import Model, Time, Source, Past, Durl
 
 
 @pytest.fixture
@@ -71,8 +71,7 @@ def some_substitutions(some_clusters, some_quotes, some_urls):
         q11 = Quote(sid=11, cluster=cluster, string="I know I hadn't")
         session.add(q10)
         session.add(q11)
-        model = Model(Time.discrete, Source.majority, Past.last_bin,
-                      Destination.all)
+        model = Model(Time.discrete, Source.majority, Past.last_bin, Durl.all)
         s = Substitution(source=q10, destination=q11,
                          occurrence=0, start=5,
                          position=3, model=model)

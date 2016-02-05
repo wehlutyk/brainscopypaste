@@ -8,7 +8,7 @@ from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.paths import paths_to_create
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
-                                  Past, Destination, Model)
+                                  Past, Durl, Model)
 
 
 @click.group()
@@ -118,15 +118,14 @@ def mine():
 @click.argument('time', type=click.Choice(map('{}'.format, Time)))
 @click.argument('source', type=click.Choice(map('{}'.format, Source)))
 @click.argument('past', type=click.Choice(map('{}'.format, Past)))
-@click.argument('destination',
-                type=click.Choice(map('{}'.format, Destination)))
+@click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
 @click.option('--testrun', is_flag=True)
-def mine_substitutions(time, source, past, destination, testrun):
+def mine_substitutions(time, source, past, durl, testrun):
     """Mine the database for substitutions."""
-    time, source, past, destination = map(lambda s: s.split('.')[1],
-                                          [time, source, past, destination])
+    time, source, past, durl = map(lambda s: s.split('.')[1],
+                                   [time, source, past, durl])
     model = Model(time=Time[time], source=Source[source],
-                  past=Past[past], destination=Destination[destination])
+                  past=Past[past], durl=Durl[durl])
     mine_substitutions_with_model(model, limit=3 if testrun else None)
 
 
