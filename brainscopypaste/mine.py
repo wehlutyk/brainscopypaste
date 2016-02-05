@@ -199,7 +199,9 @@ class ClusterMinerMixin:
 
     def substitutions(self, model):
         # TODO: test
-        # - decide behaviour for multiple frequencies of urls
+
+        # Multiple occurrences of a sentence at the same url (url 'frequency')
+        # are ignored, so as not to artificially inflate results.
 
         # Iterate through candidate substitutions.
         for durl in self.urls:
@@ -226,9 +228,8 @@ class ClusterMinerMixin:
                               for (c1, c2) in zip(slemmas, dlemmas)])[0]
         assert len(positions) == 1
         return Substitution(source=source, destination=durl.quote,
-                            occurrence=durl.occurrence,
-                            start=int(start), position=int(positions[0]),
-                            model=model)
+                            occurrence=durl.occurrence, start=int(start),
+                            position=int(positions[0]), model=model)
 
 
 class SubstitutionValidatorMixin:
