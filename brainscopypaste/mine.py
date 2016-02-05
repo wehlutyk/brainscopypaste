@@ -77,6 +77,9 @@ class Interval:
     def __contains__(self, other):
         return self.start <= other < self.end
 
+    def __repr__(self):
+        return 'Interval(start={0.start}, end={0.end})'.format(self)
+
 
 class Model:
 
@@ -126,11 +129,6 @@ class Model:
         return True
 
     def _validate_source_majority(self, source, durl):
-        # TODO: test
-        # - with source majority with all combinations of past/time
-        # - with source non majority with all combinations of past/time
-        # - with source ex-aequo majority with all combinations of past/time
-
         # Source must be a majority quote in `past`.
         past_quote_ids = np.array([surl.quote.id for surl in
                                    self.past_surls(source.cluster, durl)])
@@ -141,15 +139,9 @@ class Model:
                       zip(*np.unique(past_quote_ids, return_counts=True)))
         if len(counts) == 0:
             return False
-        print(counts)
         return counts[source.id] == max(counts.values())
 
     def _validate_durl_exclude_past(self, source, durl):
-        # TODO: test
-        # - with durl in all combinations of past/time
-        # - with durl not in all combinations of past/time
-        # - with durl at seam of past/time
-
         # Durl.quote must not be in `past`.
         past_quotes = [surl.quote for surl in
                        self.past_surls(source.cluster, durl)]

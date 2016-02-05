@@ -101,6 +101,29 @@ raw_cluster3 = '''
 '''
 
 
+raw_cluster4 = '''
+2\t3\toh yes it's real that i love pooda\t1
+\t1\t1\toh yes it's real that i love pooda\t1
+\t\t{source}\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t2
+\t\t{dest}\t1\tB\tsome-url
+\t\t{dest_other}\t1\tB\tsome-url
+'''
+
+
+raw_cluster5 = '''
+2\t4\toh yes it's real that i love pooda\t1
+\t1\t1\toh yes it's real that i love pooda\t1
+\t\t{source}\t1\tB\tsome-url
+
+\t3\t3\tit's real that i love bladi\t2
+\t\t{dest}\t1\tB\tsome-url
+\t\t{dest_other1}\t1\tB\tsome-url
+\t\t{dest_other2}\t1\tB\tsome-url
+'''
+
+
 validation_cases = {
     '_validate_base': {
         (Time.continuous, None, Past.all, None): {
@@ -496,6 +519,187 @@ validation_cases = {
                                         dest='2008-08-01 02:00:00'),
             }
         }
+    },
+    '_validate_durl': {
+        (None, None, None, Durl.all): {
+            # No fails, Durl.all validates everything.
+            True: {
+                'durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-30 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote after durl': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-02 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 0
+                },
+                'durl.quote after past before durl': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 00:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            },
+            False: {}
+        },
+        (Time.continuous, None, Past.all, Durl.exclude_past): {
+            True: {
+                'durl.quote after past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-02 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 0
+                },
+                'durl.quote at durl': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 0
+                },
+            },
+            False: {
+                'durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-30 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                }
+            }
+        },
+        (Time.continuous, None, Past.last_bin, Durl.exclude_past): {
+            True: {
+                'durl.quote before past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-30 23:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote before and after past': {
+                    'content':
+                        raw_cluster5.format(source='2008-07-29 00:00:00',
+                                            dest_other1='2008-07-30 23:00:00',
+                                            dest_other2='2008-08-01 01:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote after past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 01:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 0
+                },
+                'durl.quote at durl': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 0
+                }
+            },
+            False: {
+                'durl.quote at start of past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-31 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-31 05:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                }
+            }
+        },
+        (Time.discrete, None, Past.all, Durl.exclude_past): {
+            True: {
+                'durl.quote after past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 01:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote at end of past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 00:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            },
+            False: {
+                'durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-20 00:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            }
+        },
+        (Time.discrete, None, Past.last_bin, Durl.exclude_past): {
+            True: {
+                'durl.quote before past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-30 23:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote before and after past': {
+                    'content':
+                        raw_cluster5.format(source='2008-07-29 00:00:00',
+                                            dest_other1='2008-07-30 23:00:00',
+                                            dest_other2='2008-08-01 01:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 2
+                },
+                'durl.quote after past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 01:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote at end of past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-08-01 00:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            },
+            False: {
+                'durl.quote at start of past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-31 00:00:00',
+                                            dest='2008-08-01 00:00:00'),
+                    'occurrence': 1
+                },
+                'durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-29 00:00:00',
+                                            dest_other='2008-07-31 05:00:00',
+                                            dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            }
+        }
     }
 }
 
@@ -523,22 +727,30 @@ validation_params = [
                 ids=['{}'.format(param) for param in validation_params])
 def validation_db(request, tmpdb):
     validation_type, time, source, past, durl, success, string = request.param
-    load_db(header + validation_cases[validation_type]
-                                     [(time, source, past, durl)]
-                                     [success]
-                                     [string])
-    return request.param
+    content = validation_cases[
+        validation_type][(time, source, past, durl)][success][string]
+    if isinstance(content, dict):
+        # The test case specifies the occurrence of the destination quote to
+        # use as durl
+        occurrence = content['occurrence']
+        content = content['content']
+    else:
+        # Otherwise, default to 0.
+        occurrence = 0
+    load_db(header + content)
+    return (validation_type, time, source, past, durl, success, occurrence)
 
 
 def test_model_validate(validation_db):
-    validation_type, time, source, past, durl, success, _ = validation_db
+    (validation_type, time, source, past,
+     durl, success, occurrence) = validation_db
 
     times = list(Time) if time is None else [time]
     sources = list(Source) if source is None else [source]
     past = list(Past) if past is None else [past]
     durl = list(Durl) if durl is None else [durl]
-    models = []
 
+    models = []
     for (time, source, past, durl) in product(times, sources, past, durl):
         models.append(Model(time, source, past, durl))
 
@@ -546,5 +758,5 @@ def test_model_validate(validation_db):
         source = session.query(Quote).filter_by(sid=1).one()
         dest = session.query(Quote).filter_by(sid=2).one()
         for model in models:
-            assert getattr(model, validation_type)(source, dest.urls[0]) == \
-                success
+            validator = getattr(model, validation_type)
+            assert validator(source, dest.urls[occurrence]) == success
