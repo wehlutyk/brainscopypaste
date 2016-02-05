@@ -77,6 +77,15 @@ class Interval:
     def __contains__(self, other):
         return self.start <= other < self.end
 
+    def __key(self):
+        return (self.start, self.end)
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def __repr__(self):
         return 'Interval(start={0.start}, end={0.end})'.format(self)
 
@@ -155,10 +164,6 @@ class Model:
 
     @memoized
     def _past(self, cluster, durl):
-        # TODO: test
-        # - with Time.continuous, Time.discrete, Past.all, Past.last_bin
-        # - with durl at bin seam
-        # - with durl the very first occurrence of the cluster
         cluster_start = min([url.timestamp for url in cluster.urls])
         # The bins are aligned to midnight, so get the midnight
         # before cluster start.

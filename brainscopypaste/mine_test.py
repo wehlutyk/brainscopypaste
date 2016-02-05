@@ -22,6 +22,8 @@ def test_interval():
     assert datetime(year=2008, month=2, day=5) not in interval
     assert datetime(year=2008, month=2, day=6) not in interval
     assert datetime(year=2008, month=5, day=1) not in interval
+    assert interval == Interval(datetime(year=2008, month=1, day=1),
+                                datetime(year=2008, month=2, day=5))
 
 
 def test_model_init():
@@ -760,3 +762,174 @@ def test_model_validate(validation_db):
         for model in models:
             validator = getattr(model, validation_type)
             assert validator(source, dest.urls[occurrence]) == success
+
+
+cases_past = {
+    (Time.continuous, Past.all): {
+        'normal past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=20, hour=1),
+                         datetime(year=2008, month=8, day=1, hour=2))
+        },
+        'empty past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=2),
+                         datetime(year=2008, month=7, day=15, hour=2))
+        },
+    },
+    (Time.continuous, Past.last_bin): {
+        'normal past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=31, hour=2),
+                         datetime(year=2008, month=8, day=1, hour=2))
+        },
+        'empty past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=2),
+                         datetime(year=2008, month=7, day=15, hour=2))
+        },
+        'start-truncated': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-20 03:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=20, hour=1),
+                         datetime(year=2008, month=7, day=20, hour=3))
+        },
+    },
+    (Time.discrete, Past.all): {
+        'normal past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=20, hour=1),
+                         datetime(year=2008, month=8, day=1, hour=0))
+        },
+        'empty past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=2),
+                         datetime(year=2008, month=7, day=15, hour=2))
+        },
+        'empty past with url before durl': {
+            'content':
+                raw_cluster.format(source1='2008-07-15 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=1),
+                         datetime(year=2008, month=7, day=15, hour=1))
+        },
+        'durl at bin seam': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 00:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=20, hour=1),
+                         datetime(year=2008, month=8, day=1, hour=0))
+        },
+    },
+    (Time.discrete, Past.last_bin): {
+        'normal past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=31, hour=0),
+                         datetime(year=2008, month=8, day=1, hour=0))
+        },
+        'empty past': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=2),
+                         datetime(year=2008, month=7, day=15, hour=2))
+        },
+        'empty past with url before durl': {
+            'content':
+                raw_cluster.format(source1='2008-07-15 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-15 02:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=15, hour=1),
+                         datetime(year=2008, month=7, day=15, hour=1))
+        },
+        'start-truncated': {
+            'content':
+                raw_cluster.format(source1='2008-07-19 04:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-07-20 03:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=19, hour=4),
+                         datetime(year=2008, month=7, day=20, hour=0))
+        },
+        'durl at bin seam': {
+            'content':
+                raw_cluster.format(source1='2008-07-20 01:00:00',
+                                   source2='2008-07-25 01:00:00',
+                                   dest='2008-08-01 00:00:00'),
+            'interval':
+                Interval(datetime(year=2008, month=7, day=31, hour=0),
+                         datetime(year=2008, month=8, day=1, hour=0))
+        }
+    }
+}
+
+
+past_params = [(time, past, string)
+               for ((time, past), strings) in cases_past.items()
+               for string in strings.keys()]
+
+
+@pytest.fixture(params=past_params,
+                ids=['{}'.format(param) for param in past_params])
+def past_db(request, tmpdb):
+    time, past, string = request.param
+    content = cases_past[(time, past)][string]['content']
+    interval = cases_past[(time, past)][string]['interval']
+    load_db(header + content)
+    return time, past, interval
+
+
+def test_model_past(past_db):
+    time, past, interval = past_db
+
+    sources = list(Source)
+    durl = list(Durl)
+
+    models = []
+    for (source, durl) in product(sources, durl):
+        models.append(Model(time, source, past, durl))
+
+    with session_scope() as session:
+        destination = session.query(Quote).filter_by(sid=2).one()
+        durl = destination.urls[0]
+        cluster = durl.quote.cluster
+        for model in models:
+            assert model._past(cluster, durl) == interval
