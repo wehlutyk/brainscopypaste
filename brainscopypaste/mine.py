@@ -132,11 +132,17 @@ class Model:
         # - with source ex-aequo majority with all combinations of past/time
 
         # Source must be a majority quote in `past`.
-        past_quote_ids = np.array([quote.id for quote in
-                                   self.past_quotes(source.cluster, durl)])
+        past_quote_ids = np.array([surl.quote.id for surl in
+                                   self.past_surls(source.cluster, durl)])
+        if source.id not in past_quote_ids:
+            return False
+
         counts = dict((i, c) for (i, c) in
                       zip(*np.unique(past_quote_ids, return_counts=True)))
-        return counts.get(source.id) == max(counts.values())
+        if len(counts) == 0:
+            return False
+        print(counts)
+        return counts[source.id] == max(counts.values())
 
     def _validate_durl_exclude_past(self, source, durl):
         # TODO: test
@@ -144,14 +150,16 @@ class Model:
         # - with durl not in all combinations of past/time
         # - with durl at seam of past/time
 
-        # Durl must not be in `past`.
-        return durl.quote not in self.past_quotes(source.cluster, durl)
+        # Durl.quote must not be in `past`.
+        past_quotes = [surl.quote for surl in
+                       self.past_surls(source.cluster, durl)]
+        return durl.quote not in past_quotes
 
     @memoized
-    def past_quotes(self, cluster, durl):
+    def past_surls(self, cluster, durl):
         # TODO: test
         past = self._past(cluster, durl)
-        return set(url.quote for url in cluster.urls if url.timestamp in past)
+        return list(filter(lambda url: url.timestamp in past, cluster.urls))
 
     @memoized
     def _past(self, cluster, durl):
@@ -191,7 +199,7 @@ class Model:
 
     def drop_caches(self):
         self.validate.drop_cache()
-        self.past_quotes.drop_cache()
+        self.past_surls.drop_cache()
         self._past.drop_cache()
 
 
@@ -205,7 +213,9 @@ class ClusterMinerMixin:
 
         # Iterate through candidate substitutions.
         for durl in self.urls:
-            for source in model.past_quotes(self, durl):
+            past_quotes_set = set([surl.quote for surl in
+                                   model.past_surls(self, durl)])
+            for source in past_quotes_set:
                 # Don't test against ourselves.
                 if durl.quote == source:
                     continue

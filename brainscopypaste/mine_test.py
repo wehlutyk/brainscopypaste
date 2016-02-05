@@ -86,6 +86,20 @@ raw_cluster2 = '''
 \t\t{other}\t1\tB\tsome-url
 '''
 
+raw_cluster3 = '''
+3\t5\toh yes it's real that i love pooda\t1
+\t2\t2\toh yes it's real that i love pooda\t1
+\t\t{source1}\t1\tM\tsome-url
+\t\t{source2}\t1\tB\tsome-url
+
+\t1\t1\tit's real that i love bladi\t2
+\t\t{dest}\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t3
+\t\t{other1}\t1\tB\tsome-url
+\t\t{other2}\t1\tB\tsome-url
+'''
+
 
 validation_cases = {
     '_validate_base': {
@@ -197,37 +211,290 @@ validation_cases = {
         }
     },
     '_validate_source': {
-        (Time.continuous, Source.all, Past.all, None): {
-            True: {},
-            False: {}
-        },
-        (Time.continuous, Source.all, Past.last_bin, None): {
-            True: {},
+        (None, Source.all, None, None): {
+            # No fails, Source.all validates everything.
+            True: {
+                'empty source': empty_source,
+                'source at durl': source_at_durl,
+                'source in past':
+                    raw_cluster.format(source1='2008-07-13 14:00:00',
+                                       source2='2008-07-31 01:00:00',
+                                       dest='2008-08-01 00:00:00')
+            },
             False: {}
         },
         (Time.continuous, Source.majority, Past.all, None): {
-            True: {},
-            False: {}
+            True: {
+                'source is majority in past':
+                    raw_cluster3.format(other1='2008-07-30 00:00:00',
+                                        other2='2008-08-02 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-07-31 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-07-31 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly after durl':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-08-02 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after durl':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after durl with single other':
+                    raw_cluster2.format(other='2008-07-22 00:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            }
         },
         (Time.continuous, Source.majority, Past.last_bin, None): {
-            True: {},
-            False: {}
-        },
-        (Time.discrete, Source.all, Past.all, None): {
-            True: {},
-            False: {}
-        },
-        (Time.discrete, Source.all, Past.last_bin, None): {
-            True: {},
-            False: {}
+            True: {
+                'source is majority in past':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-07-31 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is majority in past with two occurrences':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-31 03:00:00',
+                                        source1='2008-07-31 02:00:00',
+                                        source2='2008-07-31 04:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past':
+                    raw_cluster3.format(other1='2008-07-31 03:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-07-31 05:00:00',
+                                        source2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past and at durl':
+                    raw_cluster3.format(other1='2008-07-30 05:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl':
+                    raw_cluster3.format(other1='2008-07-31 05:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all before past':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-07-29 02:00:00',
+                                        source2='2008-07-31 01:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly before past':
+                    raw_cluster3.format(other1='2008-07-31 04:00:00',
+                                        other2='2008-07-31 05:00:00',
+                                        source1='2008-07-29 02:00:00',
+                                        source2='2008-07-31 03:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source before and after past':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-07-31 01:00:00',
+                                        source2='2008-08-01 03:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly after past':
+                    raw_cluster3.format(other1='2008-07-31 04:00:00',
+                                        other2='2008-07-31 05:00:00',
+                                        source1='2008-07-31 02:00:00',
+                                        source2='2008-08-02 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past with single other':
+                    raw_cluster2.format(other='2008-07-22 00:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            }
         },
         (Time.discrete, Source.majority, Past.all, None): {
-            True: {},
-            False: {}
+            True: {
+                'source is majority in past':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-07-31 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past':
+                    raw_cluster3.format(other1='2008-07-31 03:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-07-31 05:00:00',
+                                        source2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past and at durl':
+                    raw_cluster2.format(other='2008-07-30 05:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl':
+                    raw_cluster3.format(other1='2008-07-31 05:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly after past (before durl)':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-08-01 01:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past (before durl) with single other':
+                    raw_cluster2.format(other='2008-07-29 00:00:00',
+                                        source1='2008-08-01 01:00:00',
+                                        source2='2008-08-01 01:30:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly after durl':
+                    raw_cluster3.format(other1='2008-07-31 04:00:00',
+                                        other2='2008-07-31 05:00:00',
+                                        source1='2008-07-31 02:00:00',
+                                        source2='2008-08-02 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after durl with single other':
+                    raw_cluster2.format(other='2008-07-31 04:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past with single other':
+                    raw_cluster2.format(other='2008-07-22 00:00:00',
+                                        source1='2008-08-02 02:00:00',
+                                        source2='2008-08-03 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            }
         },
         (Time.discrete, Source.majority, Past.last_bin, None): {
-            True: {},
-            False: {}
+            True: {
+                'source is majority in past':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-30 00:00:00',
+                                        source1='2008-07-20 02:00:00',
+                                        source2='2008-07-31 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is majority in past with two occurrences':
+                    raw_cluster3.format(other1='2008-07-29 00:00:00',
+                                        other2='2008-07-31 03:00:00',
+                                        source1='2008-07-31 02:00:00',
+                                        source2='2008-07-31 04:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past':
+                    raw_cluster3.format(other1='2008-07-31 03:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-07-31 05:00:00',
+                                        source2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past with single occurrence':
+                    raw_cluster3.format(other1='2008-07-31 03:00:00',
+                                        other2='2008-07-20 00:00:00',
+                                        source1='2008-07-31 05:00:00',
+                                        source2='2008-08-01 01:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source is ex-aequo in past and at durl':
+                    raw_cluster3.format(other1='2008-07-30 05:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl':
+                    raw_cluster3.format(other1='2008-07-31 05:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        source1='2008-07-31 04:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all before past':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-07-29 02:00:00',
+                                        source2='2008-07-30 23:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly before past':
+                    raw_cluster3.format(other1='2008-07-31 04:00:00',
+                                        other2='2008-07-31 05:00:00',
+                                        source1='2008-07-29 02:00:00',
+                                        source2='2008-07-31 03:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source before and after past (before durl)':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-07-30 23:00:00',
+                                        source2='2008-08-01 01:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source before and after past (after durl)':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-07-30 23:00:00',
+                                        source2='2008-08-01 03:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source before and after durl (after past)':
+                    raw_cluster3.format(other1='2008-07-30 04:00:00',
+                                        other2='2008-07-30 05:00:00',
+                                        source1='2008-08-01 01:00:00',
+                                        source2='2008-08-01 03:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source partly after past':
+                    raw_cluster3.format(other1='2008-07-31 04:00:00',
+                                        other2='2008-07-31 05:00:00',
+                                        source1='2008-07-31 02:00:00',
+                                        source2='2008-08-01 01:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after durl':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-30 04:00:00',
+                                        source1='2008-08-01 03:00:00',
+                                        source2='2008-08-01 04:00:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past':
+                    raw_cluster3.format(other1='2008-07-22 00:00:00',
+                                        other2='2008-07-31 04:00:00',
+                                        source1='2008-08-02 01:00:00',
+                                        source2='2008-08-03 01:30:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source all after past with single other':
+                    raw_cluster2.format(other='2008-07-22 00:00:00',
+                                        source1='2008-08-02 01:00:00',
+                                        source2='2008-08-03 01:30:00',
+                                        dest='2008-08-01 02:00:00'),
+            }
         }
     }
 }
