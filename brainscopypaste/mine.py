@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import click
 from progressbar import ProgressBar
@@ -168,6 +168,11 @@ class Model:
         # - with destination at bin seam
         # - with destination the very first occurrence of the cluster
         cluster_start = min([url.timestamp for url in cluster.urls])
+        # The bins are aligned to midnight, so get the midnight
+        # before cluster start.
+        cluster_bin_start = datetime(year=cluster_start.year,
+                                     month=cluster_start.month,
+                                     day=cluster_start.day)
 
         # Check our known `time` types.
         assert self.time in [Time.continuous, Time.discrete]
@@ -176,9 +181,10 @@ class Model:
             end = destination.timestamp
         else:
             # Time is discrete.
-            previous_bin_count = (destination.timestamp - cluster_start) // \
-                self.bin_span
-            end = cluster_start + previous_bin_count * self.bin_span
+            previous_bin_count = (destination.timestamp -
+                                  cluster_bin_start) // self.bin_span
+            end = max(cluster_start,
+                      cluster_bin_start + previous_bin_count * self.bin_span)
 
         # Check our known `past` types.
         assert self.past in [Past.all, Past.last_bin]
@@ -201,6 +207,7 @@ class ClusterMinerMixin:
 
     def substitutions(self, model):
         # TODO: test
+        # - decide behaviour for multiple frequencies of urls
 
         # Iterate through candidate substitutions.
         for destination in self.urls:

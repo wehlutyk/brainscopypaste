@@ -15,6 +15,7 @@ def test_cluster(some_clusters):
         assert session.query(Cluster).filter_by(sid=0).one().size == 0
         assert session.query(Cluster).filter_by(sid=0).one().size_urls == 0
         assert session.query(Cluster).filter_by(sid=0).one().frequency == 0
+        assert session.query(Cluster).filter_by(sid=0).one().urls == []
 
         assert session.query(Cluster).get(1).format_copy() == \
             '1\t0\tFalse\ttest'
@@ -48,6 +49,7 @@ def test_quote(some_quotes):
         assert session.query(Quote).filter_by(sid=0).one().size == 0
         assert session.query(Quote).filter_by(sid=0).one().frequency == 0
         assert session.query(Quote).filter_by(sid=0).one().span == timedelta(0)
+        assert session.query(Quote).filter_by(sid=0).one().urls == []
         assert session.query(Cluster).filter_by(sid=3).one().size == 2
         assert session.query(Cluster).filter_by(sid=3).one().size_urls == 0
         assert session.query(Cluster).filter_by(sid=3).one().frequency == 0
