@@ -169,6 +169,8 @@ class Quote(Base, BaseMixin):
 
     @cache
     def size(self):
+        if self.url_timestamps is None:
+            return 0
         return len(self.url_timestamps)
 
     @cache
@@ -199,6 +201,8 @@ class Quote(Base, BaseMixin):
 
     @cache
     def urls(self):
+        if self.size == 0:
+            return []
         return sorted([Url(timestamp, frequency, url_type, url, quote=self)
                        for (timestamp, frequency, url_type, url)
                        in zip(self.url_timestamps, self.url_frequencies,
