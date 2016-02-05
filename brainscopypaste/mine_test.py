@@ -1,6 +1,7 @@
 import os
 from tempfile import mkstemp
 from datetime import datetime
+from itertools import product
 
 import pytest
 
@@ -32,16 +33,6 @@ def test_model_init():
         Model(Time.continuous, Source.all, 1, Durl.all)
     with pytest.raises(AssertionError):
         Model(Time.continuous, Source.all, Past.all, 1)
-
-
-def load_db(content):
-    fd, filepath = mkstemp()
-    with open(fd, 'w') as tmp:
-        tmp.write(content)
-
-    line_count = content.count('\n') + 1
-    MemeTrackerParser(filepath, line_count=line_count).parse()
-    os.remove(filepath)
 
 
 header = '''format:
@@ -96,138 +87,197 @@ raw_cluster2 = '''
 '''
 
 
-contents_base = {
-    (Time.continuous, Past.all): {
-        True: {
-            'source in past':
-                raw_cluster.format(source1='2008-07-13 14:00:00',
-                                   source2='2008-07-31 01:00:00',
-                                   dest='2008-08-01 00:00:00')
+validation_cases = {
+    '_validate_base': {
+        (Time.continuous, None, Past.all, None): {
+            True: {
+                'source in past':
+                    raw_cluster.format(source1='2008-07-13 14:00:00',
+                                       source2='2008-07-31 01:00:00',
+                                       dest='2008-08-01 00:00:00')
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl': source_at_durl,
+                'source after past':
+                    raw_cluster.format(source1='2008-09-13 14:45:39',
+                                       source2='2008-09-17 04:09:03',
+                                       dest='2008-08-01 00:00:00')
+            }
         },
-        False: {
-            'empty source': empty_source,
-            'source at durl': source_at_durl,
-            'source after past':
-                raw_cluster.format(source1='2008-09-13 14:45:39',
-                                   source2='2008-09-17 04:09:03',
-                                   dest='2008-08-01 00:00:00')
+        (Time.continuous, None, Past.last_bin, None): {
+            True: {
+                'source in past':
+                    raw_cluster.format(source1='2008-07-13 14:00:00',
+                                       source2='2008-07-31 01:00:00',
+                                       dest='2008-08-01 00:00:00')
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl': source_at_durl,
+                'source before past':
+                    raw_cluster.format(source1='2008-07-31 01:00:00',
+                                       source2='2008-07-01 14:45:39',
+                                       dest='2008-08-01 02:00:00'),
+                'source before and after past':
+                    raw_cluster.format(source1='2008-07-31 01:00:00',
+                                       source2='2008-08-01 14:45:39',
+                                       dest='2008-08-01 02:00:00'),
+                'source after past':
+                    raw_cluster.format(source1='2008-09-13 14:45:39',
+                                       source2='2008-09-17 04:09:03',
+                                       dest='2008-08-01 00:00:00'),
+            }
+        },
+        (Time.discrete, None, Past.all, None): {
+            True: {
+                'source in past':
+                    raw_cluster.format(source1='2008-07-13 14:00:00',
+                                       source2='2008-07-31 01:00:00',
+                                       dest='2008-08-01 00:00:00')
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl': source_at_durl,
+                'source after past (before durl, non-empty first bin)':
+                    raw_cluster2.format(other='2008-07-01 00:00:00',
+                                        source1='2008-08-01 01:00:00',
+                                        source2='2008-08-01 01:30:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source after past (before durl, empty first bin)':
+                    raw_cluster.format(source1='2008-08-01 01:00:00',
+                                       source2='2008-08-01 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+                'source after past':
+                    raw_cluster.format(source1='2008-09-01 01:00:00',
+                                       source2='2008-09-01 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+            }
+        },
+        (Time.discrete, None, Past.last_bin, None): {
+            True: {
+                'source in past':
+                    raw_cluster.format(source1='2008-07-13 14:00:00',
+                                       source2='2008-07-31 00:00:00',
+                                       dest='2008-08-01 00:00:00')
+            },
+            False: {
+                'empty source': empty_source,
+                'source at durl': source_at_durl,
+                'source before past':
+                    raw_cluster.format(source1='2008-07-30 01:00:00',
+                                       source2='2008-07-30 23:00:00',
+                                       dest='2008-08-01 00:00:00'),
+                'source before and after past':
+                    raw_cluster.format(source1='2008-07-30 23:00:00',
+                                       source2='2008-08-01 14:00:00',
+                                       dest='2008-08-01 02:00:00'),
+                'source before and after past (before durl)':
+                    raw_cluster.format(source1='2008-07-30 23:00:00',
+                                       source2='2008-08-01 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+                'source before and after past':
+                    raw_cluster.format(source1='2008-07-30 23:00:00',
+                                       source2='2008-08-02 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+                'source after past (before durl, non-empty first bin)':
+                    raw_cluster2.format(other='2008-07-01 00:00:00',
+                                        source1='2008-08-01 01:00:00',
+                                        source2='2008-08-01 01:30:00',
+                                        dest='2008-08-01 02:00:00'),
+                'source after past (before durl, empty first bin)':
+                    raw_cluster.format(source1='2008-08-01 01:00:00',
+                                       source2='2008-08-01 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+                'source after past':
+                    raw_cluster.format(source1='2008-09-01 01:00:00',
+                                       source2='2008-09-01 01:30:00',
+                                       dest='2008-08-01 02:00:00'),
+            }
         }
     },
-    (Time.continuous, Past.last_bin): {
-        True: {
-            'source in past':
-                raw_cluster.format(source1='2008-07-13 14:00:00',
-                                   source2='2008-07-31 01:00:00',
-                                   dest='2008-08-01 00:00:00')
+    '_validate_source': {
+        (Time.continuous, Source.all, Past.all, None): {
+            True: {},
+            False: {}
         },
-        False: {
-            'empty source': empty_source,
-            'source at durl': source_at_durl,
-            'source before past':
-                raw_cluster.format(source1='2008-07-31 01:00:00',
-                                   source2='2008-07-01 14:45:39',
-                                   dest='2008-08-01 02:00:00'),
-            'source before and after past':
-                raw_cluster.format(source1='2008-07-31 01:00:00',
-                                   source2='2008-08-01 14:45:39',
-                                   dest='2008-08-01 02:00:00'),
-            'source after past':
-                raw_cluster.format(source1='2008-09-13 14:45:39',
-                                   source2='2008-09-17 04:09:03',
-                                   dest='2008-08-01 00:00:00'),
-        }
-    },
-    (Time.discrete, Past.all): {
-        True: {
-            'source in past':
-                raw_cluster.format(source1='2008-07-13 14:00:00',
-                                   source2='2008-07-31 01:00:00',
-                                   dest='2008-08-01 00:00:00')
+        (Time.continuous, Source.all, Past.last_bin, None): {
+            True: {},
+            False: {}
         },
-        False: {
-            'empty source': empty_source,
-            'source at durl': source_at_durl,
-            'source after past (before durl, non-empty first bin)':
-                raw_cluster2.format(other='2008-07-01 00:00:00',
-                                    source1='2008-08-01 01:00:00',
-                                    source2='2008-08-01 01:30:00',
-                                    dest='2008-08-01 02:00:00'),
-            'source after past (before durl, empty first bin)':
-                raw_cluster.format(source1='2008-08-01 01:00:00',
-                                   source2='2008-08-01 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
-            'source after past':
-                raw_cluster.format(source1='2008-09-01 01:00:00',
-                                   source2='2008-09-01 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
-        }
-    },
-    (Time.discrete, Past.last_bin): {
-        True: {
-            'source in past':
-                raw_cluster.format(source1='2008-07-13 14:00:00',
-                                   source2='2008-07-31 00:00:00',
-                                   dest='2008-08-01 00:00:00')
+        (Time.continuous, Source.majority, Past.all, None): {
+            True: {},
+            False: {}
         },
-        False: {
-            'empty source': empty_source,
-            'source at durl': source_at_durl,
-            'source before past':
-                raw_cluster.format(source1='2008-07-30 01:00:00',
-                                   source2='2008-07-30 23:00:00',
-                                   dest='2008-08-01 00:00:00'),
-            'source before and after past':
-                raw_cluster.format(source1='2008-07-30 23:00:00',
-                                   source2='2008-08-01 14:00:00',
-                                   dest='2008-08-01 02:00:00'),
-            'source before and after past (before durl)':
-                raw_cluster.format(source1='2008-07-30 23:00:00',
-                                   source2='2008-08-01 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
-            'source before and after past':
-                raw_cluster.format(source1='2008-07-30 23:00:00',
-                                   source2='2008-08-02 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
-            'source after past (before durl, non-empty first bin)':
-                raw_cluster2.format(other='2008-07-01 00:00:00',
-                                    source1='2008-08-01 01:00:00',
-                                    source2='2008-08-01 01:30:00',
-                                    dest='2008-08-01 02:00:00'),
-            'source after past (before durl, empty first bin)':
-                raw_cluster.format(source1='2008-08-01 01:00:00',
-                                   source2='2008-08-01 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
-            'source after past':
-                raw_cluster.format(source1='2008-09-01 01:00:00',
-                                   source2='2008-09-01 01:30:00',
-                                   dest='2008-08-01 02:00:00'),
+        (Time.continuous, Source.majority, Past.last_bin, None): {
+            True: {},
+            False: {}
+        },
+        (Time.discrete, Source.all, Past.all, None): {
+            True: {},
+            False: {}
+        },
+        (Time.discrete, Source.all, Past.last_bin, None): {
+            True: {},
+            False: {}
+        },
+        (Time.discrete, Source.majority, Past.all, None): {
+            True: {},
+            False: {}
+        },
+        (Time.discrete, Source.majority, Past.last_bin, None): {
+            True: {},
+            False: {}
         }
-    },
+    }
 }
 
 
-params_base = [(time, past, success, string)
-               for ((time, past), time_past) in contents_base.items()
-               for (success, contents) in time_past.items()
-               for string in contents.keys()]
+def load_db(content):
+    fd, filepath = mkstemp()
+    with open(fd, 'w') as tmp:
+        tmp.write(content)
+
+    line_count = content.count('\n') + 1
+    MemeTrackerParser(filepath, line_count=line_count).parse()
+    os.remove(filepath)
 
 
-@pytest.fixture(params=params_base,
-                ids=['{}'.format(param) for param in params_base])
-def content_base(request, tmpdb):
-    time, past, success, string = request.param
-    load_db(header + contents_base[(time, past)][success][string])
-    return time, past, success
+validation_params = [
+    (validation_type, time, source, past, durl, success, string)
+    for (validation_type, models) in validation_cases.items()
+    for ((time, source, past, durl), successes) in models.items()
+    for (success, strings) in successes.items()
+    for string in strings.keys()
+]
 
 
-def assert_validation(validate, success):
+@pytest.fixture(params=validation_params,
+                ids=['{}'.format(param) for param in validation_params])
+def validation_db(request, tmpdb):
+    validation_type, time, source, past, durl, success, string = request.param
+    load_db(header + validation_cases[validation_type]
+                                     [(time, source, past, durl)]
+                                     [success]
+                                     [string])
+    return request.param
+
+
+def test_model_validate(validation_db):
+    validation_type, time, source, past, durl, success, _ = validation_db
+
+    times = list(Time) if time is None else [time]
+    sources = list(Source) if source is None else [source]
+    past = list(Past) if past is None else [past]
+    durl = list(Durl) if durl is None else [durl]
+    models = []
+
+    for (time, source, past, durl) in product(times, sources, past, durl):
+        models.append(Model(time, source, past, durl))
+
     with session_scope() as session:
         source = session.query(Quote).filter_by(sid=1).one()
         dest = session.query(Quote).filter_by(sid=2).one()
-        assert validate(source, dest.urls[0]) == success
-
-
-def test_model_validate_base(content_base):
-    time, past, success = content_base
-    model = Model(time, Source.all, past, Durl.all)
-    assert_validation(model._validate_base, success)
+        for model in models:
+            assert getattr(model, validation_type)(source, dest.urls[0]) == \
+                success
