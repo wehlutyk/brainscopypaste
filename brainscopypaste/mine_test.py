@@ -547,8 +547,7 @@ validation_cases = {
                                             dest='2008-08-01 02:00:00'),
                     'occurrence': 1
                 }
-            },
-            False: {}
+            }
         },
         (Time.continuous, None, Past.all, Durl.exclude_past): {
             True: {
@@ -698,6 +697,48 @@ validation_cases = {
                         raw_cluster4.format(source='2008-07-29 00:00:00',
                                             dest_other='2008-07-31 05:00:00',
                                             dest='2008-08-01 02:00:00'),
+                    'occurrence': 1
+                }
+            }
+        }
+    },
+    # Hand-picked tests for the combination of the three _validate_* methods
+    'validate': {
+        (Time.continuous, Source.majority, Past.last_bin, Durl.all): {
+            True: {
+                'all good':
+                    raw_cluster3.format(source1='2008-07-31 05:00:00',
+                                        source2='2008-08-01 02:00:00',
+                                        other1='2008-07-30 00:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 03:00:00')
+            },
+            False: {
+                'fail _validate_base: source not in past':
+                    raw_cluster3.format(source1='2008-07-30 05:00:00',
+                                        source2='2008-07-30 02:00:00',
+                                        other1='2008-07-30 00:00:00',
+                                        other2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 03:00:00')
+            }
+        },
+        (Time.discrete, Source.majority, Past.last_bin, Durl.all): {
+            False: {
+                'fail _validate_source: source not majority in past':
+                    raw_cluster3.format(source1='2008-07-31 05:00:00',
+                                        source2='2008-07-30 02:00:00',
+                                        other1='2008-07-31 06:00:00',
+                                        other2='2008-07-31 07:00:00',
+                                        dest='2008-08-01 03:00:00')
+            }
+        },
+        (Time.discrete, Source.all, Past.last_bin, Durl.exclude_past): {
+            False: {
+                'fail _validate_durl: durl.quote in past': {
+                    'content':
+                        raw_cluster4.format(source='2008-07-31 05:00:00',
+                                            dest_other='2008-07-31 07:00:00',
+                                            dest='2008-08-01 03:00:00'),
                     'occurrence': 1
                 }
             }

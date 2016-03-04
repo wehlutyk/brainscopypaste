@@ -119,7 +119,6 @@ class Model:
 
     @memoized
     def validate(self, source, durl):
-        # TODO: test
         return (self._validate_base(source, durl) and
                 self._validate_source(source, durl) and
                 self._validate_durl(source, durl))
