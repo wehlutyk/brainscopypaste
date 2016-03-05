@@ -157,7 +157,6 @@ class Model:
 
     @memoized
     def past_surls(self, cluster, durl):
-        # TODO: test
         past = self._past(cluster, durl)
         return list(filter(lambda url: url.timestamp in past, cluster.urls))
 

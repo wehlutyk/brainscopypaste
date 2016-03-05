@@ -126,6 +126,17 @@ raw_cluster5 = '''
 '''
 
 
+raw_cluster6 = '''
+1\t5\toh yes it's real that i love pooda\t1
+\t5\t5\toh yes it's real that i love pooda\t1
+\t\t{source1}\t1\tB\tsome-url-1
+\t\t{source2}\t1\tB\tsome-url-2
+\t\t{source3}\t1\tB\tsome-url-3
+\t\t{source4}\t1\tB\tsome-url-4
+\t\t{source5}\t1\tB\tsome-url-5
+'''
+
+
 validation_cases = {
     '_validate_base': {
         (Time.continuous, None, Past.all, None): {
@@ -805,7 +816,7 @@ def test_model_validate(validation_db):
             assert validator(source, dest.urls[occurrence]) == success
 
 
-cases_past = {
+past_cases = {
     (Time.continuous, Past.all): {
         'normal past': {
             'content':
@@ -944,7 +955,7 @@ cases_past = {
 
 
 past_params = [(time, past, string)
-               for ((time, past), strings) in cases_past.items()
+               for ((time, past), strings) in past_cases.items()
                for string in strings.keys()]
 
 
@@ -952,8 +963,8 @@ past_params = [(time, past, string)
                 ids=['{}'.format(param) for param in past_params])
 def past_db(request, tmpdb):
     time, past, string = request.param
-    content = cases_past[(time, past)][string]['content']
-    interval = cases_past[(time, past)][string]['interval']
+    content = past_cases[(time, past)][string]['content']
+    interval = past_cases[(time, past)][string]['interval']
     load_db(header + content)
     return time, past, interval
 
@@ -974,3 +985,78 @@ def test_model_past(past_db):
         cluster = durl.quote.cluster
         for model in models:
             assert model._past(cluster, durl) == interval
+
+
+past_surls_cases = {
+    (Time.continuous, Past.all): {
+        'content':
+            raw_cluster6.format(source5='2008-07-20 02:00:00',
+                                source2='2008-07-31 02:00:00',
+                                source3='2008-08-01 01:00:00',
+                                source4='2008-08-01 02:00:00',
+                                source1='2008-08-03 06:00:00'),
+        'occurrence': 3,
+        'past_surls': [5, 2, 3]
+    },
+    (Time.continuous, Past.last_bin): {
+        'content':
+            raw_cluster6.format(source5='2008-07-20 02:00:00',
+                                source2='2008-07-31 02:00:00',
+                                source3='2008-08-01 01:00:00',
+                                source4='2008-08-01 02:00:00',
+                                source1='2008-08-03 06:00:00'),
+        'occurrence': 3,
+        'past_surls': [2, 3]
+    },
+    (Time.discrete, Past.all): {
+        'content':
+            raw_cluster6.format(source5='2008-07-20 02:00:00',
+                                source2='2008-07-31 02:00:00',
+                                source3='2008-08-01 01:00:00',
+                                source4='2008-08-01 02:00:00',
+                                source1='2008-08-03 06:00:00'),
+        'occurrence': 3,
+        'past_surls': [5, 2]
+    },
+    (Time.discrete, Past.last_bin): {
+        'content':
+            raw_cluster6.format(source5='2008-07-20 02:00:00',
+                                source2='2008-07-31 02:00:00',
+                                source3='2008-08-01 01:00:00',
+                                source4='2008-08-01 02:00:00',
+                                source1='2008-08-03 06:00:00'),
+        'occurrence': 3,
+        'past_surls': [2]
+    }
+}
+
+
+@pytest.fixture(params=past_surls_cases.keys(),
+                ids=['{}'.format(param) for param in past_surls_cases.keys()])
+def past_surls_db(request, tmpdb):
+    time, past = request.param
+    content = past_surls_cases[(time, past)]['content']
+    occurrence = past_surls_cases[(time, past)]['occurrence']
+    expected_surl_ids = past_surls_cases[(time, past)]['past_surls']
+    load_db(header + content)
+    return time, past, occurrence, expected_surl_ids
+
+
+def test_model_past_surls(past_surls_db):
+    time, past, occurrence, expected_surl_ids = past_surls_db
+
+    sources = list(Source)
+    durl = list(Durl)
+
+    models = []
+    for (source, durl) in product(sources, durl):
+        models.append(Model(time, source, past, durl))
+
+    with session_scope() as session:
+        source = session.query(Quote).filter_by(sid=1).one()
+        cluster = source.cluster
+        durl = source.urls[occurrence]
+        for model in models:
+            past_surl_ids = [int(url.url[-1])
+                             for url in model.past_surls(cluster, durl)]
+            assert past_surl_ids == expected_surl_ids
