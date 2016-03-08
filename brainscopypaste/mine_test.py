@@ -9,7 +9,7 @@ from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
                                   ClusterMinerMixin,
                                   SubstitutionValidatorMixin)
-from brainscopypaste.db import Quote
+from brainscopypaste.db import Cluster, Quote
 from brainscopypaste.utils import session_scope
 
 
@@ -1183,3 +1183,195 @@ def test_substitution_validator_mixin():
             print(svm.tokens, svm.lemmas)
             print(success)
             assert svm.validate() == success
+
+
+substitutions_cases = {
+    (Time.discrete, Source.all, Past.last_bin, Durl.all): {
+        'no substitutions': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest='2008-07-30 02:00:00',
+                                           dest_other1='2008-07-31 03:00:00',
+                                           dest_other2='2008-08-02 05:00:00'),
+            'substitutions': []
+        },
+        'one substitution': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest='2008-07-30 02:00:00',
+                                           dest_other1='2008-08-01 03:00:00',
+                                           dest_other2='2008-08-02 05:00:00'),
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1}
+            ]
+        },
+        'two substitutions': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest='2008-07-30 02:00:00',
+                                           dest_other1='2008-08-01 00:00:00',
+                                           dest_other2='2008-08-01 05:00:00'),
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 2}
+            ]
+        },
+        'three substitutions': {
+            'content': raw_cluster5.format(source='2008-07-31 00:00:00',
+                                           dest='2008-08-01 02:00:00',
+                                           dest_other1='2008-08-01 06:00:00',
+                                           dest_other2='2008-08-01 22:00:00'),
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 2}
+            ]
+        }
+    },
+    # Time.continuous, majority effects
+    (Time.continuous, Source.majority, Past.last_bin, Durl.all): {
+        'alternation': {
+            'content': '''
+2\t7\tit's real that i love pooda\t1
+\t4\t3\tit's real that i love pooda\t1
+\t\t2008-07-31 00:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t2\tB\tsome-url
+
+\t3\t2\tit's real that i love bladi\t2
+\t\t2008-07-31 08:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t2\tB\tsome-url
+''',
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+                {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+                {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
+            ]
+        },
+        'majority change': {
+            'content': '''
+2\t6\tit's real that i love pooda\t1
+\t4\t4\tit's real that i love pooda\t1
+\t\t2008-07-31 09:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-07-31 18:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t2
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t1\tB\tsome-url
+''',
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+                {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+            ]
+        },
+        'majority change with competition': {
+            'content': '''
+3\t10\tit's real that i love pooda\t1
+\t4\t4\tit's real that i love pooda\t1
+\t\t2008-07-31 09:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-07-31 18:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t2
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t1\tB\tsome-url
+
+\t4\t4\tsome other irrelevant but majority quote\t3
+\t\t2008-07-31 11:00:00\t1\tB\tsome-url
+\t\t2008-07-31 15:00:00\t1\tB\tsome-url
+\t\t2008-07-31 22:00:00\t1\tB\tsome-url
+\t\t2008-07-31 23:00:00\t1\tB\tsome-url
+''',
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+            ]
+        }
+    },
+    # Time.continuous past exclusion (from last_bin)
+    (Time.continuous, Source.all, Past.last_bin, Durl.exclude_past): {
+        'one substitution': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest_other1='2008-07-30 23:00:00',
+                                           dest='2008-08-01 00:00:00',
+                                           dest_other2='2008-08-01 01:00:00'),
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+            ]
+        },
+    },
+    # Time.continuous past exclusion (from all)
+    (Time.continuous, Source.all, Past.all, Durl.exclude_past): {
+        'no substitutions': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest_other1='2008-07-30 23:00:00',
+                                           dest='2008-08-01 00:00:00',
+                                           dest_other2='2008-08-01 01:00:00'),
+            'substitutions': []
+        },
+        'one substitution': {
+            'content': raw_cluster5.format(source='2008-07-31 02:00:00',
+                                           dest='2008-08-01 00:00:00',
+                                           dest_other1='2008-08-01 00:30:00',
+                                           dest_other2='2008-08-01 01:00:00'),
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+            ]
+        },
+    },
+    # Time.discrete majority effect and past exclusion
+    (Time.discrete, Source.majority, Past.last_bin, Durl.exclude_past): {
+        'majority change and past exclusion': {
+            'content': '''
+2\t7\tit's real that i love pooda\t1
+\t5\t5\tit's real that i love pooda\t1
+\t\t2008-07-31 05:00:00\t1\tM\tsome-url
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+\t\t2008-07-31 12:00:00\t1\tB\tsome-url
+\t\t2008-08-01 05:00:00\t1\tB\tsome-url
+\t\t2008-08-02 05:00:00\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t2
+\t\t2008-08-01 06:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t1\tB\tsome-url
+''',
+            'substitutions': [
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+                {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+            ]
+        }
+    }
+}
+
+
+substitutions_params = [
+    (time, source, past, durl, string)
+    for (time, source, past, durl), model_cases in substitutions_cases.items()
+    for string in model_cases.keys()
+]
+
+
+@pytest.fixture(params=substitutions_params,
+                ids=['{}'.format(param) for param in substitutions_params])
+def substitutions_db(request, tmpdb):
+    time, source, past, durl, string = request.param
+    content = substitutions_cases[
+        (time, source, past, durl)][string]['content']
+    expected_substitutions = substitutions_cases[
+        (time, source, past, durl)][string]['substitutions']
+    load_db(header + content)
+    return Model(time, source, past, durl), expected_substitutions
+
+
+def test_cluster_miner_mixin_substitutions(substitutions_db):
+    model, expected_substitutions = substitutions_db
+
+    with session_scope() as session:
+        cluster = session.query(Cluster).filter_by(sid=1).one()
+        substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
+                             for s in cluster.substitutions(model)])
+        assert substitutions == set([(s['source_sid'],
+                                      s['destination_sid'],
+                                      s['occurrence'])
+                                     for s in expected_substitutions])

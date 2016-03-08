@@ -201,8 +201,6 @@ class Model:
 class ClusterMinerMixin:
 
     def substitutions(self, model):
-        # TODO: test
-
         # Multiple occurrences of a sentence at the same url (url 'frequency')
         # are ignored, so as not to artificially inflate results.
 
@@ -210,9 +208,11 @@ class ClusterMinerMixin:
         for durl in self.urls:
             past_quotes_set = set([surl.quote for surl in
                                    model.past_surls(self, durl)])
+            # Don't test against ourselves.
+            past_quotes_set.discard(durl.quote)
             for source in past_quotes_set:
-                # Don't test against ourselves.
-                if durl.quote == source:
+                # Source can't be shorter than destination
+                if len(source.lemmas) < len(durl.quote.lemmas):
                     continue
 
                 # We allow for substrings.
