@@ -8,8 +8,10 @@ import pytest
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
                                   ClusterMinerMixin,
-                                  SubstitutionValidatorMixin)
-from brainscopypaste.db import Cluster, Quote
+                                  SubstitutionValidatorMixin,
+                                  mine_substitutions_with_model)
+from brainscopypaste.filter import filter_clusters
+from brainscopypaste.db import Cluster, Quote, Substitution
 from brainscopypaste.utils import session_scope
 
 
@@ -1186,6 +1188,7 @@ def test_substitution_validator_mixin():
 
 
 substitutions_cases = {
+    # Time.discrete, some basic checks
     (Time.discrete, Source.all, Past.last_bin, Durl.all): {
         'no substitutions': {
             'content': raw_cluster5.format(source='2008-07-31 02:00:00',
@@ -1371,6 +1374,75 @@ def test_cluster_miner_mixin_substitutions(substitutions_db):
         cluster = session.query(Cluster).filter_by(sid=1).one()
         substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
                              for s in cluster.substitutions(model)])
+        assert substitutions == set([(s['source_sid'],
+                                      s['destination_sid'],
+                                      s['occurrence'])
+                                     for s in expected_substitutions])
+
+
+def test_mine_substitutions_with_model(tmpdb):
+    # Set up database
+    load_db(header + '''
+2\t7\tit's real that i love pooda\t1
+\t4\t3\tit's real that i love pooda\t1
+\t\t2008-07-31 00:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t2\tB\tsome-url
+
+\t3\t2\tit's real that i love bladi\t2
+\t\t2008-07-31 08:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t2\tB\tsome-url
+
+2\t6\tit's real that i love pooda\t2
+\t4\t4\tit's real that i love pooda\t3
+\t\t2008-07-31 09:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-07-31 18:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t4
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t1\tB\tsome-url
+
+3\t10\tit's real that i love pooda\t3
+\t4\t4\tit's real that i love pooda\t5
+\t\t2008-07-31 09:00:00\t1\tM\tsome-url
+\t\t2008-07-31 16:00:00\t1\tB\tsome-url
+\t\t2008-07-31 18:00:00\t1\tB\tsome-url
+\t\t2008-08-01 08:00:00\t1\tB\tsome-url
+
+\t2\t2\tit's real that i love bladi\t6
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+\t\t2008-08-01 00:00:00\t1\tB\tsome-url
+
+\t4\t4\tsome other irrelevant but majority quote\t7
+\t\t2008-07-31 11:00:00\t1\tB\tsome-url
+\t\t2008-07-31 15:00:00\t1\tB\tsome-url
+\t\t2008-07-31 22:00:00\t1\tB\tsome-url
+\t\t2008-07-31 23:00:00\t1\tB\tsome-url
+''')
+
+    expected_substitutions = [
+        # Cluster 1
+        {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+        {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
+        {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+        {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
+        # Cluster 2
+        {'source_sid': 3, 'destination_sid': 4, 'occurrence': 0},
+        {'source_sid': 4, 'destination_sid': 3, 'occurrence': 1},
+        {'source_sid': 3, 'destination_sid': 4, 'occurrence': 1},
+        # Cluster 3
+        {'source_sid': 5, 'destination_sid': 6, 'occurrence': 0}
+    ]
+
+    # Test
+    filter_clusters()
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    mine_substitutions_with_model(model)
+    with session_scope() as session:
+        substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
+                             for s in session.query(Substitution)])
         assert substitutions == set([(s['source_sid'],
                                       s['destination_sid'],
                                       s['occurrence'])
