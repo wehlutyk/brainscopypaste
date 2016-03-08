@@ -112,7 +112,6 @@ def test_subhamming():
 
 
 def test_stopwords():
-    assert not stopwords._loaded
     assert 'a' in stopwords
     assert stopwords._loaded
     assert 'yet' in stopwords
