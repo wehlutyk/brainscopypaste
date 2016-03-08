@@ -240,8 +240,6 @@ class ClusterMinerMixin:
 class SubstitutionValidatorMixin:
 
     def validate(self):
-        # TODO: test
-
         token1, token2 = self.tokens
         lem1, lem2 = self.lemmas
 

@@ -7,7 +7,8 @@ import pytest
 
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
-                                  ClusterMinerMixin)
+                                  ClusterMinerMixin,
+                                  SubstitutionValidatorMixin)
 from brainscopypaste.db import Quote
 from brainscopypaste.utils import session_scope
 
@@ -1100,3 +1101,85 @@ def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
             source = session.query(Quote).filter_by(sid=1).one()
             durl = session.query(Quote).filter_by(sid=2).one().urls[0]
             ClusterMinerMixin._substitution(source, durl, 2, model)
+
+
+def test_substitution_validator_mixin():
+    svm = SubstitutionValidatorMixin()
+    cases = {
+        False: [{
+            # Stopwords
+            'tokens': ('yes', 'no'),
+            'lemmas': ('lemmaaa', 'lemmmoooo')
+        }, {
+            # Stopwords
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('i', 'do')
+        }, {
+            # Identical words
+            'tokens': ('word', 'word'),
+            'lemmas': ('lemmaaa', 'lemmmoooo')
+        }, {
+            # Identical lemmas
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('lemma', 'lemma')
+        }, {
+            # Abbreviation
+            'tokens': ('senator', 'sen'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # Abbreviation
+            'tokens': ('flu', 'fluviator'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # Abbreviation
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('blooom', 'blo')
+        }, {
+            # Shortening
+            'tokens': ('programme', 'program'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # Shortening
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('goddam', 'goddamme'),
+        }, {
+            # US/UK spelling
+            'tokens': ('blodder', 'bloddre'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # US/UK spelling
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('bildre', 'bilder')
+        }, {
+            # Numbers
+            'tokens': ('1st', '2nd'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # Numbers
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('3rd', 'fourth')
+        }, {
+            # Minor spelling changes
+            'tokens': ('plural', 'plurals'),
+            'lemmas': ('lemmaaa', 'lemmoooo')
+        }, {
+            # Minor spelling changes
+            'tokens': ('wordi', 'wordooo'),
+            'lemmas': ('neighbour', 'neighbor')
+        }],
+        True: [{
+            'tokens': ('hello', 'tchuss'),
+            'lemmas': ('hello', 'tchuss')
+        }, {
+            'tokens': ('tree', 'band'),
+            'lemmas': ('tree', 'willness')
+        }]
+    }
+
+    for success, token_lemma_list in cases.items():
+        for tokens_lemmas in token_lemma_list:
+            svm.tokens = tokens_lemmas['tokens']
+            svm.lemmas = tokens_lemmas['lemmas']
+            print(svm.tokens, svm.lemmas)
+            print(success)
+            assert svm.validate() == success
