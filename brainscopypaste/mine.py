@@ -223,8 +223,8 @@ class ClusterMinerMixin:
                 if distance == 1 and model.validate(source, durl):
                     yield self._substitution(source, durl, start, model)
 
-    def _substitution(self, source, durl, start, model):
-        # TODO: test
+    @classmethod
+    def _substitution(cls, source, durl, start, model):
         from brainscopypaste.db import Substitution
 
         dlemmas = durl.quote.lemmas

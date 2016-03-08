@@ -6,7 +6,8 @@ from itertools import product
 import pytest
 
 from brainscopypaste.load import MemeTrackerParser
-from brainscopypaste.mine import Interval, Model, Time, Source, Past, Durl
+from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
+                                  ClusterMinerMixin)
 from brainscopypaste.db import Quote
 from brainscopypaste.utils import session_scope
 
@@ -70,7 +71,7 @@ raw_cluster = '''
 \t\t{source1}\t1\tM\tsome-url
 \t\t{source2}\t1\tB\tsome-url
 
-\t1\t1\tit's real that i love bladi\t2
+\t1\t1\tit's real that he loves bladi\t2
 \t\t{dest}\t1\tB\tsome-url
 '''
 
@@ -1060,3 +1061,42 @@ def test_model_past_surls(past_surls_db):
             past_surl_ids = [int(url.url[-1])
                              for url in model.past_surls(cluster, durl)]
             assert past_surl_ids == expected_surl_ids
+
+
+def test_cluster_miner_mixin_substitution_ok(tmpdb):
+    # Set up database
+    load_db(header + raw_cluster5.format(source='2008-07-31 05:00:00',
+                                         dest_other1='2008-07-31 06:00:00',
+                                         dest='2008-08-01 06:00:00',
+                                         dest_other2='2008-08-02 02:00:00'))
+
+    # Test
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    with session_scope() as session:
+        source = session.query(Quote).filter_by(sid=1).one()
+        durl = session.query(Quote).filter_by(sid=2).one().urls[1]
+        substitution = ClusterMinerMixin._substitution(source, durl, 2, model)
+        assert substitution.occurrence == 1
+        assert substitution.start == 2
+        assert substitution.position == 6
+        assert substitution.source.sid == 1
+        assert substitution.destination.sid == 2
+        assert substitution.model == model
+        assert substitution.tags == ('NN', 'NNS')
+        assert substitution.tokens == ('pooda', 'bladi')
+        assert substitution.lemmas == ('pooda', 'bladi')
+
+
+def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
+    # Set up database
+    load_db(header + raw_cluster.format(source1='2008-07-31 05:00:00',
+                                        source2='2008-07-31 06:00:00',
+                                        dest='2008-08-01 06:00:00'))
+
+    # Test
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    with pytest.raises(AssertionError):
+        with session_scope() as session:
+            source = session.query(Quote).filter_by(sid=1).one()
+            durl = session.query(Quote).filter_by(sid=2).one().urls[0]
+            ClusterMinerMixin._substitution(source, durl, 2, model)
