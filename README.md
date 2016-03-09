@@ -22,3 +22,5 @@ Timings:
 - brainscoppypaste filter memetracker
   - parsing: 3:37:41
   - saving; ~0:15:00?
+- brainscoppypaste mine memetracker
+  - parsing: 7:28:25
