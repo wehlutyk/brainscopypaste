@@ -29,6 +29,7 @@ def mine_substitutions_with_model(model, limit=None):
     seen = 0
     kept = 0
     for cluster_id in ProgressBar()(cluster_ids):
+        model.drop_caches()
         with session_scope() as session:
             cluster = session.query(Cluster).get(cluster_id)
             for substitution in cluster.substitutions(model):
