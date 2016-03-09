@@ -88,13 +88,11 @@ def load():
 
 
 @load.command(name='memetracker')
-@click.option('--testrun', is_flag=True)
-def load_memetracker(testrun):
+@click.option('--limit', default=None, type=int,
+              help='Limit number of clusters processed')
+def load_memetracker(limit):
     """Load MemeTracker data into SQL."""
-    MemeTrackerParser(paths.mt_full,
-                      line_count=8357595,
-                      limit=3 if testrun else None)\
-        .parse()
+    MemeTrackerParser(paths.mt_full, line_count=8357595, limit=limit).parse()
 
 
 @cli.group()
@@ -103,10 +101,11 @@ def filter():
 
 
 @filter.command(name='memetracker')
-@click.option('--testrun', is_flag=True)
-def filter_memetracker(testrun):
+@click.option('--limit', default=None, type=int,
+              help='Limit number of clusters processed')
+def filter_memetracker(limit):
     """Filter MemeTracker data."""
-    filter_clusters(limit=3 if testrun else None)
+    filter_clusters(limit=limit)
 
 
 @cli.group()
@@ -119,14 +118,15 @@ def mine():
 @click.argument('source', type=click.Choice(map('{}'.format, Source)))
 @click.argument('past', type=click.Choice(map('{}'.format, Past)))
 @click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
-@click.option('--testrun', is_flag=True)
-def mine_substitutions(time, source, past, durl, testrun):
+@click.option('--limit', default=None, type=int,
+              help='Limit number of clusters processed')
+def mine_substitutions(time, source, past, durl, limit):
     """Mine the database for substitutions."""
     time, source, past, durl = map(lambda s: s.split('.')[1],
                                    [time, source, past, durl])
     model = Model(time=Time[time], source=Source[source],
                   past=Past[past], durl=Durl[durl])
-    mine_substitutions_with_model(model, limit=3 if testrun else None)
+    mine_substitutions_with_model(model, limit=limit)
 
 
 def cliobj():
