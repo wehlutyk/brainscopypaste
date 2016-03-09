@@ -1372,12 +1372,12 @@ def test_cluster_miner_mixin_substitutions(substitutions_db):
 
     with session_scope() as session:
         cluster = session.query(Cluster).filter_by(sid=1).one()
-        substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
-                             for s in cluster.substitutions(model)])
-        assert substitutions == set([(s['source_sid'],
-                                      s['destination_sid'],
-                                      s['occurrence'])
-                                     for s in expected_substitutions])
+        substitutions = sorted((s.source.sid, s.destination.sid, s.occurrence)
+                               for s in cluster.substitutions(model))
+        assert substitutions == sorted((s['source_sid'],
+                                        s['destination_sid'],
+                                        s['occurrence'])
+                                       for s in expected_substitutions)
 
 
 mine_substitutions_content = '''
@@ -1484,9 +1484,9 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
 
     # Test
     with session_scope() as session:
-        substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
-                             for s in session.query(Substitution)])
-        assert substitutions == set([(s['source_sid'],
-                                      s['destination_sid'],
-                                      s['occurrence'])
-                                     for s in expected_substitutions])
+        substitutions = sorted((s.source.sid, s.destination.sid, s.occurrence)
+                               for s in session.query(Substitution))
+        assert substitutions == sorted((s['source_sid'],
+                                        s['destination_sid'],
+                                        s['occurrence'])
+                                       for s in expected_substitutions)
