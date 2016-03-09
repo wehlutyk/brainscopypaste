@@ -1380,8 +1380,11 @@ def test_cluster_miner_mixin_substitutions(substitutions_db):
                                        for s in expected_substitutions)
 
 
-mine_substitutions_content = '''
-2\t7\tit's real that i love pooda\t1
+mine_substitutions_content = (
+    '''
+3\t8\tit's real that i love pooda\t1'''
+    # The first part of this cluster defines basic substitutions.
+    '''
 \t4\t3\tit's real that i love pooda\t1
 \t\t2008-07-31 00:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
@@ -1390,45 +1393,58 @@ mine_substitutions_content = '''
 \t3\t2\tit's real that i love bladi\t2
 \t\t2008-07-31 08:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t2\tB\tsome-url
-
+'''
+    # This substitution here will not validate() ('poo' abbreviates 'pooda'),
+    # and we're making sure the non-validation doesn't wipe out the previously
+    # detected substitutions.
+    '''
+\t1\t1\tit's real that i love poo\t3
+\t\t2008-08-02 07:00:00\t1\tB\tsome-url
+'''
+    # Change of majority quote.
+    '''
 2\t6\tit's real that i love pooda\t2
-\t4\t4\tit's real that i love pooda\t3
+\t4\t4\tit's real that i love pooda\t4
 \t\t2008-07-31 09:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
 \t\t2008-07-31 18:00:00\t1\tB\tsome-url
 \t\t2008-08-01 08:00:00\t1\tB\tsome-url
 
-\t2\t2\tit's real that i love bladi\t4
+\t2\t2\tit's real that i love bladi\t5
 \t\t2008-07-31 10:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t1\tB\tsome-url
-
+'''
+    # Majority masquing.
+    '''
 3\t10\tit's real that i love pooda\t3
-\t4\t4\tit's real that i love pooda\t5
+\t4\t4\tit's real that i love pooda\t6
 \t\t2008-07-31 09:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
 \t\t2008-07-31 18:00:00\t1\tB\tsome-url
 \t\t2008-08-01 08:00:00\t1\tB\tsome-url
 
-\t2\t2\tit's real that i love bladi\t6
+\t2\t2\tit's real that i love bladi\t7
 \t\t2008-07-31 10:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t1\tB\tsome-url
 
-\t4\t4\tsome other irrelevant but majority quote\t7
+\t4\t4\tsome other irrelevant but majority quote\t8
 \t\t2008-07-31 11:00:00\t1\tB\tsome-url
 \t\t2008-07-31 15:00:00\t1\tB\tsome-url
 \t\t2008-07-31 22:00:00\t1\tB\tsome-url
 \t\t2008-07-31 23:00:00\t1\tB\tsome-url
-
+'''
+    # Cluster filtered out.
+    '''
 3\t3\tsome cluster that will get filtered out\t4
-\t1\t1\tsome group that will get filtered out\t8
+\t1\t1\tsome group that will get filtered out\t9
 \t\t2008-02-01 00:00:00\t1\tM\tsome-url
 
-\t1\t1\tsome cluster that will get filtered out\t9
+\t1\t1\tsome cluster that will get filtered out\t10
 \t\t2008-07-31 10:00:00\t1\tB\tsome-url
 
-\t1\t1\tsome cluster that will get wiped out\t10
+\t1\t1\tsome cluster that will get wiped out\t11
 \t\t2008-08-01 02:00:00\t1\tB\tsome-url
-'''
+''')
 
 
 mine_substitutions_cases = {
@@ -1441,11 +1457,11 @@ mine_substitutions_cases = {
             {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
             {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
             # Cluster 2.
-            {'source_sid': 3, 'destination_sid': 4, 'occurrence': 0},
-            {'source_sid': 4, 'destination_sid': 3, 'occurrence': 1},
-            {'source_sid': 3, 'destination_sid': 4, 'occurrence': 1},
+            {'source_sid': 4, 'destination_sid': 5, 'occurrence': 0},
+            {'source_sid': 5, 'destination_sid': 4, 'occurrence': 1},
+            {'source_sid': 4, 'destination_sid': 5, 'occurrence': 1},
             # Cluster 3.
-            {'source_sid': 5, 'destination_sid': 6, 'occurrence': 0}
+            {'source_sid': 6, 'destination_sid': 7, 'occurrence': 0}
             # Cluster 4: nothing (filtered out).
         ]
     },

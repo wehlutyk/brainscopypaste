@@ -34,9 +34,8 @@ def mine_substitutions_with_model(model, limit=None):
             for substitution in cluster.substitutions(model):
                 seen += 1
                 if substitution.validate():
+                    session.add(substitution)
                     kept += 1
-                else:
-                    session.rollback()
 
     click.secho('OK', fg='green', bold=True)
     click.echo('Seen {} candidate substitutions, kept {}.'.format(seen, kept))
