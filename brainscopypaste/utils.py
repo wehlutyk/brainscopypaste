@@ -105,7 +105,9 @@ class memoized:
 
     def __get__(self, obj, objtype):
         """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        func = functools.partial(self.__call__, obj)
+        func.drop_cache = self.drop_cache
+        return func
 
     def drop_cache(self):
         self.cache = {}

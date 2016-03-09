@@ -136,6 +136,24 @@ def test_memoized():
     assert mfunc() == 2
 
 
+def test_memoized_class():
+    counter = 0
+
+    class Klass:
+        @memoized
+        def func(self):
+            nonlocal counter
+            counter += 1
+            return counter
+
+    klass = Klass()
+    assert klass.func() == 1
+    assert klass.func() == 1
+    klass.func.drop_cache()
+    assert klass.func() == 2
+    assert klass.func() == 2
+
+
 def test_cache():
 
     class Klass:
