@@ -1380,9 +1380,7 @@ def test_cluster_miner_mixin_substitutions(substitutions_db):
                                      for s in expected_substitutions])
 
 
-def test_mine_substitutions_with_model(tmpdb):
-    # Set up database
-    load_db(header + '''
+mine_substitutions_content = '''
 2\t7\tit's real that i love pooda\t1
 \t4\t3\tit's real that i love pooda\t1
 \t\t2008-07-31 00:00:00\t1\tM\tsome-url
@@ -1430,27 +1428,61 @@ def test_mine_substitutions_with_model(tmpdb):
 
 \t1\t1\tsome cluster that will get wiped out\t10
 \t\t2008-08-01 02:00:00\t1\tB\tsome-url
-''')
+'''
 
-    expected_substitutions = [
-        # Cluster 1.
-        {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
-        {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
-        {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
-        {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
-        # Cluster 2.
-        {'source_sid': 3, 'destination_sid': 4, 'occurrence': 0},
-        {'source_sid': 4, 'destination_sid': 3, 'occurrence': 1},
-        {'source_sid': 3, 'destination_sid': 4, 'occurrence': 1},
-        # Cluster 3.
-        {'source_sid': 5, 'destination_sid': 6, 'occurrence': 0}
-        # Cluster 4: nothing (filtered out).
-    ]
+
+mine_substitutions_cases = {
+    'full mining': {
+        'limit': None,
+        'substitutions': [
+            # Cluster 1.
+            {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+            {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
+            {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+            {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
+            # Cluster 2.
+            {'source_sid': 3, 'destination_sid': 4, 'occurrence': 0},
+            {'source_sid': 4, 'destination_sid': 3, 'occurrence': 1},
+            {'source_sid': 3, 'destination_sid': 4, 'occurrence': 1},
+            # Cluster 3.
+            {'source_sid': 5, 'destination_sid': 6, 'occurrence': 0}
+            # Cluster 4: nothing (filtered out).
+        ]
+    },
+    'with limit': {
+        'limit': 1,
+        'substitutions': [
+            # Cluster 1.
+            {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
+            {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
+            {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
+            {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
+            # Clusters 2, 3, 4: nothing (because of the limit).
+        ]
+    }
+}
+
+
+@pytest.fixture(params=mine_substitutions_cases.keys(),
+                ids=['{}'.format(param)
+                     for param in mine_substitutions_cases.keys()])
+def mine_substitutions_db(request, tmpdb):
+    string = request.param
+    limit = mine_substitutions_cases[string]['limit']
+    expected_substitutions = mine_substitutions_cases[string]['substitutions']
+    load_db(header + mine_substitutions_content)
+    filter_clusters()
+    return limit, expected_substitutions
+
+
+def test_mine_substitutions_with_model(mine_substitutions_db):
+    limit, expected_substitutions = mine_substitutions_db
+
+    # Mine
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    mine_substitutions_with_model(model, limit=limit)
 
     # Test
-    filter_clusters()
-    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
-    mine_substitutions_with_model(model)
     with session_scope() as session:
         substitutions = set([(s.source.sid, s.destination.sid, s.occurrence)
                              for s in session.query(Substitution)])
