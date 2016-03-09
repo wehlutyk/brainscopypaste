@@ -1420,20 +1420,31 @@ def test_mine_substitutions_with_model(tmpdb):
 \t\t2008-07-31 15:00:00\t1\tB\tsome-url
 \t\t2008-07-31 22:00:00\t1\tB\tsome-url
 \t\t2008-07-31 23:00:00\t1\tB\tsome-url
+
+3\t3\tsome cluster that will get filtered out\t4
+\t1\t1\tsome group that will get filtered out\t8
+\t\t2008-02-01 00:00:00\t1\tM\tsome-url
+
+\t1\t1\tsome cluster that will get filtered out\t9
+\t\t2008-07-31 10:00:00\t1\tB\tsome-url
+
+\t1\t1\tsome cluster that will get wiped out\t10
+\t\t2008-08-01 02:00:00\t1\tB\tsome-url
 ''')
 
     expected_substitutions = [
-        # Cluster 1
+        # Cluster 1.
         {'source_sid': 1, 'destination_sid': 2, 'occurrence': 0},
         {'source_sid': 2, 'destination_sid': 1, 'occurrence': 1},
         {'source_sid': 1, 'destination_sid': 2, 'occurrence': 1},
         {'source_sid': 2, 'destination_sid': 1, 'occurrence': 2},
-        # Cluster 2
+        # Cluster 2.
         {'source_sid': 3, 'destination_sid': 4, 'occurrence': 0},
         {'source_sid': 4, 'destination_sid': 3, 'occurrence': 1},
         {'source_sid': 3, 'destination_sid': 4, 'occurrence': 1},
-        # Cluster 3
+        # Cluster 3.
         {'source_sid': 5, 'destination_sid': 6, 'occurrence': 0}
+        # Cluster 4: nothing (filtered out).
     ]
 
     # Test
