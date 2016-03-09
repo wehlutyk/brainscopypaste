@@ -127,19 +127,11 @@ class Quote(Base, BaseMixin):
     substitutions_source = relationship(
         'Substitution', back_populates='source', lazy='dynamic',
         foreign_keys='Substitution.source_id',
-        cascade='all, delete-orphan',
-        # When creating a substitution, we want to be able to validate() it
-        # before having it added to the session (we'll add it manually, because
-        # if it doesn't validate, we discard it). So don't cascade backrefs.
-        cascade_backrefs=False)
+        cascade='all, delete-orphan')
     substitutions_destination = relationship(
         'Substitution', back_populates='destination', lazy='dynamic',
         foreign_keys='Substitution.destination_id',
-        cascade='all, delete-orphan',
-        # When creating a substitution, we want to be able to validate() it
-        # before having it added to the session (we'll add it manually, because
-        # if it doesn't validate, we discard it). So don't cascade backrefs.
-        cascade_backrefs=False)
+        cascade='all, delete-orphan')
 
     format_copy_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string',
                            'url_timestamps', 'url_frequencies',

@@ -11,7 +11,7 @@ from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
 
 
 def mine_substitutions_with_model(model, limit=None):
-    from brainscopypaste.db import Cluster
+    from brainscopypaste.db import Cluster, Substitution
 
     click.echo('Mining clusters for substitutions with {}{}...'
                .format(model, '' if limit is None else ' (test run)'))
@@ -34,8 +34,14 @@ def mine_substitutions_with_model(model, limit=None):
             for substitution in cluster.substitutions(model):
                 seen += 1
                 if substitution.validate():
-                    session.add(substitution)
                     kept += 1
+                    session.commit()
+                else:
+                    session.rollback()
+
+    # Sanity check. This session business is tricky.
+    with session_scope() as session:
+        assert session.query(Substitution).count() == kept
 
     click.secho('OK', fg='green', bold=True)
     click.echo('Seen {} candidate substitutions, kept {}.'.format(seen, kept))
