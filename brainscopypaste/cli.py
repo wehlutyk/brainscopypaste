@@ -85,6 +85,8 @@ def drop_all(obj):
         Base.metadata.drop_all(bind=obj['engine'])
         click.secho('OK', fg='green', bold=True)
 
+        logger.info('Done emptying database')
+
 
 @drop.command(name='filtered')
 @click.pass_obj
@@ -107,6 +109,8 @@ def drop_filtered(obj):
 
         click.secho('OK', fg='green', bold=True)
 
+        logger.info('Done dropping filtered rows and substitutions')
+
 
 @drop.command(name='substitutions')
 @click.pass_obj
@@ -119,6 +123,8 @@ def drop_substitutions(obj):
         click.secho('Dropping mined substitutions... ', nl=False)
         Substitution.__table__.drop(bind=obj['engine'])
         click.secho('OK', fg='green', bold=True)
+
+        logger.info('Done dropping substitutions')
 
 
 @cli.group()
@@ -134,6 +140,7 @@ def load_memetracker(limit):
 
     logger.info('Starting load of memetracker data into database')
     MemeTrackerParser(paths.mt_full, line_count=8357595, limit=limit).parse()
+    logger.info('Done loading memetracker data into database')
 
 
 @cli.group()
@@ -149,6 +156,7 @@ def filter_memetracker(limit):
 
     logger.info('Starting filtering of memetracker data')
     filter_clusters(limit=limit)
+    logger.info('Done filtering memetracker data')
 
 
 @cli.group()
@@ -177,6 +185,7 @@ def mine_substitutions(time, source, past, durl, limit):
     logger.info('Substitution model is %s', model)
 
     mine_substitutions_with_model(model, limit=limit)
+    logger.info('Done mining substitution in memetracker data')
 
 
 def cliobj():
