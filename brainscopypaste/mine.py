@@ -1,5 +1,6 @@
 from enum import Enum, unique
 from datetime import timedelta, datetime
+import logging
 
 import click
 from progressbar import ProgressBar
@@ -10,12 +11,21 @@ from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
                                    session_scope, memoized)
 
 
+logger = logging.getLogger(__name__)
+
+
 def mine_substitutions_with_model(model, limit=None):
     from brainscopypaste.db import Cluster, Substitution
 
-    click.echo('Mining clusters for substitutions with {}{}...'
-               .format(model, '' if limit is None else ' (test run)'))
+    logger.info('Mining clusters for substitutions')
+    if limit is not None:
+        logger.info('Mining is limited to %s clusters', limit)
 
+    click.echo('Mining clusters for substitutions with {}{}...'
+               .format(model, '' if limit is None
+                       else ' (limit={})'.format(limit)))
+
+    # Check clusters have been filtered.
     with session_scope() as session:
         if session.query(Cluster)\
            .filter(Cluster.filtered.is_(True)).count() == 0:
@@ -26,6 +36,9 @@ def mine_substitutions_with_model(model, limit=None):
             query = query.limit(limit)
         cluster_ids = [id for (id,) in query]
 
+    logger.info('Got %s clusters to filter', len(cluster_ids))
+
+    # Mine.
     seen = 0
     kept = 0
     for cluster_id in ProgressBar()(cluster_ids):
@@ -35,9 +48,13 @@ def mine_substitutions_with_model(model, limit=None):
             for substitution in cluster.substitutions(model):
                 seen += 1
                 if substitution.validate():
+                    logger.debug('Found valid substitution in cluster #%s',
+                                 cluster.sid)
                     kept += 1
                     session.commit()
                 else:
+                    logger.debug('Dropping substitution from cluster #%s',
+                                 cluster.sid)
                     session.rollback()
 
     # Sanity check. This session business is tricky.
@@ -45,6 +62,7 @@ def mine_substitutions_with_model(model, limit=None):
         assert session.query(Substitution).count() == kept
 
     click.secho('OK', fg='green', bold=True)
+    logger.info('Seen %s candidate substitutions, kept %s', seen, kept)
     click.echo('Seen {} candidate substitutions, kept {}.'.format(seen, kept))
 
 
@@ -226,6 +244,9 @@ class ClusterMinerMixin:
 
                 # Check distance, source and durl validity.
                 if distance == 1 and model.validate(source, durl):
+                    logger.debug('Found candidate substitution between '
+                                 'quote #%s and durl #%s/%s', source.sid,
+                                 durl.quote.sid, durl.occurrence)
                     yield self._substitution(source, durl, start, model)
 
     @classmethod
