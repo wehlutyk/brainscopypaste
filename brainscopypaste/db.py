@@ -121,7 +121,6 @@ class SealedException(Exception):
 
 class Quote(Base, BaseMixin):
 
-    # TODO: test that deleting clusters deletes this.
     cluster_id = Column(Integer, ForeignKey('cluster.id', ondelete='CASCADE'),
                         nullable=False)
     cluster = relationship('Cluster', back_populates='quotes')
@@ -259,7 +258,6 @@ class Url:
 
 class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
 
-    # TODO: test that deleting quotes, or clusters deletes this.
     source_id = Column(Integer,
                        ForeignKey('quote.id', ondelete='CASCADE'),
                        nullable=False)

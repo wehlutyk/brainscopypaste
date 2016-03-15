@@ -4,7 +4,8 @@ from sqlalchemy.exc import DataError
 import pytest
 
 from brainscopypaste.utils import session_scope
-from brainscopypaste.db import Cluster, Quote, Url, SealedException
+from brainscopypaste.db import (Cluster, Quote, Url, Substitution,
+                                SealedException)
 
 
 def test_cluster(some_clusters):
@@ -124,6 +125,25 @@ def test_url(some_urls):
                               frequency=1,
                               url_type='C',
                               url='some url'))
+
+
+def test_cluster_cascade_to_quotes(some_quotes):
+    with session_scope() as session:
+        session.query(Cluster).delete()
+        assert session.query(Quote).count() == 0
+
+
+def test_cluster_cascade_to_substitutions(some_substitutions):
+    with session_scope() as session:
+        session.query(Cluster).delete()
+        assert session.query(Quote).count() == 0
+        assert session.query(Substitution).count() == 0
+
+
+def test_quote_cascade_to_substitutions(some_substitutions):
+    with session_scope() as session:
+        session.query(Quote).delete()
+        assert session.query(Substitution).count() == 0
 
 
 def test_substitution(some_substitutions):
