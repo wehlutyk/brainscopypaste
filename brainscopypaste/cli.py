@@ -128,9 +128,6 @@ def load_memetracker(limit):
     """Load MemeTracker data into SQL."""
 
     logger.info('Starting load of memetracker data into database')
-    if limit is not None:
-        logger.info('Loading is limited to %s clusters', limit)
-
     MemeTrackerParser(paths.mt_full, line_count=8357595, limit=limit).parse()
 
 
@@ -146,9 +143,6 @@ def filter_memetracker(limit):
     """Filter MemeTracker data."""
 
     logger.info('Starting filtering of memetracker data')
-    if limit is not None:
-        logger.info('Filtering is limited to %s clusters', limit)
-
     filter_clusters(limit=limit)
 
 
