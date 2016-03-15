@@ -133,7 +133,7 @@ def session_scope():
     """Provide a transactional scope around a series of operations."""
     from brainscopypaste.db import Session
     session = Session()
-    logger.debug('Opening session %s', session)
+    logger.debug('Opened session %s', session)
     try:
         yield session
         logger.debug('Committing session %s', session)
