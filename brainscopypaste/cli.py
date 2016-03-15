@@ -20,14 +20,16 @@ logger = logging.getLogger(__name__)
 @click.option('--echo-sql', is_flag=True)
 @click.option('--log', default='info', type=click.Choice(['info', 'debug']),
               help='Set log level')
+@click.option('--log-file', default=None, type=click.Path(),
+              help='Log to this file instead of stdout')
 @click.pass_obj
-def cli(obj, echo_sql, log):
+def cli(obj, echo_sql, log, log_file):
     """BrainsCopyPaste analysis of the MemeTracker data."""
 
     # Configure logging
     loglevel = getattr(logging, log.upper())
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: '
-                        '%(message)s', level=loglevel)
+                        '%(message)s', level=loglevel, filename=log_file)
     logger.debug('Logging configured')
 
     # Save config
