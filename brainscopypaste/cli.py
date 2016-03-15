@@ -77,7 +77,7 @@ def drop_all(obj):
 
     if confirm('the whole database'):
 
-        logger.debug('Emptying database')
+        logger.info('Emptying database')
 
         click.secho('Emptying database... ', nl=False)
         Base.metadata.drop_all(bind=obj['engine'])
@@ -91,8 +91,8 @@ def drop_filtered(obj):
 
     if confirm('the filtered rows (Clusters, Quotes)'):
 
-        logger.debug('Dropping filtered rows (Quotes and Clusters) '
-                     'from database')
+        logger.info('Dropping filtered rows (Quotes and Clusters) '
+                    'from database')
 
         with session_scope() as session:
             click.secho('Dropping filtered rows... ', nl=False)
@@ -109,7 +109,7 @@ def drop_substitutions(obj):
 
     if confirm('the mined substitutions'):
 
-        logger.debug('Dropping substitutions from database')
+        logger.info('Dropping substitutions from database')
 
         click.secho('Dropping mined substitutions... ', nl=False)
         Substitution.__table__.drop(bind=obj['engine'])
