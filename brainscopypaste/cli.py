@@ -79,7 +79,6 @@ def drop_all(obj):
     """Empty the whole database."""
 
     if confirm('the whole database'):
-
         logger.info('Emptying database')
 
         click.secho('Emptying database... ', nl=False)
@@ -97,7 +96,6 @@ def drop_filtered(obj):
 
     if confirm('the filtered rows (clusters, quotes) and '
                'any mined substitutions attached to them'):
-
         logger.info('Dropping filtered rows (quotes and clusters) and '
                     'substitutions from database')
 
