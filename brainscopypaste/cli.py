@@ -4,7 +4,7 @@ import click
 from sqlalchemy import create_engine
 
 from brainscopypaste import paths
-from brainscopypaste.db import Base, Session, Cluster, Quote, Substitution
+from brainscopypaste.db import Base, Session, Cluster, Substitution
 from brainscopypaste.utils import session_scope, mkdirp
 from brainscopypaste.load import MemeTrackerParser
 from brainscopypaste.filter import filter_clusters
@@ -89,15 +89,20 @@ def drop_all(obj):
 def drop_filtered(obj):
     """Drop filtered rows (Clusters, Quotes)."""
 
-    if confirm('the filtered rows (Clusters, Quotes)'):
+    click.secho('Dropping filtered rows will also drop any substitutions '
+                'mined beforehand', bold=True)
 
-        logger.info('Dropping filtered rows (Quotes and Clusters) '
-                    'from database')
+    if confirm('the filtered rows (clusters, quotes) and '
+               'any mined substitutions attached to them'):
+
+        logger.info('Dropping filtered rows (quotes and clusters) and '
+                    'substitutions from database')
 
         with session_scope() as session:
-            click.secho('Dropping filtered rows... ', nl=False)
-            session.query(Quote).filter(Quote.filtered.is_(True)).delete()
-            session.query(Cluster).filter(Cluster.filtered.is_(True)).delete()
+            click.secho('Dropping filtered rows and substitutions... ',
+                        nl=False)
+            session.query(Cluster).filter(Cluster.filtered.is_(True))\
+                   .delete(synchronize_session=False)
 
         click.secho('OK', fg='green', bold=True)
 
@@ -108,7 +113,6 @@ def drop_substitutions(obj):
     """Drop Substitutions."""
 
     if confirm('the mined substitutions'):
-
         logger.info('Dropping substitutions from database')
 
         click.secho('Dropping mined substitutions... ', nl=False)
