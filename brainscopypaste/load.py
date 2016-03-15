@@ -100,16 +100,16 @@ class MemeTrackerParser:
         self._lines_read = 1
         self._bar.update(self._lines_read)
 
-        # Results to be saved periodically.
+        # Results to be saved and checks to be done.
         self._objects = {'clusters': [], 'quotes': []}
-        self._checks = {'clusters': {}, 'quotes': {}}
+        self._checks = {}
 
         while self._cluster_line is not None:
             logger.debug("Parsing new cluster ('%s')", self._cluster_line[:-1])
             self._parse_cluster_block()
 
     def _check(self):
-        for id, check in ProgressBar()(self._checks['clusters'].items()):
+        for id, check in ProgressBar()(self._checks.items()):
             logger.debug('Checking cluster #%s consistency', id)
 
             with session_scope() as session:
@@ -117,22 +117,22 @@ class MemeTrackerParser:
                 cluster = session.query(Cluster).get(id)
                 err_end = (' #{} does not match value'
                            ' in file').format(cluster.sid)
-                if check['size'] != cluster.size:
+                if check['cluster']['size'] != cluster.size:
                     raise ValueError("Cluster size" + err_end)
-                if check['frequency'] != cluster.frequency:
+                if check['cluster']['frequency'] != cluster.frequency:
                     raise ValueError("Cluster frequency" + err_end)
 
                 # Check each quote.
                 for quote in cluster.quotes:
-                    check = self._checks['quotes'][quote.id]
+                    quote_check = check['quotes'][quote.id]
                     err_end = (' #{} does not match value'
                                ' in file').format(quote.sid)
-                    if check['size'] != quote.size:
+                    if quote_check['size'] != quote.size:
                         raise ValueError("Quote size" + err_end)
-                    if check['frequency'] != quote.frequency:
+                    if quote_check['frequency'] != quote.frequency:
                         raise ValueError("Quote frequency" + err_end)
 
-        self._checks = {'clusters': {}, 'quotes': {}}
+        self._checks = {}
 
     def _parse_cluster_block(self):
         # Check we have a cluster line and parse it.
@@ -197,9 +197,12 @@ class MemeTrackerParser:
         # Save checks for later on.
         cluster_size = int(fields[0])
         cluster_frequency = int(fields[1])
-        self._checks['clusters'][self._cluster.id] = {
-            'size': cluster_size,
-            'frequency': cluster_frequency
+        self._checks[self._cluster.id] = {
+            'quotes': {},
+            'cluster': {
+                'size': cluster_size,
+                'frequency': cluster_frequency
+            }
         }
 
     def _handle_quote(self, fields):
@@ -211,7 +214,7 @@ class MemeTrackerParser:
         # Save checks for later on.
         quote_size = int(fields[2])
         quote_frequency = int(fields[1])
-        self._checks['quotes'][self._quote.id] = {
+        self._checks[self._cluster.id]['quotes'][self._quote.id] = {
             'size': quote_size,
             'frequency': quote_frequency
         }
