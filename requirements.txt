@@ -7,6 +7,7 @@ ipython==4.0.2
 ipython-genutils==0.1.0
 ipywidgets==4.1.1
 Jinja2==2.8
+joblib==0.9.4
 jsonschema==2.5.1
 jupyter-client==4.1.1
 jupyter-core==4.0.6
@@ -45,5 +46,4 @@ terminado==0.6
 tornado==4.3
 traitlets==4.0.0
 treetaggerwrapper==2.2.2
-wheel==0.26.0
 wmctrl==0.3
