@@ -1,3 +1,5 @@
+import logging
+
 import collections
 from contextlib import contextmanager
 import functools
@@ -9,6 +11,9 @@ from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 
 from brainscopypaste import paths
+
+
+logger = logging.getLogger(__name__)
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -110,6 +115,7 @@ class memoized:
         return func
 
     def drop_cache(self):
+        logger.debug('Dropping cache for %s', self.func)
         self.cache = {}
 
 
@@ -127,19 +133,24 @@ def session_scope():
     """Provide a transactional scope around a series of operations."""
     from brainscopypaste.db import Session
     session = Session()
+    logger.debug('Opening session %s', session)
     try:
         yield session
+        logger.debug('Committing session %s', session)
         session.commit()
     except:
+        logger.debug('Rolling back session %s', session)
         session.rollback()
         raise
     finally:
+        logger.debug('Closing session %s', session)
         session.close()
 
 
 def mkdirp(folder):
     """Create `folder` if it doesn't exist."""
     if not os.path.exists(folder):
+        logger.debug("Creating folder '%s'", folder)
         os.makedirs(folder)
 
 
@@ -202,6 +213,8 @@ def langdetect(sentence):
 
 
 def execute_raw(engine, statement):
+    logger.debug("Raw execution of SQL '%s'", statement)
+
     connection = engine.connect()
     raw_connection = connection.connection
     old_isolation_level = raw_connection.isolation_level
@@ -321,6 +334,8 @@ class Stopwords:
 
     def _load(self):
         """Read and load stopwords file."""
+
+        logger.debug('Loading stopwords')
 
         stopwords = set([])
         with open(paths.stopwords_file) as f:
