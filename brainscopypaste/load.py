@@ -105,7 +105,7 @@ class MemeTrackerParser:
         self._checks = {'clusters': {}, 'quotes': {}}
 
         while self._cluster_line is not None:
-            logger.debug("Parsing new cluster ('%s')", self._cluster_line)
+            logger.debug("Parsing new cluster ('%s')", self._cluster_line[:-1])
             self._parse_cluster_block()
 
     def _check(self):
