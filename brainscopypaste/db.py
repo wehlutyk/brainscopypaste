@@ -54,7 +54,7 @@ class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
     filtered = Column(Boolean, default=False, nullable=False)
     source = Column(String, nullable=False)
     quotes = relationship('Quote', back_populates='cluster', lazy='dynamic',
-                          cascade='all, delete-orphan')
+                          cascade='all, delete-orphan', passive_deletes=True)
 
     format_copy_columns = ('id', 'sid', 'filtered', 'source')
 
@@ -121,7 +121,9 @@ class SealedException(Exception):
 
 class Quote(Base, BaseMixin):
 
-    cluster_id = Column(Integer, ForeignKey('cluster.id'), nullable=False)
+    # TODO: test that deleting clusters deletes this.
+    cluster_id = Column(Integer, ForeignKey('cluster.id', ondelete='CASCADE'),
+                        nullable=False)
     cluster = relationship('Cluster', back_populates='quotes')
     sid = Column(Integer, nullable=False)
     filtered = Column(Boolean, default=False, nullable=False)
@@ -133,11 +135,11 @@ class Quote(Base, BaseMixin):
     substitutions_source = relationship(
         'Substitution', back_populates='source', lazy='dynamic',
         foreign_keys='Substitution.source_id',
-        cascade='all, delete-orphan')
+        cascade='all, delete-orphan', passive_deletes=True)
     substitutions_destination = relationship(
         'Substitution', back_populates='destination', lazy='dynamic',
         foreign_keys='Substitution.destination_id',
-        cascade='all, delete-orphan')
+        cascade='all, delete-orphan', passive_deletes=True)
 
     format_copy_columns = ('id', 'cluster_id', 'sid', 'filtered', 'string',
                            'url_timestamps', 'url_frequencies',
@@ -257,10 +259,15 @@ class Url:
 
 class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
 
-    source_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
+    # TODO: test that deleting quotes, or clusters deletes this.
+    source_id = Column(Integer,
+                       ForeignKey('quote.id', ondelete='CASCADE'),
+                       nullable=False)
     source = relationship('Quote', back_populates='substitutions_source',
                           foreign_keys='Substitution.source_id')
-    destination_id = Column(Integer, ForeignKey('quote.id'), nullable=False)
+    destination_id = Column(Integer,
+                            ForeignKey('quote.id', ondelete='CASCADE'),
+                            nullable=False)
     destination = relationship('Quote',
                                back_populates='substitutions_destination',
                                foreign_keys='Substitution.destination_id')
