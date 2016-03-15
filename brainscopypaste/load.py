@@ -4,12 +4,16 @@
 from datetime import datetime
 import re
 from codecs import open
+import logging
 
 import click
 from progressbar import ProgressBar
 
 from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
 from brainscopypaste.utils import session_scope, execute_raw
+
+
+logger = logging.getLogger(__name__)
 
 
 class MemeTrackerParser:
@@ -42,13 +46,18 @@ class MemeTrackerParser:
     def parse(self):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
+        logger.info('Parsing memetracker file')
+        if self.limit is not None:
+            logger.info('Parsing is limited to %s clusters', self.limit)
+
         click.echo('Parsing MemeTracker data file into database{}... '
-                   .format('' if self.limit is None else ' (test run)'))
+                   .format('' if self.limit is None
+                           else ' (limit={})'.format(self.limit)))
 
         if self.parsed:
             raise ValueError('Parser has already run')
 
-        # +100 is some margin for ProgressBar
+        # +100 is some margin for ProgressBar.
         lines_left = self.line_count - self.header_size + 100
         with open(self.filename, 'rb', encoding='utf8') as self._file, \
                 ProgressBar(max_value=lines_left,
@@ -56,17 +65,23 @@ class MemeTrackerParser:
             self._parse()
 
         click.secho('OK', fg='green', bold=True)
+        logger.info('Parsed %s clusters and %s quotes from memetracker file',
+                    len(self._objects['clusters']),
+                    len(self._objects['quotes']))
 
         # Save.
+        logger.info('Saving parsed clusters to database')
         save_by_copy(**self._objects)
         self._objects = {'clusters': [], 'quotes': []}
 
         # Vacuum analyze.
+        logger.info('Vacuuming and analyzing database')
         click.echo('Vacuuming and analyzing... ', nl=False)
         execute_raw(Session.kw['bind'], 'VACUUM ANALYZE')
         click.secho('OK', fg='green', bold=True)
 
         # And check.
+        logger.info('Checking consistency of the file against the database')
         click.echo('Checking consistency...')
         self._check()
 
@@ -90,10 +105,13 @@ class MemeTrackerParser:
         self._checks = {'clusters': {}, 'quotes': {}}
 
         while self._cluster_line is not None:
+            logger.debug("Parsing new cluster ('%s')", self._cluster_line)
             self._parse_cluster_block()
 
     def _check(self):
         for id, check in ProgressBar()(self._checks['clusters'].items()):
+            logger.debug('Checking cluster #%s consistency', id)
+
             with session_scope() as session:
                 # Check the cluster itself.
                 cluster = session.query(Cluster).get(id)
