@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 from io import StringIO
+import logging
 
 import click
 from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey,
@@ -15,6 +16,7 @@ from brainscopypaste.filter import ClusterFilterMixin
 from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
 
 
+logger = logging.getLogger(__name__)
 Base = declarative_base()
 Session = sessionmaker()
 
@@ -293,6 +295,7 @@ def _copy(string, table, columns):
 
 def save_by_copy(clusters, quotes):
     # Order the objects inserted so the engine bulks them together.
+    logger.debug("Saving %s clusters with 'copy_from'", len(clusters))
     click.echo('Saving clusters... ', nl=False)
     objects = StringIO()
     objects.writelines([cluster.format_copy() + '\n' for cluster in clusters])
@@ -300,6 +303,7 @@ def save_by_copy(clusters, quotes):
     objects.close()
     click.secho('OK', fg='green', bold=True)
 
+    logger.debug("Saving %s quotes with 'copy_from'", len(quotes))
     click.echo('Saving quotes... ', nl=False)
     objects = StringIO()
     objects.writelines([quote.format_copy() + '\n' for quote in quotes])
