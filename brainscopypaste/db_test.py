@@ -4,7 +4,7 @@ from sqlalchemy.exc import DataError
 import pytest
 
 from brainscopypaste.utils import session_scope
-from brainscopypaste.db import Cluster, Quote, Url
+from brainscopypaste.db import Cluster, Quote, Url, SealedException
 
 
 def test_cluster(some_clusters):
@@ -60,6 +60,29 @@ def test_quote(some_quotes):
         assert q0.format_copy() == ('{}'.format(q0.id) +
                                     "\t1\t0\tFalse\tSome quote to "
                                     "tokenize 0\t{}\t{}\t{}\t{}")
+
+
+def test_quote_add_url_sealed(some_quotes):
+    with pytest.raises(SealedException):
+        with session_scope() as session:
+            u = Url(timestamp=datetime.utcnow(), frequency=1,
+                    url_type='B', url='some url 1')
+            q = session.query(Quote).filter_by(sid=0).one()
+            assert q.size == len(q.urls)
+            q.add_url(u)
+
+
+def test_quote_add_urls_sealed(some_quotes):
+    u1 = Url(timestamp=datetime.utcnow(), frequency=1,
+             url_type='B', url='some url 1')
+    u2 = Url(timestamp=datetime.utcnow(), frequency=1,
+             url_type='B', url='some url 2')
+
+    with pytest.raises(SealedException):
+        with session_scope() as session:
+            q = session.query(Quote).filter_by(sid=1).one()
+            assert q.size == len(q.urls)
+            q.add_urls([u1, u2])
 
 
 def test_url(some_urls):

@@ -115,6 +115,10 @@ class ArrayOfEnum(ARRAY):
 url_type = Enum('B', 'M', name='url_type', metadata=Base.metadata)
 
 
+class SealedException(Exception):
+    pass
+
+
 class Quote(Base, BaseMixin):
 
     cluster_id = Column(Integer, ForeignKey('cluster.id'), nullable=False)
@@ -212,6 +216,9 @@ class Quote(Base, BaseMixin):
                       key=lambda url: url.timestamp)
 
     def add_url(self, url):
+        if 'urls' in self.__dict__:
+            raise SealedException('self.urls has already been accessed, '
+                                  'cannot add more urls')
         self.url_timestamps = (self.url_timestamps or []) + [url.timestamp]
         self.url_frequencies = (self.url_frequencies or []) + [url.frequency]
         self.url_url_types = (self.url_url_types or []) + [url.url_type]
