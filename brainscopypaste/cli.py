@@ -26,13 +26,14 @@ logger = logging.getLogger(__name__)
 def cli(obj, echo_sql, log, log_file):
     """BrainsCopyPaste analysis of the MemeTracker data."""
 
-    # Configure logging
+    # Configure logging and silence TreeTagger logs.
     loglevel = getattr(logging, log.upper())
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(name)s: '
                         '%(message)s', level=loglevel, filename=log_file)
+    logging.getLogger('TreeTagger').setLevel(logging.WARNING)
     logger.debug('Logging configured')
 
-    # Save config
+    # Save config.
     obj['ECHO_SQL'] = echo_sql
     obj['engine'] = init_db(obj['ECHO_SQL'])
     for path in paths_to_create:
