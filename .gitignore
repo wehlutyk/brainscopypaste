@@ -16,3 +16,6 @@ treetagger
 
 # Py.test
 .cache
+
+# Computations
+*.log
