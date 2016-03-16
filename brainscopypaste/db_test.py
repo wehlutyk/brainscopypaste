@@ -153,16 +153,46 @@ def test_substitution(some_substitutions):
         assert q10.substitutions_source.count() == 1
         assert q10.substitutions_destination.count() == 0
         assert q11.substitutions_source.count() == 0
-        assert q11.substitutions_destination.count() == 1
+        assert q11.substitutions_destination.count() == 3
 
-        s = q10.substitutions_source.first()
-        assert q11.substitutions_destination.first() == s
-        assert s.source == q10
-        assert s.destination == q11
+        # Check relationships for a single substitution.
+        s1 = q10.substitutions_source.first()
+        assert q11.substitutions_destination\
+            .order_by(Substitution.id).first() == s1
+        assert s1.source == q10
+        assert s1.destination == q11
 
-        assert s.tokens == ('would', 'had')
-        assert s.lemmas == ('would', 'have')
-        assert s.tags == ('MD', 'VHD')
+        # Check linguistic variables.
+        assert s1.tokens == ('would', 'had')
+        assert s1.lemmas == ('would', 'have')
+        assert s1.tags == ('MD', 'VHD')
+
+        # This substitution is also pooled with another one since they have
+        # same durl.
+        q12 = session.query(Quote).filter_by(sid=12).one()
+        assert q12.substitutions_source.count() == 1
+        s2 = q12.substitutions_source.first()
+        assert s1.durl_weight == 1/2
+        assert s2.durl_weight == 1/2
+
+        # Substitutions with different durl are not pooled.
+        q13 = session.query(Quote).filter_by(sid=13).one()
+        s3, s4 = q13.substitutions_source.all()
+        assert s3.durl_weight == 1
+        assert s4.durl_weight == 1
+
+        # Global weights combine number of substitutions in the cluster,
+        # and number of substitutions sharing a same durl and position.
+        assert s1.weight == 1/8
+        assert s2.weight == 1/8
+        assert s3.weight == 1/4
+        assert s4.weight == 1/4
+
+        # However, substitutions in another cluster are not affected by this.
+        q14 = session.query(Quote).filter_by(sid=14).one()
+        s5 = q14.substitutions_source.first()
+        assert s5.durl_weight == 1
+        assert s5.weight == 1
 
 
 def test_clone_cluster(some_urls):

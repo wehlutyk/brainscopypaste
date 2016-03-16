@@ -11,7 +11,7 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.types import DateTime, Enum
 from sqlalchemy.dialects.postgresql import ARRAY
 
-from brainscopypaste.utils import cache
+from brainscopypaste.utils import cache, session_scope
 from brainscopypaste.filter import ClusterFilterMixin
 from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
 
@@ -294,6 +294,24 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
     def lemmas(self):
         return (self.source.lemmas[self.start + self.position],
                 self.destination.lemmas[self.position])
+
+    @cache
+    def durl_weight(self):
+        with session_scope() as session:
+            count = session.query(Substitution)\
+                .filter(Substitution.destination_id == self.destination_id,
+                        Substitution.occurrence == self.occurrence)\
+                .count()
+        return 1 / count
+
+    @cache
+    def weight(self):
+        with session_scope() as session:
+            count = session.query(Substitution)\
+                .join(Substitution.source).join(Quote.cluster)\
+                .filter(Cluster.sid == self.source.cluster.sid)\
+                .count()
+        return self.durl_weight / count
 
 
 def _copy(string, table, columns):
