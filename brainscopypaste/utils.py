@@ -1,5 +1,5 @@
 import logging
-
+import pickle
 import collections
 from contextlib import contextmanager
 import functools
@@ -353,3 +353,10 @@ class Stopwords:
 
 
 stopwords = Stopwords()
+
+
+@memoized
+def unpickle(filename):
+    # TODO: test
+    with open(filename, 'rb') as file:
+        return pickle.load(file)

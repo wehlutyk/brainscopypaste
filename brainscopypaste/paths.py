@@ -266,6 +266,14 @@ mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
 #: which souldn't (computed at runtime, so the value shown here will change
 #: depending on the folder hierarchy when the docs were built).
 
+pickled_features = {
+    'fa_degree': fa_norms_degrees_pickle,
+    'fa_pagerank': fa_norms_PR_scores_pickle,
+    'fa_betweenness': fa_norms_BCs_pickle,
+    'fa_clustering': fa_norms_CCs_pickle,
+    'frequency': mt_frequencies_pickle
+}
+
 mt_analysis_features = {
     'wn': {
 #        'PR_scores': {

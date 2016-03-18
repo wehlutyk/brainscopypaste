@@ -16,6 +16,10 @@ from brainscopypaste.utils import session_scope, execute_raw
 logger = logging.getLogger(__name__)
 
 
+# TODO: FA norms loader and feature computation (maybe in utils)
+# TODO: Frequency loader and feature computation
+
+
 class MemeTrackerParser:
 
     """Parse the MemeTracker file into database."""
