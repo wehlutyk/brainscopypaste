@@ -83,8 +83,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _syllables_count(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on tokens, not lemmas
         pronunciations = _get_pronunciations()
         if word not in pronunciations:
             return None
@@ -94,8 +92,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonemes_count(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on tokens, not lemmas
         pronunciations = _get_pronunciations()
         if word not in pronunciations:
             return None
@@ -105,16 +101,11 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _letters_count(self, word):
-        # TODO: test
-        # TODO: test it's done on tokens, not lemmas
         return len(word)
 
     @classmethod
     @memoized
     def _synonyms_count(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
-        # TODO: test that no synonyms returns None
         synsets = wordnet.synsets(word)
         if len(synsets) == 0:
             return None
@@ -124,8 +115,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _aoa(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
         aoa = _get_aoa()
         return aoa.get(word)
 
