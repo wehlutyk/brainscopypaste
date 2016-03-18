@@ -1,3 +1,7 @@
+import pytest
+import numpy as np
+
+from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
                                       SubstitutionFeaturesMixin)
 
@@ -25,13 +29,13 @@ def test_get_aoa():
 def test_syllables_count():
     assert SubstitutionFeaturesMixin._syllables_count('hello') == 2
     assert SubstitutionFeaturesMixin._syllables_count('mountain') == 2
-    assert SubstitutionFeaturesMixin._syllables_count('makakiki') is None
+    assert SubstitutionFeaturesMixin._syllables_count('makakiki') is np.nan
 
 
 def test_phonemes_count():
     assert SubstitutionFeaturesMixin._phonemes_count('hello') == 4
     assert SubstitutionFeaturesMixin._phonemes_count('mountain') == 6
-    assert SubstitutionFeaturesMixin._phonemes_count('makakiki') is None
+    assert SubstitutionFeaturesMixin._phonemes_count('makakiki') is np.nan
 
 
 def test_letters_count():
@@ -47,13 +51,49 @@ def test_synonyms_count():
     # So ((2-1) + (27-1))/2 synonyms.
     assert SubstitutionFeaturesMixin._synonyms_count('mountain') == 13.5
     # 'lamp' has two synsets, with only one member in each.
-    # So no synonyms, which yields `None`.
-    assert SubstitutionFeaturesMixin._synonyms_count('lamp') is None
+    # So no synonyms, which yields `np.nan`.
+    assert SubstitutionFeaturesMixin._synonyms_count('lamp') is np.nan
     # 'makakiki' does not exist.
-    assert SubstitutionFeaturesMixin._synonyms_count('makakiki') is None
+    assert SubstitutionFeaturesMixin._synonyms_count('makakiki') is np.nan
 
 
 def test_aoa():
     assert SubstitutionFeaturesMixin._aoa('time') == 5.16
     assert SubstitutionFeaturesMixin._aoa('vocative') == 14.27
-    assert SubstitutionFeaturesMixin._aoa('wickiup') is None
+    assert SubstitutionFeaturesMixin._aoa('wickiup') is np.nan
+
+
+def test_features():
+    q1 = Quote(string='It is the containing part')
+    q2 = Quote(string='It is the other part')
+    s = Substitution(source=q1, destination=q2, start=0, position=3)
+    # Check we defined the right substitution.
+    assert s.tokens == ('containing', 'other')
+    assert s.lemmas == ('contain', 'other')
+
+    # An unknown feature raises an error
+    with pytest.raises(ValueError):
+        s.features('unknown_feature')
+    with pytest.raises(ValueError):
+        s.features('unknown_feature', sentence_relative=True)
+
+    # Syllable, phonemes, letters counts are right, and computed on tokens.
+    assert s.features('syllables_count') == (3, 2)
+    assert s.features('phonemes_count') == (8, 3)
+    assert s.features('letters_count') == (10, 5)
+    assert s.features('syllables_count',
+                      sentence_relative=True) == (3 - 7/5, 2 - 6/5)
+    assert s.features('phonemes_count',
+                      sentence_relative=True) == (8 - 18/5, 3 - 13/5)
+    assert s.features('letters_count',
+                      sentence_relative=True) == (10 - 21/5, 5 - 16/5)
+
+    # Unknown words are ignored. Also when in the rest of the sentence.
+    q1 = Quote(string='makakiki is the goal')
+    q2 = Quote(string='makakiki is the moukakaka')
+    s = Substitution(source=q1, destination=q2, start=0, position=3)
+    assert s.features('syllables_count')[0] == 1
+    # np.nan != np.nan so we can't `assert s.features(...) == (1, np.nan)`
+    assert np.isnan(s.features('syllables_count')[1])
+    assert s.features('syllables_count', sentence_relative=True)[0] == 1 - 3/3
+    assert np.isnan(s.features('syllables_count', sentence_relative=True)[1])

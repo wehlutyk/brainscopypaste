@@ -14,6 +14,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from brainscopypaste.utils import cache, session_scope
 from brainscopypaste.filter import ClusterFilterMixin
 from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
+from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
 logger = logging.getLogger(__name__)
@@ -256,7 +257,8 @@ class Url:
         return self.quote.urls.index(self)
 
 
-class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
+class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
+                   SubstitutionFeaturesMixin):
 
     source_id = Column(Integer,
                        ForeignKey('quote.id', ondelete='CASCADE'),

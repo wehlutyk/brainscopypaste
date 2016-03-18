@@ -49,10 +49,6 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def features(self, name, sentence_relative=False):
-        # TODO: test unknown feature
-        # TODO: test it's done on tokens when asked to,
-        #       and lemmas when asked to
-        # TODO: test it works with relative_sentence
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -67,10 +63,13 @@ class SubstitutionFeaturesMixin:
 
         if sentence_relative:
             # Substract the average sentence feature.
-            mean_feature = np.mean([feature(word) for word
-                                    in getattr(self.destination, source_type)])
-            feature1 -= mean_feature
-            feature2 -= mean_feature
+            destination_words = getattr(self.destination, source_type)
+            source_words = getattr(self.source, source_type)[
+                self.start:self.start + len(destination_words)]
+            feature1 -= np.nanmean([feature(word) for word
+                                    in source_words])
+            feature2 -= np.nanmean([feature(word) for word
+                                    in destination_words])
 
         return (feature1, feature2)
 
@@ -85,7 +84,7 @@ class SubstitutionFeaturesMixin:
     def _syllables_count(self, word):
         pronunciations = _get_pronunciations()
         if word not in pronunciations:
-            return None
+            return np.nan
         return np.mean([sum([is_int(ph[-1]) for ph in pronunciation])
                         for pronunciation in pronunciations[word]])
 
@@ -94,7 +93,7 @@ class SubstitutionFeaturesMixin:
     def _phonemes_count(self, word):
         pronunciations = _get_pronunciations()
         if word not in pronunciations:
-            return None
+            return np.nan
         return np.mean([len(pronunciation)
                         for pronunciation in pronunciations[word]])
 
@@ -108,9 +107,9 @@ class SubstitutionFeaturesMixin:
     def _synonyms_count(self, word):
         synsets = wordnet.synsets(word)
         if len(synsets) == 0:
-            return None
+            return np.nan
         count = np.mean([len(synset.lemmas()) - 1 for synset in synsets])
-        return count if count != 0 else None
+        return count if count != 0 else np.nan
 
     @classmethod
     @memoized
