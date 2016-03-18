@@ -1494,11 +1494,11 @@ def mine_substitutions_db(request, tmpdb):
 def test_mine_substitutions_with_model(mine_substitutions_db):
     limit, expected_substitutions = mine_substitutions_db
 
-    # Mine
+    # Mine.
     model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
     mine_substitutions_with_model(model, limit=limit)
 
-    # Test
+    # Test.
     with session_scope() as session:
         substitutions = sorted((s.source.sid, s.destination.sid, s.occurrence)
                                for s in session.query(Substitution))
@@ -1506,3 +1506,8 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
                                         s['destination_sid'],
                                         s['occurrence'])
                                        for s in expected_substitutions)
+
+    # Check we can't mine again.
+    with pytest.raises(Exception) as excinfo:
+        mine_substitutions_with_model(model, limit=limit)
+    assert 'already some mined substitutions' in str(excinfo.value)

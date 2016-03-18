@@ -25,6 +25,15 @@ def mine_substitutions_with_model(model, limit=None):
                .format(model, '' if limit is None
                        else ' (limit={})'.format(limit)))
 
+    # Check we haven't already mined substitutions.
+    with session_scope() as session:
+        substitution_count = session.query(Substitution).count()
+        if substitution_count != 0:
+            raise Exception(('There are already some mined substitutions in '
+                             'the database ({} of them), you should drop '
+                             'these before doing anything '
+                             'else.'.format(substitution_count)))
+
     # Check clusters have been filtered.
     with session_scope() as session:
         if session.query(Cluster)\
