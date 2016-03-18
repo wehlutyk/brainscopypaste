@@ -33,11 +33,11 @@ def tags(sentence):
 @memoized
 def tokens(sentence):
     """Get the tokens of a sentence."""
-    return tuple(t[0] for t in tag(sentence))
+    return tuple(t[0].lower() for t in tag(sentence))
 
 
 @memoized
 def lemmas(sentence):
     """Get the lemmas of a sentence."""
     # TODO: try relemmatizing with wordnet here (will apply everywhere)
-    return tuple(t[2] for t in tag(sentence))
+    return tuple(t[2].lower() for t in tag(sentence))

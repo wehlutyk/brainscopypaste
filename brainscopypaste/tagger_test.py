@@ -37,14 +37,14 @@ def test_tags():
 
 
 def test_tokens():
-    assert tokens(sentence) == ('Do', "n't", '!', 'I', 'would', "n't", '.',
-                                'I', "'ve", 'been', 'there', '.', 'The', 'cat',
+    assert tokens(sentence) == ('do', "n't", '!', 'i', 'would', "n't", '.',
+                                'i', "'ve", 'been', 'there', '.', 'the', 'cat',
                                 'jumped', 'over', 'the', 'fox', 'and', 'ate',
                                 'the', 'rat')
 
 
 def test_lemmas():
-    assert lemmas(sentence) == ('do', "n't", '!', 'I', 'would', "n't", '.',
-                                'I', 'have', 'be', 'there', '.', 'the', 'cat',
+    assert lemmas(sentence) == ('do', "n't", '!', 'i', 'would', "n't", '.',
+                                'i', 'have', 'be', 'there', '.', 'the', 'cat',
                                 'jump', 'over', 'the', 'fox', 'and', 'eat',
                                 'the', 'rat')
