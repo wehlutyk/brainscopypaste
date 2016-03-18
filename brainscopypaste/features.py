@@ -13,22 +13,21 @@ logger = logging.getLogger(__name__)
 
 @memoized
 def _get_pronunciations():
-    # TODO: test
     logger.debug('Loading CMU data')
     return cmudict.dict()
 
 
 @memoized
 def _get_aoa():
-    # TODO: test
     logger.debug('Loading Age-of-Acquisition data')
 
     aoa = {}
     with open(aoa_Kuperman_csv) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
+            if row['Rating.Mean'] == 'NA':
+                continue
             aoa[row['Word']] = float(row['Rating.Mean'])
-
     return aoa
 
 
