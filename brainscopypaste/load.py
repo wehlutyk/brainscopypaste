@@ -23,17 +23,60 @@ from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
 logger = logging.getLogger(__name__)
 
 
-# TODO: Frequency loader and feature computation
-
-
 def load_fa_features():
     # TODO: test
-    pass
+    logger.info('Computing FreeAssociation features')
+    click.echo('Computing FreeAssociation features...')
+
+    loader = FAFeatureLoader()
+    degree = loader.degree()
+    logger.debug('Saving FreeAssociation degree to pickle')
+    with open(fa_norms_degrees_pickle, 'wb') as f:
+        pickle.dump(degree, f)
+
+    pagerank = loader.pagerank()
+    logger.debug('Saving FreeAssociation pagerank to pickle')
+    with open(fa_norms_PR_scores_pickle, 'wb') as f:
+        pickle.dump(pagerank, f)
+
+    betweenness = loader.betweenness()
+    logger.debug('Saving FreeAssociation betweenness to pickle')
+    with open(fa_norms_BCs_pickle, 'wb') as f:
+        pickle.dump(betweenness, f)
+
+    clustering = loader.clustering()
+    logger.debug('Saving FreeAssociation clustering to pickle')
+    with open(fa_norms_CCs_pickle, 'wb') as f:
+        pickle.dump(clustering, f)
+
+    click.secho('OK', fg='green', bold=True)
+    logger.info('Done computing all FreeAssociation features')
 
 
 def load_mt_frequency():
     # TODO: test
-    pass
+    logger.info('Computing memetracker lemma frequencies')
+    click.echo('Computing MemeTracker lemma frequencies...')
+
+    with session_scope() as session:
+        quotes = session.query(Quote).filter(Quote.filtered.is_(True))
+
+        # Check we have filtered quotes.
+        if quotes.count() == 0:
+            raise Exception('Found no filtered quotes, aborting.')
+
+        # Compute frequencies
+        frequencies = defaultdict(int)
+        for quote in ProgressBar()(quotes, max_value=quotes.count()):
+            for lemma in quote.lemmas:
+                frequencies[lemma] += quote.frequency
+
+    logger.debug('Saving memetracker lemma frequencies to pickle')
+    with open(mt_frequencies_pickle, 'wb') as f:
+        pickle.dump(frequencies, f)
+
+    click.secho('OK', fg='green', bold=True)
+    logger.info('Done computing memetracker lemma frequencies')
 
 
 class Parser:
