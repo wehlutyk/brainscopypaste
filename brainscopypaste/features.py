@@ -184,11 +184,11 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonological_density(self, word):
-        clearpond = _get_clearpond()['phonological']
-        return clearpond.get(word, np.nan)
+        clearpond_phonological = _get_clearpond()['phonological']
+        return clearpond_phonological.get(word, np.nan)
 
     @classmethod
     @memoized
     def _orthographical_density(self, word):
-        clearpond = _get_clearpond()['orthographical']
-        return clearpond.get(word, np.nan)
+        clearpond_orthographical = _get_clearpond()['orthographical']
+        return clearpond_orthographical.get(word, np.nan)
