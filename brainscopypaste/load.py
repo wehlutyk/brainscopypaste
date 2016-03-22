@@ -5,6 +5,8 @@ from datetime import datetime
 import re
 from codecs import open
 import logging
+import pickle
+from collections import defaultdict
 
 import click
 from progressbar import ProgressBar
@@ -12,7 +14,10 @@ import networkx as nx
 
 from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
 from brainscopypaste.utils import session_scope, execute_raw, cache
-from brainscopypaste.paths import fa_norms_all
+from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
+                                   fa_norms_PR_scores_pickle,
+                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
+                                   mt_frequencies_pickle)
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +39,6 @@ def load_mt_frequency():
 class Parser:
 
     def _skip_header(self):
-        # TODO: test (move test from MemeTrackerParser)
         for i in range(self.header_size):
             self._file.readline()
 
@@ -45,8 +49,6 @@ class FAFeatureLoader(Parser):
 
     @cache
     def _norms(self):
-        # TODO: test
-        # - a few values
         """Parse the Appendix A files.
 
         After loading, `self.norms` is a dict containing, for each
@@ -62,7 +64,7 @@ class FAFeatureLoader(Parser):
 
         norms = {}
         for filename in fa_norms_all:
-            with open(filename, 'rb') as self._file:
+            with open(filename, encoding='iso-8859-2') as self._file:
 
                 self._skip_header()
                 for line in self._file:
@@ -89,9 +91,6 @@ class FAFeatureLoader(Parser):
 
     @cache
     def _norms_graph(self):
-        # TODO: test
-        # - a few edges, non-reciprocal
-        # - no null-weight edges
         logger.info('Computing FreeAssociation norms directed graph')
         graph = nx.DiGraph()
         graph.add_weighted_edges_from([(w1, w2, weight)
@@ -101,31 +100,33 @@ class FAFeatureLoader(Parser):
         return graph
 
     @cache
+    def _inverse_norms_graph(self):
+        logger.info('Computing FreeAssociation inverse norms directed graph')
+        graph = nx.DiGraph()
+        graph.add_weighted_edges_from(
+            [(w1, w2, 1 / weight) for w1, w2, weight
+             in self._norms_graph.edges_iter(data='weight')]
+        )
+        return graph
+
+    @cache
     def _undirected_norms_graph(self):
-        # TODO: test
-        # - a few edges
-        # - weights for reciprocal links
         logger.info('Computing FreeAssociation norms undirected graph')
         graph = nx.Graph()
-        for u, v, weight in self._norms_graph.edges_iter(data='weight'):
-            if graph.has_edge(u, v):
+        for w1, w2, weight in self._norms_graph.edges_iter(data='weight'):
+            if graph.has_edge(w1, w2):
                 # Add to the existing weight instead of replacing it.
-                weight += graph.edge[u][v]['weight']
-            graph.add_edge(u, v, weight=weight)
+                weight += graph.edge[w1][w2]['weight']
+            graph.add_edge(w1, w2, weight=weight)
         return graph
 
     @classmethod
     def _remove_zeros(self, feature):
-        # TODO: test
-        words = feature.keys()
-        for word in words:
+        for word in list(feature.keys()):
             if feature[word] == 0:
                 del feature[word]
 
     def degree(self):
-        # TODO: test
-        # - a few values, checking for directed and unweighted
-        # - no zeros
         # Assumes a directed unweighted graph.
         logger.info('Computing FreeAssociation degree')
         degree = nx.in_degree_centrality(self._norms_graph)
@@ -134,9 +135,6 @@ class FAFeatureLoader(Parser):
         return degree
 
     def pagerank(self):
-        # TODO: test
-        # - a few values, checking for directed and weighted
-        # - no zeros
         # Assumes a directed weighted graph.
         logger.info('Computing FreeAssociation pagerank')
         pagerank = nx.pagerank_scipy(self._norms_graph, max_iter=10000,
@@ -146,24 +144,19 @@ class FAFeatureLoader(Parser):
         return pagerank
 
     def betweenness(self):
-        # TODO: test
-        # - a few values, checking for directed and weighted
-        # - no zeros
         # Assumes a directed weighted graph.
-        logger.info('Computing FreeAssociation betweenness')
-        betweenness = nx.betweenness_centrality(self._norms_graph,
+        logger.info('Computing FreeAssociation betweenness '
+                    '(this might take a long time, e.g. 30 minutes)')
+        betweenness = nx.betweenness_centrality(self._inverse_norms_graph,
                                                 weight='weight')
         self._remove_zeros(betweenness)
         logger.info('Done computing FreeAssociation betweenness')
         return betweenness
 
     def clustering(self):
-        # TODO: test
-        # - a few values, checking for undirected and weighted
-        # - no zeros
         # Assumes an undirected weighted graph.
         logger.info('Computing FreeAssociation clustering')
-        clustering = nx.clustering(self._undirectd_norms_graph,
+        clustering = nx.clustering(self._undirected_norms_graph,
                                    weight='weight')
         self._remove_zeros(clustering)
         logger.info('Done computing FreeAssociation clustering')
