@@ -26,9 +26,14 @@ def _get_aoa():
     with open(aoa_Kuperman_csv) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
-            if row['Rating.Mean'] == 'NA':
+            word = row['Word']
+            mean = row['Rating.Mean']
+            if mean == 'NA':
                 continue
-            aoa[row['Word']] = float(row['Rating.Mean'])
+            if word in aoa:
+                raise Exception("'{}' is already is AoA dictionary"
+                                .format(word))
+            aoa[word] = float(mean)
     return aoa
 
 
@@ -42,7 +47,12 @@ def _get_clearpond():
         reader = csvreader(csvfile, delimiter='\t')
         for row in reader:
             word = row[0].lower()
-            print(row)
+            if word in clearpond_phonological:
+                raise Exception("'{}' is already is Clearpond phonological "
+                                'dictionary'.format(word))
+            if word in clearpond_orthographical:
+                raise Exception("'{}' is already is Clearpond orthographical "
+                                'dictionary'.format(word))
             clearpond_orthographical[word] = int(row[5])
             clearpond_phonological[word] = int(row[29])
     return {'orthographical': clearpond_orthographical,
