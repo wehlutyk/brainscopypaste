@@ -5,8 +5,11 @@ import numpy as np
 from nltk.corpus import cmudict, wordnet
 
 from brainscopypaste.utils import is_int, memoized, unpickle
-from brainscopypaste.paths import (pickled_features, aoa_Kuperman_csv,
-                                   clearpond_csv)
+from brainscopypaste.paths import (aoa_Kuperman_csv, clearpond_csv,
+                                   fa_norms_degrees_pickle,
+                                   fa_norms_PR_scores_pickle,
+                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
+                                   mt_frequencies_pickle)
 
 
 logger = logging.getLogger(__name__)
@@ -151,36 +154,32 @@ class SubstitutionFeaturesMixin:
     def _fa_degree(self, word):
         # TODO: test with found and not found word
         # TODO: test it's done on lemmas, not tokens
-        raise NotImplementedError
-        fa_degree = unpickle(pickled_features['fa_degree'])
-        return fa_degree.get(word)
+        fa_degree = unpickle(fa_norms_degrees_pickle)
+        return fa_degree.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_pagerank(self, word):
         # TODO: test with found and not found word
         # TODO: test it's done on lemmas, not tokens
-        raise NotImplementedError
-        fa_pagerank = unpickle(pickled_features['fa_pagerank'])
-        return fa_pagerank.get(word)
+        fa_pagerank = unpickle(fa_norms_PR_scores_pickle)
+        return fa_pagerank.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_betweenness(self, word):
         # TODO: test with found and not found word
         # TODO: test it's done on lemmas, not tokens
-        raise NotImplementedError
-        fa_betweenness = unpickle(pickled_features['fa_betweenness'])
-        return fa_betweenness.get(word)
+        fa_betweenness = unpickle(fa_norms_BCs_pickle)
+        return fa_betweenness.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_clustering(self, word):
         # TODO: test with found and not found word
         # TODO: test it's done on lemmas, not tokens
-        raise NotImplementedError
-        fa_clustering = unpickle(pickled_features['fa_clustering'])
-        return fa_clustering.get(word)
+        fa_clustering = unpickle(fa_norms_CCs_pickle)
+        return fa_clustering.get(word, np.nan)
 
     @classmethod
     @memoized
@@ -188,8 +187,8 @@ class SubstitutionFeaturesMixin:
         # TODO: test with found and not found word
         # TODO: test it's done on lemmas, not tokens
         raise NotImplementedError
-        frequency = unpickle(pickled_features['frequency'])
-        return frequency.get(word)
+        frequency = unpickle(mt_frequencies_pickle)
+        return frequency.get(word, np.nan)
 
     @classmethod
     @memoized
