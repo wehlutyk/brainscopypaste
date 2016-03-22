@@ -25,7 +25,6 @@ before_install:
 
 install:
   - bash install_treetagger.sh
-  - bash install_datasets.sh
   - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
   - source activate test
   # Until conda can handle setuptools requirements.txt (https://github.com/conda/conda-env/pull/172), we separate conda and pip requirements
@@ -34,6 +33,8 @@ install:
   - conda install --yes pip
   # Get remaining pip requirements
   - cat requirements.txt | grep -v "$CONDA_GREP" | xargs pip install
+  # Install necessary datasets now that we have all dependencies
+  - bash install_datasets.sh
   # FIXME: get a real package working instead of this
   - pip install --editable .
 
