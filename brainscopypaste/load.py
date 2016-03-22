@@ -8,19 +8,169 @@ import logging
 
 import click
 from progressbar import ProgressBar
+import networkx as nx
 
 from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
-from brainscopypaste.utils import session_scope, execute_raw
+from brainscopypaste.utils import session_scope, execute_raw, cache
+from brainscopypaste.paths import fa_norms_all
 
 
 logger = logging.getLogger(__name__)
 
 
-# TODO: FA norms loader and feature computation (maybe in utils)
 # TODO: Frequency loader and feature computation
 
 
-class MemeTrackerParser:
+def load_fa_features():
+    # TODO: test
+    pass
+
+
+def load_mt_frequency():
+    # TODO: test
+    pass
+
+
+class Parser:
+
+    def _skip_header(self):
+        # TODO: test (move test from MemeTrackerParser)
+        for i in range(self.header_size):
+            self._file.readline()
+
+
+class FAFeatureLoader(Parser):
+
+    header_size = 4
+
+    @cache
+    def _norms(self):
+        # TODO: test
+        # - a few values
+        """Parse the Appendix A files.
+
+        After loading, `self.norms` is a dict containing, for each
+        (lowercased) cue, a list of tuples. Each tuple represents a word
+        referenced by the cue, and is in format `(word, ref, weight)`:
+        `word` is the referenced word; `ref` is a boolean indicating
+        if `word` has been normed or not; `weight` is the strength of
+        the referencing.
+
+        """
+
+        logger.info('Loading FreeAssociation norms')
+
+        norms = {}
+        for filename in fa_norms_all:
+            with open(filename, 'rb') as self._file:
+
+                self._skip_header()
+                for line in self._file:
+                    # Exit if we're at the end of the data.
+                    if line[0] == '<':
+                        break
+
+                    # Parse our line.
+                    linefields = line.split(', ')
+                    w1 = linefields[0].lower()
+                    w2 = linefields[1].lower()
+                    ref = linefields[2].lower() == 'yes'
+                    weight = float(linefields[5])
+
+                    norm = (w2, ref, weight)
+                    try:
+                        norms[w1].append(norm)
+                    except KeyError:
+                        norms[w1] = [norm]
+
+        logger.info('Loaded norms for %s words from FreeAssociation',
+                    len(norms))
+        return norms
+
+    @cache
+    def _norms_graph(self):
+        # TODO: test
+        # - a few edges, non-reciprocal
+        # - no null-weight edges
+        logger.info('Computing FreeAssociation norms directed graph')
+        graph = nx.DiGraph()
+        graph.add_weighted_edges_from([(w1, w2, weight)
+                                       for w1, norm in self._norms.items()
+                                       for w2, _, weight in norm
+                                       if weight != 0])
+        return graph
+
+    @cache
+    def _undirected_norms_graph(self):
+        # TODO: test
+        # - a few edges
+        # - weights for reciprocal links
+        logger.info('Computing FreeAssociation norms undirected graph')
+        graph = nx.Graph()
+        for u, v, weight in self._norms_graph.edges_iter(data='weight'):
+            if graph.has_edge(u, v):
+                # Add to the existing weight instead of replacing it.
+                weight += graph.edge[u][v]['weight']
+            graph.add_edge(u, v, weight=weight)
+        return graph
+
+    @classmethod
+    def _remove_zeros(self, feature):
+        # TODO: test
+        words = feature.keys()
+        for word in words:
+            if feature[word] == 0:
+                del feature[word]
+
+    def degree(self):
+        # TODO: test
+        # - a few values, checking for directed and unweighted
+        # - no zeros
+        # Assumes a directed unweighted graph.
+        logger.info('Computing FreeAssociation degree')
+        degree = nx.in_degree_centrality(self._norms_graph)
+        self._remove_zeros(degree)
+        logger.info('Done computing FreeAssociation degree')
+        return degree
+
+    def pagerank(self):
+        # TODO: test
+        # - a few values, checking for directed and weighted
+        # - no zeros
+        # Assumes a directed weighted graph.
+        logger.info('Computing FreeAssociation pagerank')
+        pagerank = nx.pagerank_scipy(self._norms_graph, max_iter=10000,
+                                     tol=1e-15, weight='weight')
+        self._remove_zeros(pagerank)
+        logger.info('Done computing FreeAssociation pagerank')
+        return pagerank
+
+    def betweenness(self):
+        # TODO: test
+        # - a few values, checking for directed and weighted
+        # - no zeros
+        # Assumes a directed weighted graph.
+        logger.info('Computing FreeAssociation betweenness')
+        betweenness = nx.betweenness_centrality(self._norms_graph,
+                                                weight='weight')
+        self._remove_zeros(betweenness)
+        logger.info('Done computing FreeAssociation betweenness')
+        return betweenness
+
+    def clustering(self):
+        # TODO: test
+        # - a few values, checking for undirected and weighted
+        # - no zeros
+        # Assumes an undirected weighted graph.
+        logger.info('Computing FreeAssociation clustering')
+        clustering = nx.clustering(self._undirectd_norms_graph,
+                                   weight='weight')
+        self._remove_zeros(clustering)
+        logger.info('Done computing FreeAssociation clustering')
+        return clustering
+
+
+class MemeTrackerParser(Parser):
 
     """Parse the MemeTracker file into database."""
 
@@ -41,12 +191,6 @@ class MemeTrackerParser:
         self._cluster = None
         self._quote = None
 
-    def _skip_header(self):
-        """Skip the header lines in the open file."""
-
-        for i in range(self.header_size):
-            self._file.readline()
-
     def parse(self):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
@@ -54,7 +198,7 @@ class MemeTrackerParser:
         if self.limit is not None:
             logger.info('Parsing is limited to %s clusters', self.limit)
 
-        click.echo('Parsing MemeTracker data file into database{}... '
+        click.echo('Parsing MemeTracker data file into database{}...'
                    .format('' if self.limit is None
                            else ' (limit={})'.format(self.limit)))
 
