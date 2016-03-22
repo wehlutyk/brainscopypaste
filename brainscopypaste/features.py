@@ -115,7 +115,7 @@ class SubstitutionFeaturesMixin:
     @memoized
     def _aoa(self, word):
         aoa = _get_aoa()
-        return aoa.get(word)
+        return aoa.get(word, np.nan)
 
     @classmethod
     @memoized
