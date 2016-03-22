@@ -147,10 +147,10 @@ class MemeTrackerParser:
         # only a subset of all clusters).
         self._cluster_line = None
         if tipe != 'cluster':
-            raise ValueError(
-                ("Our supposed cluster_line ('{}', line {}) "
-                 "is not a cluster line!").format(
-                     self._cluster_line, self._lines_read + self.header_size))
+            raise ValueError("Our supposed cluster_line ('{}', line {}) "
+                             "is not a cluster line!"
+                             .format(self._cluster_line,
+                                     self._lines_read + self.header_size))
 
         # Create the cluster.
         self._handle_cluster(fields)
