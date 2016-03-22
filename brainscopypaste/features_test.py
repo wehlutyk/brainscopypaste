@@ -3,6 +3,7 @@ import numpy as np
 
 from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
+                                      _get_clearpond,
                                       SubstitutionFeaturesMixin)
 
 
@@ -24,6 +25,21 @@ def test_get_aoa():
     assert len(aoa) == 30102
     # And what's loaded is memoized.
     assert aoa is _get_aoa()
+
+
+def test_get_clearpond():
+    clearpond = _get_clearpond()
+    # We have the right kind of data.
+    assert clearpond['phonological']['dog'] == 25
+    assert clearpond['phonological']['cat'] == 50
+    assert clearpond['phonological']['ghost'] == 14
+    assert clearpond['phonological']['you'] == 49
+    assert clearpond['orthographical']['dog'] == 20
+    assert clearpond['orthographical']['cat'] == 33
+    assert clearpond['orthographical']['ghost'] == 2
+    assert clearpond['orthographical']['you'] == 4
+    # And what's loaded is memoized.
+    assert clearpond is _get_clearpond()
 
 
 def test_syllables_count():
@@ -63,6 +79,18 @@ def test_aoa():
     assert SubstitutionFeaturesMixin._aoa('wickiup') is np.nan
 
 
+def test_phonological_density():
+    assert SubstitutionFeaturesMixin._phonological_density('time') == 29
+    assert SubstitutionFeaturesMixin.\
+        _phonological_density('wickiup') is np.nan
+
+
+def test_orthographical_density():
+    assert SubstitutionFeaturesMixin._orthographical_density('time') == 13
+    assert SubstitutionFeaturesMixin.\
+        _orthographical_density('wickiup') is np.nan
+
+
 def test_features():
     q1 = Quote(string='It is the containing part')
     q2 = Quote(string='It is the other part')
@@ -77,16 +105,23 @@ def test_features():
     with pytest.raises(ValueError):
         s.features('unknown_feature', sentence_relative=True)
 
-    # Syllable, phonemes, letters counts are right, and computed on tokens.
+    # Syllable, phonemes, letters counts, and densities are right,
+    # and computed on tokens.
     assert s.features('syllables_count') == (3, 2)
     assert s.features('phonemes_count') == (8, 3)
     assert s.features('letters_count') == (10, 5)
+    assert s.features('phonological_density') == (0, 7)
+    assert s.features('orthographical_density') == (0, 5)
     assert s.features('syllables_count',
                       sentence_relative=True) == (3 - 7/5, 2 - 6/5)
     assert s.features('phonemes_count',
                       sentence_relative=True) == (8 - 18/5, 3 - 13/5)
     assert s.features('letters_count',
                       sentence_relative=True) == (10 - 21/5, 5 - 16/5)
+    assert s.features('phonological_density',
+                      sentence_relative=True) == (0 - 92/5, 7 - 99/5)
+    assert s.features('orthographical_density',
+                      sentence_relative=True) == (0 - 62/5, 5 - 67/5)
 
     # Unknown words are ignored. Also when in the rest of the sentence.
     q1 = Quote(string='makakiki is the goal')

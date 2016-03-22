@@ -1,11 +1,12 @@
 import logging
-from csv import DictReader
+from csv import DictReader, reader as csvreader
 
 import numpy as np
 from nltk.corpus import cmudict, wordnet
 
 from brainscopypaste.utils import is_int, memoized, unpickle
-from brainscopypaste.paths import pickled_features, aoa_Kuperman_csv
+from brainscopypaste.paths import (pickled_features, aoa_Kuperman_csv,
+                                   clearpond_csv)
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,23 @@ def _get_aoa():
     return aoa
 
 
+@memoized
+def _get_clearpond():
+    logger.debug('Loading Clearpond data')
+
+    clearpond_orthographical = {}
+    clearpond_phonological = {}
+    with open(clearpond_csv, encoding='iso-8859-2') as csvfile:
+        reader = csvreader(csvfile, delimiter='\t')
+        for row in reader:
+            word = row[0].lower()
+            print(row)
+            clearpond_orthographical[word] = int(row[5])
+            clearpond_phonological[word] = int(row[29])
+    return {'orthographical': clearpond_orthographical,
+            'phonological': clearpond_phonological}
+
+
 class SubstitutionFeaturesMixin:
 
     __features__ = {
@@ -44,7 +62,8 @@ class SubstitutionFeaturesMixin:
         'fa_betweenness': 'lemmas',
         'fa_clustering': 'lemmas',
         'frequency': 'lemmas',
-        'phonological_density': 'lemmas',
+        'phonological_density': 'tokens',
+        'orthographical_density': 'tokens',
     }
 
     @memoized
@@ -165,5 +184,11 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonological_density(self, word):
-        # TODO: find a database
-        raise NotImplementedError
+        clearpond = _get_clearpond()['phonological']
+        return clearpond.get(word, np.nan)
+
+    @classmethod
+    @memoized
+    def _orthographical_density(self, word):
+        clearpond = _get_clearpond()['orthographical']
+        return clearpond.get(word, np.nan)

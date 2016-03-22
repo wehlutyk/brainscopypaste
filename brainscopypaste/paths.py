@@ -135,6 +135,22 @@ aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
 
 
 ##############################################################################
+# CLEARPOND DATA #
+##################
+#
+#: Folder for the Clearpond data, relative to :attr:`data_root_rel`.
+
+clearpond_root_rel = 'clearpond'
+clearpond_root = os.path.join(data_root, clearpond_root_rel)
+
+
+#: Source csv file for the Clearpond data, relative to :attr:`clearpond_root_rel`.
+
+clearpond_csv_rel = 'englishCPdatabase2.txt'
+clearpond_csv = os.path.join(clearpond_root, clearpond_csv_rel)
+
+
+##############################################################################
 # FREE ASSOCIATION NORMS DATA #
 ###############################
 #
