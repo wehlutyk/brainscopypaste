@@ -183,6 +183,7 @@ class Quote(Base, BaseMixin):
 
     @cache
     def frequency(self):
+        # TODO: test with empty quote
         return sum(self.url_frequencies)
 
     @cache
