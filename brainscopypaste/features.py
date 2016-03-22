@@ -89,9 +89,6 @@ class SubstitutionFeaturesMixin:
         # Compute the features.
         feature = getattr(self, '_' + name)
         feature1, feature2 = feature(word1), feature(word2)
-        # Null features should be represented as np.nan.
-        assert feature1 != 0
-        assert feature2 != 0
 
         if sentence_relative:
             # Substract the average sentence feature.
