@@ -357,6 +357,5 @@ stopwords = Stopwords()
 
 @memoized
 def unpickle(filename):
-    # TODO: test
     with open(filename, 'rb') as file:
         return pickle.load(file)

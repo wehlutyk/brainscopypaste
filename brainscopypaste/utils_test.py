@@ -1,9 +1,13 @@
+import pickle
+from tempfile import mkstemp
+import os
+
 import pytest
 
 from brainscopypaste.utils import (grouper, grouper_adaptive, langdetect,
                                    is_same_ending_us_uk_spelling, is_int,
                                    levenshtein, hamming, sublists, subhamming,
-                                   stopwords, memoized, cache)
+                                   stopwords, memoized, cache, unpickle)
 
 
 def test_langdetect():
@@ -169,3 +173,22 @@ def test_cache():
     assert klass.counter == 0
     assert klass.prop == 1
     assert klass.prop == 1
+
+
+def test_unpickle():
+    fd, path = mkstemp()
+
+    # Pickle an object to this temporary file.
+    obj = {'a': 1}
+    with os.fdopen(fd, 'wb') as file:
+        pickle.dump(obj, file)
+
+    # Check it's unpickled well.
+    unpickled_obj = unpickle(path)
+    assert obj == unpickled_obj
+    assert obj is not unpickled_obj
+    # The unpickling is cached.
+    assert unpickled_obj is unpickle(path)
+
+    # Clean up.
+    os.remove(path)
