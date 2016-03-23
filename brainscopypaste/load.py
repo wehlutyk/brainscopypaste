@@ -66,13 +66,15 @@ def load_mt_frequency():
             raise Exception('Found no filtered quotes, aborting.')
         quote_ids = [id for (id,) in quote_ids]
 
-    # Compute frequencies
+    # Compute frequencies.
     frequencies = defaultdict(int)
     for quote_id in ProgressBar()(quote_ids):
         with session_scope() as session:
             quote = session.query(Quote).get(quote_id)
             for lemma in quote.lemmas:
                 frequencies[lemma] += quote.frequency
+    # Convert back to a normal dict.
+    frequencies = dict(frequencies)
 
     logger.debug('Saving memetracker lemma frequencies to pickle')
     with open(mt_frequencies_pickle, 'wb') as f:
