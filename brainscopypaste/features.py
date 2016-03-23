@@ -152,41 +152,30 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _fa_degree(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
         fa_degree = unpickle(fa_norms_degrees_pickle)
         return fa_degree.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_pagerank(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
         fa_pagerank = unpickle(fa_norms_PR_scores_pickle)
         return fa_pagerank.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_betweenness(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
         fa_betweenness = unpickle(fa_norms_BCs_pickle)
         return fa_betweenness.get(word, np.nan)
 
     @classmethod
     @memoized
     def _fa_clustering(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
         fa_clustering = unpickle(fa_norms_CCs_pickle)
         return fa_clustering.get(word, np.nan)
 
     @classmethod
     @memoized
     def _frequency(self, word):
-        # TODO: test with found and not found word
-        # TODO: test it's done on lemmas, not tokens
-        raise NotImplementedError
         frequency = unpickle(mt_frequencies_pickle)
         return frequency.get(word, np.nan)
 

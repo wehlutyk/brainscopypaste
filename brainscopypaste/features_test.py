@@ -1,3 +1,6 @@
+from os.path import exists
+from warnings import warn
+
 import pytest
 import numpy as np
 
@@ -5,6 +8,10 @@ from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
                                       _get_clearpond,
                                       SubstitutionFeaturesMixin)
+from brainscopypaste.paths import (fa_norms_degrees_pickle,
+                                   fa_norms_PR_scores_pickle,
+                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
+                                   mt_frequencies_pickle)
 
 
 def test_get_pronunciations():
@@ -45,13 +52,13 @@ def test_get_clearpond():
 def test_syllables_count():
     assert SubstitutionFeaturesMixin._syllables_count('hello') == 2
     assert SubstitutionFeaturesMixin._syllables_count('mountain') == 2
-    assert SubstitutionFeaturesMixin._syllables_count('makakiki') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._syllables_count('makakiki'))
 
 
 def test_phonemes_count():
     assert SubstitutionFeaturesMixin._phonemes_count('hello') == 4
     assert SubstitutionFeaturesMixin._phonemes_count('mountain') == 6
-    assert SubstitutionFeaturesMixin._phonemes_count('makakiki') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._phonemes_count('makakiki'))
 
 
 def test_letters_count():
@@ -68,27 +75,92 @@ def test_synonyms_count():
     assert SubstitutionFeaturesMixin._synonyms_count('mountain') == 13.5
     # 'lamp' has two synsets, with only one member in each.
     # So no synonyms, which yields `np.nan`.
-    assert SubstitutionFeaturesMixin._synonyms_count('lamp') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('lamp'))
     # 'makakiki' does not exist.
-    assert SubstitutionFeaturesMixin._synonyms_count('makakiki') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('makakiki'))
 
 
 def test_aoa():
     assert SubstitutionFeaturesMixin._aoa('time') == 5.16
     assert SubstitutionFeaturesMixin._aoa('vocative') == 14.27
-    assert SubstitutionFeaturesMixin._aoa('wickiup') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._aoa('wickiup'))
+
+
+def test_fa_degree():
+    if not exists(fa_norms_degrees_pickle):
+        warn("Skipping FA degree feature test: feature file ('{}') not "
+             'found. You should run `brainscopypaste load features` '
+             'beforehand if you want this test to run.'
+             .format(fa_norms_degrees_pickle))
+        return
+    assert SubstitutionFeaturesMixin._fa_degree('abdomen') == 1 / (10617 - 1)
+    assert SubstitutionFeaturesMixin._fa_degree('speaker') == 9 / (10617 - 1)
+    assert np.isnan(SubstitutionFeaturesMixin._fa_degree('wickiup'))
+
+
+def test_fa_pagerank():
+    if not exists(fa_norms_PR_scores_pickle):
+        warn("Skipping FA pagerank feature test: feature file ('{}') not "
+             'found. You should run `brainscopypaste load features` '
+             'beforehand if you want this test to run.'
+             .format(fa_norms_PR_scores_pickle))
+        return
+    assert abs(SubstitutionFeaturesMixin._fa_pagerank('you') -
+               0.0006390798677378056) < 1e-15
+    assert abs(SubstitutionFeaturesMixin._fa_pagerank('play') -
+               0.0012008124120435305) < 1e-15
+    assert np.isnan(SubstitutionFeaturesMixin._fa_pagerank('wickiup'))
+
+
+def test_fa_betweenness():
+    if not exists(fa_norms_BCs_pickle):
+        warn("Skipping FA betweenness feature test: feature file ('{}') "
+             'not found. You should run `brainscopypaste load features` '
+             'beforehand if you want this test to run.'
+             .format(fa_norms_BCs_pickle))
+        return
+    assert SubstitutionFeaturesMixin.\
+        _fa_betweenness('dog') == 0.0046938277117769605
+    assert SubstitutionFeaturesMixin.\
+        _fa_betweenness('play') == 0.008277234906313704
+    assert np.isnan(SubstitutionFeaturesMixin._fa_betweenness('wickiup'))
+
+
+def test_fa_clustering():
+    if not exists(fa_norms_CCs_pickle):
+        warn("Skipping FA clustering feature test: feature file ('{}') not "
+             'found. You should run `brainscopypaste load features` '
+             'beforehand if you want this test to run.'
+             .format(fa_norms_CCs_pickle))
+        return
+    assert SubstitutionFeaturesMixin.\
+        _fa_clustering('dog') == 0.0009318641757868838
+    assert SubstitutionFeaturesMixin.\
+        _fa_clustering('play') == 0.0016238663632016216
+    assert np.isnan(SubstitutionFeaturesMixin._fa_clustering('wickiup'))
+
+
+def test_frequency():
+    if not exists(mt_frequencies_pickle):
+        warn("Skipping MT frequencies feature test: feature file ('{}') "
+             'not found. You should run `brainscopypaste load features` '
+             'beforehand if you want this test to run.'
+             .format(mt_frequencies_pickle))
+        return
+    assert SubstitutionFeaturesMixin._frequency('dog') == 7865
+    assert SubstitutionFeaturesMixin._frequency('play') == 45848
+    assert np.isnan(SubstitutionFeaturesMixin._frequency('wickiup'))
 
 
 def test_phonological_density():
     assert SubstitutionFeaturesMixin._phonological_density('time') == 29
-    assert SubstitutionFeaturesMixin.\
-        _phonological_density('wickiup') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin._phonological_density('wickiup'))
 
 
 def test_orthographical_density():
     assert SubstitutionFeaturesMixin._orthographical_density('time') == 13
-    assert SubstitutionFeaturesMixin.\
-        _orthographical_density('wickiup') is np.nan
+    assert np.isnan(SubstitutionFeaturesMixin.
+                    _orthographical_density('wickiup'))
 
 
 def test_features():
@@ -112,6 +184,7 @@ def test_features():
     assert s.features('letters_count') == (10, 5)
     assert s.features('phonological_density') == (0, 7)
     assert s.features('orthographical_density') == (0, 5)
+    # Same with features computed relative to sentence.
     assert s.features('syllables_count',
                       sentence_relative=True) == (3 - 7/5, 2 - 6/5)
     assert s.features('phonemes_count',
@@ -122,6 +195,40 @@ def test_features():
                       sentence_relative=True) == (0 - 92/5, 7 - 99/5)
     assert s.features('orthographical_density',
                       sentence_relative=True) == (0 - 62/5, 5 - 67/5)
+
+    # Synonyms count, age-of-acquisition, FA features, and frequency
+    # are right, and computed on lemmas.
+    assert s.features('synonyms_count') == (3, .5)
+    assert s.features('aoa') == (7.88, 5.33)
+    assert s.features('fa_degree') == \
+        (9.419743782969103e-05, 0.0008477769404672192)
+    assert abs(s.features('fa_pagerank')[0] - 2.9236183726513393e-05) < 1e-15
+    assert abs(s.features('fa_pagerank')[1] - 6.421655879054584e-05) < 1e-15
+    assert np.isnan(s.features('fa_betweenness')[0])
+    assert s.features('fa_betweenness')[1] == 0.0003369277738594168
+    assert np.isnan(s.features('fa_clustering')[0])
+    assert s.features('fa_clustering')[1] == 0.0037154495910700605
+    assert s.features('frequency') == (3992, 81603)
+    # Same with features computed relative to sentence.
+    assert s.features('synonyms_count', sentence_relative=True) == \
+        (3 - 1.8611111111111112, .5 - 1.2361111111111112)
+    assert s.features('aoa', sentence_relative=True) == \
+        (7.88 - 6.033333333333334, 5.33 - 5.183333333333334)
+    assert s.features('fa_degree', sentence_relative=True) == \
+        (9.419743782969103e-05 - 0.0010550113036925397,
+         0.0008477769404672192 - 0.0012057272042200451)
+    assert abs(s.features('fa_pagerank', sentence_relative=True)[0] -
+               (2.9236183726513393e-05 - 9.2820794154173557e-05)) < 1e-15
+    assert abs(s.features('fa_pagerank', sentence_relative=True)[1] -
+               (6.421655879054584e-05 - 9.9816869166980042e-05)) < 1e-15
+    assert np.isnan(s.features('fa_betweenness', sentence_relative=True)[0])
+    assert s.features('fa_betweenness', sentence_relative=True)[1] == \
+        0.0003369277738594168 - 0.00081995401378403285
+    assert np.isnan(s.features('fa_clustering', sentence_relative=True)[0])
+    assert s.features('fa_clustering', sentence_relative=True)[1] == \
+        0.0037154495910700605 - 0.0021628891370054143
+    assert s.features('frequency', sentence_relative=True) == \
+        (3992 - 1373885.6000000001, 81603 - 1389407.8)
 
     # Unknown words are ignored. Also when in the rest of the sentence.
     q1 = Quote(string='makakiki is the goal')
