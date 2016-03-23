@@ -59,15 +59,18 @@ def load_mt_frequency():
     click.echo('Computing MemeTracker lemma frequencies...')
 
     with session_scope() as session:
-        quotes = session.query(Quote).filter(Quote.filtered.is_(True))
+        quote_ids = session.query(Quote.id).filter(Quote.filtered.is_(True))
 
         # Check we have filtered quotes.
-        if quotes.count() == 0:
+        if quote_ids.count() == 0:
             raise Exception('Found no filtered quotes, aborting.')
+        quote_ids = [id for (id,) in quote_ids]
 
-        # Compute frequencies
-        frequencies = defaultdict(int)
-        for quote in ProgressBar()(quotes, max_value=quotes.count()):
+    # Compute frequencies
+    frequencies = defaultdict(int)
+    for quote_id in ProgressBar()(quote_ids):
+        with session_scope() as session:
+            quote = session.query(Quote).get(quote_id)
             for lemma in quote.lemmas:
                 frequencies[lemma] += quote.frequency
 
