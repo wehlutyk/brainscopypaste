@@ -1,6 +1,5 @@
 import logging
 import pickle
-import collections
 from contextlib import contextmanager
 import functools
 from itertools import zip_longest
@@ -86,17 +85,7 @@ class memoized:
         self.cache = {}
 
     def __call__(self, *args, **kwargs):
-        try:
-            key = (args, frozenset(kwargs.items()))
-        except TypeError:
-            # uncacheable. a list, for instance.
-            # better to not cache than blow up.
-            return self.func(*args, **kwargs)
-
-        if not isinstance(args, collections.Hashable):
-            # again uncacheable
-            return self.func(*args, **kwargs)
-
+        key = (args, frozenset(kwargs.items()))
         if key in self.cache:
             return self.cache[key]
         else:
