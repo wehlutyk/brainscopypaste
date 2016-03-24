@@ -6,7 +6,8 @@ from sqlalchemy import create_engine
 from brainscopypaste import paths
 from brainscopypaste.db import Base, Session, Cluster, Substitution
 from brainscopypaste.utils import session_scope, mkdirp
-from brainscopypaste.load import MemeTrackerParser
+from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
+                                  load_mt_frequency)
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.paths import paths_to_create
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
@@ -141,6 +142,16 @@ def load_memetracker(limit):
     logger.info('Starting load of memetracker data into database')
     MemeTrackerParser(paths.mt_full, line_count=8357595, limit=limit).parse()
     logger.info('Done loading memetracker data into database')
+
+
+@load.command(name='features')
+def load_features():
+    """Compute features and save them to pickle."""
+
+    logger.info('Starting computation of features')
+    load_mt_frequency()
+    load_fa_features()
+    logger.info('Done computing and saving features')
 
 
 @cli.group()

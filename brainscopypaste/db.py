@@ -1,5 +1,4 @@
 import re
-from datetime import timedelta
 from io import StringIO
 import logging
 
@@ -14,6 +13,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from brainscopypaste.utils import cache, session_scope
 from brainscopypaste.filter import ClusterFilterMixin
 from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
+from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,8 @@ class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
     @cache
     def span(self):
         if self.size_urls == 0:
-            return timedelta(0)
+            raise ValueError('No urls defined on this quote yet, '
+                             "span doesn't make sense.")
         timestamps = []
         for quote in self.quotes.all():
             timestamps.extend(quote.url_timestamps)
@@ -182,27 +183,39 @@ class Quote(Base, BaseMixin):
 
     @cache
     def frequency(self):
+        if self.size == 0:
+            return 0
         return sum(self.url_frequencies)
 
     @cache
     def span(self):
         if self.size == 0:
-            return timedelta(0)
+            raise ValueError('No urls defined on this quote yet, '
+                             "span doesn't make sense.")
         timestamps = self.url_timestamps
         return abs(max(timestamps) - min(timestamps))
 
     @cache
     def tags(self):
+        if self.string is None:
+            raise ValueError('No string defined on this quote yet, '
+                             "tags doesn't make sense.")
         from brainscopypaste import tagger
         return tagger.tags(self.string)
 
     @cache
     def tokens(self):
+        if self.string is None:
+            raise ValueError('No string defined on this quote yet, '
+                             "tokens doesn't make sense.")
         from brainscopypaste import tagger
         return tagger.tokens(self.string)
 
     @cache
     def lemmas(self):
+        if self.string is None:
+            raise ValueError('No string defined on this quote yet, '
+                             "lemmas doesn't make sense.")
         from brainscopypaste import tagger
         return tagger.lemmas(self.string)
 
@@ -256,7 +269,8 @@ class Url:
         return self.quote.urls.index(self)
 
 
-class Substitution(Base, BaseMixin, SubstitutionValidatorMixin):
+class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
+                   SubstitutionFeaturesMixin):
 
     source_id = Column(Integer,
                        ForeignKey('quote.id', ondelete='CASCADE'),

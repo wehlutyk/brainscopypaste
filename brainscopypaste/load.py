@@ -5,18 +5,223 @@ from datetime import datetime
 import re
 from codecs import open
 import logging
+import pickle
+from collections import defaultdict
 
 import click
 from progressbar import ProgressBar
+import networkx as nx
 
 from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
-from brainscopypaste.utils import session_scope, execute_raw
+from brainscopypaste.utils import session_scope, execute_raw, cache
+from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
+                                   fa_norms_PR_scores_pickle,
+                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
+                                   mt_frequencies_pickle, mt_tokens_pickle)
+from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class MemeTrackerParser:
+def load_fa_features():
+    # TODO: test once there are environment-dependent settings and paths
+    logger.info('Computing FreeAssociation features')
+    click.echo('Computing FreeAssociation features...')
+
+    loader = FAFeatureLoader()
+    degree = loader.degree()
+    logger.debug('Saving FreeAssociation degree to pickle')
+    with open(fa_norms_degrees_pickle, 'wb') as f:
+        pickle.dump(degree, f)
+
+    pagerank = loader.pagerank()
+    logger.debug('Saving FreeAssociation pagerank to pickle')
+    with open(fa_norms_PR_scores_pickle, 'wb') as f:
+        pickle.dump(pagerank, f)
+
+    betweenness = loader.betweenness()
+    logger.debug('Saving FreeAssociation betweenness to pickle')
+    with open(fa_norms_BCs_pickle, 'wb') as f:
+        pickle.dump(betweenness, f)
+
+    clustering = loader.clustering()
+    logger.debug('Saving FreeAssociation clustering to pickle')
+    with open(fa_norms_CCs_pickle, 'wb') as f:
+        pickle.dump(clustering, f)
+
+    click.secho('OK', fg='green', bold=True)
+    logger.info('Done computing all FreeAssociation features')
+
+
+def load_mt_frequency_and_tokens():
+    # TODO: test once there are environment-dependent settings and paths.
+    logger.info('Computing memetracker frequencies and token list')
+    click.echo('Computing MemeTracker frequencies and token list...')
+
+    # See if we should count frequency of tokens or lemmas.
+    source_type = SubstitutionFeaturesMixin.__features__['frequency']
+    logger.info('Frequencies will be computed on %s', source_type)
+
+    with session_scope() as session:
+        quote_ids = session.query(Quote.id).filter(Quote.filtered.is_(True))
+
+        # Check we have filtered quotes.
+        if quote_ids.count() == 0:
+            raise Exception('Found no filtered quotes, aborting.')
+        quote_ids = [id for (id,) in quote_ids]
+
+    # Compute frequencies and token list.
+    frequencies = defaultdict(int)
+    tokens = set()
+    for quote_id in ProgressBar()(quote_ids):
+        with session_scope() as session:
+            quote = session.query(Quote).get(quote_id)
+            tokens.update(quote.tokens)
+            for word in getattr(quote, source_type):
+                frequencies[word] += quote.frequency
+    # Convert frequency back to a normal dict.
+    frequencies = dict(frequencies)
+
+    logger.debug('Saving memetracker frequencies to pickle')
+    with open(mt_frequencies_pickle, 'wb') as f:
+        pickle.dump(frequencies, f)
+    logger.debug('Saving memetracker token list to pickle')
+    with open(mt_tokens_pickle, 'wb') as f:
+        pickle.dump(tokens, f)
+
+    click.secho('OK', fg='green', bold=True)
+    logger.info('Done computing memetracker frequencies and token list')
+
+
+class Parser:
+
+    def _skip_header(self):
+        for i in range(self.header_size):
+            self._file.readline()
+
+
+class FAFeatureLoader(Parser):
+
+    header_size = 4
+
+    @cache
+    def _norms(self):
+        """Parse the Appendix A files.
+
+        After loading, `self.norms` is a dict containing, for each
+        (lowercased) cue, a list of tuples. Each tuple represents a word
+        referenced by the cue, and is in format `(word, ref, weight)`:
+        `word` is the referenced word; `ref` is a boolean indicating
+        if `word` has been normed or not; `weight` is the strength of
+        the referencing.
+
+        """
+
+        logger.info('Loading FreeAssociation norms')
+
+        norms = {}
+        for filename in fa_norms_all:
+            with open(filename, encoding='iso-8859-2') as self._file:
+
+                self._skip_header()
+                for line in self._file:
+                    # Exit if we're at the end of the data.
+                    if line[0] == '<':
+                        break
+
+                    # Parse our line.
+                    linefields = line.split(', ')
+                    w1 = linefields[0].lower()
+                    w2 = linefields[1].lower()
+                    ref = linefields[2].lower() == 'yes'
+                    weight = float(linefields[5])
+
+                    norm = (w2, ref, weight)
+                    try:
+                        norms[w1].append(norm)
+                    except KeyError:
+                        norms[w1] = [norm]
+
+        logger.info('Loaded norms for %s words from FreeAssociation',
+                    len(norms))
+        return norms
+
+    @cache
+    def _norms_graph(self):
+        logger.info('Computing FreeAssociation norms directed graph')
+        graph = nx.DiGraph()
+        graph.add_weighted_edges_from([(w1, w2, weight)
+                                       for w1, norm in self._norms.items()
+                                       for w2, _, weight in norm
+                                       if weight != 0])
+        return graph
+
+    @cache
+    def _inverse_norms_graph(self):
+        logger.info('Computing FreeAssociation inverse norms directed graph')
+        graph = nx.DiGraph()
+        graph.add_weighted_edges_from(
+            [(w1, w2, 1 / weight) for w1, w2, weight
+             in self._norms_graph.edges_iter(data='weight')]
+        )
+        return graph
+
+    @cache
+    def _undirected_norms_graph(self):
+        logger.info('Computing FreeAssociation norms undirected graph')
+        graph = nx.Graph()
+        for w1, w2, weight in self._norms_graph.edges_iter(data='weight'):
+            if graph.has_edge(w1, w2):
+                # Add to the existing weight instead of replacing it.
+                weight += graph.edge[w1][w2]['weight']
+            graph.add_edge(w1, w2, weight=weight)
+        return graph
+
+    @classmethod
+    def _remove_zeros(self, feature):
+        for word in list(feature.keys()):
+            if feature[word] == 0:
+                del feature[word]
+
+    def degree(self):
+        # Assumes a directed unweighted graph.
+        logger.info('Computing FreeAssociation degree')
+        degree = nx.in_degree_centrality(self._norms_graph)
+        self._remove_zeros(degree)
+        logger.info('Done computing FreeAssociation degree')
+        return degree
+
+    def pagerank(self):
+        # Assumes a directed weighted graph.
+        logger.info('Computing FreeAssociation pagerank')
+        pagerank = nx.pagerank_scipy(self._norms_graph, max_iter=10000,
+                                     tol=1e-15, weight='weight')
+        self._remove_zeros(pagerank)
+        logger.info('Done computing FreeAssociation pagerank')
+        return pagerank
+
+    def betweenness(self):
+        # Assumes a directed weighted graph.
+        logger.info('Computing FreeAssociation betweenness '
+                    '(this might take a long time, e.g. 30 minutes)')
+        betweenness = nx.betweenness_centrality(self._inverse_norms_graph,
+                                                weight='weight')
+        self._remove_zeros(betweenness)
+        logger.info('Done computing FreeAssociation betweenness')
+        return betweenness
+
+    def clustering(self):
+        # Assumes an undirected weighted graph.
+        logger.info('Computing FreeAssociation clustering')
+        clustering = nx.clustering(self._undirected_norms_graph,
+                                   weight='weight')
+        self._remove_zeros(clustering)
+        logger.info('Done computing FreeAssociation clustering')
+        return clustering
+
+
+class MemeTrackerParser(Parser):
 
     """Parse the MemeTracker file into database."""
 
@@ -37,12 +242,6 @@ class MemeTrackerParser:
         self._cluster = None
         self._quote = None
 
-    def _skip_header(self):
-        """Skip the header lines in the open file."""
-
-        for i in range(self.header_size):
-            self._file.readline()
-
     def parse(self):
         """Parse using the defined cluster-, quote-, and url-handlers."""
 
@@ -50,7 +249,7 @@ class MemeTrackerParser:
         if self.limit is not None:
             logger.info('Parsing is limited to %s clusters', self.limit)
 
-        click.echo('Parsing MemeTracker data file into database{}... '
+        click.echo('Parsing MemeTracker data file into database{}...'
                    .format('' if self.limit is None
                            else ' (limit={})'.format(self.limit)))
 
@@ -143,10 +342,10 @@ class MemeTrackerParser:
         # only a subset of all clusters).
         self._cluster_line = None
         if tipe != 'cluster':
-            raise ValueError(
-                ("Our supposed cluster_line ('{}', line {}) "
-                 "is not a cluster line!").format(
-                     self._cluster_line, self._lines_read + self.header_size))
+            raise ValueError("Our supposed cluster_line ('{}', line {}) "
+                             "is not a cluster line!"
+                             .format(self._cluster_line,
+                                     self._lines_read + self.header_size))
 
         # Create the cluster.
         self._handle_cluster(fields)

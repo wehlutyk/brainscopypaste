@@ -33,6 +33,8 @@ install:
   - conda install --yes pip
   # Get remaining pip requirements
   - cat requirements.txt | grep -v "$CONDA_GREP" | xargs pip install
+  # Install necessary datasets now that we have all dependencies
+  - bash install_datasets.sh
   # FIXME: get a real package working instead of this
   - pip install --editable .
 

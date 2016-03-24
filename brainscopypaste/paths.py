@@ -135,6 +135,22 @@ aoa_Kuperman_pickle = os.path.join(aoa_root, aoa_Kuperman_pickle_rel)
 
 
 ##############################################################################
+# CLEARPOND DATA #
+##################
+#
+#: Folder for the Clearpond data, relative to :attr:`data_root_rel`.
+
+clearpond_root_rel = 'clearpond'
+clearpond_root = os.path.join(data_root, clearpond_root_rel)
+
+
+#: Source csv file for the Clearpond data, relative to :attr:`clearpond_root_rel`.
+
+clearpond_csv_rel = 'englishCPdatabase2.txt'
+clearpond_csv = os.path.join(clearpond_root, clearpond_csv_rel)
+
+
+##############################################################################
 # FREE ASSOCIATION NORMS DATA #
 ###############################
 #
@@ -249,6 +265,13 @@ mt_start_frequencies_pickle = os.path.join(mt_root,
                                            mt_start_frequencies_pickle_rel)
 
 
+#: File for token list computed from the MemeTracker dataset, relative
+#: to :attr:`mt_root_rel`.
+
+mt_tokens_pickle_rel = 'mt_tokens.pickle'
+mt_tokens_pickle = os.path.join(mt_root, mt_tokens_pickle_rel)
+
+
 ##############################################################################
 # MEMETRACKER SUBSTITUTION MINING #
 ###################################
@@ -265,7 +288,6 @@ mt_mining_POSs = ['a', 'n', 'v', 'r', 'all']
 #: List of available features, telling us which should use lemmatized words and
 #: which souldn't (computed at runtime, so the value shown here will change
 #: depending on the folder hierarchy when the docs were built).
-
 mt_analysis_features = {
     'wn': {
 #        'PR_scores': {
