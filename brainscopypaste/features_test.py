@@ -11,6 +11,7 @@ from brainscopypaste.paths import (fa_norms_degrees_pickle,
                                    fa_norms_PR_scores_pickle,
                                    fa_norms_BCs_pickle, fa_norms_CCs_pickle,
                                    mt_frequencies_pickle)
+from brainscopypaste.utils import is_int
 
 
 def test_get_pronunciations():
@@ -52,12 +53,20 @@ def test_syllables_count():
     assert SubstitutionFeaturesMixin._syllables_count('hello') == 2
     assert SubstitutionFeaturesMixin._syllables_count('mountain') == 2
     assert np.isnan(SubstitutionFeaturesMixin._syllables_count('makakiki'))
+    assert SubstitutionFeaturesMixin.\
+        _syllables_count() == _get_pronunciations().keys()
+    for word in SubstitutionFeaturesMixin._syllables_count():
+        assert word.islower()
 
 
 def test_phonemes_count():
     assert SubstitutionFeaturesMixin._phonemes_count('hello') == 4
     assert SubstitutionFeaturesMixin._phonemes_count('mountain') == 6
     assert np.isnan(SubstitutionFeaturesMixin._phonemes_count('makakiki'))
+    assert SubstitutionFeaturesMixin.\
+        _phonemes_count() == _get_pronunciations().keys()
+    for word in SubstitutionFeaturesMixin._phonemes_count():
+        assert word.islower()
 
 
 def test_letters_count():
@@ -77,6 +86,11 @@ def test_synonyms_count():
     assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('lamp'))
     # 'makakiki' does not exist.
     assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('makakiki'))
+    # Lemmas are properly counted.
+    assert len(SubstitutionFeaturesMixin._synonyms_count()) == 147306
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._synonyms_count():
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 def test_aoa():
@@ -269,3 +283,17 @@ def test_features_frequency(normal_substitution):
     # Same with features computed relative to sentence.
     assert s.features('frequency', sentence_relative=True) == \
         (3992 - 1373885.6000000001, 81603 - 1389407.8)
+
+
+def test_strict_synonyms():
+    assert SubstitutionFeaturesMixin._strict_synonyms('frisbee') == set()
+    assert SubstitutionFeaturesMixin.\
+        _strict_synonyms('dog') == {'domestic_dog', 'canis_familiaris',
+                                    'frump', 'cad', 'bounder', 'blackguard',
+                                    'hound', 'heel', 'frank', 'frankfurter',
+                                    'hotdog', 'hot_dog', 'wiener',
+                                    'wienerwurst', 'weenie', 'pawl', 'detent',
+                                    'click', 'andiron', 'firedog', 'dog-iron',
+                                    'chase', 'chase_after', 'trail', 'tail',
+                                    'tag', 'give_chase', 'go_after', 'track'}
+    assert SubstitutionFeaturesMixin._strict_synonyms('makakiki') == set()

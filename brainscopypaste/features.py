@@ -136,8 +136,6 @@ class SubstitutionFeaturesMixin:
 
     @classmethod
     def _strict_synonyms(cls, word):
-        # TODO: test
-
         # wordnet.synsets() lemmatizes words, so we might as well control it.
         # This also lets us check the lemma is present in the generated
         # synonym list further down.
@@ -155,7 +153,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _syllables_count(cls, word=None):
-        # TODO: test word=None
         pronunciations = _get_pronunciations()
         if word is None:
             return pronunciations.keys()
@@ -167,7 +164,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonemes_count(cls, word=None):
-        # TODO: test word=None
         pronunciations = _get_pronunciations()
         if word is None:
             return pronunciations.keys()
@@ -188,7 +184,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _synonyms_count(cls, word=None):
-        # TODO: test word=None
         if word is None:
             return set(word.lower()
                        for synset in wordnet.all_synsets()
