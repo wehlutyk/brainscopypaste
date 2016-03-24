@@ -18,6 +18,7 @@ from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
                                    fa_norms_PR_scores_pickle,
                                    fa_norms_BCs_pickle, fa_norms_CCs_pickle,
                                    mt_frequencies_pickle)
+from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
 logger = logging.getLogger(__name__)
@@ -54,9 +55,13 @@ def load_fa_features():
 
 
 def load_mt_frequency():
-    # TODO: test once there are environment-dependent settings and paths
-    logger.info('Computing memetracker lemma frequencies')
-    click.echo('Computing MemeTracker lemma frequencies...')
+    # TODO: test once there are environment-dependent settings and paths.
+    logger.info('Computing memetracker frequencies')
+    click.echo('Computing MemeTracker frequencies...')
+
+    # See if we should count tokens or lemmas.
+    source_type = SubstitutionFeaturesMixin.__features__['frequency']
+    logger.info('Frequencies will be computed on %s', source_type)
 
     with session_scope() as session:
         quote_ids = session.query(Quote.id).filter(Quote.filtered.is_(True))
@@ -71,17 +76,17 @@ def load_mt_frequency():
     for quote_id in ProgressBar()(quote_ids):
         with session_scope() as session:
             quote = session.query(Quote).get(quote_id)
-            for lemma in quote.lemmas:
-                frequencies[lemma] += quote.frequency
+            for word in getattr(quote, source_type):
+                frequencies[word] += quote.frequency
     # Convert back to a normal dict.
     frequencies = dict(frequencies)
 
-    logger.debug('Saving memetracker lemma frequencies to pickle')
+    logger.debug('Saving memetracker frequencies to pickle')
     with open(mt_frequencies_pickle, 'wb') as f:
         pickle.dump(frequencies, f)
 
     click.secho('OK', fg='green', bold=True)
-    logger.info('Done computing memetracker lemma frequencies')
+    logger.info('Done computing memetracker frequencies')
 
 
 class Parser:
