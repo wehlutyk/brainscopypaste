@@ -17,7 +17,7 @@ from brainscopypaste.utils import session_scope, execute_raw, cache
 from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
                                    fa_norms_PR_scores_pickle,
                                    fa_norms_BCs_pickle, fa_norms_CCs_pickle,
-                                   mt_frequencies_pickle)
+                                   mt_frequencies_pickle, mt_tokens_pickle)
 from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
@@ -54,12 +54,12 @@ def load_fa_features():
     logger.info('Done computing all FreeAssociation features')
 
 
-def load_mt_frequency():
+def load_mt_frequency_and_tokens():
     # TODO: test once there are environment-dependent settings and paths.
-    logger.info('Computing memetracker frequencies')
-    click.echo('Computing MemeTracker frequencies...')
+    logger.info('Computing memetracker frequencies and token list')
+    click.echo('Computing MemeTracker frequencies and token list...')
 
-    # See if we should count tokens or lemmas.
+    # See if we should count frequency of tokens or lemmas.
     source_type = SubstitutionFeaturesMixin.__features__['frequency']
     logger.info('Frequencies will be computed on %s', source_type)
 
@@ -71,22 +71,27 @@ def load_mt_frequency():
             raise Exception('Found no filtered quotes, aborting.')
         quote_ids = [id for (id,) in quote_ids]
 
-    # Compute frequencies.
+    # Compute frequencies and token list.
     frequencies = defaultdict(int)
+    tokens = set()
     for quote_id in ProgressBar()(quote_ids):
         with session_scope() as session:
             quote = session.query(Quote).get(quote_id)
+            tokens.update(quote.tokens)
             for word in getattr(quote, source_type):
                 frequencies[word] += quote.frequency
-    # Convert back to a normal dict.
+    # Convert frequency back to a normal dict.
     frequencies = dict(frequencies)
 
     logger.debug('Saving memetracker frequencies to pickle')
     with open(mt_frequencies_pickle, 'wb') as f:
         pickle.dump(frequencies, f)
+    logger.debug('Saving memetracker token list to pickle')
+    with open(mt_tokens_pickle, 'wb') as f:
+        pickle.dump(tokens, f)
 
     click.secho('OK', fg='green', bold=True)
-    logger.info('Done computing memetracker frequencies')
+    logger.info('Done computing memetracker frequencies and token list')
 
 
 class Parser:

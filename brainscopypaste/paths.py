@@ -265,6 +265,13 @@ mt_start_frequencies_pickle = os.path.join(mt_root,
                                            mt_start_frequencies_pickle_rel)
 
 
+#: File for token list computed from the MemeTracker dataset, relative
+#: to :attr:`mt_root_rel`.
+
+mt_tokens_pickle_rel = 'mt_tokens.pickle'
+mt_tokens_pickle = os.path.join(mt_root, mt_tokens_pickle_rel)
+
+
 ##############################################################################
 # MEMETRACKER SUBSTITUTION MINING #
 ###################################
