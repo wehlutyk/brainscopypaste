@@ -9,6 +9,17 @@ from brainscopypaste.db import (Cluster, Quote, Url, Substitution,
 
 
 def test_cluster(some_clusters):
+    # Test empty cluster attributes.
+    cluster = Cluster()
+    assert cluster.size == 0
+    assert cluster.size_urls == 0
+    assert cluster.frequency == 0
+    with pytest.raises(ValueError) as excinfo:
+        cluster.span
+    assert 'No urls' in str(excinfo.value)
+    assert cluster.urls == []
+
+    # Test clusters from database.
     with session_scope() as session:
         assert session.query(Cluster).count() == 5
         assert session.query(Cluster.sid).all() == \
@@ -16,6 +27,9 @@ def test_cluster(some_clusters):
         assert session.query(Cluster).filter_by(sid=0).one().size == 0
         assert session.query(Cluster).filter_by(sid=0).one().size_urls == 0
         assert session.query(Cluster).filter_by(sid=0).one().frequency == 0
+        with pytest.raises(ValueError) as excinfo:
+            session.query(Cluster).filter_by(sid=0).one().span
+        assert 'No urls' in str(excinfo.value)
         assert session.query(Cluster).filter_by(sid=0).one().urls == []
 
         assert session.query(Cluster).get(1).format_copy() == \
@@ -23,6 +37,25 @@ def test_cluster(some_clusters):
 
 
 def test_quote(some_quotes):
+    # Test empty quote attributes.
+    quote = Quote()
+    assert quote.size == 0
+    assert quote.frequency == 0
+    with pytest.raises(ValueError) as excinfo:
+        quote.span
+    assert 'No urls' in str(excinfo.value)
+    assert quote.urls == []
+    with pytest.raises(ValueError) as excinfo:
+        quote.tags
+    assert 'No string' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        quote.tokens
+    assert 'No string' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        quote.lemmas
+    assert 'No string' in str(excinfo.value)
+
+    # Test quotes from database.
     with session_scope() as session:
         assert session.query(Quote).count() == 10
 
@@ -49,13 +82,16 @@ def test_quote(some_quotes):
 
         assert session.query(Quote).filter_by(sid=0).one().size == 0
         assert session.query(Quote).filter_by(sid=0).one().frequency == 0
-        assert session.query(Quote).filter_by(sid=0).one().span == timedelta(0)
+        with pytest.raises(ValueError) as excinfo:
+            session.query(Quote).filter_by(sid=0).one().span
+        assert 'No urls' in str(excinfo.value)
         assert session.query(Quote).filter_by(sid=0).one().urls == []
         assert session.query(Cluster).filter_by(sid=3).one().size == 2
         assert session.query(Cluster).filter_by(sid=3).one().size_urls == 0
         assert session.query(Cluster).filter_by(sid=3).one().frequency == 0
-        assert session.query(Cluster)\
-            .filter_by(sid=3).one().span == timedelta(0)
+        with pytest.raises(ValueError) as excinfo:
+            session.query(Cluster).filter_by(sid=3).one().span
+        assert 'No urls' in str(excinfo.value)
 
         q0 = session.query(Quote).filter_by(sid=0).one()
         assert q0.format_copy() == ('{}'.format(q0.id) +
