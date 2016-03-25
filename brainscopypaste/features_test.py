@@ -7,11 +7,8 @@ from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
                                       _get_clearpond,
                                       SubstitutionFeaturesMixin)
-from brainscopypaste.paths import (fa_norms_degrees_pickle,
-                                   fa_norms_PR_scores_pickle,
-                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
-                                   mt_frequencies_pickle)
 from brainscopypaste.utils import is_int
+from brainscopypaste.conf import settings
 
 
 def test_get_pronunciations():
@@ -99,7 +96,7 @@ def test_aoa():
     assert np.isnan(SubstitutionFeaturesMixin._aoa('wickiup'))
 
 
-@pytest.mark.skipif(not exists(fa_norms_degrees_pickle),
+@pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
 def test_fa_degree():
     assert SubstitutionFeaturesMixin._fa_degree('abdomen') == 1 / (10617 - 1)
@@ -107,7 +104,7 @@ def test_fa_degree():
     assert np.isnan(SubstitutionFeaturesMixin._fa_degree('wickiup'))
 
 
-@pytest.mark.skipif(not exists(fa_norms_PR_scores_pickle),
+@pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
 def test_fa_pagerank():
     assert abs(SubstitutionFeaturesMixin._fa_pagerank('you') -
@@ -117,7 +114,7 @@ def test_fa_pagerank():
     assert np.isnan(SubstitutionFeaturesMixin._fa_pagerank('wickiup'))
 
 
-@pytest.mark.skipif(not exists(fa_norms_BCs_pickle),
+@pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
 def test_fa_betweenness():
     assert SubstitutionFeaturesMixin.\
@@ -127,7 +124,7 @@ def test_fa_betweenness():
     assert np.isnan(SubstitutionFeaturesMixin._fa_betweenness('wickiup'))
 
 
-@pytest.mark.skipif(not exists(fa_norms_CCs_pickle),
+@pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
 def test_fa_clustering():
     assert SubstitutionFeaturesMixin.\
@@ -137,7 +134,7 @@ def test_fa_clustering():
     assert np.isnan(SubstitutionFeaturesMixin._fa_clustering('wickiup'))
 
 
-@pytest.mark.skipif(not exists(mt_frequencies_pickle),
+@pytest.mark.skipif(not exists(settings.FREQUENCY),
                     reason='missing computed feature')
 def test_frequency():
     assert SubstitutionFeaturesMixin._frequency('dog') == 7865
@@ -218,7 +215,7 @@ def test_features(normal_substitution):
     assert np.isnan(s.features('syllables_count', sentence_relative=True)[1])
 
 
-@pytest.mark.skipif(not exists(fa_norms_degrees_pickle),
+@pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
 def test_features_fa_degree(normal_substitution):
     s = normal_substitution
@@ -231,7 +228,7 @@ def test_features_fa_degree(normal_substitution):
          0.0008477769404672192 - 0.0012057272042200451)
 
 
-@pytest.mark.skipif(not exists(fa_norms_PR_scores_pickle),
+@pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
 def test_features_fa_pagerank(normal_substitution):
     s = normal_substitution
@@ -247,7 +244,7 @@ def test_features_fa_pagerank(normal_substitution):
                (6.421655879054584e-05 - 9.9816869166980042e-05)) < 1e-15
 
 
-@pytest.mark.skipif(not exists(fa_norms_BCs_pickle),
+@pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
 def test_features_fa_betweenness(normal_substitution):
     s = normal_substitution
@@ -261,7 +258,7 @@ def test_features_fa_betweenness(normal_substitution):
         0.0003369277738594168 - 0.00081995401378403285
 
 
-@pytest.mark.skipif(not exists(fa_norms_CCs_pickle),
+@pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
 def test_features_fa_clustering(normal_substitution):
     s = normal_substitution
@@ -274,7 +271,7 @@ def test_features_fa_clustering(normal_substitution):
         0.0037154495910700605 - 0.0021628891370054143
 
 
-@pytest.mark.skipif(not exists(mt_frequencies_pickle),
+@pytest.mark.skipif(not exists(settings.FREQUENCY),
                     reason='missing computed feature')
 def test_features_frequency(normal_substitution):
     s = normal_substitution

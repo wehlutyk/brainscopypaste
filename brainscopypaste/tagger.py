@@ -4,13 +4,13 @@
 from treetaggerwrapper import TreeTagger, TreeTaggerError
 from brainscopypaste.utils import find_parent_rel_dir, NotFoundError, memoized
 
-from brainscopypaste import paths
+from brainscopypaste.conf import settings
 
 
 try:
     _treetagger = TreeTagger(
         TAGLANG='en', TAGPARFILE='english.par',
-        TAGDIR=find_parent_rel_dir(paths.treetagger_TAGDIR))
+        TAGDIR=find_parent_rel_dir(settings.TREETAGGER_TAGDIR))
 except NotFoundError:
     raise TreeTaggerError('TreeTagger directory not found '
                           '(searched parent directories '

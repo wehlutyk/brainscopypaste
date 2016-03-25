@@ -6,11 +6,7 @@ import numpy as np
 from nltk.corpus import cmudict, wordnet
 
 from brainscopypaste.utils import is_int, memoized, unpickle
-from brainscopypaste.paths import (aoa_Kuperman_csv, clearpond_csv,
-                                   fa_norms_degrees_pickle,
-                                   fa_norms_PR_scores_pickle,
-                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
-                                   mt_frequencies_pickle, mt_tokens_pickle)
+from brainscopypaste.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +23,7 @@ def _get_aoa():
     logger.debug('Loading Age-of-Acquisition data')
 
     aoa = {}
-    with open(aoa_Kuperman_csv) as csvfile:
+    with open(settings.AOA) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
             word = row['Word']
@@ -47,7 +43,7 @@ def _get_clearpond():
 
     clearpond_orthographical = {}
     clearpond_phonological = {}
-    with open(clearpond_csv, encoding='iso-8859-2') as csvfile:
+    with open(settings.CLEARPOND, encoding='iso-8859-2') as csvfile:
         reader = csvreader(csvfile, delimiter='\t')
         for row in reader:
             word = row[0].lower()
@@ -178,7 +174,7 @@ class SubstitutionFeaturesMixin:
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
         if word is None:
-            return unpickle(mt_tokens_pickle)
+            return unpickle(settings.TOKENS)
         return len(word)
 
     @classmethod
@@ -209,7 +205,7 @@ class SubstitutionFeaturesMixin:
     def _fa_degree(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_degree = unpickle(fa_norms_degrees_pickle)
+        fa_degree = unpickle(settings.DEGREE)
         if word is None:
             return fa_degree.keys()
         return fa_degree.get(word, np.nan)
@@ -219,7 +215,7 @@ class SubstitutionFeaturesMixin:
     def _fa_pagerank(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_pagerank = unpickle(fa_norms_PR_scores_pickle)
+        fa_pagerank = unpickle(settings.PAGERANK)
         if word is None:
             return fa_pagerank.keys()
         return fa_pagerank.get(word, np.nan)
@@ -229,7 +225,7 @@ class SubstitutionFeaturesMixin:
     def _fa_betweenness(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_betweenness = unpickle(fa_norms_BCs_pickle)
+        fa_betweenness = unpickle(settings.BETWEENNESS)
         if word is None:
             return fa_betweenness.keys()
         return fa_betweenness.get(word, np.nan)
@@ -239,7 +235,7 @@ class SubstitutionFeaturesMixin:
     def _fa_clustering(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_clustering = unpickle(fa_norms_CCs_pickle)
+        fa_clustering = unpickle(settings.CLUSTERING)
         if word is None:
             return fa_clustering.keys()
         return fa_clustering.get(word, np.nan)
@@ -249,7 +245,7 @@ class SubstitutionFeaturesMixin:
     def _frequency(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        frequency = unpickle(mt_frequencies_pickle)
+        frequency = unpickle(settings.FREQUENCY)
         if word is None:
             return frequency.keys()
         return frequency.get(word, np.nan)
