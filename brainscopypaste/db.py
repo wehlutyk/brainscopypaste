@@ -3,16 +3,17 @@ from io import StringIO
 import logging
 
 import click
-from sqlalchemy import (Column, Integer, String, Boolean, ForeignKey,
-                        PickleType, cast)
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, cast
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.types import DateTime, Enum
+from sqlalchemy.types import DateTime, Enum, TypeDecorator
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from brainscopypaste.utils import cache, session_scope
 from brainscopypaste.filter import ClusterFilterMixin
-from brainscopypaste.mine import SubstitutionValidatorMixin, ClusterMinerMixin
+from brainscopypaste.mine import (SubstitutionValidatorMixin,
+                                  ClusterMinerMixin, Model, Time, Source,
+                                  Past, Durl)
 from brainscopypaste.features import SubstitutionFeaturesMixin
 
 
@@ -269,6 +270,19 @@ class Url:
         return self.quote.urls.index(self)
 
 
+class ModelType(TypeDecorator):
+
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        return eval(value, globals(),
+                    {'Model': Model, 'Source': Source, 'Time': Time,
+                     'Durl': Durl, 'Past': Past})
+
+
 class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
                    SubstitutionFeaturesMixin):
 
@@ -292,7 +306,7 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
     # (which is also the position in the destination quote).
     position = Column(Integer, nullable=False)
     # Detection model that created this substitution.
-    model = Column(PickleType, nullable=False)
+    model = Column(ModelType, nullable=False)
 
     @cache
     def tags(self):

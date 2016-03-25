@@ -6,6 +6,7 @@ import pytest
 from brainscopypaste.utils import session_scope
 from brainscopypaste.db import (Cluster, Quote, Url, Substitution,
                                 SealedException)
+from brainscopypaste.mine import Model, Past, Source, Time, Durl
 
 
 def test_cluster(some_clusters):
@@ -183,6 +184,7 @@ def test_quote_cascade_to_substitutions(some_substitutions):
 
 
 def test_substitution(some_substitutions):
+    model1, model2 = some_substitutions
     with session_scope() as session:
         q10 = session.query(Quote).filter_by(sid=10).one()
         q11 = session.query(Quote).filter_by(sid=11).one()
@@ -229,6 +231,16 @@ def test_substitution(some_substitutions):
         s5 = q14.substitutions_source.first()
         assert s5.durl_weight == 1
         assert s5.weight == 1
+
+        # We can filter substitutions by mining model.
+        assert session.query(Substitution)\
+            .filter(Substitution.model == model1).count() == 3
+        assert session.query(Substitution)\
+            .filter(Substitution.model == model2).count() == 2
+        model3 = Model(Time.continuous, Source.majority,
+                       Past.last_bin, Durl.all)
+        assert session.query(Substitution)\
+            .filter(Substitution.model == model3).count() == 0
 
 
 def test_clone_cluster(some_urls):
