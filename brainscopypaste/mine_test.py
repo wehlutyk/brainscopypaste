@@ -1520,7 +1520,10 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
                                         s['occurrence'])
                                        for s in expected_substitutions)
 
-    # Check we can't mine again.
+    # Check we can't mine again with the same model.
     with pytest.raises(Exception) as excinfo:
         mine_substitutions_with_model(model, limit=limit)
-    assert 'already some mined substitutions' in str(excinfo.value)
+    assert 'contains substitutions mined with this model' in str(excinfo.value)
+    # But it's ok with another model.
+    mine_substitutions_with_model(Model(Time.discrete, Source.majority,
+                                        Past.last_bin, Durl.all), limit=limit)

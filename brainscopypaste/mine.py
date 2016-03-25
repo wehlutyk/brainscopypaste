@@ -25,15 +25,15 @@ def mine_substitutions_with_model(model, limit=None):
                .format(model, '' if limit is None
                        else ' (limit={})'.format(limit)))
 
-    # TODO: make this model-aware (and test)
-    # Check we haven't already mined substitutions.
+    # Check we haven't already mined substitutions with this model.
     with session_scope() as session:
-        substitution_count = session.query(Substitution).count()
+        substitution_count = session.query(Substitution)\
+            .filter(Substitution.model == model).count()
         if substitution_count != 0:
-            raise Exception(('There are already some mined substitutions in '
-                             'the database ({} of them), you should drop '
-                             'these before doing anything '
-                             'else.'.format(substitution_count)))
+            raise Exception(('The database already contains substitutions '
+                             'mined with this model ({} - {} substitutions). '
+                             'You should drop these before doing anything '
+                             'else.'.format(model, substitution_count)))
 
     # Check clusters have been filtered.
     with session_scope() as session:
@@ -69,7 +69,8 @@ def mine_substitutions_with_model(model, limit=None):
 
     # Sanity check. This session business is tricky.
     with session_scope() as session:
-        assert session.query(Substitution).count() == kept
+        assert session.query(Substitution)\
+            .filter(Substitution.model == model).count() == kept
 
     click.secho('OK', fg='green', bold=True)
     logger.info('Seen %s candidate substitutions, kept %s', seen, kept)
@@ -230,11 +231,14 @@ class Model:
         self.past_surls.drop_cache()
         self._past.drop_cache()
 
+    def __key(self):
+        return (self.time, self.source, self.past, self.durl)
+
     def __eq__(self, other):
-        return (self.time == other.time and
-                self.source == other.source and
-                self.past == other.past and
-                self.durl == other.durl)
+        return self.__key() == other.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
 
 
 class ClusterMinerMixin:
