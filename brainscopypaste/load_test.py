@@ -112,32 +112,26 @@ contents_errored = {
 }
 
 
-@pytest.fixture
+@pytest.yield_fixture
 def memetracker_file():
     fd, filepath = mkstemp()
-
-    def fin():
-        os.remove(filepath)
-
     with open(fd, 'w') as tmp:
         tmp.write(content)
 
     line_count = content.count('\n') + 1
-    return filepath, line_count
+    yield filepath, line_count
+    os.remove(filepath)
 
 
-@pytest.fixture(params=contents_errored.keys())
+@pytest.yield_fixture(params=contents_errored.keys())
 def memetracker_file_errored(request):
     fd, filepath = mkstemp()
-
-    def fin():
-        os.remove(filepath)
-
     with open(fd, 'w') as tmp:
         tmp.write(contents_errored[request.param])
 
     line_count = contents_errored[request.param].count('\n') + 1
-    return request.param, filepath, line_count
+    yield request.param, filepath, line_count
+    os.remove(filepath)
 
 
 def assert_loaded():

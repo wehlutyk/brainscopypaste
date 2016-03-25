@@ -8,19 +8,16 @@ from brainscopypaste.db import Base, Session, Cluster, Quote, Url, Substitution
 from brainscopypaste.mine import Model, Time, Source, Past, Durl
 
 
-@pytest.fixture
-def tmpdb(request):
+@pytest.yield_fixture
+def tmpdb():
     engine = create_engine('postgresql+psycopg2://brainscopypaste:'
                            '@localhost:5432/brainscopypaste_test',
                            client_encoding='utf8')
     Session.configure(bind=engine)
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
-
-    def fin():
-        Base.metadata.drop_all(engine)
-
-    request.addfinalizer(fin)
+    yield
+    Base.metadata.drop_all(engine)
 
 
 @pytest.fixture
