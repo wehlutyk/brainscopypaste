@@ -67,10 +67,10 @@ class SubstitutionFeaturesMixin:
         'letters_count': 'tokens',
         'synonyms_count': 'lemmas',
         'aoa': 'lemmas',
-        'fa_degree': 'lemmas',
-        'fa_pagerank': 'lemmas',
-        'fa_betweenness': 'lemmas',
-        'fa_clustering': 'lemmas',
+        'degree': 'lemmas',
+        'pagerank': 'lemmas',
+        'betweenness': 'lemmas',
+        'clustering': 'lemmas',
         'frequency': 'lemmas',
         'phonological_density': 'tokens',
         'orthographical_density': 'tokens',
@@ -105,8 +105,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def feature_average(cls, name, synonyms_from_range=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
+        # TODO: test once there are environment-dependent settings and paths.
         feature = getattr(cls, '_' + name)
         if synonyms_from_range is None:
             return np.mean([feature(word) for word in feature()])
@@ -202,43 +201,43 @@ class SubstitutionFeaturesMixin:
 
     @classmethod
     @memoized
-    def _fa_degree(cls, word=None):
+    def _degree(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_degree = unpickle(settings.DEGREE)
+        degree = unpickle(settings.DEGREE)
         if word is None:
-            return fa_degree.keys()
-        return fa_degree.get(word, np.nan)
+            return degree.keys()
+        return degree.get(word, np.nan)
 
     @classmethod
     @memoized
-    def _fa_pagerank(cls, word=None):
+    def _pagerank(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_pagerank = unpickle(settings.PAGERANK)
+        pagerank = unpickle(settings.PAGERANK)
         if word is None:
-            return fa_pagerank.keys()
-        return fa_pagerank.get(word, np.nan)
+            return pagerank.keys()
+        return pagerank.get(word, np.nan)
 
     @classmethod
     @memoized
-    def _fa_betweenness(cls, word=None):
+    def _betweenness(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_betweenness = unpickle(settings.BETWEENNESS)
+        betweenness = unpickle(settings.BETWEENNESS)
         if word is None:
-            return fa_betweenness.keys()
-        return fa_betweenness.get(word, np.nan)
+            return betweenness.keys()
+        return betweenness.get(word, np.nan)
 
     @classmethod
     @memoized
-    def _fa_clustering(cls, word=None):
+    def _clustering(cls, word=None):
         # TODO: test word=None once there are environment-dependent
         # settings and paths.
-        fa_clustering = unpickle(settings.CLUSTERING)
+        clustering = unpickle(settings.CLUSTERING)
         if word is None:
-            return fa_clustering.keys()
-        return fa_clustering.get(word, np.nan)
+            return clustering.keys()
+        return clustering.get(word, np.nan)
 
     @classmethod
     @memoized

@@ -98,40 +98,40 @@ def test_aoa():
 
 @pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
-def test_fa_degree():
-    assert SubstitutionFeaturesMixin._fa_degree('abdomen') == 1 / (10617 - 1)
-    assert SubstitutionFeaturesMixin._fa_degree('speaker') == 9 / (10617 - 1)
-    assert np.isnan(SubstitutionFeaturesMixin._fa_degree('wickiup'))
+def test_degree():
+    assert SubstitutionFeaturesMixin._degree('abdomen') == 1 / (10617 - 1)
+    assert SubstitutionFeaturesMixin._degree('speaker') == 9 / (10617 - 1)
+    assert np.isnan(SubstitutionFeaturesMixin._degree('wickiup'))
 
 
 @pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
-def test_fa_pagerank():
-    assert abs(SubstitutionFeaturesMixin._fa_pagerank('you') -
+def test_pagerank():
+    assert abs(SubstitutionFeaturesMixin._pagerank('you') -
                0.0006390798677378056) < 1e-15
-    assert abs(SubstitutionFeaturesMixin._fa_pagerank('play') -
+    assert abs(SubstitutionFeaturesMixin._pagerank('play') -
                0.0012008124120435305) < 1e-15
-    assert np.isnan(SubstitutionFeaturesMixin._fa_pagerank('wickiup'))
+    assert np.isnan(SubstitutionFeaturesMixin._pagerank('wickiup'))
 
 
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
-def test_fa_betweenness():
+def test_betweenness():
     assert SubstitutionFeaturesMixin.\
-        _fa_betweenness('dog') == 0.0046938277117769605
+        _betweenness('dog') == 0.0046938277117769605
     assert SubstitutionFeaturesMixin.\
-        _fa_betweenness('play') == 0.008277234906313704
-    assert np.isnan(SubstitutionFeaturesMixin._fa_betweenness('wickiup'))
+        _betweenness('play') == 0.008277234906313704
+    assert np.isnan(SubstitutionFeaturesMixin._betweenness('wickiup'))
 
 
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
-def test_fa_clustering():
+def test_clustering():
     assert SubstitutionFeaturesMixin.\
-        _fa_clustering('dog') == 0.0009318641757868838
+        _clustering('dog') == 0.0009318641757868838
     assert SubstitutionFeaturesMixin.\
-        _fa_clustering('play') == 0.0016238663632016216
-    assert np.isnan(SubstitutionFeaturesMixin._fa_clustering('wickiup'))
+        _clustering('play') == 0.0016238663632016216
+    assert np.isnan(SubstitutionFeaturesMixin._clustering('wickiup'))
 
 
 @pytest.mark.skipif(not exists(settings.FREQUENCY),
@@ -217,57 +217,57 @@ def test_features(normal_substitution):
 
 @pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
-def test_features_fa_degree(normal_substitution):
+def test_features_degree(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert s.features('fa_degree') == \
+    assert s.features('degree') == \
         (9.419743782969103e-05, 0.0008477769404672192)
     # Same with features computed relative to sentence.
-    assert s.features('fa_degree', sentence_relative=True) == \
+    assert s.features('degree', sentence_relative=True) == \
         (9.419743782969103e-05 - 0.0010550113036925397,
          0.0008477769404672192 - 0.0012057272042200451)
 
 
 @pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
-def test_features_fa_pagerank(normal_substitution):
+def test_features_pagerank(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert abs(s.features('fa_pagerank')[0] -
+    assert abs(s.features('pagerank')[0] -
                2.9236183726513393e-05) < 1e-15
-    assert abs(s.features('fa_pagerank')[1] -
+    assert abs(s.features('pagerank')[1] -
                6.421655879054584e-05) < 1e-15
     # Same with features computed relative to sentence.
-    assert abs(s.features('fa_pagerank', sentence_relative=True)[0] -
+    assert abs(s.features('pagerank', sentence_relative=True)[0] -
                (2.9236183726513393e-05 - 9.2820794154173557e-05)) < 1e-15
-    assert abs(s.features('fa_pagerank', sentence_relative=True)[1] -
+    assert abs(s.features('pagerank', sentence_relative=True)[1] -
                (6.421655879054584e-05 - 9.9816869166980042e-05)) < 1e-15
 
 
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
-def test_features_fa_betweenness(normal_substitution):
+def test_features_betweenness(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert np.isnan(s.features('fa_betweenness')[0])
-    assert s.features('fa_betweenness')[1] == 0.0003369277738594168
+    assert np.isnan(s.features('betweenness')[0])
+    assert s.features('betweenness')[1] == 0.0003369277738594168
     # Same with features computed relative to sentence.
-    assert np.isnan(s.features('fa_betweenness',
+    assert np.isnan(s.features('betweenness',
                                sentence_relative=True)[0])
-    assert s.features('fa_betweenness', sentence_relative=True)[1] == \
+    assert s.features('betweenness', sentence_relative=True)[1] == \
         0.0003369277738594168 - 0.00081995401378403285
 
 
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
-def test_features_fa_clustering(normal_substitution):
+def test_features_clustering(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert np.isnan(s.features('fa_clustering')[0])
-    assert s.features('fa_clustering')[1] == 0.0037154495910700605
+    assert np.isnan(s.features('clustering')[0])
+    assert s.features('clustering')[1] == 0.0037154495910700605
     # Same with features computed relative to sentence.
-    assert np.isnan(s.features('fa_clustering', sentence_relative=True)[0])
-    assert s.features('fa_clustering', sentence_relative=True)[1] == \
+    assert np.isnan(s.features('clustering', sentence_relative=True)[0])
+    assert s.features('clustering', sentence_relative=True)[1] == \
         0.0037154495910700605 - 0.0021628891370054143
 
 
