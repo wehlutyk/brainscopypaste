@@ -1,6 +1,8 @@
 import logging
 import importlib
 from contextlib import contextmanager
+import os
+from tempfile import mkstemp
 
 from brainscopypaste.utils import mkdirp
 
@@ -28,6 +30,16 @@ class Settings:
             self._override(name, value)
         yield
         self._setup()
+
+    @contextmanager
+    def file_override(self, *names):
+        filepaths = [mkstemp()[1] for name in names]
+        try:
+            with self.override(*zip(names, filepaths)):
+                yield
+        finally:
+            for filepath in filepaths:
+                os.remove(filepath)
 
     def _override(self, name, value):
         if not name.isupper():

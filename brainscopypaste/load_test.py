@@ -396,19 +396,12 @@ def fa_sources(request):
     with open(fd, 'w') as tmp:
         tmp.write(fa_header + content + fa_footer)
 
-    # Redirect the saving of computed features.
-    features = ['DEGREE', 'PAGERANK', 'BETWEENNESS', 'CLUSTERING']
-    features_filepaths = [mkstemp()[1] for feature in features]
-
     # Run the test.
-    with settings.override(('FA_SOURCES', [fa_filepath]),
-                           *zip(features, features_filepaths)):
+    with settings.override(('FA_SOURCES', [fa_filepath])):
         yield request.param, expected_result, tol
 
     # Clean up.
     os.remove(fa_filepath)
-    for feature_filepath in features_filepaths:
-        os.remove(feature_filepath)
 
 
 def test_fa_feature_loader_feature(fa_sources):
@@ -424,33 +417,20 @@ def test_fa_feature_loader_feature(fa_sources):
 
 def test_load_fa_features(fa_sources):
     feature, expected_result, tol = fa_sources
-    load_fa_features()
-    with open(getattr(settings, feature.upper()), 'rb') as f:
-        result = pickle.load(f)
-    if tol is None:
-        assert result == expected_result
-    else:
-        assert set(result.keys()) == set(expected_result.keys())
-        for k, v in expected_result.items():
-            assert abs(result[k] - v) < tol
+    with settings.file_override('DEGREE', 'PAGERANK',
+                                'BETWEENNESS', 'CLUSTERING'):
+        load_fa_features()
+        with open(getattr(settings, feature.upper()), 'rb') as f:
+            result = pickle.load(f)
+        if tol is None:
+            assert result == expected_result
+        else:
+            assert set(result.keys()) == set(expected_result.keys())
+            for k, v in expected_result.items():
+                assert abs(result[k] - v) < tol
 
 
-@pytest.yield_fixture
-def mt_source():
-    # Redirect the saving of computed features.
-    features = ['FREQUENCY', 'TOKENS']
-    features_filepaths = [mkstemp()[1] for feature in features]
-
-    # Run the test.
-    with settings.override(*zip(features, features_filepaths)):
-        yield
-
-    # Clean up.
-    for feature_filepath in features_filepaths:
-        os.remove(feature_filepath)
-
-
-def test_load_mt_frequency_and_tokens(tmpdb, memetracker_file, mt_source):
+def test_load_mt_frequency_and_tokens(tmpdb, memetracker_file):
     filepath, line_count = memetracker_file
     MemeTrackerParser(filepath, line_count=line_count).parse()
 
@@ -460,13 +440,14 @@ def test_load_mt_frequency_and_tokens(tmpdb, memetracker_file, mt_source):
 
     # Run the filtering and test real values.
     filter_clusters()
-    load_mt_frequency_and_tokens()
-    with open(settings.FREQUENCY, 'rb') as f:
-        frequency = pickle.load(f)
-    assert frequency == {'yes': 8, 'that': 5, 'be': 4, 'what': 2, 'love': 5,
-                         'person': 3, 'do': 6, 'you': 3, 'we': 3, 'can': 3,
-                         'this': 3}
-    with open(settings.TOKENS, 'rb') as f:
-        tokens = pickle.load(f)
-    assert tokens == {'yes', 'that', "'s", 'what', 'love', 'is', 'person',
-                      'does', 'you', 'we', 'can', 'do', 'this'}
+    with settings.file_override('FREQUENCY', 'TOKENS'):
+        load_mt_frequency_and_tokens()
+        with open(settings.FREQUENCY, 'rb') as f:
+            frequency = pickle.load(f)
+        assert frequency == {'yes': 8, 'that': 5, 'be': 4, 'what': 2,
+                             'love': 5, 'person': 3, 'do': 6, 'you': 3,
+                             'we': 3, 'can': 3, 'this': 3}
+        with open(settings.TOKENS, 'rb') as f:
+            tokens = pickle.load(f)
+        assert tokens == {'yes', 'that', "'s", 'what', 'love', 'is', 'person',
+                          'does', 'you', 'we', 'can', 'do', 'this'}
