@@ -9,8 +9,6 @@ import numpy as np
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 
-from brainscopypaste import paths
-
 
 logger = logging.getLogger(__name__)
 
@@ -326,8 +324,9 @@ class Stopwords:
 
         logger.debug('Loading stopwords')
 
+        from brainscopypaste.conf import settings
         stopwords = set([])
-        with open(paths.stopwords_file) as f:
+        with open(settings.STOPWORDS) as f:
             for l in f:
                 stopwords.add(l.strip().lower())
 

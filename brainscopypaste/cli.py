@@ -3,15 +3,14 @@ import logging
 import click
 from sqlalchemy import create_engine
 
-from brainscopypaste import paths
 from brainscopypaste.db import Base, Session, Cluster, Substitution
-from brainscopypaste.utils import session_scope, mkdirp
+from brainscopypaste.utils import session_scope
 from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
                                   load_mt_frequency)
 from brainscopypaste.filter import filter_clusters
-from brainscopypaste.paths import paths_to_create
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
                                   Past, Durl, Model)
+from brainscopypaste.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -37,9 +36,6 @@ def cli(obj, echo_sql, log, log_file):
     # Save config.
     obj['ECHO_SQL'] = echo_sql
     obj['engine'] = init_db(obj['ECHO_SQL'])
-    for path in paths_to_create:
-        logger.debug("Checking for path '%s' to create", path)
-        mkdirp(path)
 
 
 def init_db(echo_sql):
@@ -140,7 +136,8 @@ def load_memetracker(limit):
     """Load MemeTracker data into SQL."""
 
     logger.info('Starting load of memetracker data into database')
-    MemeTrackerParser(paths.mt_full, line_count=8357595, limit=limit).parse()
+    MemeTrackerParser(settings.MT_SOURCE, line_count=settings.MT_LENGTH,
+                      limit=limit).parse()
     logger.info('Done loading memetracker data into database')
 
 

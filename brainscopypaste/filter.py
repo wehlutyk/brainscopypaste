@@ -8,7 +8,7 @@ import numpy as np
 
 from brainscopypaste.utils import (langdetect, session_scope, execute_raw,
                                    memoized)
-from brainscopypaste import settings
+from brainscopypaste.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -102,8 +102,8 @@ class ClusterFilterMixin:
         if self.filtered:
             raise AlreadyFiltered('Cluster is already filtered')
 
-        min_tokens = settings.mt_filter_min_tokens
-        max_span = timedelta(days=settings.mt_filter_max_days)
+        min_tokens = settings.MT_FILTER_MIN_TOKENS
+        max_span = timedelta(days=settings.MT_FILTER_MAX_DAYS)
         fcluster = self.clone(id=filter_cluster_offset() + self.id,
                               filtered=True)
 

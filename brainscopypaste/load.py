@@ -14,11 +14,8 @@ import networkx as nx
 
 from brainscopypaste.db import Session, Cluster, Quote, Url, save_by_copy
 from brainscopypaste.utils import session_scope, execute_raw, cache
-from brainscopypaste.paths import (fa_norms_all, fa_norms_degrees_pickle,
-                                   fa_norms_PR_scores_pickle,
-                                   fa_norms_BCs_pickle, fa_norms_CCs_pickle,
-                                   mt_frequencies_pickle, mt_tokens_pickle)
 from brainscopypaste.features import SubstitutionFeaturesMixin
+from brainscopypaste.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -32,22 +29,22 @@ def load_fa_features():
     loader = FAFeatureLoader()
     degree = loader.degree()
     logger.debug('Saving FreeAssociation degree to pickle')
-    with open(fa_norms_degrees_pickle, 'wb') as f:
+    with open(settings.DEGREE, 'wb') as f:
         pickle.dump(degree, f)
 
     pagerank = loader.pagerank()
     logger.debug('Saving FreeAssociation pagerank to pickle')
-    with open(fa_norms_PR_scores_pickle, 'wb') as f:
+    with open(settings.PAGERANK, 'wb') as f:
         pickle.dump(pagerank, f)
 
     betweenness = loader.betweenness()
     logger.debug('Saving FreeAssociation betweenness to pickle')
-    with open(fa_norms_BCs_pickle, 'wb') as f:
+    with open(settings.BETWEENNESS, 'wb') as f:
         pickle.dump(betweenness, f)
 
     clustering = loader.clustering()
     logger.debug('Saving FreeAssociation clustering to pickle')
-    with open(fa_norms_CCs_pickle, 'wb') as f:
+    with open(settings.CLUSTERING, 'wb') as f:
         pickle.dump(clustering, f)
 
     click.secho('OK', fg='green', bold=True)
@@ -84,10 +81,10 @@ def load_mt_frequency_and_tokens():
     frequencies = dict(frequencies)
 
     logger.debug('Saving memetracker frequencies to pickle')
-    with open(mt_frequencies_pickle, 'wb') as f:
+    with open(settings.FREQUENCY, 'wb') as f:
         pickle.dump(frequencies, f)
     logger.debug('Saving memetracker token list to pickle')
-    with open(mt_tokens_pickle, 'wb') as f:
+    with open(settings.TOKENS, 'wb') as f:
         pickle.dump(tokens, f)
 
     click.secho('OK', fg='green', bold=True)
@@ -121,7 +118,7 @@ class FAFeatureLoader(Parser):
         logger.info('Loading FreeAssociation norms')
 
         norms = {}
-        for filename in fa_norms_all:
+        for filename in settings.FA_SOURCES:
             with open(filename, encoding='iso-8859-2') as self._file:
 
                 self._skip_header()
