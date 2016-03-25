@@ -59,16 +59,18 @@ def confirm(fillin):
 @drop.command(name='all')
 @click.pass_obj
 def drop_all(obj):
-    """Empty the whole database."""
+    """Empty the whole database and all features."""
 
-    if confirm('the whole database'):
+    if confirm('the whole database and all features'):
         logger.info('Emptying database')
-
         click.secho('Emptying database... ', nl=False)
-        Base.metadata.drop_all(bind=obj['engine'])
-        click.secho('OK', fg='green', bold=True)
 
+        Base.metadata.drop_all(bind=obj['engine'])
+
+        click.secho('OK', fg='green', bold=True)
         logger.info('Done emptying database')
+
+        _drop_features()
 
 
 @drop.command(name='filtered')
@@ -91,7 +93,6 @@ def drop_filtered(obj):
                    .delete(synchronize_session=False)
 
         click.secho('OK', fg='green', bold=True)
-
         logger.info('Done dropping filtered rows and substitutions')
 
 
@@ -102,33 +103,36 @@ def drop_substitutions(obj):
 
     if confirm('the mined substitutions'):
         logger.info('Dropping substitutions from database')
-
         click.secho('Dropping mined substitutions... ', nl=False)
-        Substitution.__table__.drop(bind=obj['engine'])
-        click.secho('OK', fg='green', bold=True)
 
+        Substitution.__table__.drop(bind=obj['engine'])
+
+        click.secho('OK', fg='green', bold=True)
         logger.info('Done dropping substitutions')
+
+
+def _drop_features():
+    logger.info('Dropping computed features from filesystem')
+    click.secho('Dropping computed features... ', nl=False)
+
+    for file in [settings.DEGREE, settings.PAGERANK, settings.BETWEENNESS,
+                 settings.CLUSTERING, settings.FREQUENCY, settings.TOKENS]:
+        if exists(file):
+            logger.debug("Dropping '%s'", basename(file))
+            remove(file)
+        else:
+            logger.debug("'%s' not present, no need to drop it",
+                         basename(file))
+
+    click.secho('OK', fg='green', bold=True)
+    logger.info('Done dropping features')
 
 
 @drop.command(name='features')
 def drop_features():
     """Drop computed features."""
-
     if confirm('the computed features'):
-        logger.info('Dropping computed features from filesystem')
-
-        click.secho('Dropping computed features... ', nl=False)
-        for file in [settings.DEGREE, settings.PAGERANK, settings.BETWEENNESS,
-                     settings.CLUSTERING, settings.FREQUENCY, settings.TOKENS]:
-            if exists(file):
-                logger.debug("Dropping '%s'", basename(file))
-                remove(file)
-            else:
-                logger.debug("'%s' not present, no need to drop it",
-                             basename(file))
-        click.secho('OK', fg='green', bold=True)
-
-        logger.info('Done dropping features')
+        _drop_features()
 
 
 @cli.group()
