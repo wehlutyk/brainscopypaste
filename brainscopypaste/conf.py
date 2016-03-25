@@ -1,5 +1,6 @@
 import logging
 import importlib
+from contextlib import contextmanager
 
 from brainscopypaste.utils import mkdirp
 
@@ -21,15 +22,19 @@ class Settings:
             if setting.isupper():
                 setattr(self, setting, getattr(self.mod, setting))
 
-    def override(self, name, value):
+    @contextmanager
+    def override(self, *names_values):
+        for name, value in names_values:
+            self._override(name, value)
+        yield
+        self._setup()
+
+    def _override(self, name, value):
         if not name.isupper():
             raise ValueError('Setting names must be uppercase')
         if name not in dir(self.mod):
             raise ValueError('Unknown setting name')
         setattr(self, name, value)
-
-    def reset(self):
-        self._setup()
 
 
 settings = Settings()

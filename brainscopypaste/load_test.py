@@ -392,24 +392,21 @@ def fa_sources(request):
     tol = fa_cases[request.param].get('tol')
 
     # Create fake FA source.
-    fd, filepath = mkstemp()
+    fd, fa_filepath = mkstemp()
     with open(fd, 'w') as tmp:
         tmp.write(fa_header + content + fa_footer)
-    settings.override('FA_SOURCES', [filepath])
 
     # Redirect the saving of computed features.
-    features_filepaths = []
-    for feature in ['DEGREE', 'PAGERANK', 'BETWEENNESS', 'CLUSTERING']:
-        _, feature_filepath = mkstemp()
-        settings.override(feature, feature_filepath)
-        features_filepaths.append(feature_filepath)
+    features = ['DEGREE', 'PAGERANK', 'BETWEENNESS', 'CLUSTERING']
+    features_filepaths = [mkstemp()[1] for feature in features]
 
     # Run the test.
-    yield request.param, expected_result, tol
+    with settings.override(('FA_SOURCES', [fa_filepath]),
+                           *zip(features, features_filepaths)):
+        yield request.param, expected_result, tol
 
     # Clean up.
-    settings.reset()
-    os.remove(filepath)
+    os.remove(fa_filepath)
     for feature_filepath in features_filepaths:
         os.remove(feature_filepath)
 
@@ -441,17 +438,14 @@ def test_load_fa_features(fa_sources):
 @pytest.yield_fixture
 def mt_source():
     # Redirect the saving of computed features.
-    features_filepaths = []
-    for feature in ['FREQUENCY', 'TOKENS']:
-        _, feature_filepath = mkstemp()
-        settings.override(feature, feature_filepath)
-        features_filepaths.append(feature_filepath)
+    features = ['FREQUENCY', 'TOKENS']
+    features_filepaths = [mkstemp()[1] for feature in features]
 
     # Run the test.
-    yield
+    with settings.override(*zip(features, features_filepaths)):
+        yield
 
     # Clean up.
-    settings.reset()
     for feature_filepath in features_filepaths:
         os.remove(feature_filepath)
 
