@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 def load_fa_features():
-    # TODO: test once there are environment-dependent settings and paths
     logger.info('Computing FreeAssociation features')
     click.echo('Computing FreeAssociation features...')
 
@@ -52,7 +51,6 @@ def load_fa_features():
 
 
 def load_mt_frequency_and_tokens():
-    # TODO: test once there are environment-dependent settings and paths.
     logger.info('Computing memetracker frequencies and token list')
     click.echo('Computing MemeTracker frequencies and token list...')
 

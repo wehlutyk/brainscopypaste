@@ -1,13 +1,17 @@
 import os
 from tempfile import mkstemp
 from datetime import timedelta
+import pickle
 
 import pytest
-import networkx as nx
 
 from brainscopypaste.utils import session_scope
 from brainscopypaste.db import Cluster, Quote
-from brainscopypaste.load import MemeTrackerParser, FAFeatureLoader
+from brainscopypaste.load import (MemeTrackerParser, FAFeatureLoader,
+                                  load_fa_features,
+                                  load_mt_frequency_and_tokens)
+from brainscopypaste.filter import filter_clusters
+from brainscopypaste.conf import settings
 
 
 # Quotes and urls are intentionally not ordered to check for ordering later on.
@@ -18,16 +22,16 @@ content = '''format:
 
 
 2\t5\thate that i love you so\t36543
-\t2\t2\tthat i love you\t950238
+\t2\t2\tyes that's what love is\t950238
 \t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
 \t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-\t3\t2\ti love you\t43
+\t3\t2\tno he doesn't love you\t43
 \t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 \t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
 
 1\t3\tyes we can yes we can\t43112
-\t3\t2\tyes we can\t1485
+\t3\t2\tyes we can yes yes yes\t1485
 \t\t2008-08-01 00:31:56\t2\tM\tsome-url-6
 \t\t2008-08-01 00:12:05\t1\tB\tsome-url-5'''
 
@@ -134,7 +138,10 @@ def memetracker_file_errored(request):
     os.remove(filepath)
 
 
-def assert_loaded():
+def test_parser(tmpdb, memetracker_file):
+    filepath, line_count = memetracker_file
+    MemeTrackerParser(filepath, line_count=line_count).parse()
+
     with session_scope() as session:
         assert session.query(Cluster).count() == 2
         assert session.query(Quote).count() == 3
@@ -159,9 +166,9 @@ def assert_loaded():
         assert c3.urls[0].url == 'some-url-with-"-and-\'-1'
         assert abs(c3.span - timedelta(days=47)) < timedelta(hours=5)
 
-        assert q4.string == 'i love you'
-        assert q9.string == 'that i love you'
-        assert q1.string == 'yes we can'
+        assert q4.string == "no he doesn't love you"
+        assert q9.string == "yes that's what love is"
+        assert q1.string == 'yes we can yes yes yes'
         assert q4.size == 2
         assert q9.size == 2
         assert q1.size == 2
@@ -184,12 +191,6 @@ def assert_loaded():
         assert q1.urls[1].frequency == 2
         assert q1.urls[1].url_type == 'M'
         assert q1.urls[1].url == 'some-url-6'
-
-
-def test_parser(tmpdb, memetracker_file):
-    filepath, line_count = memetracker_file
-    MemeTrackerParser(filepath, line_count=line_count).parse()
-    assert_loaded()
 
 
 def test_parser_errored(tmpdb, memetracker_file_errored):
@@ -315,51 +316,163 @@ def test_fa_feature_loader_degree():
 
 
 def test_fa_feature_loader_pagerank():
-    loader = FAFeatureLoader()
     # No 0 pagerank.
-    for v in loader.pagerank().values():
+    for v in FAFeatureLoader().pagerank().values():
         assert v > 0
-    # Test values on a small graph.
-    # Weights are used as strengths, not costs, and the graph is directed.
-    loader._norms_graph = nx.DiGraph()
-    loader._norms_graph.add_weighted_edges_from([(1, 3, .5), (2, 3, .5),
-                                                 (3, 4, .5), (3, 5, .5),
-                                                 (1, 4, 2), (4, 1, 1)])
-    reference = {1: 0.343157577741676,
-                 2: 0.04913541630116447,
-                 3: 0.14923730837323892,
-                 4: 0.34590842522412957,
-                 5: 0.11256127235979119}
-    for k, v in loader.pagerank().items():
-        assert abs(reference[k] - v) < 1e-15
 
 
-def test_fa_feature_loader_betweenness():
-    loader = FAFeatureLoader()
-    # Test values on a small graph.
-    loader._norms_graph = nx.DiGraph()
-    loader._norms_graph.add_weighted_edges_from([(1, 2, 1), (1, 3, 1),
-                                                 (2, 4, 1), (3, 4, 2)])
-    # There are no 0 betweennesses.
-    # Weights are used as strengths, not costs, and the graph is directed.
-    assert loader.betweenness() == {3: 1/6}
+# No tests are made on the full FA betweenness because it takes 15 min
+# to compute. Instead, test are made with a toy FA source file below.
 
 
 def test_fa_feature_loader_clustering():
-    # Test values on a small graph.
-    # Weights are used as strengths, not costs, and the graph is undirected.
-    loader = FAFeatureLoader()
-    loader._norms_graph = nx.DiGraph()
-    loader._norms_graph.add_weighted_edges_from([(1, 2, 1), (1, 3, 1),
-                                                 (3, 2, 1), (3, 4, 1),
-                                                 (4, 5, 1), (3, 5, 1),
-                                                 (5, 3, 1)])
-    assert loader.clustering() == {1: 0.5,
-                                   2: 0.5,
-                                   3: 0.18832675415790612,
-                                   4: 0.6299605249474366,
-                                   5: 0.6299605249474366}
-    # On the full dataset, there are no 0 clusterings.
-    loader = FAFeatureLoader()
-    for v in loader.clustering().values():
+    # No 0 clustering.
+    for v in FAFeatureLoader().clustering().values():
         assert v > 0
+
+
+fa_header = '''<HTML>
+<BODY>
+<PRE>
+CUE, TARGET, NORMED?, #G, #P, FSG
+'''
+
+
+fa_footer = '''
+</pre>
+</BODY>
+</HTML>'''
+
+fa_cases = {
+    'degree': {
+        'content': '''a, b, x, x, x, .5
+b, c, x, x, x, .5
+c, d, x, x, x, .5
+c, e, x, x, x, .5
+a, d, x, x, x, 2''',
+        'result': {'b': 1/4, 'c': 1/4, 'd': 2/4, 'e': 1/4}
+    },
+    'pagerank': {
+        'content': '''a, c, x, x, x, .5
+b, c, x, x, x, .5
+c, d, x, x, x, .5
+c, e, x, x, x, .5
+a, d, x, x, x, 2
+d, a, x, x, x, 1''',
+        'result': {'a': 0.343157577741676, 'b': 0.04913541630116447,
+                   'c': 0.14923730837323892, 'd': 0.34590842522412957,
+                   'e': 0.11256127235979119},
+        'tol': 1e-15
+    },
+    'betweenness': {
+        'content': '''a, b, x, x, x, 1
+a, c, x, x, x, 1
+b, d, x, x, x, 1
+c, d, x, x, x, 2''',
+        'result': {'c': 1/6}
+    },
+    'clustering': {
+        'content': '''a, b, x, x, x, 1
+a, c, x, x, x, 1
+c, b, x, x, x, 1
+c, d, x, x, x, 1
+d, e, x, x, x, 1
+c, e, x, x, x, 1
+e, c, x, x, x, 1''',
+        'result': {'a': 0.5, 'b': 0.5, 'c': 0.18832675415790612,
+                   'd': 0.6299605249474366, 'e': 0.6299605249474366}
+    }
+}
+
+
+@pytest.yield_fixture(params=fa_cases.keys())
+def fa_sources(request):
+    content = fa_cases[request.param]['content']
+    expected_result = fa_cases[request.param]['result']
+    tol = fa_cases[request.param].get('tol')
+
+    # Create fake FA source.
+    fd, filepath = mkstemp()
+    with open(fd, 'w') as tmp:
+        tmp.write(fa_header + content + fa_footer)
+    settings.override('FA_SOURCES', [filepath])
+
+    # Redirect the saving of computed features.
+    features_filepaths = []
+    for feature in ['DEGREE', 'PAGERANK', 'BETWEENNESS', 'CLUSTERING']:
+        _, feature_filepath = mkstemp()
+        settings.override(feature, feature_filepath)
+        features_filepaths.append(feature_filepath)
+
+    # Run the test.
+    yield request.param, expected_result, tol
+
+    # Clean up.
+    settings.reset()
+    os.remove(filepath)
+    for feature_filepath in features_filepaths:
+        os.remove(feature_filepath)
+
+
+def test_fa_feature_loader_feature(fa_sources):
+    feature, expected_result, tol = fa_sources
+    result = getattr(FAFeatureLoader(), feature)()
+    if tol is None:
+        assert result == expected_result
+    else:
+        assert set(result.keys()) == set(expected_result.keys())
+        for k, v in expected_result.items():
+            assert abs(result[k] - v) < tol
+
+
+def test_load_fa_features(fa_sources):
+    feature, expected_result, tol = fa_sources
+    load_fa_features()
+    with open(getattr(settings, feature.upper()), 'rb') as f:
+        result = pickle.load(f)
+    if tol is None:
+        assert result == expected_result
+    else:
+        assert set(result.keys()) == set(expected_result.keys())
+        for k, v in expected_result.items():
+            assert abs(result[k] - v) < tol
+
+
+@pytest.yield_fixture
+def mt_source():
+    # Redirect the saving of computed features.
+    features_filepaths = []
+    for feature in ['FREQUENCY', 'TOKENS']:
+        _, feature_filepath = mkstemp()
+        settings.override(feature, feature_filepath)
+        features_filepaths.append(feature_filepath)
+
+    # Run the test.
+    yield
+
+    # Clean up.
+    settings.reset()
+    for feature_filepath in features_filepaths:
+        os.remove(feature_filepath)
+
+
+def test_load_mt_frequency_and_tokens(tmpdb, memetracker_file, mt_source):
+    filepath, line_count = memetracker_file
+    MemeTrackerParser(filepath, line_count=line_count).parse()
+
+    with pytest.raises(Exception) as excinfo:
+        load_mt_frequency_and_tokens()
+    assert 'no filtered quotes' in str(excinfo.value)
+
+    # Run the filtering and test real values.
+    filter_clusters()
+    load_mt_frequency_and_tokens()
+    with open(settings.FREQUENCY, 'rb') as f:
+        frequency = pickle.load(f)
+    assert frequency == {'yes': 14, 'that': 2, 'be': 4, 'what': 2, 'love': 5,
+                         'no': 3, 'he': 3, 'do': 3, "n't": 3, 'you': 3,
+                         'we': 3, 'can': 3}
+    with open(settings.TOKENS, 'rb') as f:
+        tokens = pickle.load(f)
+    assert tokens == {'yes', 'that', "'s", 'what', 'love', 'is', 'no', 'he',
+                      'does', "n't", 'you', 'we', 'can'}
