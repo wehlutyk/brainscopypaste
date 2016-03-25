@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from brainscopypaste.db import Base, Session, Cluster, Substitution
 from brainscopypaste.utils import session_scope
 from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
-                                  load_mt_frequency)
+                                  load_mt_frequency_and_tokens)
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
                                   Past, Durl, Model)
@@ -38,6 +38,7 @@ def cli(obj, echo_sql, log, log_file):
     obj['engine'] = init_db(obj['ECHO_SQL'])
 
 
+# TODO: move to utils
 def init_db(echo_sql):
     logger.info('Initializing database connection')
 
@@ -124,6 +125,9 @@ def drop_substitutions(obj):
         logger.info('Done dropping substitutions')
 
 
+# TODO: drop features
+
+
 @cli.group()
 def load():
     """Source database loading."""
@@ -146,7 +150,7 @@ def load_features():
     """Compute features and save them to pickle."""
 
     logger.info('Starting computation of features')
-    load_mt_frequency()
+    load_mt_frequency_and_tokens()
     load_fa_features()
     logger.info('Done computing and saving features')
 

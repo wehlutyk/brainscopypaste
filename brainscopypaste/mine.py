@@ -25,6 +25,7 @@ def mine_substitutions_with_model(model, limit=None):
                .format(model, '' if limit is None
                        else ' (limit={})'.format(limit)))
 
+    # TODO: make this model-aware (and test)
     # Check we haven't already mined substitutions.
     with session_scope() as session:
         substitution_count = session.query(Substitution).count()
