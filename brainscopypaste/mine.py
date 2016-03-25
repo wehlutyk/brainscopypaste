@@ -230,6 +230,12 @@ class Model:
         self.past_surls.drop_cache()
         self._past.drop_cache()
 
+    def __eq__(self, other):
+        return (self.time == other.time and
+                self.source == other.source and
+                self.past == other.past and
+                self.durl == other.durl)
+
 
 class ClusterMinerMixin:
 

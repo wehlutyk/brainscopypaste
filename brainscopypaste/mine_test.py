@@ -41,6 +41,19 @@ def test_model_init():
         Model(Time.continuous, Source.all, Past.all, 1)
 
 
+def test_model_eq():
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all) == \
+        Model(Time.continuous, Source.all, Past.all, Durl.all)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
+        Model(Time.discrete, Source.all, Past.all, Durl.all)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
+        Model(Time.continuous, Source.majority, Past.all, Durl.all)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
+        Model(Time.continuous, Source.all, Past.last_bin, Durl.all)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
+        Model(Time.continuous, Source.all, Past.all, Durl.exclude_past)
+
+
 header = '''format:
 <ClSz>\t<TotFq>\t<Root>\t<ClusterId>
 \t<QtFq>\t<Urls>\t<QtStr>\t<QuteId>
