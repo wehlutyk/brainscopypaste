@@ -26,12 +26,12 @@ content = '''format:
 \t\t2008-09-13 14:45:39\t1\tM\tsome-url-3
 \t\t2008-09-17 04:09:03\t1\tB\tsome-url-4
 
-\t3\t2\tno he doesn't love you\t43
+\t3\t2\tyes that person does love you\t43
 \t\t2008-08-01 00:24:08\t1\tM\tsome-url-2
 \t\t2008-08-01 00:00:16\t2\tB\tsome-url-with-"-and-'-1
 
 1\t3\tyes we can yes we can\t43112
-\t3\t2\tyes we can yes yes yes\t1485
+\t3\t2\tyes we can do this\t1485
 \t\t2008-08-01 00:31:56\t2\tM\tsome-url-6
 \t\t2008-08-01 00:12:05\t1\tB\tsome-url-5'''
 
@@ -166,9 +166,9 @@ def test_parser(tmpdb, memetracker_file):
         assert c3.urls[0].url == 'some-url-with-"-and-\'-1'
         assert abs(c3.span - timedelta(days=47)) < timedelta(hours=5)
 
-        assert q4.string == "no he doesn't love you"
+        assert q4.string == "yes that person does love you"
         assert q9.string == "yes that's what love is"
-        assert q1.string == 'yes we can yes yes yes'
+        assert q1.string == 'yes we can do this'
         assert q4.size == 2
         assert q9.size == 2
         assert q1.size == 2
@@ -463,10 +463,10 @@ def test_load_mt_frequency_and_tokens(tmpdb, memetracker_file, mt_source):
     load_mt_frequency_and_tokens()
     with open(settings.FREQUENCY, 'rb') as f:
         frequency = pickle.load(f)
-    assert frequency == {'yes': 14, 'that': 2, 'be': 4, 'what': 2, 'love': 5,
-                         'no': 3, 'he': 3, 'do': 3, "n't": 3, 'you': 3,
-                         'we': 3, 'can': 3}
+    assert frequency == {'yes': 8, 'that': 5, 'be': 4, 'what': 2, 'love': 5,
+                         'person': 3, 'do': 6, 'you': 3, 'we': 3, 'can': 3,
+                         'this': 3}
     with open(settings.TOKENS, 'rb') as f:
         tokens = pickle.load(f)
-    assert tokens == {'yes', 'that', "'s", 'what', 'love', 'is', 'no', 'he',
-                      'does', "n't", 'you', 'we', 'can'}
+    assert tokens == {'yes', 'that', "'s", 'what', 'love', 'is', 'person',
+                      'does', 'you', 'we', 'can', 'do', 'this'}
