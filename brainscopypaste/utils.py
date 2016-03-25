@@ -8,6 +8,7 @@ import os
 import numpy as np
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
+from sqlalchemy import create_engine
 
 
 logger = logging.getLogger(__name__)
@@ -347,3 +348,19 @@ stopwords = Stopwords()
 def unpickle(filename):
     with open(filename, 'rb') as file:
         return pickle.load(file)
+
+
+def init_db(echo_sql=False):
+    from brainscopypaste.db import Base, Session
+    logger.info('Initializing database connection')
+
+    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
+                           '@localhost:5432/brainscopypaste',
+                           client_encoding='utf8', echo=echo_sql)
+    Session.configure(bind=engine)
+
+    logger.info('Database connected')
+    logger.debug('Checking tables to create')
+
+    Base.metadata.create_all(engine)
+    return engine

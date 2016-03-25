@@ -1,10 +1,9 @@
 import logging
 
 import click
-from sqlalchemy import create_engine
 
-from brainscopypaste.db import Base, Session, Cluster, Substitution
-from brainscopypaste.utils import session_scope
+from brainscopypaste.db import Base, Cluster, Substitution
+from brainscopypaste.utils import session_scope, init_db
 from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
                                   load_mt_frequency_and_tokens)
 from brainscopypaste.filter import filter_clusters
@@ -36,22 +35,6 @@ def cli(obj, echo_sql, log, log_file):
     # Save config.
     obj['ECHO_SQL'] = echo_sql
     obj['engine'] = init_db(obj['ECHO_SQL'])
-
-
-# TODO: move to utils
-def init_db(echo_sql):
-    logger.info('Initializing database connection')
-
-    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
-                           '@localhost:5432/brainscopypaste',
-                           client_encoding='utf8', echo=echo_sql)
-    Session.configure(bind=engine)
-
-    logger.info('Database connected')
-    logger.debug('Checking tables to create')
-
-    Base.metadata.create_all(engine)
-    return engine
 
 
 @cli.group()
