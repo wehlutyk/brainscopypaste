@@ -1,3 +1,5 @@
+from os.path import exists, basename
+from os import remove
 import logging
 
 import click
@@ -108,7 +110,25 @@ def drop_substitutions(obj):
         logger.info('Done dropping substitutions')
 
 
-# TODO: drop features
+@drop.command(name='features')
+def drop_features():
+    """Drop computed features."""
+
+    if confirm('the computed features'):
+        logger.info('Dropping computed features from filesystem')
+
+        click.secho('Dropping computed features... ', nl=False)
+        for file in [settings.DEGREE, settings.PAGERANK, settings.BETWEENNESS,
+                     settings.CLUSTERING, settings.FREQUENCY, settings.TOKENS]:
+            if exists(file):
+                logger.debug("Dropping '%s'", basename(file))
+                remove(file)
+            else:
+                logger.debug("'%s' not present, no need to drop it",
+                             basename(file))
+        click.secho('OK', fg='green', bold=True)
+
+        logger.info('Done dropping features')
 
 
 @cli.group()
