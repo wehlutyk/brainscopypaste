@@ -1,4 +1,5 @@
 from os.path import exists
+import pickle
 
 import pytest
 import numpy as np
@@ -7,7 +8,7 @@ from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
                                       _get_clearpond,
                                       SubstitutionFeaturesMixin)
-from brainscopypaste.utils import is_int
+from brainscopypaste.utils import is_int, unpickle
 from brainscopypaste.conf import settings
 
 
@@ -46,10 +47,26 @@ def test_get_clearpond():
     assert clearpond is _get_clearpond()
 
 
+def drop_caches():
+    unpickle.drop_cache()
+    _get_aoa.drop_cache()
+    _get_clearpond.drop_cache()
+    _get_pronunciations.drop_cache()
+    SubstitutionFeaturesMixin.features.drop_cache()
+    SubstitutionFeaturesMixin.feature_average.drop_cache()
+    for feature in SubstitutionFeaturesMixin.__features__:
+        getattr(SubstitutionFeaturesMixin, '_' + feature).drop_cache()
+
+
 def test_syllables_count():
+    drop_caches()
     assert SubstitutionFeaturesMixin._syllables_count('hello') == 2
     assert SubstitutionFeaturesMixin._syllables_count('mountain') == 2
     assert np.isnan(SubstitutionFeaturesMixin._syllables_count('makakiki'))
+
+
+def test_syllables_count_none():
+    drop_caches()
     assert SubstitutionFeaturesMixin.\
         _syllables_count() == _get_pronunciations().keys()
     for word in SubstitutionFeaturesMixin._syllables_count():
@@ -57,9 +74,14 @@ def test_syllables_count():
 
 
 def test_phonemes_count():
+    drop_caches()
     assert SubstitutionFeaturesMixin._phonemes_count('hello') == 4
     assert SubstitutionFeaturesMixin._phonemes_count('mountain') == 6
     assert np.isnan(SubstitutionFeaturesMixin._phonemes_count('makakiki'))
+
+
+def test_phonemes_count_none():
+    drop_caches()
     assert SubstitutionFeaturesMixin.\
         _phonemes_count() == _get_pronunciations().keys()
     for word in SubstitutionFeaturesMixin._phonemes_count():
@@ -67,12 +89,32 @@ def test_phonemes_count():
 
 
 def test_letters_count():
+    drop_caches()
     assert SubstitutionFeaturesMixin._letters_count('hello') == 5
     assert SubstitutionFeaturesMixin._letters_count('mountain') == 8
     assert SubstitutionFeaturesMixin._letters_count('makakiki') == 8
 
 
+def test_letters_count_none():
+    drop_caches()
+    with settings.file_override('TOKENS'):
+        with open(settings.TOKENS, 'wb') as f:
+            pickle.dump({'these', 'are', 'tokens'}, f)
+        assert SubstitutionFeaturesMixin.\
+            _letters_count() == {'these', 'are', 'tokens'}
+
+
+@pytest.mark.skipif(not exists(settings.TOKENS),
+                    reason='missing computed feature')
+def test_letters_count_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._letters_count():
+        assert word.islower()
+
+
 def test_synonyms_count():
+    drop_caches()
     # 'hello' has a single synset, with 5 members. So 4 synonyms.
     assert SubstitutionFeaturesMixin._synonyms_count('hello') == 4
     # 'mountain' has two synsets, with 2 and 27 members.
@@ -83,6 +125,10 @@ def test_synonyms_count():
     assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('lamp'))
     # 'makakiki' does not exist.
     assert np.isnan(SubstitutionFeaturesMixin._synonyms_count('makakiki'))
+
+
+def test_synonyms_count_none():
+    drop_caches()
     # Lemmas are properly counted.
     assert len(SubstitutionFeaturesMixin._synonyms_count()) == 147306
     # Lemmas are all lowercase.
@@ -91,22 +137,55 @@ def test_synonyms_count():
 
 
 def test_aoa():
+    drop_caches()
     assert SubstitutionFeaturesMixin._aoa('time') == 5.16
     assert SubstitutionFeaturesMixin._aoa('vocative') == 14.27
     assert np.isnan(SubstitutionFeaturesMixin._aoa('wickiup'))
 
 
+def test_aoa_none():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._aoa():
+        assert word.islower()
+    # And it's properly computed.
+    drop_caches()
+    with settings.file_override('AOA'):
+        with open(settings.AOA, 'w') as f:
+            f.write('Word,Rating.Mean\nhave,2\ntell,3')
+        assert set(SubstitutionFeaturesMixin._aoa()) == {'have', 'tell'}
+
+
 @pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
 def test_degree():
+    drop_caches()
     assert SubstitutionFeaturesMixin._degree('abdomen') == 1 / (10617 - 1)
     assert SubstitutionFeaturesMixin._degree('speaker') == 9 / (10617 - 1)
     assert np.isnan(SubstitutionFeaturesMixin._degree('wickiup'))
 
 
+def test_degree_none():
+    drop_caches()
+    with settings.file_override('DEGREE'):
+        with open(settings.DEGREE, 'wb') as f:
+            pickle.dump({'dog': 2, 'cat': 3}, f)
+        assert set(SubstitutionFeaturesMixin._degree()) == {'dog', 'cat'}
+
+
+@pytest.mark.skipif(not exists(settings.DEGREE),
+                    reason='missing computed feature')
+def test_degree_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._degree():
+        assert word.islower()
+
+
 @pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
 def test_pagerank():
+    drop_caches()
     assert abs(SubstitutionFeaturesMixin._pagerank('you') -
                0.0006390798677378056) < 1e-15
     assert abs(SubstitutionFeaturesMixin._pagerank('play') -
@@ -114,9 +193,27 @@ def test_pagerank():
     assert np.isnan(SubstitutionFeaturesMixin._pagerank('wickiup'))
 
 
+def test_pagerank_none():
+    drop_caches()
+    with settings.file_override('PAGERANK'):
+        with open(settings.PAGERANK, 'wb') as f:
+            pickle.dump({'dog': 2, 'cat': 3}, f)
+        assert set(SubstitutionFeaturesMixin._pagerank()) == {'dog', 'cat'}
+
+
+@pytest.mark.skipif(not exists(settings.PAGERANK),
+                    reason='missing computed feature')
+def test_pagerank_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._pagerank():
+        assert word.islower()
+
+
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
 def test_betweenness():
+    drop_caches()
     assert SubstitutionFeaturesMixin.\
         _betweenness('dog') == 0.0046938277117769605
     assert SubstitutionFeaturesMixin.\
@@ -124,9 +221,27 @@ def test_betweenness():
     assert np.isnan(SubstitutionFeaturesMixin._betweenness('wickiup'))
 
 
+def test_betweenness_none():
+    drop_caches()
+    with settings.file_override('BETWEENNESS'):
+        with open(settings.BETWEENNESS, 'wb') as f:
+            pickle.dump({'dog': 2, 'cat': 3}, f)
+        assert set(SubstitutionFeaturesMixin._betweenness()) == {'dog', 'cat'}
+
+
+@pytest.mark.skipif(not exists(settings.BETWEENNESS),
+                    reason='missing computed feature')
+def test_betweenness_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._betweenness():
+        assert word.islower()
+
+
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
 def test_clustering():
+    drop_caches()
     assert SubstitutionFeaturesMixin.\
         _clustering('dog') == 0.0009318641757868838
     assert SubstitutionFeaturesMixin.\
@@ -134,23 +249,90 @@ def test_clustering():
     assert np.isnan(SubstitutionFeaturesMixin._clustering('wickiup'))
 
 
+def test_clustering_none():
+    drop_caches()
+    with settings.file_override('CLUSTERING'):
+        with open(settings.CLUSTERING, 'wb') as f:
+            pickle.dump({'dog': 2, 'cat': 3}, f)
+        assert set(SubstitutionFeaturesMixin._clustering()) == {'dog', 'cat'}
+
+
+@pytest.mark.skipif(not exists(settings.CLUSTERING),
+                    reason='missing computed feature')
+def test_clustering_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._clustering():
+        assert word.islower()
+
+
 @pytest.mark.skipif(not exists(settings.FREQUENCY),
                     reason='missing computed feature')
 def test_frequency():
+    drop_caches()
     assert SubstitutionFeaturesMixin._frequency('dog') == 7865
     assert SubstitutionFeaturesMixin._frequency('play') == 45848
     assert np.isnan(SubstitutionFeaturesMixin._frequency('wickiup'))
 
 
+def test_frequency_none():
+    drop_caches()
+    with settings.file_override('FREQUENCY'):
+        with open(settings.FREQUENCY, 'wb') as f:
+            pickle.dump({'dog': 2, 'cat': 3}, f)
+        assert set(SubstitutionFeaturesMixin._frequency()) == {'dog', 'cat'}
+
+
+@pytest.mark.skipif(not exists(settings.FREQUENCY),
+                    reason='missing computed feature')
+def test_frequency_none_with_computed():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._frequency():
+        assert word.islower()
+
+
 def test_phonological_density():
+    drop_caches()
     assert SubstitutionFeaturesMixin._phonological_density('time') == 29
     assert np.isnan(SubstitutionFeaturesMixin._phonological_density('wickiup'))
 
 
+def test_phonological_density_none():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._phonological_density():
+        assert word.islower()
+    # And it's computed right.
+    drop_caches()
+    with settings.file_override('CLEARPOND'):
+        with open(settings.CLEARPOND, 'w') as f:
+            f.write('dog' + 5 * '\t' + '2' + 24 * '\t' + '3\n'
+                    'cat' + 5 * '\t' + '2' + 24 * '\t' + '3')
+        assert set(SubstitutionFeaturesMixin.
+                   _phonological_density()) == {'dog', 'cat'}
+
+
 def test_orthographical_density():
+    drop_caches()
     assert SubstitutionFeaturesMixin._orthographical_density('time') == 13
     assert np.isnan(SubstitutionFeaturesMixin.
                     _orthographical_density('wickiup'))
+
+
+def test_orthographical_density_none():
+    drop_caches()
+    # Lemmas are all lowercase.
+    for word in SubstitutionFeaturesMixin._orthographical_density():
+        assert word.islower()
+    # And it's computed right.
+    drop_caches()
+    with settings.file_override('CLEARPOND'):
+        with open(settings.CLEARPOND, 'w') as f:
+            f.write('dog' + 5 * '\t' + '2' + 24 * '\t' + '3\n'
+                    'cat' + 5 * '\t' + '2' + 24 * '\t' + '3')
+        assert set(SubstitutionFeaturesMixin.
+                   _orthographical_density()) == {'dog', 'cat'}
 
 
 @pytest.fixture
@@ -161,6 +343,7 @@ def normal_substitution():
 
 
 def test_features(normal_substitution):
+    drop_caches()
     # A shortcut.
     s = normal_substitution
 
@@ -218,6 +401,7 @@ def test_features(normal_substitution):
 @pytest.mark.skipif(not exists(settings.DEGREE),
                     reason='missing computed feature')
 def test_features_degree(normal_substitution):
+    drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert s.features('degree') == \
@@ -231,6 +415,7 @@ def test_features_degree(normal_substitution):
 @pytest.mark.skipif(not exists(settings.PAGERANK),
                     reason='missing computed feature')
 def test_features_pagerank(normal_substitution):
+    drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert abs(s.features('pagerank')[0] -
@@ -247,6 +432,7 @@ def test_features_pagerank(normal_substitution):
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
                     reason='missing computed feature')
 def test_features_betweenness(normal_substitution):
+    drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert np.isnan(s.features('betweenness')[0])
@@ -261,6 +447,7 @@ def test_features_betweenness(normal_substitution):
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
                     reason='missing computed feature')
 def test_features_clustering(normal_substitution):
+    drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert np.isnan(s.features('clustering')[0])
@@ -274,6 +461,7 @@ def test_features_clustering(normal_substitution):
 @pytest.mark.skipif(not exists(settings.FREQUENCY),
                     reason='missing computed feature')
 def test_features_frequency(normal_substitution):
+    drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert s.features('frequency') == (3992, 81603)
@@ -294,3 +482,15 @@ def test_strict_synonyms():
                                     'chase', 'chase_after', 'trail', 'tail',
                                     'tag', 'give_chase', 'go_after', 'track'}
     assert SubstitutionFeaturesMixin._strict_synonyms('makakiki') == set()
+
+
+def test_feature_average():
+    drop_caches()
+    with settings.file_override('AOA'):
+        with open(settings.AOA, 'w') as f:
+            f.write('Word,Rating.Mean\n'
+                    'dog,2\nhound,3\nfrisbee,4\nchase,6\ncad,7\nother,8')
+        assert SubstitutionFeaturesMixin.feature_average('aoa') == 30 / 6
+        assert SubstitutionFeaturesMixin.\
+            feature_average('aoa', synonyms_from_range=(2, 5)) == \
+            (16 / 3 + 9 / 2) / 2

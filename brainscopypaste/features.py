@@ -26,7 +26,7 @@ def _get_aoa():
     with open(settings.AOA) as csvfile:
         reader = DictReader(csvfile)
         for row in reader:
-            word = row['Word']
+            word = row['Word'].lower()
             mean = row['Rating.Mean']
             if mean == 'NA':
                 continue
@@ -105,7 +105,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def feature_average(cls, name, synonyms_from_range=None):
-        # TODO: test once there are environment-dependent settings and paths.
         feature = getattr(cls, '_' + name)
         if synonyms_from_range is None:
             return np.mean([feature(word) for word in feature()])
@@ -170,8 +169,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _letters_count(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         if word is None:
             return unpickle(settings.TOKENS)
         return len(word)
@@ -192,8 +189,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _aoa(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         aoa = _get_aoa()
         if word is None:
             return aoa.keys()
@@ -202,8 +197,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _degree(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         degree = unpickle(settings.DEGREE)
         if word is None:
             return degree.keys()
@@ -212,8 +205,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _pagerank(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         pagerank = unpickle(settings.PAGERANK)
         if word is None:
             return pagerank.keys()
@@ -222,8 +213,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _betweenness(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         betweenness = unpickle(settings.BETWEENNESS)
         if word is None:
             return betweenness.keys()
@@ -232,8 +221,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _clustering(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         clustering = unpickle(settings.CLUSTERING)
         if word is None:
             return clustering.keys()
@@ -242,8 +229,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _frequency(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         frequency = unpickle(settings.FREQUENCY)
         if word is None:
             return frequency.keys()
@@ -252,8 +237,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonological_density(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         clearpond_phonological = _get_clearpond()['phonological']
         if word is None:
             return clearpond_phonological.keys()
@@ -262,8 +245,6 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _orthographical_density(cls, word=None):
-        # TODO: test word=None once there are environment-dependent
-        # settings and paths.
         clearpond_orthographical = _get_clearpond()['orthographical']
         if word is None:
             return clearpond_orthographical.keys()
