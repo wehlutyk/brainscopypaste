@@ -46,7 +46,7 @@ def mine_substitutions_with_model(model, limit=None):
             query = query.limit(limit)
         cluster_ids = [id for (id,) in query]
 
-    logger.info('Got %s clusters to filter', len(cluster_ids))
+    logger.info('Got %s clusters to mine', len(cluster_ids))
 
     # Mine.
     seen = 0
