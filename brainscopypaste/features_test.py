@@ -245,10 +245,10 @@ def test_betweenness_none_with_computed():
                     reason='missing computed feature')
 def test_clustering():
     drop_caches()
-    assert SubstitutionFeaturesMixin.\
-        _clustering('dog') == 0.0009318641757868838
-    assert SubstitutionFeaturesMixin.\
-        _clustering('play') == 0.0016238663632016216
+    assert abs(SubstitutionFeaturesMixin.
+               _clustering('dog') - 0.0009318641757868838) < 1e-17
+    assert abs(SubstitutionFeaturesMixin.
+               _clustering('play') - 0.0016238663632016216) < 1e-17
     assert np.isnan(SubstitutionFeaturesMixin._clustering('wickiup'))
 
 
