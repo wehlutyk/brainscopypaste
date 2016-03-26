@@ -110,7 +110,7 @@ def test_letters_count_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._letters_count():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 def test_synonyms_count():
@@ -179,7 +179,7 @@ def test_degree_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._degree():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 @pytest.mark.skipif(not exists(settings.PAGERANK),
@@ -207,7 +207,7 @@ def test_pagerank_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._pagerank():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
@@ -235,7 +235,7 @@ def test_betweenness_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._betweenness():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
@@ -263,7 +263,7 @@ def test_clustering_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._clustering():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 @pytest.mark.skipif(not exists(settings.FREQUENCY),
@@ -289,7 +289,7 @@ def test_frequency_none_with_computed():
     drop_caches()
     # Lemmas are all lowercase.
     for word in SubstitutionFeaturesMixin._frequency():
-        assert word.islower()
+        assert word.islower() or is_int(word[0]) or is_int(word[-1])
 
 
 def test_phonological_density():
