@@ -204,7 +204,7 @@ def mine_substitutions(time, source, past, durl, limit):
     logger.info('Substitution model is %s', model)
 
     mine_substitutions_with_model(model, limit=limit)
-    logger.info('Done mining substitution in memetracker data')
+    logger.info('Done mining substitutions in memetracker data')
 
 
 def cliobj():
