@@ -21,7 +21,7 @@ nbformat==4.0.1
 networkx==1.11
 nltk==3.2
 notebook==4.1.0
-numpy==1.11.0
+numpy==1.10.4
 ordereddict==1.1
 pandas==0.18.0
 path.py==8.1.2
