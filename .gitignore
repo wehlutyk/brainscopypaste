@@ -1,7 +1,21 @@
+# Python
 *.pyc
+*.egg-info/
+
+# Editors
 *~
+
+# IPython
 .ipynb_checkpoints/
-.ropeproject
-docs/_build
+
+# Vendors
 treetagger
+
+# Virtualfish
 .venv
+
+# Py.test
+.cache
+
+# Computations
+*.log
