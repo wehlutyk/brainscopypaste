@@ -62,18 +62,19 @@ def _get_clearpond():
 class SubstitutionFeaturesMixin:
 
     __features__ = {
-        'syllables_count': 'tokens',
-        'phonemes_count': 'tokens',
-        'letters_count': 'tokens',
-        'synonyms_count': 'lemmas',
-        'aoa': 'lemmas',
-        'degree': 'lemmas',
-        'pagerank': 'lemmas',
-        'betweenness': 'lemmas',
-        'clustering': 'lemmas',
-        'frequency': 'lemmas',
-        'phonological_density': 'tokens',
-        'orthographical_density': 'tokens',
+        # feature_name:           (source_type, transform)
+        'syllables_count':        ('tokens', lambda x: x),
+        'phonemes_count':         ('tokens', lambda x: x),
+        'letters_count':          ('tokens', lambda x: x),
+        'synonyms_count':         ('lemmas', np.log),
+        'aoa':                    ('lemmas', lambda x: x),
+        'degree':                 ('lemmas', np.log),
+        'pagerank':               ('lemmas', np.log),
+        'betweenness':            ('lemmas', np.log),
+        'clustering':             ('lemmas', np.log),
+        'frequency':              ('lemmas', np.log),
+        'phonological_density':   ('tokens', np.log),
+        'orthographical_density': ('tokens', np.log),
     }
 
     @memoized
@@ -83,11 +84,11 @@ class SubstitutionFeaturesMixin:
 
         # Get the substitution's tokens or lemmas,
         # depending on the requested feature.
-        source_type = self.__features__[name]
+        source_type, _ = self.__features__[name]
         word1, word2 = getattr(self, source_type)
 
         # Compute the features.
-        feature = getattr(self, '_' + name)
+        feature = self._transformed_feature(name)
         feature1, feature2 = feature(word1), feature(word2)
 
         if sentence_relative:
@@ -105,7 +106,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def feature_average(cls, name, synonyms_from_range=None):
-        feature = getattr(cls, '_' + name)
+        feature = cls._transformed_feature(name)
         if synonyms_from_range is None:
             return np.nanmean([feature(word) for word in feature()])
 
@@ -127,6 +128,19 @@ class SubstitutionFeaturesMixin:
                 base_averages.append(np.nanmean(features))
 
             return np.nanmean(base_averages)
+
+    @classmethod
+    def _transformed_feature(cls, name):
+        _feature = getattr(cls, '_' + name)
+        _, transform = cls.__features__[name]
+
+        def feature(word=None):
+            if word is None:
+                return _feature()
+            else:
+                return transform(_feature(word))
+
+        return feature
 
     @classmethod
     def _strict_synonyms(cls, word):
@@ -184,7 +198,7 @@ class SubstitutionFeaturesMixin:
         if len(synsets) == 0:
             return np.nan
         count = np.mean([len(synset.lemmas()) - 1 for synset in synsets])
-        return count if count != 0 else np.nan
+        return count or np.nan
 
     @classmethod
     @memoized
@@ -240,7 +254,7 @@ class SubstitutionFeaturesMixin:
         clearpond_phonological = _get_clearpond()['phonological']
         if word is None:
             return clearpond_phonological.keys()
-        return clearpond_phonological.get(word, np.nan)
+        return clearpond_phonological.get(word, np.nan) or np.nan
 
     @classmethod
     @memoized
@@ -248,4 +262,4 @@ class SubstitutionFeaturesMixin:
         clearpond_orthographical = _get_clearpond()['orthographical']
         if word is None:
             return clearpond_orthographical.keys()
-        return clearpond_orthographical.get(word, np.nan)
+        return clearpond_orthographical.get(word, np.nan) or np.nan

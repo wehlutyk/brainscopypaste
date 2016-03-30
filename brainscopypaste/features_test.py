@@ -367,8 +367,10 @@ def test_features(normal_substitution):
     assert s.features('syllables_count') == (3, 2)
     assert s.features('phonemes_count') == (8, 3)
     assert s.features('letters_count') == (10, 5)
-    assert s.features('phonological_density') == (0, 7)
-    assert s.features('orthographical_density') == (0, 5)
+    assert np.isnan(s.features('phonological_density')[0])
+    assert s.features('phonological_density')[1] == np.log(7)
+    assert np.isnan(s.features('orthographical_density')[0])
+    assert s.features('orthographical_density')[1] == np.log(5)
     # Same with features computed relative to sentence.
     assert s.features('syllables_count',
                       sentence_relative=True) == (3 - 7/5, 2 - 6/5)
@@ -376,19 +378,26 @@ def test_features(normal_substitution):
                       sentence_relative=True) == (8 - 18/5, 3 - 13/5)
     assert s.features('letters_count',
                       sentence_relative=True) == (10 - 21/5, 5 - 16/5)
+    assert np.isnan(s.features('phonological_density',
+                               sentence_relative=True)[0])
     assert s.features('phonological_density',
-                      sentence_relative=True) == (0 - 92/5, 7 - 99/5)
+                      sentence_relative=True)[1] == \
+        np.log(7) - np.log([31, 24, 9, 7, 28]).mean()
+    assert np.isnan(s.features('orthographical_density',
+                               sentence_relative=True)[0])
     assert s.features('orthographical_density',
-                      sentence_relative=True) == (0 - 62/5, 5 - 67/5)
+                      sentence_relative=True)[1] == \
+        np.log(5) - np.log([17, 14, 11, 5, 20]).mean()
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
     # (the rest of the features need computed files,
     # and are tested separately).
-    assert s.features('synonyms_count') == (3, .5)
+    assert s.features('synonyms_count') == (np.log(3), np.log(.5))
     assert s.features('aoa') == (7.88, 5.33)
     # Same with features computed relative to sentence.
     assert s.features('synonyms_count', sentence_relative=True) == \
-        (3 - 1.8611111111111112, .5 - 1.2361111111111112)
+        (np.log(3) - np.log([1, 1, 3, 2.4444444444444446]).mean(),
+         np.log(.5) - np.log([1, 1, .5, 2.4444444444444446]).mean())
     assert s.features('aoa', sentence_relative=True) == \
         (7.88 - 6.033333333333334, 5.33 - 5.183333333333334)
 
@@ -410,11 +419,11 @@ def test_features_degree(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert s.features('degree') == \
-        (9.419743782969103e-05, 0.0008477769404672192)
+        (np.log(9.419743782969103e-05), np.log(0.0008477769404672192))
     # Same with features computed relative to sentence.
     assert s.features('degree', sentence_relative=True) == \
-        (9.419743782969103e-05 - 0.0010550113036925397,
-         0.0008477769404672192 - 0.0012057272042200451)
+        (np.log(9.419743782969103e-05) - (-7.3658186158894221),
+         np.log(0.0008477769404672192) - (-6.9263737004221797))
 
 
 @pytest.mark.skipif(not exists(settings.PAGERANK),
@@ -423,15 +432,17 @@ def test_features_pagerank(normal_substitution):
     drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert abs(s.features('pagerank')[0] -
+    # (We use np.exp instead of np.log to avoid translating the uncertainty
+    # tolerance.)
+    assert abs(np.exp(s.features('pagerank')[0]) -
                2.9236183726513393e-05) < 1e-15
-    assert abs(s.features('pagerank')[1] -
+    assert abs(np.exp(s.features('pagerank')[1]) -
                6.421655879054584e-05) < 1e-15
     # Same with features computed relative to sentence.
-    assert abs(s.features('pagerank', sentence_relative=True)[0] -
-               (2.9236183726513393e-05 - 9.2820794154173557e-05)) < 1e-15
-    assert abs(s.features('pagerank', sentence_relative=True)[1] -
-               (6.421655879054584e-05 - 9.9816869166980042e-05)) < 1e-15
+    assert abs(np.exp(s.features('pagerank', sentence_relative=True)[0]) -
+               (2.9236183726513393e-05 / 7.4667929803002613e-05)) < 1e-15
+    assert abs(np.exp(s.features('pagerank', sentence_relative=True)[1]) -
+               (6.421655879054584e-05 / 8.739354974404687e-05)) < 1e-15
 
 
 @pytest.mark.skipif(not exists(settings.BETWEENNESS),
@@ -441,12 +452,12 @@ def test_features_betweenness(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert np.isnan(s.features('betweenness')[0])
-    assert s.features('betweenness')[1] == 0.0003369277738594168
+    assert s.features('betweenness')[1] == np.log(0.0003369277738594168)
     # Same with features computed relative to sentence.
     assert np.isnan(s.features('betweenness',
                                sentence_relative=True)[0])
     assert s.features('betweenness', sentence_relative=True)[1] == \
-        0.0003369277738594168 - 0.00081995401378403285
+        np.log(0.0003369277738594168) - (-7.3319337537445257)
 
 
 @pytest.mark.skipif(not exists(settings.CLUSTERING),
@@ -456,11 +467,11 @@ def test_features_clustering(normal_substitution):
     s = normal_substitution
     # Values are right, and computed on lemmas.
     assert np.isnan(s.features('clustering')[0])
-    assert s.features('clustering')[1] == 0.0037154495910700605
+    assert s.features('clustering')[1] == np.log(0.0037154495910700605)
     # Same with features computed relative to sentence.
     assert np.isnan(s.features('clustering', sentence_relative=True)[0])
     assert s.features('clustering', sentence_relative=True)[1] == \
-        0.0037154495910700605 - 0.0021628891370054143
+        np.log(0.0037154495910700605) - (-6.2647504887460004)
 
 
 @pytest.mark.skipif(not exists(settings.FREQUENCY),
@@ -469,10 +480,39 @@ def test_features_frequency(normal_substitution):
     drop_caches()
     s = normal_substitution
     # Values are right, and computed on lemmas.
-    assert s.features('frequency') == (3992, 81603)
+    assert s.features('frequency') == (np.log(3992), np.log(81603))
     # Same with features computed relative to sentence.
     assert s.features('frequency', sentence_relative=True) == \
-        (3992 - 1373885.6000000001, 81603 - 1389407.8)
+        (np.log(3992) - 12.447170233839325, np.log(81603) - 13.050684967349508)
+
+
+def test_transformed_feature():
+    # Phonological density is log-transformed.
+    drop_caches()
+    transformed_phonological_density = SubstitutionFeaturesMixin.\
+        _transformed_feature('phonological_density')
+    assert transformed_phonological_density('time') == np.log(29)
+    assert np.isnan(transformed_phonological_density('wickiup'))
+    # And the list of words is properly computed.
+    drop_caches()
+    with settings.file_override('CLEARPOND'):
+        with open(settings.CLEARPOND, 'w') as f:
+            f.write('dog' + 5 * '\t' + '2' + 24 * '\t' + '3\n'
+                    'cat' + 5 * '\t' + '2' + 24 * '\t' + '3')
+        assert set(transformed_phonological_density()) == {'dog', 'cat'}
+
+    # AoA is left untouched.
+    drop_caches()
+    transformed_aoa = SubstitutionFeaturesMixin._transformed_feature('aoa')
+    assert transformed_aoa('time') == 5.16
+    assert transformed_aoa('vocative') == 14.27
+    assert np.isnan(transformed_aoa('wickiup'))
+    # And the list of words is properly computed.
+    drop_caches()
+    with settings.file_override('AOA'):
+        with open(settings.AOA, 'w') as f:
+            f.write('Word,Rating.Mean\nhave,2\ntell,3')
+        assert set(transformed_aoa()) == {'have', 'tell'}
 
 
 def test_strict_synonyms():
@@ -490,6 +530,7 @@ def test_strict_synonyms():
 
 
 def test_feature_average():
+    # Test a non-transformed feature (AoA).
     drop_caches()
     with settings.file_override('AOA'):
         with open(settings.AOA, 'w') as f:
@@ -499,6 +540,23 @@ def test_feature_average():
         assert SubstitutionFeaturesMixin.\
             feature_average('aoa', synonyms_from_range=(2, 5)) == \
             (16 / 3 + 9 / 2) / 2
+    # Test a log-transformed feature (phonological density).
+    drop_caches()
+    with settings.file_override('CLEARPOND'):
+        with open(settings.CLEARPOND, 'w') as f:
+            f.write('dog' + 5 * '\t' + '0' + 24 * '\t' + '2\n'
+                    'hound' + 5 * '\t' + '0' + 24 * '\t' + '3\n'
+                    'frisbee' + 5 * '\t' + '0' + 24 * '\t' + '4\n'
+                    'chase' + 5 * '\t' + '0' + 24 * '\t' + '6\n'
+                    'cad' + 5 * '\t' + '0' + 24 * '\t' + '7\n'
+                    'other' + 5 * '\t' + '0' + 24 * '\t' + '8')
+        assert SubstitutionFeaturesMixin.\
+            feature_average('phonological_density') == \
+            np.log([2, 3, 4, 6, 7, 8]).mean()
+        assert SubstitutionFeaturesMixin.\
+            feature_average('phonological_density',
+                            synonyms_from_range=(np.log(2), np.log(5))) == \
+            (np.log([3, 6, 7]).mean() + np.log([2, 7]).mean()) / 2
     # _synonyms_count(word=None) returns a list of words, some of which have
     # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
     # np.nan). So check that synonyms_count feature average is not np.nan.
