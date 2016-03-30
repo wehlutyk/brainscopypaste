@@ -323,24 +323,6 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
         return (self.source.lemmas[self.start + self.position],
                 self.destination.lemmas[self.position])
 
-    @cache
-    def durl_weight(self):
-        with session_scope() as session:
-            count = session.query(Substitution)\
-                .filter(Substitution.destination_id == self.destination_id,
-                        Substitution.occurrence == self.occurrence)\
-                .count()
-        return 1 / count
-
-    @cache
-    def weight(self):
-        with session_scope() as session:
-            count = session.query(Substitution)\
-                .join(Substitution.source).join(Quote.cluster)\
-                .filter(Cluster.sid == self.source.cluster.sid)\
-                .count()
-        return self.durl_weight / count
-
 
 def _copy(string, table, columns):
     from brainscopypaste.utils import session_scope
