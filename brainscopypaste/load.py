@@ -55,7 +55,7 @@ def load_mt_frequency_and_tokens():
     click.echo('Computing MemeTracker frequencies and token list...')
 
     # See if we should count frequency of tokens or lemmas.
-    source_type = SubstitutionFeaturesMixin.__features__['frequency']
+    source_type, _ = SubstitutionFeaturesMixin.__features__['frequency']
     logger.info('Frequencies will be computed on %s', source_type)
 
     with session_scope() as session:
