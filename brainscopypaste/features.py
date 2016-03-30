@@ -107,7 +107,7 @@ class SubstitutionFeaturesMixin:
     def feature_average(cls, name, synonyms_from_range=None):
         feature = getattr(cls, '_' + name)
         if synonyms_from_range is None:
-            return np.mean([feature(word) for word in feature()])
+            return np.nanmean([feature(word) for word in feature()])
 
         # Computing for synonyms of words with feature in the given range.
         min, max = synonyms_from_range

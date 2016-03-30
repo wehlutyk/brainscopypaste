@@ -499,3 +499,8 @@ def test_feature_average():
         assert SubstitutionFeaturesMixin.\
             feature_average('aoa', synonyms_from_range=(2, 5)) == \
             (16 / 3 + 9 / 2) / 2
+    # _synonyms_count(word=None) returns a list of words, some of which have
+    # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
+    # np.nan). So check that synonyms_count feature average is not np.nan.
+    assert not np.isnan(SubstitutionFeaturesMixin
+                        .feature_average('synonyms_count'))
