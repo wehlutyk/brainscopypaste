@@ -82,6 +82,7 @@ class memoized:
     def __init__(self, func):
         self.func = func
         self.cache = {}
+        functools.update_wrapper(self, self.func)
 
     def __call__(self, *args, **kwargs):
         key = (args, frozenset(kwargs.items()))
@@ -92,13 +93,10 @@ class memoized:
             self.cache[key] = value
             return value
 
-    def __repr__(self):
-        """Return the function's docstring."""
-        return self.func.__doc__
-
     def __get__(self, obj, objtype):
         """Support instance methods."""
         func = functools.partial(self.__call__, obj)
+        functools.update_wrapper(func, self)
         func.drop_cache = self.drop_cache
         return func
 

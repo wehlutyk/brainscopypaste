@@ -128,13 +128,19 @@ def test_memoized():
     counter = 0
 
     def func():
+        """My super func."""
         nonlocal counter
         counter += 1
         return counter
 
+    # Doc is propagated through memoization.
+    assert func.__doc__ == 'My super func.'
+
+    # Caching works.
     mfunc = memoized(func)
     assert mfunc() == 1
     assert mfunc() == 1
+    # Dropping the cache works.
     mfunc.drop_cache()
     assert mfunc() == 2
     assert mfunc() == 2
@@ -146,16 +152,83 @@ def test_memoized_class():
     class Klass:
         @memoized
         def func(self):
+            """My super instance func."""
             nonlocal counter
             counter += 1
             return counter
 
-    klass = Klass()
-    assert klass.func() == 1
-    assert klass.func() == 1
-    klass.func.drop_cache()
-    assert klass.func() == 2
-    assert klass.func() == 2
+    klass1 = Klass()
+    klass2 = Klass()
+
+    # Doc is propagated through memoization.
+    assert klass1.func.__doc__ == 'My super instance func.'
+    assert klass2.func.__doc__ == 'My super instance func.'
+    assert Klass.func.__doc__ == 'My super instance func.'
+
+    # Caching works on instances.
+    assert klass1.func() == 1
+    assert klass1.func() == 1
+    # Another instance counts as different argument.
+    assert klass2.func() == 2
+    assert klass2.func() == 2
+
+    # Dropping cache on the class or any of the instances has the same effect.
+    klass1.func.drop_cache()
+    assert klass1.func() == 3
+    assert klass1.func() == 3
+    assert klass2.func() == 4
+    assert klass2.func() == 4
+    klass2.func.drop_cache()
+    assert klass1.func() == 5
+    assert klass1.func() == 5
+    assert klass2.func() == 6
+    assert klass2.func() == 6
+    Klass.func.drop_cache()
+    assert klass1.func() == 7
+    assert klass1.func() == 7
+    assert klass2.func() == 8
+    assert klass2.func() == 8
+
+
+def test_memoized_class_classmethod():
+    counter = 0
+
+    class Klass:
+        @classmethod
+        @memoized
+        def clsfunc(self):
+            """My super class func."""
+            nonlocal counter
+            counter += 1
+            return counter
+
+    klass1 = Klass()
+    klass2 = Klass()
+
+    # Doc is propagated through memoization.
+    assert klass1.clsfunc.__doc__ == 'My super class func.'
+    assert klass2.clsfunc.__doc__ == 'My super class func.'
+    assert Klass.clsfunc.__doc__ == 'My super class func.'
+
+    # Caching works on the class and instances, and having a different instance
+    # counts as the same argument.
+    assert Klass.clsfunc() == 1
+    assert klass1.clsfunc() == 1
+    assert klass2.clsfunc() == 1
+
+    # Dropping cache on the class or any of the instances has the same effect.
+    Klass.clsfunc.drop_cache()
+    assert Klass.clsfunc() == 2
+    assert klass1.clsfunc() == 2
+    assert klass2.clsfunc() == 2
+    klass1.clsfunc.drop_cache()
+    assert Klass.clsfunc() == 3
+    assert klass1.clsfunc() == 3
+    assert klass2.clsfunc() == 3
+    klass2.clsfunc.drop_cache()
+    assert Klass.clsfunc() == 4
+    assert klass1.clsfunc() == 4
+    assert klass2.clsfunc() == 4
 
 
 def test_cache():
