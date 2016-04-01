@@ -1,6 +1,7 @@
 import logging
 from csv import DictReader, reader as csvreader
 import warnings
+import functools
 
 import numpy as np
 from nltk.corpus import cmudict, wordnet
@@ -140,6 +141,11 @@ class SubstitutionFeaturesMixin:
             else:
                 return transform(_feature(word))
 
+        functools.update_wrapper(feature, _feature)
+        if transform is np.log:
+            feature.__name__ = '_log' + feature.__name__
+            feature.__doc__ = 'log(' + feature.__doc__ + ')'
+
         return feature
 
     @classmethod
@@ -161,6 +167,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _syllables_count(cls, word=None):
+        """<#syllables>"""
         pronunciations = _get_pronunciations()
         if word is None:
             return pronunciations.keys()
@@ -172,6 +179,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonemes_count(cls, word=None):
+        """<#phonemes>"""
         pronunciations = _get_pronunciations()
         if word is None:
             return pronunciations.keys()
@@ -183,6 +191,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _letters_count(cls, word=None):
+        """#letters"""
         if word is None:
             return unpickle(settings.TOKENS)
         return len(word)
@@ -190,6 +199,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _synonyms_count(cls, word=None):
+        """#synonyms"""
         if word is None:
             return set(word.lower()
                        for synset in wordnet.all_synsets()
@@ -203,6 +213,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _aoa(cls, word=None):
+        """age of acquisition"""
         aoa = _get_aoa()
         if word is None:
             return aoa.keys()
@@ -211,6 +222,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _degree(cls, word=None):
+        """degree"""
         degree = unpickle(settings.DEGREE)
         if word is None:
             return degree.keys()
@@ -219,6 +231,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _pagerank(cls, word=None):
+        """pagerank"""
         pagerank = unpickle(settings.PAGERANK)
         if word is None:
             return pagerank.keys()
@@ -227,6 +240,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _betweenness(cls, word=None):
+        """betweenness"""
         betweenness = unpickle(settings.BETWEENNESS)
         if word is None:
             return betweenness.keys()
@@ -235,6 +249,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _clustering(cls, word=None):
+        """clustering"""
         clustering = unpickle(settings.CLUSTERING)
         if word is None:
             return clustering.keys()
@@ -243,6 +258,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _frequency(cls, word=None):
+        """frequency"""
         frequency = unpickle(settings.FREQUENCY)
         if word is None:
             return frequency.keys()
@@ -251,6 +267,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonological_density(cls, word=None):
+        """phonological neighbourhood density"""
         clearpond_phonological = _get_clearpond()['phonological']
         if word is None:
             return clearpond_phonological.keys()
@@ -259,6 +276,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _orthographical_density(cls, word=None):
+        """orthographical neighbourhood density"""
         clearpond_orthographical = _get_clearpond()['orthographical']
         if word is None:
             return clearpond_orthographical.keys()

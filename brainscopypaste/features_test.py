@@ -493,6 +493,11 @@ def test_transformed_feature():
         _transformed_feature('phonological_density')
     assert transformed_phonological_density('time') == np.log(29)
     assert np.isnan(transformed_phonological_density('wickiup'))
+    # Doc and name are transformed too.
+    assert transformed_phonological_density.__doc__ == \
+        'log(' + SubstitutionFeaturesMixin._phonological_density.__doc__ + ')'
+    assert transformed_phonological_density.__name__ == \
+        '_log_phonological_density'
     # And the list of words is properly computed.
     drop_caches()
     with settings.file_override('CLEARPOND'):
@@ -507,6 +512,9 @@ def test_transformed_feature():
     assert transformed_aoa('time') == 5.16
     assert transformed_aoa('vocative') == 14.27
     assert np.isnan(transformed_aoa('wickiup'))
+    # Doc and name are passed on.
+    assert transformed_aoa.__doc__ == SubstitutionFeaturesMixin._aoa.__doc__
+    assert transformed_aoa.__name__ == '_aoa'
     # And the list of words is properly computed.
     drop_caches()
     with settings.file_override('AOA'):
