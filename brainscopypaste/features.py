@@ -267,7 +267,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _phonological_density(cls, word=None):
-        """phonological neighbourhood density"""
+        """phonological nd"""
         clearpond_phonological = _get_clearpond()['phonological']
         if word is None:
             return clearpond_phonological.keys()
@@ -276,7 +276,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _orthographical_density(cls, word=None):
-        """orthographical neighbourhood density"""
+        """orthographical nd"""
         clearpond_orthographical = _get_clearpond()['orthographical']
         if word is None:
             return clearpond_orthographical.keys()
