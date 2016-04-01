@@ -199,7 +199,7 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _synonyms_count(cls, word=None):
-        """#synonyms"""
+        """<#synonyms>"""
         if word is None:
             return set(word.lower()
                        for synset in wordnet.all_synsets()
