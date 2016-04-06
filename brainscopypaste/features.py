@@ -79,7 +79,8 @@ class SubstitutionFeaturesMixin:
     }
 
     @memoized
-    def features(self, name, sentence_relative=False):
+    def _substitution_features(self, name):
+        # TODO: test
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -90,45 +91,135 @@ class SubstitutionFeaturesMixin:
 
         # Compute the features.
         feature = self._transformed_feature(name)
-        feature1, feature2 = feature(word1), feature(word2)
+        return feature(word1), feature(word2)
+
+    @memoized
+    def _source_destination_features(self, name):
+        # TODO: test
+        if name not in self.__features__:
+            raise ValueError("Unknown feature: '{}'".format(name))
+
+        # Get the source and destination tokens or lemmas,
+        # depending on the requested feature.
+        source_type, _ = self.__features__[name]
+        destination_words = getattr(self.destination, source_type)
+        source_words = getattr(self.source, source_type)[
+            self.start:self.start + len(destination_words)]
+
+        # Compute the features.
+        feature = self._transformed_feature(name)
+        source_features = np.array([feature(word) for word
+                                    in source_words])
+        destination_features = np.array([feature(word) for word
+                                         in destination_words])
+        return source_features, destination_features
+
+    @memoized
+    def features(self, name, sentence_relative=False):
+        feature1, feature2 = self._substitution_features(name)
 
         if sentence_relative:
-            # Substract the average sentence feature.
-            destination_words = getattr(self.destination, source_type)
-            source_words = getattr(self.source, source_type)[
-                self.start:self.start + len(destination_words)]
-            feature1 -= np.nanmean([feature(word) for word
-                                    in source_words])
-            feature2 -= np.nanmean([feature(word) for word
-                                    in destination_words])
+            source_features, destination_features = \
+                self._source_destination_features(name)
+            feature1 -= np.nanmean(source_features)
+            feature2 -= np.nanmean(destination_features)
 
-        return (feature1, feature2)
+        return feature1, feature2
+
+    @memoized
+    def components(self, n, pca, feature_names, sentence_relative=False):
+        # TODO: test
+        # Check the PCA was computed for as many features as we're given.
+        n_features = len(feature_names)
+        assert n_features == len(pca.mean_)
+
+        # Compute the features, and transform into components.
+        features = np.zeros((2, n_features))
+        for i, name in enumerate(feature_names):
+            features[:, i] = self._substitution_features(name)
+        components = pca.transform(features)
+
+        if sentence_relative:
+            # Compute components for each source and destination word.
+            n_words = len(self.destination.tokens)
+            source_features = np.zeros((n_words, n_features))
+            destination_features = np.zeros((n_words, n_features))
+            for i, name in enumerate(feature_names):
+                source_features[:, i], destination_features[:, i] = \
+                    self._source_destination_features(name)
+            source_components = pca.transform(source_features)
+            destination_components = pca.transform(destination_features)
+
+            # Substract the sentence average from substitution components.
+            components[0, :] -= np.nanmean(source_components, 0)
+            components[1, :] -= np.nanmean(destination_components, 0)
+
+        return components[:, n]
 
     @classmethod
     @memoized
-    def feature_average(cls, name, synonyms_from_range=None):
-        feature = cls._transformed_feature(name)
+    def _average(cls, func, synonyms_from_range):
+        # TODO: test
+        # Assumes func() yields the set of words from which to compute
+        # the average.
         if synonyms_from_range is None:
-            return np.nanmean([feature(word) for word in feature()])
+            return np.nanmean([func(word) for word in func()])
 
-        # Computing for synonyms of words with feature in the given range.
+        # Computing for synonyms of words with func() in the given range.
         min, max = synonyms_from_range
-        base_words = [word for word in feature()
-                      if min <= feature(word) < max]
+        base_words = [word for word in func() if min <= func(word) < max]
 
         # Suppress warning here, see
         # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=RuntimeWarning)
 
-            # Average feature of synonyms, for each base word.
+            # Average func() of synonyms, for each base word.
             base_averages = []
             for base_word in base_words:
-                features = [feature(word) for word
-                            in cls._strict_synonyms(base_word)]
-                base_averages.append(np.nanmean(features))
+                values = [func(word) for word
+                          in cls._strict_synonyms(base_word)]
+                base_averages.append(np.nanmean(values))
 
             return np.nanmean(base_averages)
+
+    @classmethod
+    @memoized
+    def feature_average(cls, name, synonyms_from_range=None):
+        feature = cls._transformed_feature(name)
+        return cls._average(feature, synonyms_from_range)
+
+    @classmethod
+    @memoized
+    def component_average(cls, n, pca, feature_names,
+                          synonyms_from_range=None):
+        # TODO: test
+        # Check the PCA was computed for as many features as we're given.
+        n_features = len(feature_names)
+        assert n_features == len(pca.mean_)
+
+        # Prepare our target words and component.
+        # This sort of thing cannot be used for self.components() because each
+        # feature uses either tokens or lemmas (here we use all words
+        # indiscriminately).
+        # Note that by doing this, we ignore the fact that a feature can yield
+        # real values on words that don't appear in feature() (i.e. its base
+        # set of words), in which case the average is a bit changed. Only
+        # letters_count and synonyms are susceptible to this (because they're
+        # not based on a dict). So we consider that the approach taken here is
+        # fair to compute component average.
+        features = [cls._transformed_feature(name) for name in feature_names]
+        words = set()
+        for feature in features:
+            words.update(feature())
+
+        def component(word=None):
+            if word is None:
+                return words
+            else:
+                return pca.transform([f(word) for f in features])[n]
+
+        return cls._average(component, synonyms_from_range)
 
     @classmethod
     def _transformed_feature(cls, name):
