@@ -725,22 +725,22 @@ def test_components(normal_substitution):
     drop_caches()
     pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
     assert np.isnan(s.components(0, pca, features)[0])
-    assert s.components(0, pca, features)[1] == 4.5386185157523178
+    assert abs(s.components(0, pca, features)[1] - 4.5386185157523178) < 1e-15
     assert np.isnan(s.components(1, pca, features)[0])
-    assert s.components(1, pca, features)[1] == 1.4878619981409629
+    assert abs(s.components(1, pca, features)[1] - 1.4878619981409629) < 1e-15
     assert np.isnan(s.components(2, pca, features)[0])
-    assert s.components(2, pca, features)[1] == 2.5067990036967074
+    assert abs(s.components(2, pca, features)[1] - 2.5067990036967074) < 1e-15
 
     # Also for sentence_relative=True.
     assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
-    assert s.components(0, pca, features, sentence_relative=True)[1] == \
-        4.5386185157523178 - 2.9821934691598986
+    assert abs(s.components(0, pca, features, sentence_relative=True)[1] -
+               (4.5386185157523178 - 2.9821934691598986)) < 1e-15
     assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
-    assert s.components(1, pca, features, sentence_relative=True)[1] == \
-        1.4878619981409629 - 0.95091629901938557
+    assert abs(s.components(1, pca, features, sentence_relative=True)[1] -
+               (1.4878619981409629 - 0.95091629901938557)) < 1e-15
     assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
-    assert s.components(2, pca, features, sentence_relative=True)[1] == \
-        2.5067990036967074 - 3.1573434812204084
+    assert abs(s.components(2, pca, features, sentence_relative=True)[1] -
+               (2.5067990036967074 - 3.1573434812204084)) < 1e-15
 
 
 def test_component_average():
