@@ -710,9 +710,18 @@ def test_components(normal_substitution):
         s.components(0, pca, features)
     with pytest.raises(AssertionError):
         s.components(0, pca, features, sentence_relative=True)
+    # Trying this with unknown features fails.
+    with pytest.raises(ValueError) as excinfo:
+        s.components(0, pca, ('letters_count', 'unknown_feature', 'frequency'))
+    assert 'Unknown feature' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        s.components(0, pca, ('letters_count', 'unknown_feature', 'frequency'),
+                     sentence_relative=True)
+    assert 'Unknown feature' in str(excinfo.value)
 
     # Now training with the right shape, we get the expected hand-computed
     # values.
+    drop_caches()
     pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
     assert np.isnan(s.components(0, pca, features)[0])
     assert abs(s.components(0, pca, features)[1] -
@@ -734,3 +743,60 @@ def test_components(normal_substitution):
     assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
     assert abs(s.components(2, pca, features, sentence_relative=True)[1] -
                (-2.0197528206483044 - (-1.4379587398131821))) < 1e-15
+
+
+def test_component_average():
+    drop_caches()
+
+    # Create a test PCA that will use features we later override.
+    features = ('aoa', 'phonological_density')
+    pca = PCA(n_components=2)
+
+    # Trying this with a PCA fitted with the wrong shape fails.
+    pca.fit(np.array([[1, 1, 0], [0, 1, 0], [0, 1, 1]]))
+    with pytest.raises(AssertionError):
+        SubstitutionFeaturesMixin.component_average(0, pca, features)
+    with pytest.raises(AssertionError):
+        SubstitutionFeaturesMixin.component_average(0, pca, features,
+                                                    synonyms_from_range=(2, 5))
+    # Trying this with unknown features fails.
+    with pytest.raises(ValueError) as excinfo:
+        SubstitutionFeaturesMixin.component_average(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'))
+    assert 'Unknown feature' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        SubstitutionFeaturesMixin.component_average(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'),
+            synonyms_from_range=(2, 5))
+    assert 'Unknown feature' in str(excinfo.value)
+
+    drop_caches()
+    pca.fit(np.array([[2, 1], [1, -2]]))
+    with settings.file_override('AOA', 'CLEARPOND'):
+        with open(settings.AOA, 'w') as f:
+            f.write('Word,Rating.Mean\n'
+                    'dog,2\nhound,3\nfrisbee,4\nchase,6\ncad,7\nother,8')
+        with open(settings.CLEARPOND, 'w') as f:
+            f.write('dog' + 5 * '\t' + '0' + 24 * '\t' + '2\n'
+                    'hound' + 5 * '\t' + '0' + 24 * '\t' + '3\n'
+                    'frisbee' + 5 * '\t' + '0' + 24 * '\t' + '4\n'
+                    'screen' + 5 * '\t' + '0' + 24 * '\t' + '5\n'
+                    'chase' + 5 * '\t' + '0' + 24 * '\t' + '6\n'
+                    'other' + 5 * '\t' + '0' + 24 * '\t' + '8')
+
+        # We find the hand-computed values alright.
+        assert abs(SubstitutionFeaturesMixin
+                   .component_average(0, pca, features) -
+                   (-2.7921497899976822)) < 1e-15
+        assert abs(SubstitutionFeaturesMixin
+                   .component_average(1, pca, features) -
+                   (-2.3369703188414315)) < 1e-15
+        # Same with synonyms_from_range.
+        assert abs(SubstitutionFeaturesMixin
+                   .component_average(0, pca, features,
+                                      synonyms_from_range=(-3, -1)) -
+                   (-2.0420406691669841)) < 1e-15
+        assert abs(SubstitutionFeaturesMixin
+                   .component_average(1, pca, features,
+                                      synonyms_from_range=(-2, 0)) -
+                   (-1.1639817453758932)) < 1e-15

@@ -124,7 +124,6 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def components(self, n, pca, feature_names, sentence_relative=False):
-        # TODO: test
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -203,7 +202,6 @@ class SubstitutionFeaturesMixin:
     @memoized
     def component_average(cls, n, pca, feature_names,
                           synonyms_from_range=None):
-        # TODO: test
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -218,21 +216,25 @@ class SubstitutionFeaturesMixin:
         # letters_count and synonyms are susceptible to this (because they're
         # not based on a dict). So we consider that the approach taken here is
         # fair to compute component average.
-        features = [cls._transformed_feature(name) for name in feature_names]
+        tfeatures = [cls._transformed_feature(name) for name in feature_names]
         words = set()
-        for feature in features:
-            words.update(feature())
+        for tfeature in tfeatures:
+            words.update(tfeature())
 
         def component(word=None):
             if word is None:
                 return words
             else:
-                return pca.transform([f(word) for f in features])[n]
+                word_tfeatures = np.array([tf(word) for tf in tfeatures])
+                return pca.transform(word_tfeatures.reshape(1, -1))[0, n]\
+                    if np.isfinite(word_tfeatures).all() else np.nan
 
         return cls._average(component, synonyms_from_range)
 
     @classmethod
     def _transformed_feature(cls, name):
+        if name not in cls.__features__:
+            raise ValueError("Unknown feature: '{}'".format(name))
         _feature = getattr(cls, '_' + name)
         _, transform = cls.__features__[name]
 
