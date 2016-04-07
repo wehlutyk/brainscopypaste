@@ -727,31 +727,29 @@ def test_components(normal_substitution):
 
     # Now training with the right shape, we get the expected hand-computed
     # values.
-    pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
-    sign = np.sign(pca.components_[:, 0])
+    pca.fit(np.array([[1, 0, 0, 0], [-1, 0, 0, 0],
+                      [0, 1, 0, 0], [0, -1, 0, 0],
+                      [0, 0, 1, 0], [0, 0, -1, 0]]))
     assert np.isnan(s.components(0, pca, features)[0])
-    assert abs(sign[0] * s.components(0, pca, features)[1] -
-               4.5386185157523178) < 1e-14
+    assert abs(s.components(0, pca, features)[1]) == 5.33
     assert np.isnan(s.components(1, pca, features)[0])
-    assert abs(sign[1] * s.components(1, pca, features)[1] -
-               1.4878619981409629) < 1e-14
+    assert abs(s.components(1, pca, features)[1]) == 0.69314718055994529
     assert np.isnan(s.components(2, pca, features)[0])
-    assert abs(-sign[2] * s.components(2, pca, features)[1] -
-               2.5067990036967074) < 1e-14
+    assert abs(s.components(2, pca, features)[1]) == 5
 
     # Also for sentence_relative=True.
     assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
-    assert abs(sign[0] * s.components(0, pca, features,
-                                      sentence_relative=True)[1] -
-               (4.5386185157523178 - 2.9821934691598986)) < 1e-14
+    assert abs(s.components(0, pca, features,
+                            sentence_relative=True)[1]) == \
+        5.33 - np.mean([5.11, 5.33, 5.11])
     assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
-    assert abs(sign[1] * s.components(1, pca, features,
-                                      sentence_relative=True)[1] -
-               (1.4878619981409629 - 0.95091629901938557)) < 1e-14
+    assert abs(s.components(1, pca, features,
+                            sentence_relative=True)[1]) == \
+        0.69314718055994529 + 0.066890231820717072
     assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
-    assert abs(-sign[2] * s.components(2, pca, features,
-                                       sentence_relative=True)[1] -
-               (2.5067990036967074 - 3.1573434812204084)) < 1e-14
+    assert abs(s.components(2, pca, features,
+                            sentence_relative=True)[1]) == \
+        5 - np.mean([2, 5, 4])
 
 
 def test_component_average():
