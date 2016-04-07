@@ -656,6 +656,7 @@ def test_average():
         (16 / 3 + 9 / 2) / 2
 
     # If we have a lot of NaNs, things still work well.
+    drop_caches()
     values = {'dog': 2, 'screen': 3, 'frisbee': 4, 'chase': np.nan, 'cad': 7,
               'other': 8, 'blind': np.nan, 'cover': np.nan}
     assert SubstitutionFeaturesMixin._average(feature, None) == 24 / 5
