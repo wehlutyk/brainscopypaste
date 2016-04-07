@@ -731,27 +731,27 @@ def test_components(normal_substitution):
     sign = np.sign(pca.components_[0, 0])
     assert np.isnan(s.components(0, pca, features)[0])
     assert abs(sign * s.components(0, pca, features)[1] -
-               4.5386185157523178) < 1e-15
+               4.5386185157523178) < 1e-14
     assert np.isnan(s.components(1, pca, features)[0])
     assert abs(sign * s.components(1, pca, features)[1] -
-               1.4878619981409629) < 1e-15
+               1.4878619981409629) < 1e-14
     assert np.isnan(s.components(2, pca, features)[0])
     assert abs(sign * s.components(2, pca, features)[1] -
-               2.5067990036967074) < 1e-15
+               2.5067990036967074) < 1e-14
 
     # Also for sentence_relative=True.
     assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
     assert abs(sign * s.components(0, pca, features,
                                    sentence_relative=True)[1] -
-               (4.5386185157523178 - 2.9821934691598986)) < 1e-15
+               (4.5386185157523178 - 2.9821934691598986)) < 1e-14
     assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
     assert abs(sign * s.components(1, pca, features,
                                    sentence_relative=True)[1] -
-               (1.4878619981409629 - 0.95091629901938557)) < 1e-15
+               (1.4878619981409629 - 0.95091629901938557)) < 1e-14
     assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
     assert abs(sign * s.components(2, pca, features,
                                    sentence_relative=True)[1] -
-               (2.5067990036967074 - 3.1573434812204084)) < 1e-15
+               (2.5067990036967074 - 3.1573434812204084)) < 1e-14
 
 
 def test_component_average():
@@ -798,16 +798,16 @@ def test_component_average():
         # We find the hand-computed values alright.
         assert abs(sign * SubstitutionFeaturesMixin
                    .component_average(0, pca, features) -
-                   2.7921497899976822) < 1e-15
+                   2.7921497899976822) < 1e-14
         assert abs(sign * SubstitutionFeaturesMixin
                    .component_average(1, pca, features) -
-                   2.3369703188414315) < 1e-15
+                   2.3369703188414315) < 1e-14
         # Same with synonyms_from_range.
         assert abs(sign * SubstitutionFeaturesMixin
                    .component_average(0, pca, features,
                                       synonyms_from_range=(-3, -1)) -
-                   2.0420406691669841) < 1e-15
+                   2.0420406691669841) < 1e-14
         assert abs(sign * SubstitutionFeaturesMixin
                    .component_average(1, pca, features,
                                       synonyms_from_range=(-2, 0)) -
-                   1.1639817453758932) < 1e-15
+                   1.1639817453758932) < 1e-14
