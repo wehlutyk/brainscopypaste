@@ -727,7 +727,7 @@ def test_components(normal_substitution):
 
     # Now training with the right shape, we get the expected hand-computed
     # values.
-    pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
+    pca.fit(np.array([[1, 2, 3, 4], [4, 3, 4, 0], [2, 1, 1, 2]]))
     print(pca.components_)
     sign = np.sign(pca.components_[:, 0])
     assert np.isnan(s.components(0, pca, features)[0])
@@ -753,6 +753,7 @@ def test_components(normal_substitution):
     assert abs(-sign[2] * s.components(2, pca, features,
                                        sentence_relative=True)[1] -
                (2.5067990036967074 - 3.1573434812204084)) < 1e-14
+    assert False
 
 
 def test_component_average():
