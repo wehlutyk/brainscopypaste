@@ -53,10 +53,14 @@ def drop_caches():
     _get_aoa.drop_cache()
     _get_clearpond.drop_cache()
     _get_pronunciations.drop_cache()
+    SubstitutionFeaturesMixin._substitution_features.drop_cache()
+    SubstitutionFeaturesMixin._source_destination_features.drop_cache()
     SubstitutionFeaturesMixin.features.drop_cache()
-    SubstitutionFeaturesMixin.feature_average.drop_cache()
     SubstitutionFeaturesMixin.components.drop_cache()
+    SubstitutionFeaturesMixin._average.drop_cache()
+    SubstitutionFeaturesMixin.feature_average.drop_cache()
     SubstitutionFeaturesMixin.component_average.drop_cache()
+    SubstitutionFeaturesMixin._transformed_feature.drop_cache()
     for feature in SubstitutionFeaturesMixin.__features__:
         getattr(SubstitutionFeaturesMixin, '_' + feature).drop_cache()
 
@@ -722,7 +726,6 @@ def test_components(normal_substitution):
 
     # Now training with the right shape, we get the expected hand-computed
     # values.
-    drop_caches()
     pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
     assert np.isnan(s.components(0, pca, features)[0])
     assert abs(s.components(0, pca, features)[1] - 4.5386185157523178) < 1e-15
@@ -768,6 +771,7 @@ def test_component_average():
             synonyms_from_range=(2, 5))
     assert 'Unknown feature' in str(excinfo.value)
 
+    # Now with features we override to test manual values.
     drop_caches()
     pca.fit(np.array([[2, 1], [1, -2]]))
     with settings.file_override('AOA', 'CLEARPOND'):
