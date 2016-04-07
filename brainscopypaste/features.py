@@ -154,7 +154,6 @@ class SubstitutionFeaturesMixin:
 
     @classmethod
     def _average(cls, func, synonyms_from_range):
-        # TODO: test
         # Assumes func() yields the set of words from which to compute
         # the average.
         if synonyms_from_range is None:

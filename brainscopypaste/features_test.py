@@ -632,6 +632,32 @@ def test_strict_synonyms():
     assert SubstitutionFeaturesMixin._strict_synonyms('makakiki') == set()
 
 
+def test_average():
+    drop_caches()
+
+    # Our test feature.
+    values = {'dog': 2, 'hound': 3, 'frisbee': 4, 'chase': 6, 'cad': 7,
+              'other': 8}
+
+    def feature(word=None):
+        if word is None:
+            return set(values.keys())
+        else:
+            return values.get(word, np.nan)
+
+    # Global average and average of synonyms are well retrieved.
+    assert SubstitutionFeaturesMixin._average(feature, None) == 30 / 6
+    assert SubstitutionFeaturesMixin._average(feature, (2, 5)) == \
+        (16 / 3 + 9 / 2) / 2
+
+    # If we have a lot of NaNs, things still work well.
+    values = {'dog': 2, 'screen': 3, 'frisbee': 4, 'chase': np.nan, 'cad': 7,
+              'other': 8, 'blind': np.nan, 'cover': np.nan}
+    assert SubstitutionFeaturesMixin._average(feature, None) == 24 / 5
+    # 'frisbee' has no synonyms. All the synonyms of 'screen' are np.nan.
+    assert SubstitutionFeaturesMixin._average(feature, (2, 5)) == 7
+
+
 def test_feature_average():
     # Test a non-transformed feature (AoA).
     drop_caches()
@@ -663,5 +689,5 @@ def test_feature_average():
     # _synonyms_count(word=None) returns a list of words, some of which have
     # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
     # np.nan). So check that synonyms_count feature average is not np.nan.
-    assert not np.isnan(SubstitutionFeaturesMixin
-                        .feature_average('synonyms_count'))
+    assert np.isfinite(SubstitutionFeaturesMixin
+                       .feature_average('synonyms_count'))
