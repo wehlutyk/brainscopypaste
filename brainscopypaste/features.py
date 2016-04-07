@@ -131,26 +131,42 @@ class SubstitutionFeaturesMixin:
 
         # Compute the features, and transform into components.
         features = np.zeros((2, n_features))
-        for i, name in enumerate(feature_names):
-            features[:, i] = self._substitution_features(name)
-        components = pca.transform(features)
+        for j, name in enumerate(feature_names):
+            features[:, j] = self._substitution_features(name)
+        components = np.zeros(2)
+        for i in range(2):
+            components[i] = pca.transform(features[i, :].reshape(1, -1))[0, n]\
+                if np.isfinite(features[i, :]).all() else np.nan
 
         if sentence_relative:
-            # Compute components for each source and destination word.
+            # First compute the matrices of word, feature for source and
+            # destination.
             n_words = len(self.destination.tokens)
             source_features = np.zeros((n_words, n_features))
             destination_features = np.zeros((n_words, n_features))
-            for i, name in enumerate(feature_names):
-                source_features[:, i], destination_features[:, i] = \
+            for j, name in enumerate(feature_names):
+                source_features[:, j], destination_features[:, j] = \
                     self._source_destination_features(name)
-            source_components = pca.transform(source_features)
-            destination_components = pca.transform(destination_features)
+            # Then transform those into components, guarding for NaNs.
+            source_components = np.zeros(n_words)
+            destination_components = np.zeros(n_words)
+            for i in range(n_words):
+                source_components[i] = \
+                    pca.transform(source_features[i, :]
+                                  .reshape(1, -1))[0, n]\
+                    if np.isfinite(source_features[i, :]).all()\
+                    else np.nan
+                destination_components[i] = \
+                    pca.transform(destination_features[i, :]
+                                  .reshape(1, -1))[0, n]\
+                    if np.isfinite(destination_features[i, :]).all()\
+                    else np.nan
 
             # Substract the sentence average from substitution components.
-            components[0, :] -= np.nanmean(source_components, 0)
-            components[1, :] -= np.nanmean(destination_components, 0)
+            components[0] -= np.nanmean(source_components)
+            components[1] -= np.nanmean(destination_components)
 
-        return components[:, n]
+        return components
 
     @classmethod
     def _average(cls, func, synonyms_from_range):

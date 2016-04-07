@@ -3,6 +3,7 @@ import pickle
 
 import pytest
 import numpy as np
+from sklearn.decomposition import PCA
 
 from brainscopypaste.db import Quote, Substitution
 from brainscopypaste.features import (_get_pronunciations, _get_aoa,
@@ -691,3 +692,45 @@ def test_feature_average():
     # np.nan). So check that synonyms_count feature average is not np.nan.
     assert np.isfinite(SubstitutionFeaturesMixin
                        .feature_average('synonyms_count'))
+
+
+def test_components(normal_substitution):
+    drop_caches()
+    # A shortcut.
+    s = normal_substitution
+
+    # Create a test PCA with features alternatively log-transformed and not,
+    # alternatively on tokens and lemmas.
+    features = ('letters_count', 'aoa', 'frequency', 'phonological_density')
+    pca = PCA(n_components=3)
+
+    # Trying this with a PCA fitted with the wrong shape fails.
+    pca.fit(np.array([[1, 1, 0], [0, 1, 0], [0, 1, 1]]))
+    with pytest.raises(AssertionError):
+        s.components(0, pca, features)
+    with pytest.raises(AssertionError):
+        s.components(0, pca, features, sentence_relative=True)
+
+    # Now training with the right shape, we get the expected hand-computed
+    # values.
+    pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
+    assert np.isnan(s.components(0, pca, features)[0])
+    assert abs(s.components(0, pca, features)[1] -
+               (-1.4627657270187964)) < 1e-15
+    assert np.isnan(s.components(1, pca, features)[0])
+    assert abs(s.components(1, pca, features)[1] -
+               (-4.5135222446301482)) < 1e-15
+    assert np.isnan(s.components(2, pca, features)[0])
+    assert abs(s.components(2, pca, features)[1] -
+               (-2.0197528206483044)) < 1e-15
+
+    # Also for sentence_relative=True.
+    assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
+    assert abs(s.components(0, pca, features, sentence_relative=True)[1] -
+               (-1.4627657270187964 - (-3.1103412924569382))) < 2e-15
+    assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
+    assert abs(s.components(1, pca, features, sentence_relative=True)[1] -
+               (-4.5135222446301482 - (-5.1416184625974486))) < 1e-15
+    assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
+    assert abs(s.components(2, pca, features, sentence_relative=True)[1] -
+               (-2.0197528206483044 - (-1.4379587398131821))) < 1e-15
