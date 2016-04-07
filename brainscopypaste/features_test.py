@@ -701,7 +701,8 @@ def test_components(normal_substitution):
 
     # Create a test PCA with features alternatively log-transformed and not,
     # alternatively on tokens and lemmas.
-    features = ('letters_count', 'aoa', 'frequency', 'phonological_density')
+    features = ('letters_count', 'aoa', 'synonyms_count',
+                'phonological_density')
     pca = PCA(n_components=3)
 
     # Trying this with a PCA fitted with the wrong shape fails.
@@ -712,10 +713,10 @@ def test_components(normal_substitution):
         s.components(0, pca, features, sentence_relative=True)
     # Trying this with unknown features fails.
     with pytest.raises(ValueError) as excinfo:
-        s.components(0, pca, ('letters_count', 'unknown_feature', 'frequency'))
+        s.components(0, pca, ('letters_count', 'unknown_feature', 'aoa'))
     assert 'Unknown feature' in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        s.components(0, pca, ('letters_count', 'unknown_feature', 'frequency'),
+        s.components(0, pca, ('letters_count', 'unknown_feature', 'aoa'),
                      sentence_relative=True)
     assert 'Unknown feature' in str(excinfo.value)
 
@@ -724,25 +725,22 @@ def test_components(normal_substitution):
     drop_caches()
     pca.fit(np.array([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]]))
     assert np.isnan(s.components(0, pca, features)[0])
-    assert abs(s.components(0, pca, features)[1] -
-               (-1.4627657270187964)) < 1e-15
+    assert s.components(0, pca, features)[1] == 4.5386185157523178
     assert np.isnan(s.components(1, pca, features)[0])
-    assert abs(s.components(1, pca, features)[1] -
-               (-4.5135222446301482)) < 1e-15
+    assert s.components(1, pca, features)[1] == 1.4878619981409629
     assert np.isnan(s.components(2, pca, features)[0])
-    assert abs(s.components(2, pca, features)[1] -
-               (-2.0197528206483044)) < 1e-15
+    assert s.components(2, pca, features)[1] == 2.5067990036967074
 
     # Also for sentence_relative=True.
     assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
-    assert abs(s.components(0, pca, features, sentence_relative=True)[1] -
-               (-1.4627657270187964 - (-3.1103412924569382))) < 2e-15
+    assert s.components(0, pca, features, sentence_relative=True)[1] == \
+        4.5386185157523178 - 2.9821934691598986
     assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
-    assert abs(s.components(1, pca, features, sentence_relative=True)[1] -
-               (-4.5135222446301482 - (-5.1416184625974486))) < 1e-15
+    assert s.components(1, pca, features, sentence_relative=True)[1] == \
+        1.4878619981409629 - 0.95091629901938557
     assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
-    assert abs(s.components(2, pca, features, sentence_relative=True)[1] -
-               (-2.0197528206483044 - (-1.4379587398131821))) < 1e-15
+    assert s.components(2, pca, features, sentence_relative=True)[1] == \
+        2.5067990036967074 - 3.1573434812204084
 
 
 def test_component_average():
