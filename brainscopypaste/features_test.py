@@ -54,6 +54,8 @@ def drop_caches():
     _get_pronunciations.drop_cache()
     SubstitutionFeaturesMixin.features.drop_cache()
     SubstitutionFeaturesMixin.feature_average.drop_cache()
+    SubstitutionFeaturesMixin.components.drop_cache()
+    SubstitutionFeaturesMixin.component_average.drop_cache()
     for feature in SubstitutionFeaturesMixin.__features__:
         getattr(SubstitutionFeaturesMixin, '_' + feature).drop_cache()
 
@@ -342,9 +344,103 @@ def test_orthographical_density_none():
 
 @pytest.fixture
 def normal_substitution():
-    q1 = Quote(string='It is the containing part')
+    q1 = Quote(string='Oh yes it is the containing part')
     q2 = Quote(string='It is the other part')
-    return Substitution(source=q1, destination=q2, start=0, position=3)
+    return Substitution(source=q1, destination=q2, start=2, position=3)
+
+
+def test_substitution_features(normal_substitution):
+    drop_caches()
+    # A shortcut.
+    s = normal_substitution
+
+    # Check we defined the right substitution.
+    assert s.tokens == ('containing', 'other')
+    assert s.lemmas == ('contain', 'other')
+
+    # An unknown feature raises an error
+    with pytest.raises(ValueError):
+        s._substitution_features('unknown_feature')
+
+    # Syllable, phonemes, letters counts, and densities are right,
+    # and computed on tokens.
+    assert s._substitution_features('syllables_count') == (3, 2)
+    assert s._substitution_features('phonemes_count') == (8, 3)
+    assert s._substitution_features('letters_count') == (10, 5)
+    assert np.isnan(s._substitution_features('phonological_density')[0])
+    assert s._substitution_features('phonological_density')[1] == np.log(7)
+    assert np.isnan(s._substitution_features('orthographical_density')[0])
+    assert s._substitution_features('orthographical_density')[1] == np.log(5)
+
+    # Synonyms count and age-of-acquisition are right, and computed on lemmas.
+    # The rest of the features need computed files, and are only tested through
+    # 'features()' directly so as not to make other file-dependent tests heavy
+    # to read.
+    assert s._substitution_features('synonyms_count') == \
+        (np.log(3), np.log(.5))
+    assert s._substitution_features('aoa') == (7.88, 5.33)
+
+    # Unknown words are ignored. Also when in the rest of the sentence.
+    q1 = Quote(string='makakiki is the goal')
+    q2 = Quote(string='makakiki is the moukakaka')
+    s = Substitution(source=q1, destination=q2, start=0, position=3)
+    assert s._substitution_features('syllables_count')[0] == 1
+    # np.nan != np.nan so we can't `assert s.features(...) == (1, np.nan)`
+    assert np.isnan(s._substitution_features('syllables_count')[1])
+
+
+def test_source_destination_features(normal_substitution):
+    drop_caches()
+    # A shortcut.
+    s = normal_substitution
+
+    # Check we defined the right substitution.
+    assert s.tokens == ('containing', 'other')
+    assert s.lemmas == ('contain', 'other')
+
+    # An unknown feature raises an error
+    with pytest.raises(ValueError):
+        s._source_destination_features('unknown_feature')
+
+    # Syllable, phonemes, letters counts, and densities are right,
+    # and computed on tokens.
+    assert (s._source_destination_features('syllables_count')[0] ==
+            [1, 1, 1, 3, 1]).all()
+    assert (s._source_destination_features('syllables_count')[1] ==
+            [1, 1, 1, 2, 1]).all()
+    assert (s._source_destination_features('phonemes_count')[0] ==
+            [2, 2, 2, 8, 4]).all()
+    assert (s._source_destination_features('phonemes_count')[1] ==
+            [2, 2, 2, 3, 4]).all()
+    assert (s._source_destination_features('letters_count')[0] ==
+            [2, 2, 3, 10, 4]).all()
+    assert (s._source_destination_features('letters_count')[1] ==
+            [2, 2, 3, 5, 4]).all()
+    sf, df = s._source_destination_features('phonological_density')
+    assert (sf[np.isfinite(sf)] == np.log([31, 24, 9, 28])).all()
+    assert (np.isnan(sf) == [False, False, False, True, False]).all()
+    assert (df == np.log([31, 24, 9, 7, 28])).all()
+    sf, df = s._source_destination_features('orthographical_density')
+    assert (sf[np.isfinite(sf)] == np.log([17, 14, 11, 20])).all()
+    assert (np.isnan(sf) == [False, False, False, True, False]).all()
+    assert (df == np.log([17, 14, 11, 5, 20])).all()
+
+    # Synonyms count and age-of-acquisition are right, and computed on lemmas.
+    # The rest of the features need computed files, and are only tested through
+    # 'features()' directly so as not to make other file-dependent tests heavy
+    # to read.
+    sf, df = s._source_destination_features('synonyms_count')
+    assert (sf[np.isfinite(sf)] ==
+            np.log([1, 1, 3, 2.4444444444444446])).all()
+    assert (np.isnan(sf) == [False, False, True, False, False]).all()
+    assert (df[np.isfinite(df)] ==
+            np.log([1, 1, .5, 2.4444444444444446])).all()
+    assert (np.isnan(df) == [False, False, True, False, False]).all()
+    sf, df = s._source_destination_features('aoa')
+    assert (sf[np.isfinite(sf)] == [5.11, 7.88, 5.11]).all()
+    assert (np.isnan(sf) == [True, False, True, False, False]).all()
+    assert (df[np.isfinite(df)] == [5.11, 5.33, 5.11]).all()
+    assert (np.isnan(df) == [True, False, True, False, False]).all()
 
 
 def test_features(normal_substitution):
@@ -390,8 +486,7 @@ def test_features(normal_substitution):
         np.log(5) - np.log([17, 14, 11, 5, 20]).mean()
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
-    # (the rest of the features need computed files,
-    # and are tested separately).
+    # The rest of the features need computed files, and are tested separately.
     assert s.features('synonyms_count') == (np.log(3), np.log(.5))
     assert s.features('aoa') == (7.88, 5.33)
     # Same with features computed relative to sentence.

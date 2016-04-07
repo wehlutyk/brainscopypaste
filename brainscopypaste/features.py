@@ -78,9 +78,7 @@ class SubstitutionFeaturesMixin:
         'orthographical_density': ('tokens', np.log),
     }
 
-    @memoized
     def _substitution_features(self, name):
-        # TODO: test
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -93,9 +91,7 @@ class SubstitutionFeaturesMixin:
         feature = self._transformed_feature(name)
         return feature(word1), feature(word2)
 
-    @memoized
     def _source_destination_features(self, name):
-        # TODO: test
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -157,7 +153,6 @@ class SubstitutionFeaturesMixin:
         return components[:, n]
 
     @classmethod
-    @memoized
     def _average(cls, func, synonyms_from_range):
         # TODO: test
         # Assumes func() yields the set of words from which to compute
