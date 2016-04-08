@@ -119,8 +119,12 @@ class SubstitutionFeaturesMixin:
         if sentence_relative:
             source_features, destination_features = \
                 self._source_destination_features(name)
-            feature1 -= np.nanmean(source_features)
-            feature2 -= np.nanmean(destination_features)
+            # Suppress warning here, see
+            # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                feature1 -= np.nanmean(source_features)
+                feature2 -= np.nanmean(destination_features)
 
         return feature1, feature2
 
