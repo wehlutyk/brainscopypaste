@@ -113,6 +113,16 @@ class SubstitutionFeaturesMixin:
         return source_features, destination_features
 
     @memoized
+    def sentence_features(self, name):
+        source_features, destination_features = \
+            self._source_destination_features(name)
+        # Suppress warning here, see
+        # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
+        with warnings.catch_warnings():
+            return (np.nanmean(source_features),
+                    np.nanmean(destination_features))
+
+    @memoized
     def features(self, name, sentence_relative=False):
         feature1, feature2 = self._substitution_features(name)
 
