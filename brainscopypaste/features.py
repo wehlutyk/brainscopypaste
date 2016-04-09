@@ -183,7 +183,6 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def _average(self, func, source_synonyms):
-        # TODO: test
         # We always use the lemmas (vs. tokens) here, for two reasons:
         # - WordNet lemmatizes when looking for synsets (although it lemmatizes
         #   with wordnet.morphy(), not with treetagger, so there may be some

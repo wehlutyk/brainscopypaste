@@ -50,12 +50,13 @@ def test_get_clearpond():
 
 def drop_caches():
     unpickle.drop_cache()
+    _get_pronunciations.drop_cache()
     _get_aoa.drop_cache()
     _get_clearpond.drop_cache()
-    _get_pronunciations.drop_cache()
     SubstitutionFeaturesMixin._substitution_features.drop_cache()
     SubstitutionFeaturesMixin._source_destination_features.drop_cache()
     SubstitutionFeaturesMixin.features.drop_cache()
+    SubstitutionFeaturesMixin._source_destination_components.drop_cache()
     SubstitutionFeaturesMixin.components.drop_cache()
     SubstitutionFeaturesMixin._average.drop_cache()
     SubstitutionFeaturesMixin.feature_average.drop_cache()
@@ -637,9 +638,15 @@ def test_strict_synonyms():
     assert SubstitutionFeaturesMixin._strict_synonyms('makakiki') == set()
 
 
-@pytest.mark.xfail
 def test_average():
     drop_caches()
+    # Two subtitutions.
+    q1a = Quote(string='Chase it others is the dogs hound')
+    q1b = Quote(string='Others is the hound hound')
+    s1 = Substitution(source=q1a, destination=q1b, start=2, position=3)
+    q2a = Quote(string='Chase it others is the frisbee hound')
+    q2b = q1b
+    s2 = Substitution(source=q2a, destination=q2b, start=2, position=3)
 
     # Our test feature.
     values = {'dog': 2, 'hound': 3, 'frisbee': 4, 'chase': 6, 'cad': 7,
@@ -651,18 +658,17 @@ def test_average():
         else:
             return values.get(word, np.nan)
 
-    # Global average and average of synonyms are well retrieved.
-    assert SubstitutionFeaturesMixin._average(feature, None) == 30 / 6
-    assert SubstitutionFeaturesMixin._average(feature, (2, 5)) == \
-        (16 / 3 + 9 / 2) / 2
+    # Global average and average of synonyms (computed on lemmas) are well
+    # retrieved.
+    assert s1._average(feature, False) == 30 / 6
+    assert s1._average(feature, True) == np.mean([3, 6, 7])
 
     # If we have a lot of NaNs, things still work well.
     drop_caches()
-    values = {'dog': 2, 'screen': 3, 'frisbee': 4, 'chase': np.nan, 'cad': 7,
-              'other': 8, 'blind': np.nan, 'cover': np.nan}
-    assert SubstitutionFeaturesMixin._average(feature, None) == 24 / 5
-    # 'frisbee' has no synonyms. All the synonyms of 'screen' are np.nan.
-    assert SubstitutionFeaturesMixin._average(feature, (2, 5)) == 7
+    values = {'dog': 2, 'frisbee': 4, 'chase': np.nan, 'cad': 7, 'other': 8}
+    assert s1._average(feature, True) == 7
+    # 'frisbee' has no synonyms.
+    assert np.isnan(s2._average(feature, True))
 
 
 @pytest.mark.xfail
@@ -756,7 +762,7 @@ def test_components(normal_substitution):
 
 def test_component_average():
     drop_caches()
-    # A subtitution.
+    # Two subtitutions.
     q1a = Quote(string='Chase it others is the dogs hound')
     q1b = Quote(string='Others is the hound hound')
     s1 = Substitution(source=q1a, destination=q1b, start=2, position=3)
