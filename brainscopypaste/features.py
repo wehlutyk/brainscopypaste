@@ -182,7 +182,7 @@ class SubstitutionFeaturesMixin:
         return components
 
     @memoized
-    def _average(self, func, synonyms):
+    def _average(self, func, source_synonyms):
         # TODO: test
         # We always use the lemmas (vs. tokens) here, for two reasons:
         # - WordNet lemmatizes when looking for synsets (although it lemmatizes
@@ -195,7 +195,8 @@ class SubstitutionFeaturesMixin:
         source_lemma, _ = self.lemmas
         # Assumes func() yields the set of words from which to compute
         # the average.
-        words = self._strict_synonyms(source_lemma) if synonyms else func()
+        words = self._strict_synonyms(source_lemma) \
+            if source_synonyms else func()
 
         # Suppress warning here, see
         # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
@@ -203,10 +204,11 @@ class SubstitutionFeaturesMixin:
             return np.nanmean([func(word) for word in words])
 
     @memoized
-    def feature_average(self, name, synonyms=False, sentence_relative=False):
+    def feature_average(self, name, source_synonyms=False,
+                        sentence_relative=False):
         # TODO: test
         tfeature = self._transformed_feature(name)
-        avg = self._average(tfeature, synonyms)
+        avg = self._average(tfeature, source_synonyms)
 
         if sentence_relative:
             sentence_features, _ = self._source_destination_features(name)
@@ -217,8 +219,7 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def component_average(self, n, pca, feature_names,
-                          synonyms=False, sentence_relative=False):
-        # TODO: test
+                          source_synonyms=False, sentence_relative=False):
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -249,7 +250,7 @@ class SubstitutionFeaturesMixin:
                 word_tfeatures = np.array([tf(word) for tf in tfeatures])
                 return transform(word_tfeatures)
 
-        avg = self._average(component, synonyms)
+        avg = self._average(component, source_synonyms)
 
         if sentence_relative:
             sentence_components, _ = \

@@ -754,9 +754,15 @@ def test_components(normal_substitution):
         5 - np.mean([2, 5, 4])
 
 
-@pytest.mark.xfail
 def test_component_average():
     drop_caches()
+    # A subtitution.
+    q1a = Quote(string='Chase it others is the dogs hound')
+    q1b = Quote(string='Others is the hound hound')
+    s1 = Substitution(source=q1a, destination=q1b, start=2, position=3)
+    q2a = Quote(string='Chase it others is the frisbee hound')
+    q2b = q1b
+    s2 = Substitution(source=q2a, destination=q2b, start=2, position=3)
 
     # Create a test PCA that will use features we later override.
     features = ('aoa', 'phonological_density')
@@ -765,19 +771,34 @@ def test_component_average():
     # Trying this with a PCA fitted with the wrong shape fails.
     pca.fit(np.array([[1, 1, 0], [0, 1, 0], [0, 1, 1]]))
     with pytest.raises(AssertionError):
-        SubstitutionFeaturesMixin.component_average(0, pca, features)
+        s1.component_average(0, pca, features)
     with pytest.raises(AssertionError):
-        SubstitutionFeaturesMixin.component_average(0, pca, features,
-                                                    synonyms_from_range=(2, 5))
+        s1.component_average(0, pca, features, source_synonyms=True)
+    with pytest.raises(AssertionError):
+        s1.component_average(0, pca, features, source_synonyms=False,
+                             sentence_relative=True)
+    with pytest.raises(AssertionError):
+        s1.component_average(0, pca, features, source_synonyms=True,
+                             sentence_relative=True)
     # Trying this with unknown features fails.
     with pytest.raises(ValueError) as excinfo:
-        SubstitutionFeaturesMixin.component_average(
+        s1.component_average(
             0, pca, ('letters_count', 'unknown_feature', 'aoa'))
     assert 'Unknown feature' in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        SubstitutionFeaturesMixin.component_average(
+        s1.component_average(
             0, pca, ('letters_count', 'unknown_feature', 'aoa'),
-            synonyms_from_range=(2, 5))
+            source_synonyms=True)
+    assert 'Unknown feature' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        s1.component_average(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'),
+            source_synonyms=False, sentence_relative=True)
+    assert 'Unknown feature' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        s1.component_average(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'),
+            source_synonyms=True, sentence_relative=True)
     assert 'Unknown feature' in str(excinfo.value)
 
     # Now with features we override to test manual values.
@@ -794,21 +815,61 @@ def test_component_average():
                     'frisbee' + 5 * '\t' + '0' + 24 * '\t' + '4\n'
                     'screen' + 5 * '\t' + '0' + 24 * '\t' + '5\n'
                     'chase' + 5 * '\t' + '0' + 24 * '\t' + '6\n'
-                    'other' + 5 * '\t' + '0' + 24 * '\t' + '8')
+                    'other' + 5 * '\t' + '0' + 24 * '\t' + '8\n'
+                    'others' + 5 * '\t' + '0' + 24 * '\t' + '9')
 
         # We find the hand-computed values alright.
-        assert abs(sign[0] * SubstitutionFeaturesMixin
-                   .component_average(0, pca, features) -
-                   2.7921497899976822) < 1e-14
-        assert abs(sign[1] * SubstitutionFeaturesMixin
-                   .component_average(1, pca, features) -
-                   2.3369703188414315) < 1e-14
-        # Same with synonyms_from_range.
-        assert abs(sign[0] * SubstitutionFeaturesMixin
-                   .component_average(0, pca, features,
-                                      synonyms_from_range=(-3, -1)) -
-                   2.0420406691669841) < 1e-14
-        assert abs(sign[1] * SubstitutionFeaturesMixin
-                   .component_average(1, pca, features,
-                                      synonyms_from_range=(-2, 0)) -
-                   1.1639817453758932) < 1e-14
+        assert abs(-sign[0] * s1.component_average(0, pca, features) -
+                   (-2.7921497899976822)) < 1e-14
+        assert abs(-sign[0] * s2.component_average(0, pca, features) -
+                   (-2.7921497899976822)) < 1e-14
+        assert abs(-sign[1] * s1.component_average(1, pca, features) -
+                   (-2.3369703188414315)) < 1e-14
+        assert abs(-sign[1] * s2.component_average(1, pca, features) -
+                   (-2.3369703188414315)) < 1e-14
+        # Same with synonyms. Computed on synonyms of 'dog' (lemma of
+        # 'dogs'). 'frisbee' has no synonyms, hence the NaN for s2.
+        assert abs(-sign[0] * s1.component_average(0, pca, features,
+                                                   source_synonyms=True) -
+                   (-2.7940486530122683)) < 1e-14
+        assert np.isnan(s2.component_average(0, pca, features,
+                                             source_synonyms=True))
+        assert abs(-sign[1] * s1.component_average(1, pca, features,
+                                                   source_synonyms=True) -
+                   (-2.2309281091642896)) < 1e-14
+        assert np.isnan(s2.component_average(1, pca, features,
+                                             source_synonyms=True))
+        # Same without synonyms but with sentence_relative.
+        # Each feature uses either lemmas or tokens (whereas above it was
+        # all lemmas).
+        assert abs(-sign[0] * s1.component_average(0, pca, features,
+                                                   source_synonyms=False,
+                                                   sentence_relative=True) -
+                   0.34030374468910285) < 1e-14
+        assert abs(-sign[0] * s2.component_average(0, pca, features,
+                                                   source_synonyms=False,
+                                                   sentence_relative=True) -
+                   0.34030374468910285) < 1e-14
+        assert abs(-sign[1] * s1.component_average(1, pca, features,
+                                                   source_synonyms=False,
+                                                   sentence_relative=True) -
+                   0.51902095047064112) < 1e-14
+        assert abs(-sign[1] * s2.component_average(1, pca, features,
+                                                   source_synonyms=False,
+                                                   sentence_relative=True) -
+                   0.51902095047064112) < 1e-14
+        # Same with synonyms and sentence_relative.
+        assert abs(-sign[0] * s1.component_average(0, pca, features,
+                                                   source_synonyms=True,
+                                                   sentence_relative=True) -
+                   0.3390378360127122) < 1e-14
+        assert np.isnan(s2.component_average(0, pca, features,
+                                             source_synonyms=True,
+                                             sentence_relative=True))
+        assert abs(-sign[1] * s1.component_average(1, pca, features,
+                                                   source_synonyms=True,
+                                                   sentence_relative=True) -
+                   0.58971575692206901) < 1e-14
+        assert np.isnan(s2.component_average(1, pca, features,
+                                             source_synonyms=True,
+                                             sentence_relative=True))
