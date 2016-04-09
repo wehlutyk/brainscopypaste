@@ -130,7 +130,6 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def _source_destination_components(self, n, pca, feature_names):
-        # TODO: test
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)

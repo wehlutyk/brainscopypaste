@@ -13,6 +13,12 @@ from brainscopypaste.utils import is_int, unpickle
 from brainscopypaste.conf import settings
 
 
+def nanequals(list1, list2):
+    array1, array2 = np.array(list1), np.array(list2)
+    return ((np.isnan(array1) == np.isnan(array2)).all() and
+            (array1[np.isfinite(array1)] == array2[np.isfinite(array2)]).all())
+
+
 def test_get_pronunciations():
     pronunciations = _get_pronunciations()
     # We have the right kind of data.
@@ -423,30 +429,22 @@ def test_source_destination_features(normal_substitution):
     assert (s._source_destination_features('letters_count')[1] ==
             [2, 2, 3, 5, 4]).all()
     sf, df = s._source_destination_features('phonological_density')
-    assert (sf[np.isfinite(sf)] == np.log([31, 24, 9, 28])).all()
-    assert (np.isnan(sf) == [False, False, False, True, False]).all()
-    assert (df == np.log([31, 24, 9, 7, 28])).all()
+    assert nanequals(sf, np.log([31, 24, 9, np.nan, 28]))
+    assert nanequals(df, np.log([31, 24, 9, 7, 28]))
     sf, df = s._source_destination_features('orthographical_density')
-    assert (sf[np.isfinite(sf)] == np.log([17, 14, 11, 20])).all()
-    assert (np.isnan(sf) == [False, False, False, True, False]).all()
-    assert (df == np.log([17, 14, 11, 5, 20])).all()
+    assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]))
+    assert nanequals(df, np.log([17, 14, 11, 5, 20]))
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
     # The rest of the features need computed files, and are only tested through
     # 'features()' directly so as not to make other file-dependent tests heavy
     # to read.
     sf, df = s._source_destination_features('synonyms_count')
-    assert (sf[np.isfinite(sf)] ==
-            np.log([1, 1, 3, 2.4444444444444446])).all()
-    assert (np.isnan(sf) == [False, False, True, False, False]).all()
-    assert (df[np.isfinite(df)] ==
-            np.log([1, 1, .5, 2.4444444444444446])).all()
-    assert (np.isnan(df) == [False, False, True, False, False]).all()
+    assert nanequals(sf, np.log([1, 1, np.nan, 3, 2.4444444444444446]))
+    assert nanequals(df, np.log([1, 1, np.nan, .5, 2.4444444444444446]))
     sf, df = s._source_destination_features('aoa')
-    assert (sf[np.isfinite(sf)] == [5.11, 7.88, 5.11]).all()
-    assert (np.isnan(sf) == [True, False, True, False, False]).all()
-    assert (df[np.isfinite(df)] == [5.11, 5.33, 5.11]).all()
-    assert (np.isnan(df) == [True, False, True, False, False]).all()
+    assert nanequals(sf, [np.nan, 5.11, np.nan, 7.88, 5.11])
+    assert nanequals(df, [np.nan, 5.11, np.nan, 5.33, 5.11])
 
 
 def test_features(normal_substitution):
@@ -752,6 +750,53 @@ def test_feature_average():
     # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
     # np.nan). So check that synonyms_count feature average is not np.nan.
     assert np.isfinite(s1.feature_average('synonyms_count'))
+
+
+def test_source_destination_components(normal_substitution):
+    drop_caches()
+    # A shortcut.
+    s = normal_substitution
+
+    # Check we defined the right substitution.
+    assert s.tokens == ('containing', 'other')
+    assert s.lemmas == ('contain', 'other')
+
+    # Create a test PCA with features alternatively log-transformed and not,
+    # alternatively on tokens and lemmas.
+    features = ('letters_count', 'aoa', 'synonyms_count',
+                'phonological_density')
+    pca = PCA(n_components=3)
+
+    # Trying this with a PCA fitted with the wrong shape fails.
+    pca.fit(np.array([[1, 1, 0], [0, 1, 0], [0, 1, 1]]))
+    with pytest.raises(AssertionError):
+        s._source_destination_components(0, pca, features)
+    # Trying this with unknown features fails.
+    with pytest.raises(ValueError) as excinfo:
+        s._source_destination_components(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'))
+    assert 'Unknown feature' in str(excinfo.value)
+
+    # Now training with the right shape, we get the expected hand-computed
+    # values.
+    pca.fit(np.array([[1, 0, 0, 0], [-1, 0, 0, 0],
+                      [0, 1, 0, 0], [0, -1, 0, 0],
+                      [0, 0, 1, 0], [0, 0, -1, 0]]))
+    print(pca.components_)
+
+    # All components have the right hand-computed values, with features taken
+    # either on tokens or lemmas.
+    sc, dc = s._source_destination_components(0, pca, features)
+    assert nanequals(-sc, [np.nan, 5.11, np.nan, np.nan, 5.11])
+    assert nanequals(-dc, [np.nan, 5.11, np.nan, 5.33, 5.11])
+    sc, dc = s._source_destination_components(1, pca, features)
+    assert nanequals(-sc,
+                     np.log([np.nan, 1.0, np.nan, np.nan, 2.4444444444444446]))
+    assert nanequals(-dc,
+                     np.log([np.nan, 1.0, np.nan, .5, 2.4444444444444446]))
+    sc, dc = s._source_destination_components(2, pca, features)
+    assert nanequals(-sc, [np.nan, 2, np.nan, np.nan, 4])
+    assert nanequals(-dc, [np.nan, 2, np.nan, 5, 4])
 
 
 def test_components(normal_substitution):
