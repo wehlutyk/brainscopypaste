@@ -674,19 +674,41 @@ def test_average():
     assert np.isnan(s2._average(feature, True))
 
 
-@pytest.mark.xfail
 def test_feature_average():
-    # Test a non-transformed feature (AoA).
+    # Two subtitutions.
+    q1a = Quote(string='Chase it others is the dogs hound')
+    q1b = Quote(string='Others is the hound hound')
+    s1 = Substitution(source=q1a, destination=q1b, start=2, position=3)
+    q2a = Quote(string='Chase it others is the frisbee hound')
+    q2b = q1b
+    s2 = Substitution(source=q2a, destination=q2b, start=2, position=3)
+
+    # Test a non-transformed feature (AoA), computed on lemmas.
     drop_caches()
     with settings.file_override('AOA'):
         with open(settings.AOA, 'w') as f:
             f.write('Word,Rating.Mean\n'
                     'dog,2\nhound,3\nfrisbee,4\nchase,6\ncad,7\nother,8')
-        assert SubstitutionFeaturesMixin.feature_average('aoa') == 30 / 6
-        assert SubstitutionFeaturesMixin.\
-            feature_average('aoa', synonyms_from_range=(2, 5)) == \
-            (16 / 3 + 9 / 2) / 2
-    # Test a log-transformed feature (phonological density).
+        assert s1.feature_average('aoa') == 30 / 6
+        assert s2.feature_average('aoa') == 30 / 6
+        assert s1.feature_average('aoa', source_synonyms=True) == \
+            np.mean([3, 6, 7])
+        # 'frisbee' has no synonyms.
+        assert np.isnan(s2.feature_average('aoa', source_synonyms=True))
+        assert s1.feature_average('aoa', source_synonyms=False,
+                                  sentence_relative=True) == \
+            (-0.33333333333333304)
+        assert s2.feature_average('aoa', source_synonyms=False,
+                                  sentence_relative=True) == \
+            (-0.33333333333333304)
+        assert s1.feature_average('aoa', source_synonyms=True,
+                                  sentence_relative=True) == \
+            (-0.11111111111111072)
+        # 'frisbee' has no synonyms.
+        assert np.isnan(s2.feature_average('aoa', source_synonyms=True,
+                                           sentence_relative=True))
+    # Test a log-transformed feature (phonological density), computed on
+    # tokens.
     drop_caches()
     with settings.file_override('CLEARPOND'):
         with open(settings.CLEARPOND, 'w') as f:
@@ -696,18 +718,40 @@ def test_feature_average():
                     'chase' + 5 * '\t' + '0' + 24 * '\t' + '6\n'
                     'cad' + 5 * '\t' + '0' + 24 * '\t' + '7\n'
                     'other' + 5 * '\t' + '0' + 24 * '\t' + '8')
-        assert SubstitutionFeaturesMixin.\
-            feature_average('phonological_density') == \
+        assert s1.feature_average('phonological_density') == \
             np.log([2, 3, 4, 6, 7, 8]).mean()
-        assert SubstitutionFeaturesMixin.\
-            feature_average('phonological_density',
-                            synonyms_from_range=(np.log(2), np.log(5))) == \
-            (np.log([3, 6, 7]).mean() + np.log([2, 7]).mean()) / 2
+        assert s2.feature_average('phonological_density') == \
+            np.log([2, 3, 4, 6, 7, 8]).mean()
+        # Even though phonological density is computed on tokens, the synonyms
+        # come from the lemmas.
+        assert s1.feature_average('phonological_density',
+                                  source_synonyms=True) == \
+            np.log([3, 6, 7]).mean()
+        # 'frisbee' has no synonyms.
+        assert np.isnan(s2.feature_average('phonological_density',
+                                           source_synonyms=True))
+        # Features for the 'sentence_relative' part are still taken from the
+        # tokens, which leads us to drop 'others'.
+        assert s1.feature_average('phonological_density',
+                                  source_synonyms=False,
+                                  sentence_relative=True) == \
+            0.20029093819187427
+        assert s2.feature_average('phonological_density',
+                                  source_synonyms=False,
+                                  sentence_relative=True) == \
+            0.20029093819187427
+        assert s1.feature_average('phonological_density',
+                                  source_synonyms=True,
+                                  sentence_relative=True) == \
+            0.25674084015785814
+        # 'frisbee' has no synonyms.
+        assert np.isnan(s2.feature_average('phonological_density',
+                                           source_synonyms=True,
+                                           sentence_relative=True))
     # _synonyms_count(word=None) returns a list of words, some of which have
     # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
     # np.nan). So check that synonyms_count feature average is not np.nan.
-    assert np.isfinite(SubstitutionFeaturesMixin
-                       .feature_average('synonyms_count'))
+    assert np.isfinite(s1.feature_average('synonyms_count'))
 
 
 def test_components(normal_substitution):

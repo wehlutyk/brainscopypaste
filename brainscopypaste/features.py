@@ -205,7 +205,6 @@ class SubstitutionFeaturesMixin:
     @memoized
     def feature_average(self, name, source_synonyms=False,
                         sentence_relative=False):
-        # TODO: test
         tfeature = self._transformed_feature(name)
         avg = self._average(tfeature, source_synonyms)
 
