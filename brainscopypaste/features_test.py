@@ -661,7 +661,10 @@ def test_average():
     # Global average and average of synonyms (computed on lemmas) are well
     # retrieved.
     assert s1._average(feature, False) == 30 / 6
+    assert s2._average(feature, False) == 30 / 6
     assert s1._average(feature, True) == np.mean([3, 6, 7])
+    # 'frisbee' has no synonyms.
+    assert np.isnan(s2._average(feature, True))
 
     # If we have a lot of NaNs, things still work well.
     drop_caches()
