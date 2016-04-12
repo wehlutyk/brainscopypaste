@@ -119,8 +119,6 @@ class SubstitutionFeaturesMixin:
         if sentence_relative:
             source_features, destination_features = \
                 self._source_destination_features(name)
-            # Suppress warning here, see
-            # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
                 feature1 -= np.nanmean(source_features)
@@ -175,8 +173,10 @@ class SubstitutionFeaturesMixin:
             # Substract the sentence average from substitution components.
             source_components, destination_components = \
                 self._source_destination_components(n, pca, feature_names)
-            components[0] -= np.nanmean(source_components)
-            components[1] -= np.nanmean(destination_components)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                components[0] -= np.nanmean(source_components)
+                components[1] -= np.nanmean(destination_components)
 
         return components
 
@@ -196,9 +196,8 @@ class SubstitutionFeaturesMixin:
         words = self._strict_synonyms(source_lemma) \
             if source_synonyms else func()
 
-        # Suppress warning here, see
-        # http://stackoverflow.com/questions/29688168/mean-nanmean-and-warning-mean-of-empty-slice#29688390
         with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
             return np.nanmean([func(word) for word in words])
 
     @memoized
@@ -210,7 +209,9 @@ class SubstitutionFeaturesMixin:
         if sentence_relative:
             sentence_features, _ = self._source_destination_features(name)
             sentence_features[self.position] = avg
-            avg -= np.nanmean(sentence_features)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                avg -= np.nanmean(sentence_features)
 
         return avg
 
@@ -253,7 +254,9 @@ class SubstitutionFeaturesMixin:
             sentence_components, _ = \
                 self._source_destination_components(n, pca, feature_names)
             sentence_components[self.position] = avg
-            avg -= np.nanmean(sentence_components)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                avg -= np.nanmean(sentence_components)
 
         return avg
 
