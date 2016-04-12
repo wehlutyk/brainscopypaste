@@ -658,7 +658,9 @@ def test_average():
 
     # Global average and average of synonyms (computed on lemmas) are well
     # retrieved.
+    assert s1._static_average(feature) == 30 / 6
     assert s1._average(feature, False) == 30 / 6
+    assert s2._static_average(feature) == 30 / 6
     assert s2._average(feature, False) == 30 / 6
     assert s1._average(feature, True) == np.mean([3, 6, 7])
     # 'frisbee' has no synonyms.

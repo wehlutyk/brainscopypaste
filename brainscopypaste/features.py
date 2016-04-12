@@ -182,25 +182,34 @@ class SubstitutionFeaturesMixin:
 
         return components
 
+    @classmethod
     @memoized
-    def _average(self, func, source_synonyms):
-        # We always use the lemmas (vs. tokens) here, for two reasons:
-        # - WordNet lemmatizes when looking for synsets (although it lemmatizes
-        #   with wordnet.morphy(), not with treetagger, so there may be some
-        #   differences when the feature is computed on lemmas)
-        # - It's the only way to compute averages of components. Otherwise
-        #   we're facing a different set of synonyms (those from the lemma and
-        #   those from the token) for each feature used in the component, and
-        #   it's impossible to bring them together.
-        source_lemma, _ = self.lemmas
-        # Assumes func() yields the set of words from which to compute
-        # the average.
-        words = self._strict_synonyms(source_lemma) \
-            if source_synonyms else func()
-
+    def _static_average(cls, func):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=RuntimeWarning)
-            return np.nanmean([func(word) for word in words])
+            return np.nanmean([func(word) for word in func()])
+
+    @memoized
+    def _average(self, func, source_synonyms):
+        if source_synonyms:
+            # We always use the lemmas (vs. tokens) here, for two reasons:
+            # - WordNet lemmatizes when looking for synsets (although it
+            #   lemmatizes with wordnet.morphy(), not with treetagger, so there
+            #   may be some differences when the feature is computed on lemmas)
+            # - It's the only way to compute averages of components. Otherwise
+            #   we're facing a different set of synonyms (those from the lemma
+            #   and those from the token) for each feature used in the
+            #   component, and it's impossible to bring them together.
+            source_lemma, _ = self.lemmas
+            # Assumes func() yields the set of words from which to compute
+            # the average.
+            words = self._strict_synonyms(source_lemma)
+
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                return np.nanmean([func(word) for word in words])
+        else:
+            return self._static_average(func)
 
     @memoized
     def feature_average(self, name, source_synonyms=False,
