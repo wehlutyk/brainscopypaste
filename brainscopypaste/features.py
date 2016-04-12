@@ -107,9 +107,11 @@ class SubstitutionFeaturesMixin:
         # Compute the features.
         feature = self._transformed_feature(name)
         source_features = np.array([feature(word) for word
-                                    in source_words])
+                                    in source_words],
+                                   dtype=float)
         destination_features = np.array([feature(word) for word
-                                         in destination_words])
+                                         in destination_words],
+                                        dtype=float)
         return source_features, destination_features
 
     @memoized
@@ -135,8 +137,8 @@ class SubstitutionFeaturesMixin:
         # First compute the matrices of word, feature for source and
         # destination.
         n_words = len(self.destination.tokens)
-        source_features = np.zeros((n_words, n_features))
-        destination_features = np.zeros((n_words, n_features))
+        source_features = np.zeros((n_words, n_features), dtype=float)
+        destination_features = np.zeros((n_words, n_features), dtype=float)
         for j, name in enumerate(feature_names):
             source_features[:, j], destination_features[:, j] = \
                 self._source_destination_features(name)
@@ -245,7 +247,8 @@ class SubstitutionFeaturesMixin:
             if word is None:
                 return words
             else:
-                word_tfeatures = np.array([tf(word) for tf in tfeatures])
+                word_tfeatures = np.array([tf(word) for tf in tfeatures],
+                                          dtype=float)
                 return transform(word_tfeatures)
 
         avg = self._average(component, source_synonyms)
