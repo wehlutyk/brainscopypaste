@@ -108,10 +108,10 @@ class SubstitutionFeaturesMixin:
         feature = self._transformed_feature(name)
         source_features = np.array([feature(word) for word
                                     in source_words],
-                                   dtype=float)
+                                   dtype=np.float_)
         destination_features = np.array([feature(word) for word
                                          in destination_words],
-                                        dtype=float)
+                                        dtype=np.float_)
         return source_features, destination_features
 
     @memoized
@@ -137,14 +137,14 @@ class SubstitutionFeaturesMixin:
         # First compute the matrices of word, feature for source and
         # destination.
         n_words = len(self.destination.tokens)
-        source_features = np.zeros((n_words, n_features), dtype=float)
-        destination_features = np.zeros((n_words, n_features), dtype=float)
+        source_features = np.zeros((n_words, n_features), dtype=np.float_)
+        destination_features = np.zeros((n_words, n_features), dtype=np.float_)
         for j, name in enumerate(feature_names):
             source_features[:, j], destination_features[:, j] = \
                 self._source_destination_features(name)
         # Then transform those into components, guarding for NaNs.
-        source_components = np.zeros(n_words)
-        destination_components = np.zeros(n_words)
+        source_components = np.zeros(n_words, dtype=np.float_)
+        destination_components = np.zeros(n_words, dtype=np.float_)
         for i in range(n_words):
             source_components[i] = \
                 pca.transform(source_features[i, :].reshape(1, -1))[0, n]\
@@ -163,10 +163,10 @@ class SubstitutionFeaturesMixin:
         assert n_features == len(pca.mean_)
 
         # Compute the features, and transform into components.
-        features = np.zeros((2, n_features))
+        features = np.zeros((2, n_features), dtype=np.float_)
         for j, name in enumerate(feature_names):
             features[:, j] = self._substitution_features(name)
-        components = np.zeros(2)
+        components = np.zeros(2, dtype=np.float_)
         for i in range(2):
             components[i] = pca.transform(features[i, :].reshape(1, -1))[0, n]\
                 if np.isfinite(features[i, :]).all() else np.nan
@@ -191,7 +191,7 @@ class SubstitutionFeaturesMixin:
         # - It's the only way to compute averages of components. Otherwise
         #   we're facing a different set of synonyms (those from the lemma and
         #   those from the token) for each feature used in the component, and
-        #   it's impossible to bring the together.
+        #   it's impossible to bring them together.
         source_lemma, _ = self.lemmas
         # Assumes func() yields the set of words from which to compute
         # the average.
@@ -248,7 +248,7 @@ class SubstitutionFeaturesMixin:
                 return words
             else:
                 word_tfeatures = np.array([tf(word) for tf in tfeatures],
-                                          dtype=float)
+                                          dtype=np.float_)
                 return transform(word_tfeatures)
 
         avg = self._average(component, source_synonyms)
