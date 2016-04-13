@@ -67,6 +67,7 @@ def drop_caches():
     SubstitutionFeaturesMixin._average.drop_cache()
     SubstitutionFeaturesMixin.feature_average.drop_cache()
     SubstitutionFeaturesMixin.component_average.drop_cache()
+    SubstitutionFeaturesMixin._component.drop_cache()
     SubstitutionFeaturesMixin._transformed_feature.drop_cache()
     for feature in SubstitutionFeaturesMixin.__features__:
         getattr(SubstitutionFeaturesMixin, '_' + feature).drop_cache()
@@ -799,6 +800,58 @@ def test_source_destination_components(normal_substitution):
     sc, dc = s._source_destination_components(2, pca, features)
     assert nanequals(-sc, [np.nan, 2, np.nan, np.nan, 4])
     assert nanequals(-dc, [np.nan, 2, np.nan, 5, 4])
+
+
+def test_component():
+    drop_caches()
+
+    # Create a test PCA with features alternatively log-transformed and not,
+    # alternatively on tokens and lemmas.
+    features = ('letters_count', 'aoa', 'synonyms_count',
+                'phonological_density')
+    pca = PCA(n_components=3)
+
+    # Trying this with a PCA fitted with the wrong shape fails.
+    pca.fit(np.array([[1, 1, 0], [0, 1, 0], [0, 1, 1]]))
+    with pytest.raises(AssertionError):
+        SubstitutionFeaturesMixin._component(0, pca, features)
+    with pytest.raises(AssertionError):
+        SubstitutionFeaturesMixin._component(1, pca, features)
+    # Trying this with unknown features fails.
+    with pytest.raises(ValueError) as excinfo:
+        SubstitutionFeaturesMixin._component(
+            0, pca, ('letters_count', 'unknown_feature', 'aoa'))
+    assert 'Unknown feature' in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        SubstitutionFeaturesMixin._component(
+            1, pca, ('letters_count', 'unknown_feature', 'aoa'))
+    assert 'Unknown feature' in str(excinfo.value)
+
+    # Now training with the right shape.
+    pca.fit(np.array([[1, 0, 0, 0], [-1, 0, 0, 0],
+                      [0, 1, 0, 0], [0, -1, 0, 0],
+                      [0, 0, 1, 0], [0, 0, -1, 0]]))
+    c0 = SubstitutionFeaturesMixin._component(0, pca, features)
+    c1 = SubstitutionFeaturesMixin._component(1, pca, features)
+    c2 = SubstitutionFeaturesMixin._component(2, pca, features)
+    # Doc and name are properly set.
+    assert c0.__name__ == '_component_0'
+    assert c0.__doc__ == 'component 0'
+    assert c1.__name__ == '_component_1'
+    assert c1.__doc__ == 'component 1'
+    assert c2.__name__ == '_component_2'
+    assert c2.__doc__ == 'component 2'
+    # We get the expected hand-computed values.
+    assert c0('time') == -5.16
+    assert c1('time') == 0.62860865942237421
+    assert c2('time') == -4
+    assert np.isnan(c0('makakiki'))
+    assert np.isnan(c1('makakiki'))
+    assert np.isnan(c2('makakiki'))
+    # And the list of words is properly computed.
+    assert len(c0()) == 173926
+    assert len(c1()) == 173926
+    assert len(c2()) == 173926
 
 
 def test_components(normal_substitution):

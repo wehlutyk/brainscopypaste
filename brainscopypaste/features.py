@@ -229,6 +229,22 @@ class SubstitutionFeaturesMixin:
     @memoized
     def component_average(self, n, pca, feature_names,
                           source_synonyms=False, sentence_relative=False):
+        component = self._component(n, pca, feature_names)
+        avg = self._average(component, source_synonyms)
+
+        if sentence_relative:
+            sentence_components, _ = \
+                self._source_destination_components(n, pca, feature_names)
+            sentence_components[self.position] = avg
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                avg -= np.nanmean(sentence_components)
+
+        return avg
+
+    @classmethod
+    @memoized
+    def _component(cls, n, pca, feature_names):
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -243,7 +259,7 @@ class SubstitutionFeaturesMixin:
         # letters_count and synonyms are susceptible to this (because they're
         # not based on a dict). So we consider that the approach taken here is
         # fair to compute component average.
-        tfeatures = [self._transformed_feature(name) for name in feature_names]
+        tfeatures = [cls._transformed_feature(name) for name in feature_names]
         words = set()
         for tfeature in tfeatures:
             words.update(tfeature())
@@ -260,17 +276,10 @@ class SubstitutionFeaturesMixin:
                                           dtype=np.float_)
                 return transform(word_tfeatures)
 
-        avg = self._average(component, source_synonyms)
+        component.__name__ = '_component_{}'.format(n)
+        component.__doc__ = 'component {}'.format(n)
 
-        if sentence_relative:
-            sentence_components, _ = \
-                self._source_destination_components(n, pca, feature_names)
-            sentence_components[self.position] = avg
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', category=RuntimeWarning)
-                avg -= np.nanmean(sentence_components)
-
-        return avg
+        return component
 
     @classmethod
     @memoized
