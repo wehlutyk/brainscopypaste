@@ -114,8 +114,10 @@ class SubstitutionFeaturesMixin:
                                         dtype=np.float_)
 
         if sentence_relative:
-            source_features -= np.nanmean(source_features)
-            destination_features -= np.nanmean(destination_features)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                source_features -= np.nanmean(source_features)
+                destination_features -= np.nanmean(destination_features)
 
         return source_features, destination_features
 
