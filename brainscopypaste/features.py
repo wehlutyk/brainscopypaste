@@ -93,7 +93,7 @@ class SubstitutionFeaturesMixin:
         return feature(word1), feature(word2)
 
     @memoized
-    def _source_destination_features(self, name):
+    def source_destination_features(self, name, sentence_relative=False):
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -112,6 +112,11 @@ class SubstitutionFeaturesMixin:
         destination_features = np.array([feature(word) for word
                                          in destination_words],
                                         dtype=np.float_)
+
+        if sentence_relative:
+            source_features -= np.nanmean(source_features)
+            destination_features -= np.nanmean(destination_features)
+
         return source_features, destination_features
 
     @memoized
@@ -120,7 +125,7 @@ class SubstitutionFeaturesMixin:
 
         if sentence_relative:
             source_features, destination_features = \
-                self._source_destination_features(name)
+                self.source_destination_features(name)
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
                 feature1 -= np.nanmean(source_features)
@@ -141,7 +146,7 @@ class SubstitutionFeaturesMixin:
         destination_features = np.zeros((n_words, n_features), dtype=np.float_)
         for j, name in enumerate(feature_names):
             source_features[:, j], destination_features[:, j] = \
-                self._source_destination_features(name)
+                self.source_destination_features(name)
         # Then transform those into components, guarding for NaNs.
         source_components = np.zeros(n_words, dtype=np.float_)
         destination_components = np.zeros(n_words, dtype=np.float_)
@@ -218,7 +223,7 @@ class SubstitutionFeaturesMixin:
         avg = self._average(tfeature, source_synonyms)
 
         if sentence_relative:
-            sentence_features, _ = self._source_destination_features(name)
+            sentence_features, _ = self.source_destination_features(name)
             sentence_features[self.position] = avg
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)

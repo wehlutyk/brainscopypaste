@@ -60,7 +60,7 @@ def drop_caches():
     _get_aoa.drop_cache()
     _get_clearpond.drop_cache()
     SubstitutionFeaturesMixin._substitution_features.drop_cache()
-    SubstitutionFeaturesMixin._source_destination_features.drop_cache()
+    SubstitutionFeaturesMixin.source_destination_features.drop_cache()
     SubstitutionFeaturesMixin.features.drop_cache()
     SubstitutionFeaturesMixin._source_destination_components.drop_cache()
     SubstitutionFeaturesMixin.components.drop_cache()
@@ -413,39 +413,84 @@ def test_source_destination_features(normal_substitution):
 
     # An unknown feature raises an error
     with pytest.raises(ValueError):
-        s._source_destination_features('unknown_feature')
+        s.source_destination_features('unknown_feature')
 
     # Syllable, phonemes, letters counts, and densities are right,
     # and computed on tokens.
-    assert (s._source_destination_features('syllables_count')[0] ==
+    assert (s.source_destination_features('syllables_count')[0] ==
             [1, 1, 1, 3, 1]).all()
-    assert (s._source_destination_features('syllables_count')[1] ==
+    assert (s.source_destination_features('syllables_count')[1] ==
             [1, 1, 1, 2, 1]).all()
-    assert (s._source_destination_features('phonemes_count')[0] ==
+    assert (s.source_destination_features('phonemes_count')[0] ==
             [2, 2, 2, 8, 4]).all()
-    assert (s._source_destination_features('phonemes_count')[1] ==
+    assert (s.source_destination_features('phonemes_count')[1] ==
             [2, 2, 2, 3, 4]).all()
-    assert (s._source_destination_features('letters_count')[0] ==
+    assert (s.source_destination_features('letters_count')[0] ==
             [2, 2, 3, 10, 4]).all()
-    assert (s._source_destination_features('letters_count')[1] ==
+    assert (s.source_destination_features('letters_count')[1] ==
             [2, 2, 3, 5, 4]).all()
-    sf, df = s._source_destination_features('phonological_density')
+    sf, df = s.source_destination_features('phonological_density')
     assert nanequals(sf, np.log([31, 24, 9, np.nan, 28]))
     assert nanequals(df, np.log([31, 24, 9, 7, 28]))
-    sf, df = s._source_destination_features('orthographical_density')
+    sf, df = s.source_destination_features('orthographical_density')
     assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]))
     assert nanequals(df, np.log([17, 14, 11, 5, 20]))
+    # This also all works sentence_relative.
+    assert (s.source_destination_features('syllables_count',
+                                          sentence_relative=True)[0] ==
+            [1, 1, 1, 3, 1] - np.mean([1, 1, 1, 3, 1])).all()
+    assert (s.source_destination_features('syllables_count',
+                                          sentence_relative=True)[1] ==
+            [1, 1, 1, 2, 1] - np.mean([1, 1, 1, 2, 1])).all()
+    assert (s.source_destination_features('phonemes_count',
+                                          sentence_relative=True)[0] ==
+            [2, 2, 2, 8, 4] - np.mean([2, 2, 2, 8, 4])).all()
+    assert (s.source_destination_features('phonemes_count',
+                                          sentence_relative=True)[1] ==
+            [2, 2, 2, 3, 4] - np.mean([2, 2, 2, 3, 4])).all()
+    assert (s.source_destination_features('letters_count',
+                                          sentence_relative=True)[0] ==
+            [2, 2, 3, 10, 4] - np.mean([2, 2, 3, 10, 4])).all()
+    assert (s.source_destination_features('letters_count',
+                                          sentence_relative=True)[1] ==
+            [2, 2, 3, 5, 4] - np.mean([2, 2, 3, 5, 4])).all()
+    sf, df = s.source_destination_features('phonological_density',
+                                           sentence_relative=True)
+    assert nanequals(sf, np.log([31, 24, 9, np.nan, 28]) -
+                     np.nanmean(np.log([31, 24, 9, np.nan, 28])))
+    assert nanequals(df, np.log([31, 24, 9, 7, 28]) -
+                     np.nanmean(np.log([31, 24, 9, 7, 28])))
+    sf, df = s.source_destination_features('orthographical_density',
+                                           sentence_relative=True)
+    assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]) -
+                     np.nanmean(np.log([17, 14, 11, np.nan, 20])))
+    assert nanequals(df, np.log([17, 14, 11, 5, 20]) -
+                     np.nanmean(np.log([17, 14, 11, 5, 20])))
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
     # The rest of the features need computed files, and are only tested through
     # 'features()' directly so as not to make other file-dependent tests heavy
     # to read.
-    sf, df = s._source_destination_features('synonyms_count')
+    sf, df = s.source_destination_features('synonyms_count')
     assert nanequals(sf, np.log([1, 1, np.nan, 3, 2.4444444444444446]))
     assert nanequals(df, np.log([1, 1, np.nan, .5, 2.4444444444444446]))
-    sf, df = s._source_destination_features('aoa')
+    sf, df = s.source_destination_features('aoa')
     assert nanequals(sf, [np.nan, 5.11, np.nan, 7.88, 5.11])
     assert nanequals(df, [np.nan, 5.11, np.nan, 5.33, 5.11])
+    # This also all works sentence_relative.
+    sf, df = s.source_destination_features('synonyms_count',
+                                           sentence_relative=True)
+    assert nanequals(
+        sf, np.log([1, 1, np.nan, 3, 2.4444444444444446]) -
+        np.nanmean(np.log([1, 1, np.nan, 3, 2.4444444444444446])))
+    assert nanequals(
+        df, np.log([1, 1, np.nan, .5, 2.4444444444444446]) -
+        np.nanmean(np.log([1, 1, np.nan, .5, 2.4444444444444446])))
+    sf, df = s.source_destination_features('aoa', sentence_relative=True)
+    assert nanequals(sf, [np.nan, 5.11, np.nan, 7.88, 5.11] -
+                     np.nanmean([np.nan, 5.11, np.nan, 7.88, 5.11]))
+    assert nanequals(df, [np.nan, 5.11, np.nan, 5.33, 5.11] -
+                     np.nanmean([np.nan, 5.11, np.nan, 5.33, 5.11]))
 
 
 def test_features(normal_substitution):
