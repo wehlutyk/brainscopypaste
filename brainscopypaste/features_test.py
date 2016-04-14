@@ -831,27 +831,32 @@ def test_component():
     pca.fit(np.array([[1, 0, 0, 0], [-1, 0, 0, 0],
                       [0, 1, 0, 0], [0, -1, 0, 0],
                       [0, 0, 1, 0], [0, 0, -1, 0]]))
-    c0 = SubstitutionFeaturesMixin._component(0, pca, features)
-    c1 = SubstitutionFeaturesMixin._component(1, pca, features)
-    c2 = SubstitutionFeaturesMixin._component(2, pca, features)
-    # Doc and name are properly set.
-    assert c0.__name__ == '_component_0'
-    assert c0.__doc__ == 'component 0'
-    assert c1.__name__ == '_component_1'
-    assert c1.__doc__ == 'component 1'
-    assert c2.__name__ == '_component_2'
-    assert c2.__doc__ == 'component 2'
-    # We get the expected hand-computed values.
-    assert c0('time') == -5.16
-    assert c1('time') == 0.62860865942237421
-    assert c2('time') == -4
-    assert np.isnan(c0('makakiki'))
-    assert np.isnan(c1('makakiki'))
-    assert np.isnan(c2('makakiki'))
-    # And the list of words is properly computed.
-    assert len(c0()) == 173926
-    assert len(c1()) == 173926
-    assert len(c2()) == 173926
+    with settings.file_override('TOKENS'):
+        with open(settings.TOKENS, 'wb') as f:
+            pickle.dump({'these', 'are', 'tokens'}, f)
+
+        c0 = SubstitutionFeaturesMixin._component(0, pca, features)
+        c1 = SubstitutionFeaturesMixin._component(1, pca, features)
+        c2 = SubstitutionFeaturesMixin._component(2, pca, features)
+        # Doc and name are properly set.
+        assert c0.__name__ == '_component_0'
+        assert c0.__doc__ == 'component 0'
+        assert c1.__name__ == '_component_1'
+        assert c1.__doc__ == 'component 1'
+        assert c2.__name__ == '_component_2'
+        assert c2.__doc__ == 'component 2'
+        # We get the expected hand-computed values.
+        assert c0('time') == -5.16
+        assert c1('time') == 0.62860865942237421
+        assert c2('time') == -4
+        assert np.isnan(c0('makakiki'))
+        assert np.isnan(c1('makakiki'))
+        assert np.isnan(c2('makakiki'))
+        # And the list of words is properly computed. (These are not the true
+        # values since we overrode the tokens list.)
+        assert len(c0()) == 157863
+        assert len(c1()) == 157863
+        assert len(c2()) == 157863
 
 
 def test_components(normal_substitution):
