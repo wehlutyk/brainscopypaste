@@ -4,7 +4,7 @@ Analyzing mutation in quotes when they propagate through the blog- and news-spac
 
 This software was developed for a research paper based on the [MemeTracker](http://memetracker.org/) quotes database [to be pusblished]. It is released under the GNU/GPLv3 licence.
 
-[The documentation](https://brainscopypaste.readthedocs.org/en/latest/) explains all about how to setup and use the software.
+OUTDATED: [The documentation](https://brainscopypaste.readthedocs.org/en/latest/) explains all about how to setup and use the software.
 
 
 ## Notes
