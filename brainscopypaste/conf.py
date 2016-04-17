@@ -28,8 +28,10 @@ class Settings:
     def override(self, *names_values):
         for name, value in names_values:
             self._override(name, value)
-        yield
-        self._setup()
+        try:
+            yield
+        finally:
+            self._setup()
 
     @contextmanager
     def file_override(self, *names):
