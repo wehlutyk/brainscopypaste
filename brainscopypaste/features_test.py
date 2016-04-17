@@ -437,31 +437,31 @@ def test_source_destination_features(normal_substitution):
     assert nanequals(df, np.log([17, 14, 11, 5, 20]))
     # This also all works sentence_relative.
     assert (s.source_destination_features('syllables_count',
-                                          sentence_relative=True)[0] ==
-            [1, 1, 1, 3, 1] - np.mean([1, 1, 1, 3, 1])).all()
+                                          sentence_relative='median')[0] ==
+            [1, 1, 1, 3, 1] - np.median([1, 1, 1, 3, 1])).all()
     assert (s.source_destination_features('syllables_count',
-                                          sentence_relative=True)[1] ==
+                                          sentence_relative='mean')[1] ==
             [1, 1, 1, 2, 1] - np.mean([1, 1, 1, 2, 1])).all()
     assert (s.source_destination_features('phonemes_count',
-                                          sentence_relative=True)[0] ==
-            [2, 2, 2, 8, 4] - np.mean([2, 2, 2, 8, 4])).all()
+                                          sentence_relative='median')[0] ==
+            [2, 2, 2, 8, 4] - np.median([2, 2, 2, 8, 4])).all()
     assert (s.source_destination_features('phonemes_count',
-                                          sentence_relative=True)[1] ==
+                                          sentence_relative='mean')[1] ==
             [2, 2, 2, 3, 4] - np.mean([2, 2, 2, 3, 4])).all()
     assert (s.source_destination_features('letters_count',
-                                          sentence_relative=True)[0] ==
-            [2, 2, 3, 10, 4] - np.mean([2, 2, 3, 10, 4])).all()
+                                          sentence_relative='median')[0] ==
+            [2, 2, 3, 10, 4] - np.median([2, 2, 3, 10, 4])).all()
     assert (s.source_destination_features('letters_count',
-                                          sentence_relative=True)[1] ==
+                                          sentence_relative='mean')[1] ==
             [2, 2, 3, 5, 4] - np.mean([2, 2, 3, 5, 4])).all()
     sf, df = s.source_destination_features('phonological_density',
-                                           sentence_relative=True)
+                                           sentence_relative='median')
     assert nanequals(sf, np.log([31, 24, 9, np.nan, 28]) -
-                     np.nanmean(np.log([31, 24, 9, np.nan, 28])))
+                     np.nanmedian(np.log([31, 24, 9, np.nan, 28])))
     assert nanequals(df, np.log([31, 24, 9, 7, 28]) -
-                     np.nanmean(np.log([31, 24, 9, 7, 28])))
+                     np.nanmedian(np.log([31, 24, 9, 7, 28])))
     sf, df = s.source_destination_features('orthographical_density',
-                                           sentence_relative=True)
+                                           sentence_relative='mean')
     assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]) -
                      np.nanmean(np.log([17, 14, 11, np.nan, 20])))
     assert nanequals(df, np.log([17, 14, 11, 5, 20]) -
@@ -479,18 +479,18 @@ def test_source_destination_features(normal_substitution):
     assert nanequals(df, [np.nan, 5.11, np.nan, 5.33, 5.11])
     # This also all works sentence_relative.
     sf, df = s.source_destination_features('synonyms_count',
-                                           sentence_relative=True)
+                                           sentence_relative='mean')
     assert nanequals(
         sf, np.log([1, 1, np.nan, 3, 2.4444444444444446]) -
         np.nanmean(np.log([1, 1, np.nan, 3, 2.4444444444444446])))
     assert nanequals(
         df, np.log([1, 1, np.nan, .5, 2.4444444444444446]) -
         np.nanmean(np.log([1, 1, np.nan, .5, 2.4444444444444446])))
-    sf, df = s.source_destination_features('aoa', sentence_relative=True)
+    sf, df = s.source_destination_features('aoa', sentence_relative='median')
     assert nanequals(sf, [np.nan, 5.11, np.nan, 7.88, 5.11] -
-                     np.nanmean([np.nan, 5.11, np.nan, 7.88, 5.11]))
+                     np.nanmedian([np.nan, 5.11, np.nan, 7.88, 5.11]))
     assert nanequals(df, [np.nan, 5.11, np.nan, 5.33, 5.11] -
-                     np.nanmean([np.nan, 5.11, np.nan, 5.33, 5.11]))
+                     np.nanmedian([np.nan, 5.11, np.nan, 5.33, 5.11]))
 
 
 def test_features(normal_substitution):
@@ -506,7 +506,7 @@ def test_features(normal_substitution):
     with pytest.raises(ValueError):
         s.features('unknown_feature')
     with pytest.raises(ValueError):
-        s.features('unknown_feature', sentence_relative=True)
+        s.features('unknown_feature', sentence_relative='mean')
 
     # Syllable, phonemes, letters counts, and densities are right,
     # and computed on tokens.
@@ -519,20 +519,20 @@ def test_features(normal_substitution):
     assert s.features('orthographical_density')[1] == np.log(5)
     # Same with features computed relative to sentence.
     assert s.features('syllables_count',
-                      sentence_relative=True) == (3 - 7/5, 2 - 6/5)
+                      sentence_relative='mean') == (3 - 7/5, 2 - 6/5)
     assert s.features('phonemes_count',
-                      sentence_relative=True) == (8 - 18/5, 3 - 13/5)
+                      sentence_relative='mean') == (8 - 18/5, 3 - 13/5)
     assert s.features('letters_count',
-                      sentence_relative=True) == (10 - 21/5, 5 - 16/5)
+                      sentence_relative='mean') == (10 - 21/5, 5 - 16/5)
     assert np.isnan(s.features('phonological_density',
-                               sentence_relative=True)[0])
+                               sentence_relative='median')[0])
     assert s.features('phonological_density',
-                      sentence_relative=True)[1] == \
-        np.log(7) - np.log([31, 24, 9, 7, 28]).mean()
+                      sentence_relative='median')[1] == \
+        np.log(7) - np.median(np.log([31, 24, 9, 7, 28]))
     assert np.isnan(s.features('orthographical_density',
-                               sentence_relative=True)[0])
+                               sentence_relative='mean')[0])
     assert s.features('orthographical_density',
-                      sentence_relative=True)[1] == \
+                      sentence_relative='mean')[1] == \
         np.log(5) - np.log([17, 14, 11, 5, 20]).mean()
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
@@ -540,10 +540,10 @@ def test_features(normal_substitution):
     assert s.features('synonyms_count') == (np.log(3), np.log(.5))
     assert s.features('aoa') == (7.88, 5.33)
     # Same with features computed relative to sentence.
-    assert s.features('synonyms_count', sentence_relative=True) == \
-        (np.log(3) - np.log([1, 1, 3, 2.4444444444444446]).mean(),
-         np.log(.5) - np.log([1, 1, .5, 2.4444444444444446]).mean())
-    assert s.features('aoa', sentence_relative=True) == \
+    assert s.features('synonyms_count', sentence_relative='median') == \
+        (np.log(3) - np.median(np.log([1, 1, 3, 2.4444444444444446])),
+         np.log(.5) - np.median(np.log([1, 1, .5, 2.4444444444444446])))
+    assert s.features('aoa', sentence_relative='mean') == \
         (7.88 - 6.033333333333334, 5.33 - 5.183333333333334)
 
     # Unknown words are ignored. Also when in the rest of the sentence.
@@ -553,8 +553,10 @@ def test_features(normal_substitution):
     assert s.features('syllables_count')[0] == 1
     # np.nan != np.nan so we can't `assert s.features(...) == (1, np.nan)`
     assert np.isnan(s.features('syllables_count')[1])
-    assert s.features('syllables_count', sentence_relative=True)[0] == 1 - 3/3
-    assert np.isnan(s.features('syllables_count', sentence_relative=True)[1])
+    assert s.features('syllables_count',
+                      sentence_relative='mean')[0] == 1 - 3/3
+    assert np.isnan(s.features('syllables_count',
+                               sentence_relative='median')[1])
 
 
 @pytest.mark.skipif(not exists(settings.DEGREE),
@@ -566,7 +568,7 @@ def test_features_degree(normal_substitution):
     assert s.features('degree') == \
         (np.log(9.419743782969103e-05), np.log(0.0008477769404672192))
     # Same with features computed relative to sentence.
-    assert s.features('degree', sentence_relative=True) == \
+    assert s.features('degree', sentence_relative='mean') == \
         (np.log(9.419743782969103e-05) - (-7.3658186158894221),
          np.log(0.0008477769404672192) - (-6.9263737004221797))
 
@@ -584,9 +586,9 @@ def test_features_pagerank(normal_substitution):
     assert abs(np.exp(s.features('pagerank')[1]) -
                6.421655879054584e-05) < 1e-15
     # Same with features computed relative to sentence.
-    assert abs(np.exp(s.features('pagerank', sentence_relative=True)[0]) -
+    assert abs(np.exp(s.features('pagerank', sentence_relative='mean')[0]) -
                (2.9236183726513393e-05 / 7.4667929803002613e-05)) < 1e-15
-    assert abs(np.exp(s.features('pagerank', sentence_relative=True)[1]) -
+    assert abs(np.exp(s.features('pagerank', sentence_relative='mean')[1]) -
                (6.421655879054584e-05 / 8.739354974404687e-05)) < 1e-15
 
 
@@ -600,8 +602,8 @@ def test_features_betweenness(normal_substitution):
     assert s.features('betweenness')[1] == np.log(0.0003369277738594168)
     # Same with features computed relative to sentence.
     assert np.isnan(s.features('betweenness',
-                               sentence_relative=True)[0])
-    assert s.features('betweenness', sentence_relative=True)[1] == \
+                               sentence_relative='mean')[0])
+    assert s.features('betweenness', sentence_relative='mean')[1] == \
         np.log(0.0003369277738594168) - (-7.3319337537445257)
 
 
@@ -614,8 +616,8 @@ def test_features_clustering(normal_substitution):
     assert np.isnan(s.features('clustering')[0])
     assert s.features('clustering')[1] == np.log(0.0037154495910700605)
     # Same with features computed relative to sentence.
-    assert np.isnan(s.features('clustering', sentence_relative=True)[0])
-    assert s.features('clustering', sentence_relative=True)[1] == \
+    assert np.isnan(s.features('clustering', sentence_relative='mean')[0])
+    assert s.features('clustering', sentence_relative='mean')[1] == \
         np.log(0.0037154495910700605) - (-6.2647504887460004)
 
 
@@ -627,7 +629,7 @@ def test_features_frequency(normal_substitution):
     # Values are right, and computed on lemmas.
     assert s.features('frequency') == (np.log(3992), np.log(81603))
     # Same with features computed relative to sentence.
-    assert s.features('frequency', sentence_relative=True) == \
+    assert s.features('frequency', sentence_relative='mean') == \
         (np.log(3992) - 12.447170233839325, np.log(81603) - 13.050684967349508)
 
 
@@ -742,17 +744,17 @@ def test_feature_average():
         # 'frisbee' has no synonyms.
         assert np.isnan(s2.feature_average('aoa', source_synonyms=True))
         assert s1.feature_average('aoa', source_synonyms=False,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             (-0.33333333333333304)
         assert s2.feature_average('aoa', source_synonyms=False,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             (-0.33333333333333304)
         assert s1.feature_average('aoa', source_synonyms=True,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             (-0.11111111111111072)
         # 'frisbee' has no synonyms.
         assert np.isnan(s2.feature_average('aoa', source_synonyms=True,
-                                           sentence_relative=True))
+                                           sentence_relative='mean'))
     # Test a log-transformed feature (phonological density), computed on
     # tokens.
     drop_caches()
@@ -780,20 +782,20 @@ def test_feature_average():
         # tokens, which leads us to drop 'others'.
         assert s1.feature_average('phonological_density',
                                   source_synonyms=False,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             0.20029093819187427
         assert s2.feature_average('phonological_density',
                                   source_synonyms=False,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             0.20029093819187427
         assert s1.feature_average('phonological_density',
                                   source_synonyms=True,
-                                  sentence_relative=True) == \
+                                  sentence_relative='mean') == \
             0.25674084015785814
         # 'frisbee' has no synonyms.
         assert np.isnan(s2.feature_average('phonological_density',
                                            source_synonyms=True,
-                                           sentence_relative=True))
+                                           sentence_relative='median'))
     # _synonyms_count(word=None) returns a list of words, some of which have
     # a _synonyms_count(word) == np.nan (because 0 synonyms is returned as
     # np.nan). So check that synonyms_count feature average is not np.nan.
@@ -920,14 +922,14 @@ def test_components(normal_substitution):
     with pytest.raises(AssertionError):
         s.components(0, pca, features)
     with pytest.raises(AssertionError):
-        s.components(0, pca, features, sentence_relative=True)
+        s.components(0, pca, features, sentence_relative='mean')
     # Trying this with unknown features fails.
     with pytest.raises(ValueError) as excinfo:
         s.components(0, pca, ('letters_count', 'unknown_feature', 'aoa'))
     assert 'Unknown feature' in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         s.components(0, pca, ('letters_count', 'unknown_feature', 'aoa'),
-                     sentence_relative=True)
+                     sentence_relative='mean')
     assert 'Unknown feature' in str(excinfo.value)
 
     # Now training with the right shape, we get the expected hand-computed
@@ -942,18 +944,21 @@ def test_components(normal_substitution):
     assert np.isnan(s.components(2, pca, features)[0])
     assert abs(s.components(2, pca, features)[1]) == 5
 
-    # Also for sentence_relative=True.
-    assert np.isnan(s.components(0, pca, features, sentence_relative=True)[0])
+    # Also for sentence_relative something else than None.
+    assert np.isnan(s.components(0, pca, features,
+                                 sentence_relative='mean')[0])
     assert abs(s.components(0, pca, features,
-                            sentence_relative=True)[1]) == \
-        5.33 - np.mean([5.11, 5.33, 5.11])
-    assert np.isnan(s.components(1, pca, features, sentence_relative=True)[0])
+                            sentence_relative='median')[1]) == \
+        5.33 - np.median([5.11, 5.33, 5.11])
+    assert np.isnan(s.components(1, pca, features,
+                                 sentence_relative='mean')[0])
     assert abs(s.components(1, pca, features,
-                            sentence_relative=True)[1]) == \
+                            sentence_relative='mean')[1]) == \
         0.69314718055994529 + 0.066890231820717072
-    assert np.isnan(s.components(2, pca, features, sentence_relative=True)[0])
+    assert np.isnan(s.components(2, pca, features,
+                                 sentence_relative='mean')[0])
     assert abs(s.components(2, pca, features,
-                            sentence_relative=True)[1]) == \
+                            sentence_relative='mean')[1]) == \
         5 - np.mean([2, 5, 4])
 
 
@@ -979,10 +984,10 @@ def test_component_average():
         s1.component_average(0, pca, features, source_synonyms=True)
     with pytest.raises(AssertionError):
         s1.component_average(0, pca, features, source_synonyms=False,
-                             sentence_relative=True)
+                             sentence_relative='mean')
     with pytest.raises(AssertionError):
         s1.component_average(0, pca, features, source_synonyms=True,
-                             sentence_relative=True)
+                             sentence_relative='mean')
     # Trying this with unknown features fails.
     with pytest.raises(ValueError) as excinfo:
         s1.component_average(
@@ -996,12 +1001,12 @@ def test_component_average():
     with pytest.raises(ValueError) as excinfo:
         s1.component_average(
             0, pca, ('letters_count', 'unknown_feature', 'aoa'),
-            source_synonyms=False, sentence_relative=True)
+            source_synonyms=False, sentence_relative='mean')
     assert 'Unknown feature' in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         s1.component_average(
             0, pca, ('letters_count', 'unknown_feature', 'aoa'),
-            source_synonyms=True, sentence_relative=True)
+            source_synonyms=True, sentence_relative='mean')
     assert 'Unknown feature' in str(excinfo.value)
 
     # Now with features we override to test manual values.
@@ -1047,32 +1052,32 @@ def test_component_average():
         # all lemmas).
         assert abs(-sign[0] * s1.component_average(0, pca, features,
                                                    source_synonyms=False,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.34030374468910285) < 1e-14
         assert abs(-sign[0] * s2.component_average(0, pca, features,
                                                    source_synonyms=False,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.34030374468910285) < 1e-14
         assert abs(-sign[1] * s1.component_average(1, pca, features,
                                                    source_synonyms=False,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.51902095047064112) < 1e-14
         assert abs(-sign[1] * s2.component_average(1, pca, features,
                                                    source_synonyms=False,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.51902095047064112) < 1e-14
         # Same with synonyms and sentence_relative.
         assert abs(-sign[0] * s1.component_average(0, pca, features,
                                                    source_synonyms=True,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.3390378360127122) < 1e-14
         assert np.isnan(s2.component_average(0, pca, features,
                                              source_synonyms=True,
-                                             sentence_relative=True))
+                                             sentence_relative='median'))
         assert abs(-sign[1] * s1.component_average(1, pca, features,
                                                    source_synonyms=True,
-                                                   sentence_relative=True) -
+                                                   sentence_relative='mean') -
                    0.58971575692206901) < 1e-14
         assert np.isnan(s2.component_average(1, pca, features,
                                              source_synonyms=True,
-                                             sentence_relative=True))
+                                             sentence_relative='mean'))

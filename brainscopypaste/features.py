@@ -93,7 +93,7 @@ class SubstitutionFeaturesMixin:
         return feature(word1), feature(word2)
 
     @memoized
-    def source_destination_features(self, name, sentence_relative=False):
+    def source_destination_features(self, name, sentence_relative=None):
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -113,25 +113,27 @@ class SubstitutionFeaturesMixin:
                                          in destination_words],
                                         dtype=np.float_)
 
-        if sentence_relative:
+        if sentence_relative is not None:
+            pool = getattr(np, 'nan' + sentence_relative)
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
-                source_features -= np.nanmean(source_features)
-                destination_features -= np.nanmean(destination_features)
+                source_features -= pool(source_features)
+                destination_features -= pool(destination_features)
 
         return source_features, destination_features
 
     @memoized
-    def features(self, name, sentence_relative=False):
+    def features(self, name, sentence_relative=None):
         feature1, feature2 = self._substitution_features(name)
 
-        if sentence_relative:
+        if sentence_relative is not None:
+            pool = getattr(np, 'nan' + sentence_relative)
             source_features, destination_features = \
                 self.source_destination_features(name)
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
-                feature1 -= np.nanmean(source_features)
-                feature2 -= np.nanmean(destination_features)
+                feature1 -= pool(source_features)
+                feature2 -= pool(destination_features)
 
         return feature1, feature2
 
@@ -164,7 +166,7 @@ class SubstitutionFeaturesMixin:
         return source_components, destination_components
 
     @memoized
-    def components(self, n, pca, feature_names, sentence_relative=False):
+    def components(self, n, pca, feature_names, sentence_relative=None):
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -178,14 +180,15 @@ class SubstitutionFeaturesMixin:
             components[i] = pca.transform(features[i, :].reshape(1, -1))[0, n]\
                 if np.isfinite(features[i, :]).all() else np.nan
 
-        if sentence_relative:
+        if sentence_relative is not None:
+            pool = getattr(np, 'nan' + sentence_relative)
             # Substract the sentence average from substitution components.
             source_components, destination_components = \
                 self._source_destination_components(n, pca, feature_names)
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
-                components[0] -= np.nanmean(source_components)
-                components[1] -= np.nanmean(destination_components)
+                components[0] -= pool(source_components)
+                components[1] -= pool(destination_components)
 
         return components
 
@@ -220,32 +223,34 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def feature_average(self, name, source_synonyms=False,
-                        sentence_relative=False):
+                        sentence_relative=None):
         tfeature = self._transformed_feature(name)
         avg = self._average(tfeature, source_synonyms)
 
-        if sentence_relative:
+        if sentence_relative is not None:
+            pool = getattr(np, 'nan' + sentence_relative)
             sentence_features, _ = self.source_destination_features(name)
             sentence_features[self.position] = avg
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
-                avg -= np.nanmean(sentence_features)
+                avg -= pool(sentence_features)
 
         return avg
 
     @memoized
     def component_average(self, n, pca, feature_names,
-                          source_synonyms=False, sentence_relative=False):
+                          source_synonyms=False, sentence_relative=None):
         component = self._component(n, pca, feature_names)
         avg = self._average(component, source_synonyms)
 
-        if sentence_relative:
+        if sentence_relative is not None:
+            pool = getattr(np, 'nan' + sentence_relative)
             sentence_components, _ = \
                 self._source_destination_components(n, pca, feature_names)
             sentence_components[self.position] = avg
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', category=RuntimeWarning)
-                avg -= np.nanmean(sentence_components)
+                avg -= pool(sentence_components)
 
         return avg
 
