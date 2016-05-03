@@ -9,7 +9,7 @@ from brainscopypaste.conf import settings
 
 try:
     _treetagger = TreeTagger(
-        TAGLANG='en', TAGPARFILE='english.par',
+        TAGLANG='en', TAGPARFILE='english-utf8.par',
         TAGDIR=find_parent_rel_dir(settings.TREETAGGER_TAGDIR))
 except NotFoundError:
     raise TreeTaggerError('TreeTagger directory not found '
