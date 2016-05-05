@@ -1,8 +1,11 @@
-from os.path import exists, basename
+from os.path import exists, basename, split, join
 from os import remove
 import logging
+import re
 
 import click
+import nbformat
+from nbconvert.preprocessors import ExecutePreprocessor
 
 from brainscopypaste.db import Base, Cluster, Substitution
 from brainscopypaste.utils import session_scope, init_db
@@ -205,6 +208,82 @@ def mine_substitutions(time, source, past, durl, limit):
 
     mine_substitutions_with_model(model, limit=limit)
     logger.info('Done mining substitutions in memetracker data')
+
+
+@cli.group()
+def variant():
+    """Generate or run variants of the analysis notebooks."""
+
+
+def _notebook_variant_path(nb_file, model):
+    folder, filename = split(nb_file)
+    return join(settings.NOTEBOOKS_VARIANTS, '{} - {}'.format(model, filename))
+
+
+@variant.command(name='generate')
+@click.argument('time', type=click.Choice(map('{}'.format, Time)))
+@click.argument('source', type=click.Choice(map('{}'.format, Source)))
+@click.argument('past', type=click.Choice(map('{}'.format, Past)))
+@click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
+@click.argument('notebook', type=click.Path(exists=True))
+def variant_generate(time, source, past, durl, notebook):
+    """Generate a variant of an analysis notebooks based on a different
+    substitution model."""
+
+    # Get model object.
+    time, source, past, durl = map(lambda s: s.split('.')[1],
+                                   [time, source, past, durl])
+    model = Model(time=Time[time], source=Source[source],
+                  past=Past[past], durl=Durl[durl])
+    model_str = '{}'.format(model)
+
+    # Read the source notebook, and generate the appropriate variant.
+    logger.debug("Reading notebook '{}'".format(notebook))
+    with open(notebook) as f:
+        nb = nbformat.read(f, as_version=4)
+
+    logger.info("Creating notebook '{}' variant {}".format(notebook, model))
+    for cell in nb.cells:
+        cell['source'] = re.sub(r'Model\(.*?\)', model_str, cell['source'])
+        if 'outputs' in cell:
+            cell['outputs'] = []
+        if 'execution_count' in cell:
+            cell['execution_count'] = None
+
+    logger.debug("Saving notebook '{}' variant {}".format(notebook, model))
+    with open(_notebook_variant_path(notebook, model), 'wt') as f:
+        nbformat.write(nb, f)
+
+
+@variant.command(name='run')
+@click.argument('time', type=click.Choice(map('{}'.format, Time)))
+@click.argument('source', type=click.Choice(map('{}'.format, Source)))
+@click.argument('past', type=click.Choice(map('{}'.format, Past)))
+@click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
+@click.argument('notebook', type=click.Path(exists=True))
+def variant_run(time, source, past, durl, notebook):
+    """Run a variant of an analysis notebooks based on a different
+    substitution model."""
+
+    time, source, past, durl = map(lambda s: s.split('.')[1],
+                                   [time, source, past, durl])
+    model = Model(time=Time[time], source=Source[source],
+                  past=Past[past], durl=Durl[durl])
+    notebook = _notebook_variant_path(notebook, model)
+
+    logger.debug("Reading notebook '{}'".format(notebook))
+    if not exists(notebook):
+        raise Exception("Couldn't find notebook '{}'".format(notebook))
+    with open(notebook) as f:
+        nb = nbformat.read(f, as_version=4)
+
+    logger.info("Executing notebook '{}'".format(notebook))
+    ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
+    ep.preprocess(nb, {'metadata': {'path': settings.NOTEBOOKS}})
+
+    logger.debug("Saving notebook '{}'".format(notebook))
+    with open(notebook, 'wt') as f:
+        nbformat.write(nb, f)
 
 
 def cliobj():

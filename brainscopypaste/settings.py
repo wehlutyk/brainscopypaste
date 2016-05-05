@@ -14,8 +14,11 @@ clearpond_root = join(data_root, 'clearpond')
 fa_root = join(data_root, 'FreeAssociation')
 mt_root = join(data_root, 'MemeTracker')
 figures_root = join(data_root, 'figures')
+NOTEBOOKS = abspath('notebooks')
+NOTEBOOKS_VARIANTS = abspath('notebooks_variants')
 # Paths to be created when settings are initialised.
-paths_to_create = [data_root, aoa_root, fa_root, mt_root, figures_root]
+paths_to_create = [NOTEBOOKS, NOTEBOOKS_VARIANTS, data_root,
+                   aoa_root, fa_root, mt_root, figures_root]
 
 # NLTK-builtin stopwords are a bit shallow, so we use these instead.
 STOPWORDS = join(data_root, 'stopwords.txt')
