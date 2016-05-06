@@ -278,7 +278,7 @@ def variant_run(time, source, past, durl, notebook):
         nb = nbformat.read(f, as_version=4)
 
     logger.info("Executing notebook '{}'".format(notebook))
-    ep = ExecutePreprocessor(timeout=600, kernel_name='python3')
+    ep = ExecutePreprocessor(timeout=12*3600, kernel_name='python3')
     ep.preprocess(nb, {'metadata': {'path': settings.NOTEBOOKS}})
 
     logger.debug("Saving notebook '{}'".format(notebook))
