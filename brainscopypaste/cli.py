@@ -242,6 +242,7 @@ def variant_generate(time, source, past, durl, notebook):
     with open(notebook) as f:
         nb = nbformat.read(f, as_version=4)
 
+    # TODO: use ClearOutputPreprocessor
     logger.info("Creating notebook '{}' variant {}".format(notebook, model))
     for cell in nb.cells:
         cell['source'] = re.sub(r'Model\(.*?\)', model_str, cell['source'])
@@ -277,6 +278,7 @@ def variant_run(time, source, past, durl, notebook):
     with open(notebook) as f:
         nb = nbformat.read(f, as_version=4)
 
+    # TODO: use a preprocessor that extracts the figures
     logger.info("Executing notebook '{}'".format(notebook))
     ep = ExecutePreprocessor(timeout=12*3600, kernel_name='python3')
     ep.preprocess(nb, {'metadata': {'path': settings.NOTEBOOKS}})
