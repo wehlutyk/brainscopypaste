@@ -5,7 +5,8 @@ import re
 
 import click
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor
+from traitlets.config import Config
+from nbconvert.exporters import Exporter
 
 from brainscopypaste.db import Base, Cluster, Substitution
 from brainscopypaste.utils import session_scope, init_db
@@ -14,6 +15,7 @@ from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
                                   Past, Durl, Model)
+from brainscopypaste.utils import mkdirp
 from brainscopypaste.conf import settings
 
 
@@ -210,82 +212,65 @@ def mine_substitutions(time, source, past, durl, limit):
     logger.info('Done mining substitutions in memetracker data')
 
 
-@cli.group()
-def variant():
-    """Generate or run variants of the analysis notebooks."""
-
-
-def _notebook_variant_path(nb_file, model):
-    folder, filename = split(nb_file)
-    return join(settings.NOTEBOOKS_VARIANTS, '{} - {}'.format(model, filename))
-
-
-@variant.command(name='generate')
+@cli.command()
 @click.argument('time', type=click.Choice(map('{}'.format, Time)))
 @click.argument('source', type=click.Choice(map('{}'.format, Source)))
 @click.argument('past', type=click.Choice(map('{}'.format, Past)))
 @click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
-@click.argument('notebook', type=click.Path(exists=True))
-def variant_generate(time, source, past, durl, notebook):
-    """Generate a variant of an analysis notebooks based on a different
-    substitution model."""
+@click.argument('notebook_path', metavar='NOTEBOOK',
+                type=click.Path(exists=True))
+def variant(time, source, past, durl, notebook_path):
+    """Generate and run a variant of an analysis notebook based on a specific
+    substitution-detection model."""
 
-    # Get model object.
+    # Create the model defined on the command line.
     time, source, past, durl = map(lambda s: s.split('.')[1],
                                    [time, source, past, durl])
     model = Model(time=Time[time], source=Source[source],
                   past=Past[past], durl=Durl[durl])
+    notebook_folder, notebook_file = split(notebook_path)
+    variant_path = settings.NOTEBOOK.format(model=model,
+                                            notebook=notebook_file)
+    _, variant_file = split(variant_path)
+
+    # Read the source notebook and generate the appropriate variant.
+    if not exists(notebook_path):
+        raise Exception("Couldn't find notebook '{}'".format(notebook_path))
+    logger.debug("Reading notebook '{}'".format(notebook_file))
+    with open(notebook_path) as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    logger.info("Creating notebook '{}'".format(variant_file))
     model_str = '{}'.format(model)
-
-    # Read the source notebook, and generate the appropriate variant.
-    logger.debug("Reading notebook '{}'".format(notebook))
-    with open(notebook) as f:
-        nb = nbformat.read(f, as_version=4)
-
-    # TODO: use ClearOutputPreprocessor
-    logger.info("Creating notebook '{}' variant {}".format(notebook, model))
-    for cell in nb.cells:
+    for cell in notebook.cells:
         cell['source'] = re.sub(r'Model\(.*?\)', model_str, cell['source'])
-        if 'outputs' in cell:
-            cell['outputs'] = []
-        if 'execution_count' in cell:
-            cell['execution_count'] = None
 
-    logger.debug("Saving notebook '{}' variant {}".format(notebook, model))
-    with open(_notebook_variant_path(notebook, model), 'wt') as f:
-        nbformat.write(nb, f)
+    # Execute the notebook and extract its figures.
+    logger.info("Executing and extracting figures from notebook '{}'"
+                .format(variant_file))
+    config = Config()
+    config.Exporter.preprocessors = [
+        'nbconvert.preprocessors.ExecutePreprocessor',
+        'nbconvert.preprocessors.ExtractOutputPreprocessor'
+    ]
+    config.ExecutePreprocessor.timeout = 12 * 3600
+    exporter = Exporter(config=config)
+    variant, resources = exporter.from_notebook_node(notebook, {
+        'metadata': {'path': notebook_folder},
+        'unique_key': 'figure'
+    })
 
+    # Save the resulting notebook and figures.
+    logger.debug("Saving notebook '{}'".format(variant_file))
+    with open(variant_path, 'wt') as f:
+        nbformat.write(variant, f)
 
-@variant.command(name='run')
-@click.argument('time', type=click.Choice(map('{}'.format, Time)))
-@click.argument('source', type=click.Choice(map('{}'.format, Source)))
-@click.argument('past', type=click.Choice(map('{}'.format, Past)))
-@click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
-@click.argument('notebook', type=click.Path(exists=True))
-def variant_run(time, source, past, durl, notebook):
-    """Run a variant of an analysis notebooks based on a different
-    substitution model."""
-
-    time, source, past, durl = map(lambda s: s.split('.')[1],
-                                   [time, source, past, durl])
-    model = Model(time=Time[time], source=Source[source],
-                  past=Past[past], durl=Durl[durl])
-    notebook = _notebook_variant_path(notebook, model)
-
-    logger.debug("Reading notebook '{}'".format(notebook))
-    if not exists(notebook):
-        raise Exception("Couldn't find notebook '{}'".format(notebook))
-    with open(notebook) as f:
-        nb = nbformat.read(f, as_version=4)
-
-    # TODO: use a preprocessor that extracts the figures
-    logger.info("Executing notebook '{}'".format(notebook))
-    ep = ExecutePreprocessor(timeout=12*3600, kernel_name='python3')
-    ep.preprocess(nb, {'metadata': {'path': settings.NOTEBOOKS}})
-
-    logger.debug("Saving notebook '{}'".format(notebook))
-    with open(notebook, 'wt') as f:
-        nbformat.write(nb, f)
+    logger.debug("Saving figures from notebook '{}'".format(variant_file))
+    figures_dir = settings.FIGURE_VARIANTS.format(model)
+    mkdirp(figures_dir)
+    for figure_file, figure_data in resources['outputs'].items():
+        with open(join(figures_dir, figure_file), 'wb') as f:
+            f.write(figure_data)
 
 
 def cliobj():
