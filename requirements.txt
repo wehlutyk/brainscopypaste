@@ -1,5 +1,6 @@
 click==6.4
 cycler==0.10.0
+Cython==0.24
 decorator==4.0.9
 fancycompleter==0.4
 ipykernel==4.3.1
@@ -25,6 +26,7 @@ numpy==1.10.4
 ordereddict==1.1
 pandas==0.18.0
 path.py==8.1.2
+patsy==0.4.1
 pdbpp==0.8.3
 pexpect==4.0.1
 pickleshare==0.6
@@ -38,6 +40,7 @@ pyparsing==2.1.1
 pytest==2.9.1
 python-dateutil==2.5.2
 pytz==2016.3
+PyYAML==3.11
 pyzmq==15.2.0
 qtconsole==4.2.0
 scikit-learn==0.17.1
@@ -46,6 +49,7 @@ seaborn==0.7.0
 simplegeneric==0.8.1
 six==1.10.0
 SQLAlchemy==1.0.12
+-e git+https://github.com/wehlutyk/statsmodels.git@17cef1992701bb6ba72a3e40250618a852cbe59f#egg=statsmodels
 terminado==0.6
 tornado==4.3
 traitlets==4.2.1
