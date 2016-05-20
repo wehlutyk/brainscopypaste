@@ -266,7 +266,8 @@ def variant(time, source, past, durl, notebook_path):
         nbformat.write(variant, f)
 
     logger.debug("Saving figures from notebook '{}'".format(variant_file))
-    figures_dir = settings.FIGURE_VARIANTS.format(model)
+    figures_dir = settings.FIGURE_VARIANTS.format(
+        notebook=notebook_file, model=model)
     mkdirp(figures_dir)
     for figure_file, figure_data in resources['outputs'].items():
         with open(join(figures_dir, figure_file), 'wb') as f:

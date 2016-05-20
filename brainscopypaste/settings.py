@@ -54,7 +54,7 @@ TOKENS = join(mt_root, 'tokens.pickle')
 
 # Where figures from notebooks live.
 FIGURE = join(figures_root, '{}.png')
-FIGURE_VARIANTS = join(figures_root, '{}')
+FIGURE_VARIANTS = join(figures_root, '{notebook}', '{model}')
 
 # TreeTagger library folder.
 TREETAGGER_TAGDIR = 'treetagger'
