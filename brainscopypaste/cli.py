@@ -1,8 +1,12 @@
-from os.path import exists, basename
+from os.path import exists, basename, split, join
 from os import remove
 import logging
+import re
 
 import click
+import nbformat
+from traitlets.config import Config
+from nbconvert.exporters import Exporter
 
 from brainscopypaste.db import Base, Cluster, Substitution
 from brainscopypaste.utils import session_scope, init_db
@@ -11,6 +15,7 @@ from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
                                   Past, Durl, Model)
+from brainscopypaste.utils import mkdirp
 from brainscopypaste.conf import settings
 
 
@@ -205,6 +210,68 @@ def mine_substitutions(time, source, past, durl, limit):
 
     mine_substitutions_with_model(model, limit=limit)
     logger.info('Done mining substitutions in memetracker data')
+
+
+@cli.command()
+@click.argument('time', type=click.Choice(map('{}'.format, Time)))
+@click.argument('source', type=click.Choice(map('{}'.format, Source)))
+@click.argument('past', type=click.Choice(map('{}'.format, Past)))
+@click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
+@click.argument('notebook_path', metavar='NOTEBOOK',
+                type=click.Path(exists=True))
+def variant(time, source, past, durl, notebook_path):
+    """Generate and run a variant of an analysis notebook based on a specific
+    substitution-detection model."""
+
+    # Create the model defined on the command line.
+    time, source, past, durl = map(lambda s: s.split('.')[1],
+                                   [time, source, past, durl])
+    model = Model(time=Time[time], source=Source[source],
+                  past=Past[past], durl=Durl[durl])
+    notebook_folder, notebook_file = split(notebook_path)
+    variant_path = settings.NOTEBOOK.format(model=model,
+                                            notebook=notebook_file)
+    _, variant_file = split(variant_path)
+
+    # Read the source notebook and generate the appropriate variant.
+    if not exists(notebook_path):
+        raise Exception("Couldn't find notebook '{}'".format(notebook_path))
+    logger.debug("Reading notebook '{}'".format(notebook_file))
+    with open(notebook_path) as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    logger.info("Creating notebook '{}'".format(variant_file))
+    model_str = '{}'.format(model)
+    for cell in notebook.cells:
+        cell['source'] = re.sub(r'Model\(.*?\)', model_str, cell['source'])
+
+    # Execute the notebook and extract its figures.
+    logger.info("Executing and extracting figures from notebook '{}'"
+                .format(variant_file))
+    config = Config()
+    config.Exporter.preprocessors = [
+        'nbconvert.preprocessors.ExecutePreprocessor',
+        'nbconvert.preprocessors.ExtractOutputPreprocessor'
+    ]
+    config.ExecutePreprocessor.timeout = 12 * 3600
+    exporter = Exporter(config=config)
+    variant, resources = exporter.from_notebook_node(notebook, {
+        'metadata': {'path': notebook_folder},
+        'unique_key': 'figure'
+    })
+
+    # Save the resulting notebook and figures.
+    logger.debug("Saving notebook '{}'".format(variant_file))
+    with open(variant_path, 'wt') as f:
+        nbformat.write(variant, f)
+
+    logger.debug("Saving figures from notebook '{}'".format(variant_file))
+    figures_dir = settings.FIGURE_VARIANTS.format(
+        notebook=notebook_file, model=model)
+    mkdirp(figures_dir)
+    for figure_file, figure_data in resources['outputs'].items():
+        with open(join(figures_dir, figure_file), 'wb') as f:
+            f.write(figure_data)
 
 
 def cliobj():

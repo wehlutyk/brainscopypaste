@@ -14,8 +14,13 @@ clearpond_root = join(data_root, 'clearpond')
 fa_root = join(data_root, 'FreeAssociation')
 mt_root = join(data_root, 'MemeTracker')
 figures_root = join(data_root, 'figures')
+notebooks_root = join(data_root, 'notebooks')
 # Paths to be created when settings are initialised.
-paths_to_create = [data_root, aoa_root, fa_root, mt_root, figures_root]
+paths_to_create = [data_root, aoa_root, fa_root, mt_root, figures_root,
+                   notebooks_root]
+
+# Notebook variant with a specific substitution-detection model.
+NOTEBOOK = join(notebooks_root, '{model} - {notebook}')
 
 # NLTK-builtin stopwords are a bit shallow, so we use these instead.
 STOPWORDS = join(data_root, 'stopwords.txt')
@@ -49,6 +54,7 @@ TOKENS = join(mt_root, 'tokens.pickle')
 
 # Where figures from notebooks live.
 FIGURE = join(figures_root, '{}.png')
+FIGURE_VARIANTS = join(figures_root, '{notebook}', '{model}')
 
 # TreeTagger library folder.
 TREETAGGER_TAGDIR = 'treetagger'
