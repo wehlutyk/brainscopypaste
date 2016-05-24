@@ -4,7 +4,7 @@ Software developed to build our "Brains Copy Paste" paper, analyzing mutation in
 
 The latex source (along with compiled pdf) for the paper is at [wehlutyk/brainscopypaste-paper](https://github.com/wehlutyk/brainscopypaste-paper).
 
-TODO/OUTDATED: See the [the documentation](https://brainscopypaste.readthedocs.org/en/latest/) if you want to install, run, or understand any of this.
+TODO/OUTDATED: See the [documentation](https://brainscopypaste.readthedocs.org/en/latest/) if you want to install, run, or understand any of this.
 
 ## Licence
 
