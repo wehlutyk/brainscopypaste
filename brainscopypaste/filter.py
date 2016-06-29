@@ -127,7 +127,7 @@ class ClusterFilterMixin:
 
             if langdetect(quote.string) != 'en':
                 logger.debug('Dropping quote #%s (cluster #%s): '
-                             'not english', quote.sid, self.sid)
+                             'not English', quote.sid, self.sid)
                 continue
 
             logger.debug('Keeping quote #%s (cluster #%s)',
