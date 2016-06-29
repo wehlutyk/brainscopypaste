@@ -92,7 +92,6 @@ def filter_quote_offset():
     from brainscopypaste.db import Quote
     with session_scope() as session:
         maxid = session.query(func.max(Quote.id)).scalar()
-        print(maxid)
         return _top_id(maxid)
 
 
