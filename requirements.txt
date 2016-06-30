@@ -49,7 +49,7 @@ seaborn==0.7.0
 simplegeneric==0.8.1
 six==1.10.0
 SQLAlchemy==1.0.12
-git+https://github.com/wehlutyk/statsmodels.git@17cef1992701bb6ba72a3e40250618a852cbe59f#egg=statsmodels
+git+https://github.com/wehlutyk/statsmodels.git@44dc808dcbacc6ac0a891b836aa4c6523e1f0778#egg=statsmodels
 terminado==0.6
 tornado==4.3
 traitlets==4.2.1
