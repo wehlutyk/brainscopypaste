@@ -259,6 +259,11 @@ class ClusterMinerMixin:
                     continue
 
                 # We allow for substrings.
+                # Note here that there can be a difference in lemmas without
+                # there being a difference in tokens, because of fluctuations
+                # in lemmatization. This is caught later on in the validation
+                # of substitutions (see SubstitutionValidatorMixin.validate()),
+                # instead of making this function more complicated.
                 distance, start = subhamming(source.lemmas,
                                              durl.quote.lemmas)
 
@@ -310,7 +315,8 @@ class SubstitutionValidatorMixin:
         if (token1 in stopwords or token2 in stopwords or
                 lem1 in stopwords or lem2 in stopwords):
             return False
-        # Other minor spelling changes
+        # Other minor spelling changes, also catching cases where tokens are
+        # not different but lemmas are (because of lemmatization fluctuations).
         if levenshtein(token1, token2) <= 1:
             return False
         if levenshtein(lem1, lem2) <= 1:
