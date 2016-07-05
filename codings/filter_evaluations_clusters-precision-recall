@@ -1,4 +1,4 @@
-This file holds the codings for the precision-recall analysis in notebooks/filter_evaluations.ipynb
+This file holds the codings for the *cluster* filter precision-recall analysis in notebooks/filter_evaluations.ipynb
 
 The codings are as follows:
 tp: true positive
