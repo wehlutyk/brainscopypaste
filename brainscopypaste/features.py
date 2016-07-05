@@ -42,7 +42,7 @@ def _get_aoa():
 def _get_clearpond():
     logger.debug('Loading Clearpond data')
 
-    clearpond_orthographical = {}
+    clearpond_orthographic = {}
     clearpond_phonological = {}
     with open(settings.CLEARPOND, encoding='iso-8859-2') as csvfile:
         reader = csvreader(csvfile, delimiter='\t')
@@ -51,12 +51,12 @@ def _get_clearpond():
             if word in clearpond_phonological:
                 raise Exception("'{}' is already is Clearpond phonological "
                                 'dictionary'.format(word))
-            if word in clearpond_orthographical:
-                raise Exception("'{}' is already is Clearpond orthographical "
+            if word in clearpond_orthographic:
+                raise Exception("'{}' is already is Clearpond orthographic "
                                 'dictionary'.format(word))
-            clearpond_orthographical[word] = int(row[5])
+            clearpond_orthographic[word] = int(row[5])
             clearpond_phonological[word] = int(row[29])
-    return {'orthographical': clearpond_orthographical,
+    return {'orthographic': clearpond_orthographic,
             'phonological': clearpond_phonological}
 
 
@@ -75,7 +75,7 @@ class SubstitutionFeaturesMixin:
         'clustering':             ('lemmas', np.log),
         'frequency':              ('lemmas', np.log),
         'phonological_density':   ('tokens', np.log),
-        'orthographical_density': ('tokens', np.log),
+        'orthographic_density': ('tokens', np.log),
     }
 
     @memoized
@@ -441,9 +441,9 @@ class SubstitutionFeaturesMixin:
 
     @classmethod
     @memoized
-    def _orthographical_density(cls, word=None):
-        """orthographical nd"""
-        clearpond_orthographical = _get_clearpond()['orthographical']
+    def _orthographic_density(cls, word=None):
+        """orthographic nd"""
+        clearpond_orthographic = _get_clearpond()['orthographic']
         if word is None:
-            return clearpond_orthographical.keys()
-        return clearpond_orthographical.get(word, np.nan) or np.nan
+            return clearpond_orthographic.keys()
+        return clearpond_orthographic.get(word, np.nan) or np.nan

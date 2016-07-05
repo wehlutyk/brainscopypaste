@@ -46,10 +46,10 @@ def test_get_clearpond():
     assert clearpond['phonological']['cat'] == 50
     assert clearpond['phonological']['ghost'] == 14
     assert clearpond['phonological']['you'] == 49
-    assert clearpond['orthographical']['dog'] == 20
-    assert clearpond['orthographical']['cat'] == 33
-    assert clearpond['orthographical']['ghost'] == 2
-    assert clearpond['orthographical']['you'] == 4
+    assert clearpond['orthographic']['dog'] == 20
+    assert clearpond['orthographic']['cat'] == 33
+    assert clearpond['orthographic']['ghost'] == 2
+    assert clearpond['orthographic']['you'] == 4
     # And what's loaded is memoized.
     assert clearpond is _get_clearpond()
 
@@ -333,17 +333,17 @@ def test_phonological_density_none():
                    _phonological_density()) == {'dog', 'cat'}
 
 
-def test_orthographical_density():
+def test_orthographic_density():
     drop_caches()
-    assert SubstitutionFeaturesMixin._orthographical_density('time') == 13
+    assert SubstitutionFeaturesMixin._orthographic_density('time') == 13
     assert np.isnan(SubstitutionFeaturesMixin.
-                    _orthographical_density('wickiup'))
+                    _orthographic_density('wickiup'))
 
 
-def test_orthographical_density_none():
+def test_orthographic_density_none():
     drop_caches()
     # Lemmas are all lowercase.
-    for word in SubstitutionFeaturesMixin._orthographical_density():
+    for word in SubstitutionFeaturesMixin._orthographic_density():
         assert word.islower()
     # And it's computed right.
     drop_caches()
@@ -352,7 +352,7 @@ def test_orthographical_density_none():
             f.write('dog' + 5 * '\t' + '2' + 24 * '\t' + '3\n'
                     'cat' + 5 * '\t' + '2' + 24 * '\t' + '3')
         assert set(SubstitutionFeaturesMixin.
-                   _orthographical_density()) == {'dog', 'cat'}
+                   _orthographic_density()) == {'dog', 'cat'}
 
 
 @pytest.fixture
@@ -382,8 +382,8 @@ def test_substitution_features(normal_substitution):
     assert s._substitution_features('letters_count') == (10, 5)
     assert np.isnan(s._substitution_features('phonological_density')[0])
     assert s._substitution_features('phonological_density')[1] == np.log(7)
-    assert np.isnan(s._substitution_features('orthographical_density')[0])
-    assert s._substitution_features('orthographical_density')[1] == np.log(5)
+    assert np.isnan(s._substitution_features('orthographic_density')[0])
+    assert s._substitution_features('orthographic_density')[1] == np.log(5)
 
     # Synonyms count and age-of-acquisition are right, and computed on lemmas.
     # The rest of the features need computed files, and are only tested through
@@ -432,7 +432,7 @@ def test_source_destination_features(normal_substitution):
     sf, df = s.source_destination_features('phonological_density')
     assert nanequals(sf, np.log([31, 24, 9, np.nan, 28]))
     assert nanequals(df, np.log([31, 24, 9, 7, 28]))
-    sf, df = s.source_destination_features('orthographical_density')
+    sf, df = s.source_destination_features('orthographic_density')
     assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]))
     assert nanequals(df, np.log([17, 14, 11, 5, 20]))
     # This also all works sentence_relative.
@@ -460,7 +460,7 @@ def test_source_destination_features(normal_substitution):
                      np.nanmedian(np.log([31, 24, 9, np.nan, 28])))
     assert nanequals(df, np.log([31, 24, 9, 7, 28]) -
                      np.nanmedian(np.log([31, 24, 9, 7, 28])))
-    sf, df = s.source_destination_features('orthographical_density',
+    sf, df = s.source_destination_features('orthographic_density',
                                            sentence_relative='mean')
     assert nanequals(sf, np.log([17, 14, 11, np.nan, 20]) -
                      np.nanmean(np.log([17, 14, 11, np.nan, 20])))
@@ -515,8 +515,8 @@ def test_features(normal_substitution):
     assert s.features('letters_count') == (10, 5)
     assert np.isnan(s.features('phonological_density')[0])
     assert s.features('phonological_density')[1] == np.log(7)
-    assert np.isnan(s.features('orthographical_density')[0])
-    assert s.features('orthographical_density')[1] == np.log(5)
+    assert np.isnan(s.features('orthographic_density')[0])
+    assert s.features('orthographic_density')[1] == np.log(5)
     # Same with features computed relative to sentence.
     assert s.features('syllables_count',
                       sentence_relative='mean') == (3 - 7/5, 2 - 6/5)
@@ -529,9 +529,9 @@ def test_features(normal_substitution):
     assert s.features('phonological_density',
                       sentence_relative='median')[1] == \
         np.log(7) - np.median(np.log([31, 24, 9, 7, 28]))
-    assert np.isnan(s.features('orthographical_density',
+    assert np.isnan(s.features('orthographic_density',
                                sentence_relative='mean')[0])
-    assert s.features('orthographical_density',
+    assert s.features('orthographic_density',
                       sentence_relative='mean')[1] == \
         np.log(5) - np.log([17, 14, 11, 5, 20]).mean()
 
