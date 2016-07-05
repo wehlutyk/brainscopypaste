@@ -12,7 +12,7 @@ from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
                                   mine_substitutions_with_model)
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.db import Cluster, Quote, Substitution
-from brainscopypaste.utils import session_scope
+from brainscopypaste.utils import session_scope, Namespace
 
 
 def test_interval():
@@ -1124,77 +1124,200 @@ def test_substitution_validator_mixin():
         False: [{
             # Stopwords
             'tokens': ('yes', 'no'),
-            'lemmas': ('lemmaaa', 'lemmmoooo')
+            'lemmas': ('lemmaaa', 'lemmmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Stopwords
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('i', 'do')
+            'lemmas': ('i', 'do'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Identical words
             'tokens': ('word', 'word'),
-            'lemmas': ('lemmaaa', 'lemmmoooo')
+            'lemmas': ('lemmaaa', 'lemmmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Identical lemmas
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('lemma', 'lemma')
+            'lemmas': ('lemma', 'lemma'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Abbreviation
             'tokens': ('senator', 'sen'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Abbreviation
             'tokens': ('flu', 'fluviator'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Abbreviation
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('blooom', 'blo')
+            'lemmas': ('blooom', 'blo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Shortening
             'tokens': ('programme', 'program'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Shortening
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('goddam', 'goddamme'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # US/UK spelling
             'tokens': ('blodder', 'bloddre'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # US/UK spelling
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('bildre', 'bilder')
+            'lemmas': ('bildre', 'bilder'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Numbers
             'tokens': ('1st', '2nd'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Numbers
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('3rd', 'fourth')
+            'lemmas': ('3rd', 'fourth'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Minor spelling changes
             'tokens': ('plural', 'plurals'),
-            'lemmas': ('lemmaaa', 'lemmoooo')
+            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             # Minor spelling changes
             'tokens': ('wordi', 'wordooo'),
-            'lemmas': ('neighbour', 'neighbor')
+            'lemmas': ('neighbour', 'neighbor'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
+        }, {
+            # Word deletion
+            'tokens': ('highest', 'school'),
+            'lemmas': ('high', 'school'),
+            'source': {'tokens': ['this', 'is', 'highest', 'school'],
+                       'lemmas': ['this', 'be', 'high', 'school']},
+            'destination': {'tokens': ['this', 'is', 'school'],
+                            'lemmas': ['this', 'be', 'school']},
+            'position': 2,
+            'start': 0
+        }, {
+            # Word deletion
+            'tokens': ('school', 'highest'),
+            'lemmas': ('school', 'high'),
+            'source': {'tokens': ['highest', 'school', 'is', 'the', 'best',
+                                  'thing'],
+                       'lemmas': ['high', 'school', 'be', 'the', 'best',
+                                  'thing']},
+            'destination': {'tokens': ['highest', 'is', 'the', 'best',
+                                       'thing'],
+                            'lemmas': ['high', 'be', 'the', 'best', 'thing']},
+            'position': 0,
+            'start': 1
+        }, {
+            # Words stuck together
+            'tokens': ('policy', 'policymakers'),
+            'lemmas': ('policy', 'policymaker'),
+            'source': {'tokens': ['these', 'are', 'the', 'policy', 'makers',
+                                  'of', 'dream'],
+                       'lemmas': ['this', 'be', 'the', 'policy', 'maker',
+                                  'of', 'dream']},
+            'destination': {'tokens': ['these', 'are', 'the', 'policymakers'],
+                            'lemmas': ['this', 'be', 'the', 'policymaker']},
+            'position': 3,
+            'start': 0
+        }, {
+            # Words stuck together
+            'tokens': ('time', 'anytime'),
+            'lemmas': ('time', 'anytime'),
+            'source': {'tokens': ['i', 'think', 'any', 'time', 'will', 'do'],
+                       'lemmas': ['i', 'think', 'any', 'time', 'do', 'do']},
+            'destination': {'tokens': ['anytime', 'will', 'do'],
+                            'lemmas': ['anytime', 'do', 'do']},
+            'position': 0,
+            'start': 3
         }],
         True: [{
             'tokens': ('hello', 'tchuss'),
-            'lemmas': ('hello', 'tchuss')
+            'lemmas': ('hello', 'tchuss'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }, {
             'tokens': ('tree', 'band'),
-            'lemmas': ('tree', 'willness')
+            'lemmas': ('tree', 'willness'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
         }]
     }
 
-    for success, token_lemma_list in cases.items():
-        for tokens_lemmas in token_lemma_list:
-            svm.tokens = tokens_lemmas['tokens']
-            svm.lemmas = tokens_lemmas['lemmas']
+    for success, props_list in cases.items():
+        for props in props_list:
+            svm.tokens = props['tokens']
+            svm.lemmas = props['lemmas']
+            svm.source = Namespace({
+                'tokens': props['source']['tokens'],
+                'lemmas': props['source']['lemmas']
+            })
+            svm.destination = Namespace({
+                'tokens': props['destination']['tokens'],
+                'lemmas': props['destination']['lemmas']
+            })
+            svm.position = props['position']
+            svm.start = props['start']
             print(svm.tokens, svm.lemmas)
             print(success)
             assert svm.validate() == success

@@ -293,6 +293,7 @@ class SubstitutionValidatorMixin:
     def validate(self):
         token1, token2 = self.tokens
         lem1, lem2 = self.lemmas
+        tokens1, lemmas1 = self.source.tokens, self.source.lemmas
 
         # '21st'/'twenty-first', etc.
         if (is_int(token1[0]) or is_int(token2[0]) or
@@ -320,6 +321,24 @@ class SubstitutionValidatorMixin:
         if levenshtein(token1, token2) <= 1:
             return False
         if levenshtein(lem1, lem2) <= 1:
+            return False
+        # Word deletion ('high school' -> 'school')
+        if (self.start + self.position > 0 and
+            (token2 == tokens1[self.start + self.position - 1] or
+             lem2 == lemmas1[self.start + self.position - 1])):
+            return False
+        if (self.start + self.position < len(tokens1) - 1 and
+            (token2 == tokens1[self.start + self.position + 1] or
+             lem2 == lemmas1[self.start + self.position + 1])):
+            return False
+        # Words stuck together ('policy maker' -> 'policymaker')
+        if (self.start + self.position > 0 and
+            (token2 == tokens1[self.start + self.position - 1] + token1 or
+             lem2 == lemmas1[self.start + self.position - 1] + lem1)):
+            return False
+        if (self.start + self.position < len(tokens1) - 1 and
+            (token2 == token1 + tokens1[self.start + self.position + 1] or
+             lem2 == lem1 + lemmas1[self.start + self.position + 1])):
             return False
 
         return True

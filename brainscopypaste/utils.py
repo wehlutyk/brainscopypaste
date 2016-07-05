@@ -14,6 +14,12 @@ from sqlalchemy import create_engine
 logger = logging.getLogger(__name__)
 
 
+class Namespace:
+
+    def __init__(self, init_dict):
+        self.__dict__.update(init_dict)
+
+
 def grouper(iterable, n, fillvalue=None):
     """Iterate over `n`-wide slices of `iterable`, filling the
     last slice with `fillvalue`."""
