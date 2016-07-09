@@ -157,7 +157,6 @@ class Model:
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
                 'durl={0.durl}, max_distance={0.max_distance})').format(self)
 
-    # TODO: test
     @memoized
     def validate(self, source, durl):
         return (self._validate_distance(source, durl) and
@@ -165,7 +164,6 @@ class Model:
                 self._validate_source(source, durl) and
                 self._validate_durl(source, durl))
 
-    # TODO: test
     def _validate_distance(self, source, durl):
         return 0 < self._distance_start(source, durl)[0] <= self.max_distance
 
@@ -201,7 +199,6 @@ class Model:
                        self.past_surls(source.cluster, durl)]
         return durl.quote not in past_quotes
 
-    # TODO: test
     def _distance_start(self, source, durl):
         # We allow for substrings.
         # Note here that there can be a difference in lemmas without
@@ -211,7 +208,6 @@ class Model:
         # instead of making this function more complicated.
         return subhamming(source.lemmas, durl.quote.lemmas)
 
-    # TODO: test
     def find_start(self, source, durl):
         return self._distance_start(source, durl)[1]
 
@@ -262,7 +258,7 @@ class Model:
                 self.max_distance)
 
     def __eq__(self, other):
-        return hasattr(other, '__key') and self.__key() == other.__key()
+        return hasattr(other, '_Model__key') and self.__key() == other.__key()
 
     def __hash__(self):
         return hash(self.__key())
@@ -270,7 +266,6 @@ class Model:
 
 class ClusterMinerMixin:
 
-    # TODO: test
     def substitutions(self, model):
         # Multiple occurrences of a sentence at the same url (url 'frequency')
         # are ignored, so as not to artificially inflate results.
@@ -295,7 +290,6 @@ class ClusterMinerMixin:
                                                             model):
                         yield substitution
 
-    # TODO: test
     @classmethod
     def _substitutions(cls, source, durl, model):
         from brainscopypaste.db import Substitution
