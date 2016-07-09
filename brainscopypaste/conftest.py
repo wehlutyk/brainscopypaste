@@ -61,8 +61,8 @@ def some_urls(some_clusters, some_quotes):
 
 @pytest.fixture
 def some_substitutions(some_clusters, some_quotes, some_urls):
-    model1 = Model(Time.discrete, Source.majority, Past.last_bin, Durl.all)
-    model2 = Model(Time.discrete, Source.majority, Past.all, Durl.all)
+    model1 = Model(Time.discrete, Source.majority, Past.last_bin, Durl.all, 1)
+    model2 = Model(Time.discrete, Source.majority, Past.all, Durl.all, 1)
     with session_scope() as session:
         c0 = session.query(Cluster).filter_by(sid=0).one()
         c1 = session.query(Cluster).filter_by(sid=1).one()

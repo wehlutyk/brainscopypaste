@@ -141,7 +141,6 @@ class Model:
         self.past = past
         assert durl in Durl
         self.durl = durl
-        # TODO: test
         assert 0 < max_distance <= settings.MT_FILTER_MIN_TOKENS // 2
         self.max_distance = max_distance
 
@@ -154,7 +153,6 @@ class Model:
             Durl.exclude_past: self._validate_durl_exclude_past
         }
 
-    # TODO: test
     def __repr__(self):
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
                 'durl={0.durl}, max_distance={0.max_distance})').format(self)
