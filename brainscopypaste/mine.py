@@ -15,6 +15,9 @@ from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
 logger = logging.getLogger(__name__)
 
 
+# TODO: Move models into mining
+
+
 def mine_substitutions_with_model(model, limit=None):
     from brainscopypaste.db import Cluster, Substitution
 
@@ -363,5 +366,8 @@ class SubstitutionValidatorMixin:
             (token2 == token1 + tokens1[self.start + self.position + 1] or
              lem2 == lem1 + lemmas1[self.start + self.position + 1])):
             return False
+        # TODO
+        # test word1 + '-' + word2
+        # test reverse 2->1
 
         return True
