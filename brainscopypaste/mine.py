@@ -6,6 +6,7 @@ import click
 from progressbar import ProgressBar
 import numpy as np
 
+from brainscopypaste.conf import settings
 from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
                                    stopwords, levenshtein, subhamming,
                                    session_scope, memoized)
@@ -128,7 +129,7 @@ class Model:
 
     bin_span = timedelta(days=1)
 
-    def __init__(self, time, source, past, durl):
+    def __init__(self, time, source, past, durl, max_distance):
         assert time in Time
         self.time = time
         assert source in Source
@@ -137,6 +138,9 @@ class Model:
         self.past = past
         assert durl in Durl
         self.durl = durl
+        # TODO: test
+        assert 0 < max_distance <= settings.MT_FILTER_MIN_TOKENS // 2
+        self.max_distance = max_distance
 
         self._source_validation_table = {
             Source.all: self._ok,
@@ -147,15 +151,22 @@ class Model:
             Durl.exclude_past: self._validate_durl_exclude_past
         }
 
+    # TODO: test
     def __repr__(self):
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
-                'durl={0.durl})').format(self)
+                'durl={0.durl}, max_distance={0.max_distance})').format(self)
 
+    # TODO: test
     @memoized
     def validate(self, source, durl):
-        return (self._validate_base(source, durl) and
+        return (self._validate_distance(source, durl) and
+                self._validate_base(source, durl) and
                 self._validate_source(source, durl) and
                 self._validate_durl(source, durl))
+
+    # TODO: test
+    def _validate_distance(self, source, durl):
+        return 0 < self._distance_start(source, durl)[0] <= self.max_distance
 
     def _validate_base(self, source, durl):
         past = self._past(source.cluster, durl)
@@ -188,6 +199,20 @@ class Model:
         past_quotes = [surl.quote for surl in
                        self.past_surls(source.cluster, durl)]
         return durl.quote not in past_quotes
+
+    # TODO: test
+    def _distance_start(self, source, durl):
+        # We allow for substrings.
+        # Note here that there can be a difference in lemmas without
+        # there being a difference in tokens, because of fluctuations
+        # in lemmatization. This is caught later on in the validation
+        # of substitutions (see SubstitutionValidatorMixin.validate()),
+        # instead of making this function more complicated.
+        return subhamming(source.lemmas, durl.quote.lemmas)
+
+    # TODO: test
+    def find_start(self, source, durl):
+        return self._distance_start(source, durl)[1]
 
     @memoized
     def past_surls(self, cluster, durl):
@@ -232,10 +257,11 @@ class Model:
         self._past.drop_cache()
 
     def __key(self):
-        return (self.time, self.source, self.past, self.durl)
+        return (self.time, self.source, self.past, self.durl,
+                self.max_distance)
 
     def __eq__(self, other):
-        return self.__key() == other.__key()
+        return hasattr(other, '__key') and self.__key() == other.__key()
 
     def __hash__(self):
         return hash(self.__key())
@@ -243,6 +269,7 @@ class Model:
 
 class ClusterMinerMixin:
 
+    # TODO: test
     def substitutions(self, model):
         # Multiple occurrences of a sentence at the same url (url 'frequency')
         # are ignored, so as not to artificially inflate results.
@@ -258,34 +285,30 @@ class ClusterMinerMixin:
                 if len(source.lemmas) < len(durl.quote.lemmas):
                     continue
 
-                # We allow for substrings.
-                # Note here that there can be a difference in lemmas without
-                # there being a difference in tokens, because of fluctuations
-                # in lemmatization. This is caught later on in the validation
-                # of substitutions (see SubstitutionValidatorMixin.validate()),
-                # instead of making this function more complicated.
-                distance, start = subhamming(source.lemmas,
-                                             durl.quote.lemmas)
-
                 # Check distance, source and durl validity.
-                if distance == 1 and model.validate(source, durl):
-                    logger.debug('Found candidate substitution between '
+                if model.validate(source, durl):
+                    logger.debug('Found candidate substitution(s) between '
                                  'quote #%s and durl #%s/%s', source.sid,
                                  durl.quote.sid, durl.occurrence)
-                    yield self._substitution(source, durl, start, model)
+                    for substitution in self._substitutions(source, durl,
+                                                            model):
+                        yield substitution
 
+    # TODO: test
     @classmethod
-    def _substitution(cls, source, durl, start, model):
+    def _substitutions(cls, source, durl, model):
         from brainscopypaste.db import Substitution
 
+        start = model.find_start(source, durl)
         dlemmas = durl.quote.lemmas
         slemmas = source.lemmas[start:start + len(dlemmas)]
         positions = np.where([c1 != c2
                               for (c1, c2) in zip(slemmas, dlemmas)])[0]
-        assert len(positions) == 1
-        return Substitution(source=source, destination=durl.quote,
-                            occurrence=durl.occurrence, start=int(start),
-                            position=int(positions[0]), model=model)
+        assert 0 < len(positions) <= model.max_distance
+        for position in positions:
+            yield Substitution(source=source, destination=durl.quote,
+                               occurrence=durl.occurrence, start=int(start),
+                               position=int(position), model=model)
 
 
 class SubstitutionValidatorMixin:

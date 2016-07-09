@@ -13,6 +13,7 @@ from brainscopypaste.mine import (Interval, Model, Time, Source, Past, Durl,
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.db import Cluster, Quote, Substitution
 from brainscopypaste.utils import session_scope, Namespace
+from brainscopypaste.conf import settings
 
 
 def test_interval():
@@ -32,26 +33,35 @@ def test_interval():
 
 def test_model_init():
     with pytest.raises(AssertionError):
-        Model(1, Source.all, Past.all, Durl.all)
+        Model(1, Source.all, Past.all, Durl.all, 1)
     with pytest.raises(AssertionError):
-        Model(Time.continuous, 1, Past.all, Durl.all)
+        Model(Time.continuous, 1, Past.all, Durl.all, 1)
     with pytest.raises(AssertionError):
-        Model(Time.continuous, Source.all, 1, Durl.all)
+        Model(Time.continuous, Source.all, 1, Durl.all, 1)
     with pytest.raises(AssertionError):
-        Model(Time.continuous, Source.all, Past.all, 1)
+        Model(Time.continuous, Source.all, Past.all, 1, 1)
+    with pytest.raises(AssertionError):
+        Model(Time.continuous, Source.all, Past.all, Durl.all, 0)
+    with pytest.raises(AssertionError):
+        Model(Time.continuous, Source.all, Past.all, Durl.all,
+              settings.MT_FILTER_MIN_TOKENS)
+    assert Model(Time.continuous, Source.all,
+                 Past.all, Durl.all, 2) is not None
 
 
 def test_model_eq():
-    assert Model(Time.continuous, Source.all, Past.all, Durl.all) == \
-        Model(Time.continuous, Source.all, Past.all, Durl.all)
-    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
-        Model(Time.discrete, Source.all, Past.all, Durl.all)
-    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
-        Model(Time.continuous, Source.majority, Past.all, Durl.all)
-    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
-        Model(Time.continuous, Source.all, Past.last_bin, Durl.all)
-    assert Model(Time.continuous, Source.all, Past.all, Durl.all) != \
-        Model(Time.continuous, Source.all, Past.all, Durl.exclude_past)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 2) == \
+        Model(Time.continuous, Source.all, Past.all, Durl.all, 2)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 1) != \
+        Model(Time.discrete, Source.all, Past.all, Durl.all, 1)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 1) != \
+        Model(Time.continuous, Source.majority, Past.all, Durl.all, 1)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 1) != \
+        Model(Time.continuous, Source.all, Past.last_bin, Durl.all, 1)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 1) != \
+        Model(Time.continuous, Source.all, Past.all, Durl.exclude_past, 1)
+    assert Model(Time.continuous, Source.all, Past.all, Durl.all, 1) != \
+        Model(Time.continuous, Source.all, Past.all, Durl.all, 2)
 
 
 header = '''format:
@@ -818,12 +828,13 @@ def test_model_validate(validation_db):
 
     times = list(Time) if time is None else [time]
     sources = list(Source) if source is None else [source]
-    past = list(Past) if past is None else [past]
-    durl = list(Durl) if durl is None else [durl]
+    pasts = list(Past) if past is None else [past]
+    durls = list(Durl) if durl is None else [durl]
 
     models = []
-    for (time, source, past, durl) in product(times, sources, past, durl):
-        models.append(Model(time, source, past, durl))
+    for (time, source, past, durl) in product(times, sources, pasts, durls):
+        # TODO: factor out max_distance into test cases
+        models.append(Model(time, source, past, durl, 1))
 
     with session_scope() as session:
         source = session.query(Quote).filter_by(sid=1).one()
@@ -990,11 +1001,12 @@ def test_model_past(past_db):
     time, past, interval = past_db
 
     sources = list(Source)
-    durl = list(Durl)
+    durls = list(Durl)
 
     models = []
-    for (source, durl) in product(sources, durl):
-        models.append(Model(time, source, past, durl))
+    for (source, durl) in product(sources, durls):
+        # TODO: factor out max_distance into tests
+        models.append(Model(time, source, past, durl, 1))
 
     with session_scope() as session:
         destination = session.query(Quote).filter_by(sid=2).one()
@@ -1063,11 +1075,12 @@ def test_model_past_surls(past_surls_db):
     time, past, occurrence, expected_surl_ids = past_surls_db
 
     sources = list(Source)
-    durl = list(Durl)
+    durls = list(Durl)
 
     models = []
-    for (source, durl) in product(sources, durl):
-        models.append(Model(time, source, past, durl))
+    for (source, durl) in product(sources, durls):
+        # TODO: factor out max_distance into tests
+        models.append(Model(time, source, past, durl, 1))
 
     with session_scope() as session:
         source = session.query(Quote).filter_by(sid=1).one()
@@ -1087,20 +1100,22 @@ def test_cluster_miner_mixin_substitution_ok(tmpdb):
                                          dest_other2='2008-08-02 02:00:00'))
 
     # Test
-    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    # TODO: factor out max_distance into tests
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all, 1)
     with session_scope() as session:
         source = session.query(Quote).filter_by(sid=1).one()
         durl = session.query(Quote).filter_by(sid=2).one().urls[1]
-        substitution = ClusterMinerMixin._substitution(source, durl, 2, model)
-        assert substitution.occurrence == 1
-        assert substitution.start == 2
-        assert substitution.position == 6
-        assert substitution.source.sid == 1
-        assert substitution.destination.sid == 2
-        assert substitution.model == model
-        assert substitution.tags == ('NN', 'NNS')
-        assert substitution.tokens == ('pooda', 'bladi')
-        assert substitution.lemmas == ('pooda', 'bladi')
+        for substitution in ClusterMinerMixin._substitutions(source, durl,
+                                                             model):
+            assert substitution.occurrence == 1
+            assert substitution.start == 2
+            assert substitution.position == 6
+            assert substitution.source.sid == 1
+            assert substitution.destination.sid == 2
+            assert substitution.model == model
+            assert substitution.tags == ('NN', 'NNS')
+            assert substitution.tokens == ('pooda', 'bladi')
+            assert substitution.lemmas == ('pooda', 'bladi')
 
 
 def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
@@ -1110,12 +1125,15 @@ def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
                                         dest='2008-08-01 06:00:00'))
 
     # Test
-    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    # TODO: factor out max_distance into tests
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all, 1)
     with pytest.raises(AssertionError):
         with session_scope() as session:
             source = session.query(Quote).filter_by(sid=1).one()
             durl = session.query(Quote).filter_by(sid=2).one().urls[0]
-            ClusterMinerMixin._substitution(source, durl, 2, model)
+            for substitution in ClusterMinerMixin._substitutions(source, durl,
+                                                                 model):
+                pass
 
 
 def test_substitution_validator_mixin():
@@ -1500,7 +1518,8 @@ def substitutions_db(request, tmpdb):
     expected_substitutions = substitutions_cases[
         (time, source, past, durl)][string]['substitutions']
     load_db(header + content)
-    return Model(time, source, past, durl), expected_substitutions
+    # TODO: factor out max_distance into tests
+    return Model(time, source, past, durl, 1), expected_substitutions
 
 
 def test_cluster_miner_mixin_substitutions(substitutions_db):
@@ -1631,7 +1650,8 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
     limit, expected_substitutions = mine_substitutions_db
 
     # Mine.
-    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all)
+    # TODO: factor out max_distance into tests
+    model = Model(Time.continuous, Source.majority, Past.last_bin, Durl.all, 1)
     mine_substitutions_with_model(model, limit=limit)
 
     # Test.
@@ -1648,5 +1668,7 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
         mine_substitutions_with_model(model, limit=limit)
     assert 'contains substitutions mined with this model' in str(excinfo.value)
     # But it's ok with another model.
+    # TODO: factor out max_distance into tests
     mine_substitutions_with_model(Model(Time.discrete, Source.majority,
-                                        Past.last_bin, Durl.all), limit=limit)
+                                        Past.last_bin, Durl.all, 1),
+                                  limit=limit)
