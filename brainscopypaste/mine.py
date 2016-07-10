@@ -15,8 +15,6 @@ from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
 logger = logging.getLogger(__name__)
 
 
-# TODO: Move models into mining
-
 
 def mine_substitutions_with_model(model, limit=None):
     from brainscopypaste.db import Cluster, Substitution
