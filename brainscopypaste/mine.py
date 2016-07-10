@@ -311,7 +311,8 @@ class SubstitutionValidatorMixin:
     def validate(self):
         token1, token2 = self.tokens
         lem1, lem2 = self.lemmas
-        tokens1, lemmas1 = self.source.tokens, self.source.lemmas
+        tokens1, tokens2 = self.source.tokens, self.destination.tokens
+        lemmas1, lemmas2 = self.source.lemmas, self.destination.lemmas
 
         # '21st'/'twenty-first', etc.
         if (is_int(token1[0]) or is_int(token2[0]) or
@@ -349,17 +350,73 @@ class SubstitutionValidatorMixin:
             (token2 == tokens1[self.start + self.position + 1] or
              lem2 == lemmas1[self.start + self.position + 1])):
             return False
-        # Words stuck together ('policy maker' -> 'policymaker')
+        # Word insertion ('school' -> 'high school')
+        if (self.position > 0 and
+            (token1 == tokens2[self.position - 1] or
+             lem1 == lemmas2[self.position - 1])):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (token1 == tokens2[self.position + 1] or
+             lem1 == lemmas2[self.position + 1])):
+            return False
+        # Words stuck together ('policy maker' -> 'policymaker'
+        # or 'policy-maker')
         if (self.start + self.position > 0 and
             (token2 == tokens1[self.start + self.position - 1] + token1 or
-             lem2 == lemmas1[self.start + self.position - 1] + lem1)):
+             token2 == tokens1[self.start + self.position - 1] +
+                '-' + token1 or
+             lem2 == lemmas1[self.start + self.position - 1] + lem1 or
+             lem2 == lemmas1[self.start + self.position - 1] + '-' + lem1)):
             return False
         if (self.start + self.position < len(tokens1) - 1 and
             (token2 == token1 + tokens1[self.start + self.position + 1] or
-             lem2 == lem1 + lemmas1[self.start + self.position + 1])):
+             token2 == token1 + '-' +
+                tokens1[self.start + self.position + 1] or
+             lem2 == lem1 + lemmas1[self.start + self.position + 1] or
+             lem2 == lem1 + '-' + lemmas1[self.start + self.position + 1])):
             return False
-        # TODO
-        # test word1 + '-' + word2
-        # test reverse 2->1
+        # Words separated ('policymaker' or 'policy-maker' -> 'policy maker')
+        if (self.position > 0 and
+            (token1 == tokens2[self.position - 1] + token2 or
+             token1 == tokens2[self.position - 1] + '-' + token2 or
+             lem1 == lemmas2[self.position - 1] + lem2 or
+             lem1 == lemmas2[self.position - 1] + '-' + lem2)):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (token1 == token2 + tokens2[self.position + 1] or
+             token1 == token2 + '-' + tokens2[self.position + 1] or
+             lem1 == lem2 + lemmas2[self.position + 1] or
+             lem1 == lem2 + '-' + lemmas2[self.position + 1])):
+            return False
+        # We need 2 extra checks compare to the words-stuck-together situation,
+        # to detect teh second substitution appearing because of word
+        # separation. Indeed in this case, contrary to words-stuck-together, we
+        # can't rely on word shifts always being present, since the destination
+        # can be cut shorter. In other words, in the following case:
+        # (1) i'll come anytime there
+        # (2) i'll come any time
+        # these checks let us exclude 'there' -> 'time' as a substitution (in
+        # the words-stuck-together case, the word 'there' would be present in
+        # both sentences, shifted).
+        if (self.position > 0 and
+            (tokens1[self.start + self.position - 1] ==
+                tokens2[self.position - 1] + token2 or
+             tokens1[self.start + self.position - 1] ==
+                tokens2[self.position - 1] + '-' + token2 or
+             lemmas1[self.start + self.position - 1] ==
+                lemmas2[self.position - 1] + lem2 or
+             lemmas1[self.start + self.position - 1] ==
+                lemmas2[self.position - 1] + '-' + lem2)):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (tokens1[self.start + self.position + 1] ==
+                token2 + tokens2[self.position + 1] or
+             tokens1[self.start + self.position + 1] ==
+                token2 + '-' + tokens2[self.position + 1] or
+             lemmas1[self.start + self.position + 1] ==
+                lem2 + lemmas2[self.position + 1] or
+             lemmas1[self.start + self.position + 1] ==
+                lem2 + '-' + lemmas2[self.position + 1])):
+            return False
 
         return True

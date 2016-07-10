@@ -1277,207 +1277,529 @@ def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
                 pass
 
 
-def test_substitution_validator_mixin():
-    svm = SubstitutionValidatorMixin()
-    cases = {
-        False: [{
-            # Stopwords
+validator_mixin_cases = {
+    False: {
+        'stopwords (tokens)': {
             'tokens': ('yes', 'no'),
             'lemmas': ('lemmaaa', 'lemmmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Stopwords
+        },
+        'stopwords (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('i', 'do'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Identical words
+        },
+        'identical words (tokens)': {
             'tokens': ('word', 'word'),
             'lemmas': ('lemmaaa', 'lemmmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Identical lemmas
+        },
+        'identical words (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('lemma', 'lemma'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Abbreviation
+        },
+        'abbreviation (real)': {
             'tokens': ('senator', 'sen'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Abbreviation
+        },
+        'abbreviation (non-word)': {
             'tokens': ('flu', 'fluviator'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Abbreviation
+        },
+        'abbreviation (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('blooom', 'blo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Shortening
+        },
+        'shortening (tokens)': {
             'tokens': ('programme', 'program'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Shortening
+        },
+        'shortening (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('goddam', 'goddamme'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # US/UK spelling
+        },
+        'us/uk spelling (tokens)': {
             'tokens': ('blodder', 'bloddre'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # US/UK spelling
+        },
+        'us/uk spelling (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('bildre', 'bilder'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Numbers
+        },
+        'numbers (tokens)': {
             'tokens': ('1st', '2nd'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Numbers
+        },
+        'numbers (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('3rd', 'fourth'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Minor spelling changes
+        },
+        'minor spelling changes (tokens)': {
             'tokens': ('plural', 'plurals'),
             'lemmas': ('lemmaaa', 'lemmoooo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Minor spelling changes
+        },
+        'minor spelling changes (lemmas)': {
             'tokens': ('wordi', 'wordooo'),
             'lemmas': ('neighbour', 'neighbor'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
-            # Word deletion
+        },
+        'word deletion (right, 1st substitution)': {
             'tokens': ('highest', 'school'),
             'lemmas': ('high', 'school'),
-            'source': {'tokens': ['this', 'is', 'highest', 'school'],
-                       'lemmas': ['this', 'be', 'high', 'school']},
-            'destination': {'tokens': ['this', 'is', 'school'],
-                            'lemmas': ['this', 'be', 'school']},
+            'source': {
+                'tokens': ['this', 'is', 'highest', 'school'],
+                'lemmas': ['this', 'be', 'high', 'school']
+            },
+            'destination': {
+                'tokens': ['this', 'is', 'school', 'boy'],
+                'lemmas': ['this', 'be', 'school', 'boy']
+            },
             'position': 2,
             'start': 0
-        }, {
-            # Word deletion
-            'tokens': ('school', 'highest'),
-            'lemmas': ('school', 'high'),
-            'source': {'tokens': ['highest', 'school', 'is', 'the', 'best',
-                                  'thing'],
-                       'lemmas': ['high', 'school', 'be', 'the', 'best',
-                                  'thing']},
-            'destination': {'tokens': ['highest', 'is', 'the', 'best',
-                                       'thing'],
-                            'lemmas': ['high', 'be', 'the', 'best', 'thing']},
-            'position': 0,
-            'start': 1
-        }, {
-            # Words stuck together
-            'tokens': ('policy', 'policymakers'),
-            'lemmas': ('policy', 'policymaker'),
-            'source': {'tokens': ['these', 'are', 'the', 'policy', 'makers',
-                                  'of', 'dream'],
-                       'lemmas': ['this', 'be', 'the', 'policy', 'maker',
-                                  'of', 'dream']},
-            'destination': {'tokens': ['these', 'are', 'the', 'policymakers'],
-                            'lemmas': ['this', 'be', 'the', 'policymaker']},
+        },
+        'word deletion (right, 2nd substitution)': {
+            'tokens': ('school', 'boy'),
+            'lemmas': ('school', 'boy'),
+            'source': {
+                'tokens': ['this', 'is', 'highest', 'school'],
+                'lemmas': ['this', 'be', 'high', 'school']
+            },
+            'destination': {
+                'tokens': ['this', 'is', 'school', 'boy'],
+                'lemmas': ['this', 'be', 'school', 'boy']
+            },
             'position': 3,
             'start': 0
-        }, {
-            # Words stuck together
-            'tokens': ('time', 'anytime'),
-            'lemmas': ('time', 'anytime'),
-            'source': {'tokens': ['i', 'think', 'any', 'time', 'will', 'do'],
-                       'lemmas': ['i', 'think', 'any', 'time', 'do', 'do']},
-            'destination': {'tokens': ['anytime', 'will', 'do'],
-                            'lemmas': ['anytime', 'do', 'do']},
+        },
+        'word deletion (left, 1st substitution)': {
+            'tokens': ('highest', 'huge'),
+            'lemmas': ('high', 'huge'),
+            'source': {
+                'tokens': ['huge', 'highest', 'school', 'is', 'the', 'best',
+                           'thing'],
+                'lemmas': ['huge', 'high', 'school', 'be', 'the', 'best',
+                           'thing']
+            },
+            'destination': {
+                'tokens': ['huge', 'highest', 'is', 'the', 'best', 'thing'],
+                'lemmas': ['huge', 'high', 'be', 'the', 'best', 'thing']
+            },
             'position': 0,
-            'start': 3
-        }],
-        True: [{
+            'start': 1
+        },
+        'word deletion (left, 2nd substitution)': {
+            'tokens': ('school', 'highest'),
+            'lemmas': ('school', 'high'),
+            'source': {
+                'tokens': ['huge', 'highest', 'school', 'is', 'the', 'best',
+                           'thing'],
+                'lemmas': ['huge', 'high', 'school', 'be', 'the', 'best',
+                           'thing']
+            },
+            'destination': {
+                'tokens': ['huge', 'highest', 'is', 'the', 'best', 'thing'],
+                'lemmas': ['huge', 'high', 'be', 'the', 'best', 'thing']
+            },
+            'position': 1,
+            'start': 1
+        },
+        'word insertion (right, 1st substitution)': {
+            'tokens': ('school', 'highest'),
+            'lemmas': ('school', 'high'),
+            'source': {
+                'tokens': ['hell', 'now', 'this', 'is', 'school', 'boy'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'school', 'boy']
+            },
+            'destination': {
+                'tokens': ['this', 'is', 'highest', 'school'],
+                'lemmas': ['this', 'be', 'high', 'school']
+            },
+            'position': 2,
+            'start': 2
+        },
+        'word insertion (right, 2nd substitution)': {
+            'tokens': ('boy', 'school'),
+            'lemmas': ('boy', 'school'),
+            'source': {
+                'tokens': ['hell', 'now', 'this', 'is', 'school', 'boy'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'school', 'boy']
+            },
+            'destination': {
+                'tokens': ['this', 'is', 'highest', 'school'],
+                'lemmas': ['this', 'be', 'high', 'school']
+            },
+            'position': 3,
+            'start': 2
+        },
+        'word insertion (left, 1st substitution)': {
+            'tokens': ('boy', 'highest'),
+            'lemmas': ('boy', 'high'),
+            'source': {
+                'tokens': ['hell', 'now', 'boy', 'highest', 'is', 'the',
+                           'best', 'thing'],
+                'lemmas': ['hell', 'now', 'boy', 'high', 'be', 'the',
+                           'best', 'thing']
+            },
+            'destination': {
+                'tokens': ['highest', 'school', 'is', 'the', 'best', 'thing'],
+                'lemmas': ['high', 'school', 'be', 'the', 'best', 'thing']
+            },
+            'position': 0,
+            'start': 2
+        },
+        'word insertion (left, 2nd substitution)': {
+            'tokens': ('highest', 'school'),
+            'lemmas': ('high', 'school'),
+            'source': {
+                'tokens': ['hell', 'now', 'boy', 'highest', 'is', 'the',
+                           'best', 'thing'],
+                'lemmas': ['hell', 'now', 'boy', 'high', 'be', 'the',
+                           'best', 'thing']
+            },
+            'destination': {
+                'tokens': ['highest', 'school', 'is', 'the', 'best', 'thing'],
+                'lemmas': ['high', 'school', 'be', 'the', 'best', 'thing']
+            },
+            'position': 1,
+            'start': 2
+        },
+        'words stuck together (right, 1st substitution)': {
+            'tokens': ('policy', 'policymakers'),
+            'lemmas': ('policy', 'policymaker'),
+            'source': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policymakers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policymaker', 'plate']
+            },
+            'position': 3,
+            'start': 0
+        },
+        'words stuck together (right, 2nd substitution)': {
+            'tokens': ('makers', 'plate'),
+            'lemmas': ('maker', 'plate'),
+            'source': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policymakers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policymaker', 'plate']
+            },
+            'position': 4,
+            'start': 0
+        },
+        'words stuck together (right, hyphen, 1st substitution)': {
+            'tokens': ('policy', 'policy-makers'),
+            'lemmas': ('policy', 'policy-maker'),
+            'source': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy-makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy-maker', 'plate']
+            },
+            'position': 3,
+            'start': 0
+        },
+        'words stuck together (right, hyphen, 2nd substitution)': {
+            'tokens': ('makers', 'plate'),
+            'lemmas': ('maker', 'plate'),
+            'source': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy-makers', 'plate'],
+                'lemmas': ['this', 'be', 'the', 'policy-maker', 'plate']
+            },
+            'position': 4,
+            'start': 0
+        },
+        'words stuck together (left, 1st substitution)': {
+            'tokens': ('better', 'think'),
+            'lemmas': ('better', 'think'),
+            'source': {
+                'tokens': ['i', 'think', 'better', 'time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better', 'time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['think', 'bettertime', 'will', 'do'],
+                'lemmas': ['think', 'bettertime', 'do', 'do']
+            },
+            'position': 0,
+            'start': 2
+        },
+        'words stuck together (left, 2nd substitution)': {
+            'tokens': ('time', 'bettertime'),
+            'lemmas': ('time', 'bettertime'),
+            'source': {
+                'tokens': ['i', 'think', 'better', 'time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better', 'time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['think', 'bettertime', 'will', 'do'],
+                'lemmas': ['think', 'bettertime', 'do', 'do']
+            },
+            'position': 1,
+            'start': 2
+        },
+        'words stuck together (left, hyphen, 1st substitution)': {
+            'tokens': ('better', 'think'),
+            'lemmas': ('better', 'think'),
+            'source': {
+                'tokens': ['i', 'think', 'better', 'time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better', 'time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['think', 'better-time', 'will', 'do'],
+                'lemmas': ['think', 'better-time', 'do', 'do']
+            },
+            'position': 0,
+            'start': 2
+        },
+        'words stuck together (left, hyphen, 2nd substitution)': {
+            'tokens': ('time', 'better-time'),
+            'lemmas': ('time', 'better-time'),
+            'source': {
+                'tokens': ['i', 'think', 'better', 'time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better', 'time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['think', 'better-time', 'will', 'do'],
+                'lemmas': ['think', 'better-time', 'do', 'do']
+            },
+            'position': 1,
+            'start': 2
+        },
+        'words separated (right, 1st substitution)': {
+            'tokens': ('policymakers', 'policy'),
+            'lemmas': ('policymaker', 'policy'),
+            'source': {
+                'tokens': ['hell', 'now', 'these', 'are', 'the',
+                           'policymakers', 'plate'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'the',
+                           'policymaker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker']
+            },
+            'position': 3,
+            'start': 2
+        },
+        'words separated (right, 2nd substitution)': {
+            'tokens': ('plate', 'makers'),
+            'lemmas': ('plate', 'maker'),
+            'source': {
+                'tokens': ['hell', 'now', 'these', 'are', 'the',
+                           'policymakers', 'plate'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'the',
+                           'policymaker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker']
+            },
+            'position': 4,
+            'start': 2
+        },
+        'words separated (right, hyphen, 1st substitution)': {
+            'tokens': ('policy-makers', 'policy'),
+            'lemmas': ('policy-maker', 'policy'),
+            'source': {
+                'tokens': ['hell', 'now', 'these', 'are', 'the',
+                           'policy-makers', 'plate'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'the',
+                           'policy-maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker']
+            },
+            'position': 3,
+            'start': 2
+        },
+        'words separated (right, hyphen, 2nd substitution)': {
+            'tokens': ('plate', 'makers'),
+            'lemmas': ('plate', 'maker'),
+            'source': {
+                'tokens': ['hell', 'now', 'these', 'are', 'the',
+                           'policy-makers', 'plate'],
+                'lemmas': ['hell', 'now', 'this', 'be', 'the',
+                           'policy-maker', 'plate']
+            },
+            'destination': {
+                'tokens': ['these', 'are', 'the', 'policy', 'makers'],
+                'lemmas': ['this', 'be', 'the', 'policy', 'maker']
+            },
+            'position': 4,
+            'start': 2
+        },
+        'words separated (left, 1st substitution)': {
+            'tokens': ('think', 'better'),
+            'lemmas': ('think', 'better'),
+            'source': {
+                'tokens': ['i', 'think', 'bettertime', 'will', 'do'],
+                'lemmas': ['i', 'think', 'bettertime', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['better', 'time', 'will', 'do'],
+                'lemmas': ['better', 'time', 'do', 'do']
+            },
+            'position': 0,
+            'start': 1
+        },
+        'words separated (left, 2nd substitution)': {
+            'tokens': ('bettertime', 'time'),
+            'lemmas': ('bettertime', 'time'),
+            'source': {
+                'tokens': ['i', 'think', 'bettertime', 'will', 'do'],
+                'lemmas': ['i', 'think', 'bettertime', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['better', 'time', 'will', 'do'],
+                'lemmas': ['better', 'time', 'do', 'do']
+            },
+            'position': 1,
+            'start': 1
+        },
+        'words separated (left, hyphen, 1st substitution)': {
+            'tokens': ('think', 'better'),
+            'lemmas': ('think', 'better'),
+            'source': {
+                'tokens': ['i', 'think', 'better-time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better-time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['better', 'time', 'will', 'do'],
+                'lemmas': ['better', 'time', 'do', 'do']
+            },
+            'position': 0,
+            'start': 1
+        },
+        'words separated (left, hyphen, 2nd substitution)': {
+            'tokens': ('better-time', 'time'),
+            'lemmas': ('better-time', 'time'),
+            'source': {
+                'tokens': ['i', 'think', 'better-time', 'will', 'do'],
+                'lemmas': ['i', 'think', 'better-time', 'do', 'do']
+            },
+            'destination': {
+                'tokens': ['better', 'time', 'will', 'do'],
+                'lemmas': ['better', 'time', 'do', 'do']
+            },
+            'position': 1,
+            'start': 1
+        },
+    },
+    True: {
+        'all good 1': {
             'tokens': ('hello', 'tchuss'),
             'lemmas': ('hello', 'tchuss'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }, {
+        },
+        'all good 2': {
             'tokens': ('tree', 'band'),
             'lemmas': ('tree', 'willness'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
-        }]
+        }
     }
+}
 
-    for success, props_list in cases.items():
-        for props in props_list:
-            svm.tokens = props['tokens']
-            svm.lemmas = props['lemmas']
-            svm.source = Namespace({
-                'tokens': props['source']['tokens'],
-                'lemmas': props['source']['lemmas']
-            })
-            svm.destination = Namespace({
-                'tokens': props['destination']['tokens'],
-                'lemmas': props['destination']['lemmas']
-            })
-            svm.position = props['position']
-            svm.start = props['start']
-            assert svm.validate() == success
+
+validator_mixin_params = [
+    (success, title)
+    for success, success_cases in validator_mixin_cases.items()
+    for title in success_cases.keys()
+]
+
+
+@pytest.mark.parametrize('success,title', validator_mixin_params,
+                         ids=['{}'.format(param)
+                              for param in validator_mixin_params])
+def test_substitution_validator_mixin(success, title):
+    props = validator_mixin_cases[success][title]
+
+    svm = SubstitutionValidatorMixin()
+    svm.tokens = props['tokens']
+    svm.lemmas = props['lemmas']
+    svm.source = Namespace({
+        'tokens': props['source']['tokens'],
+        'lemmas': props['source']['lemmas']
+    })
+    svm.destination = Namespace({
+        'tokens': props['destination']['tokens'],
+        'lemmas': props['destination']['lemmas']
+    })
+    svm.position = props['position']
+    svm.start = props['start']
+    assert svm.validate() == success
 
 
 substitutions_cases = {
