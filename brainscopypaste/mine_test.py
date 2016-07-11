@@ -1279,16 +1279,24 @@ def test_cluster_miner_mixin_substitution_too_many_changes(tmpdb):
 
 validator_mixin_cases = {
     False: {
+        'only real-word lemmas': {
+            'tokens': ('tree', 'bush'),
+            'lemmas': ('lemmaaa', 'lemmooo'),
+            'source': {'tokens': [], 'lemmas': []},
+            'destination': {'tokens': [], 'lemmas': []},
+            'position': 0,
+            'start': 0
+        },
         'stopwords (tokens)': {
             'tokens': ('yes', 'no'),
-            'lemmas': ('lemmaaa', 'lemmmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'stopwords (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('i', 'do'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1297,14 +1305,14 @@ validator_mixin_cases = {
         },
         'identical words (tokens)': {
             'tokens': ('word', 'word'),
-            'lemmas': ('lemmaaa', 'lemmmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'identical words (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('lemma', 'lemma'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1313,7 +1321,7 @@ validator_mixin_cases = {
         },
         'abbreviation (real)': {
             'tokens': ('senator', 'sen'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
@@ -1321,14 +1329,14 @@ validator_mixin_cases = {
         },
         'abbreviation (non-word)': {
             'tokens': ('flu', 'fluviator'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'abbreviation (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('blooom', 'blo'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1337,14 +1345,14 @@ validator_mixin_cases = {
         },
         'shortening (tokens)': {
             'tokens': ('programme', 'program'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'shortening (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('goddam', 'goddamme'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1353,14 +1361,14 @@ validator_mixin_cases = {
         },
         'us/uk spelling (tokens)': {
             'tokens': ('blodder', 'bloddre'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'us/uk spelling (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('bildre', 'bilder'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1369,14 +1377,14 @@ validator_mixin_cases = {
         },
         'numbers (tokens)': {
             'tokens': ('1st', '2nd'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'numbers (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('3rd', 'fourth'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1385,14 +1393,14 @@ validator_mixin_cases = {
         },
         'minor spelling changes (tokens)': {
             'tokens': ('plural', 'plurals'),
-            'lemmas': ('lemmaaa', 'lemmoooo'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
             'start': 0
         },
         'minor spelling changes (lemmas)': {
-            'tokens': ('wordi', 'wordooo'),
+            'tokens': ('tree', 'bush'),
             'lemmas': ('neighbour', 'neighbor'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
@@ -1458,6 +1466,66 @@ validator_mixin_cases = {
             },
             'position': 1,
             'start': 1
+        },
+        'two words deletion (right, 1st substitution)': {
+            'tokens': ('of', 'is'),
+            'lemmas': ('of', 'is'),
+            'source': {
+                'tokens': ['here', 'our', 'supply', 'of', 'energy', 'is',
+                           'gone'],
+                'lemmas': ['here', 'our', 'supply', 'of', 'energy', 'is', 'go']
+            },
+            'destination': {
+                'tokens': ['our', 'supply', 'is', 'gone'],
+                'lemmas': ['our', 'supply', 'is', 'go']
+            },
+            'position': 2,
+            'start': 1
+        },
+        'two words deletion (right, 2nd substitution)': {
+            'tokens': ('energy', 'gone'),
+            'lemmas': ('energy', 'go'),
+            'source': {
+                'tokens': ['here', 'our', 'supply', 'of', 'energy', 'is',
+                           'gone'],
+                'lemmas': ['here', 'our', 'supply', 'of', 'energy', 'is', 'go']
+            },
+            'destination': {
+                'tokens': ['our', 'supply', 'is', 'gone'],
+                'lemmas': ['our', 'supply', 'is', 'go']
+            },
+            'position': 3,
+            'start': 1
+        },
+        'two words deletion (left, 1st substitution)': {
+            'tokens': ('of', 'our'),
+            'lemmas': ('of', 'our'),
+            'source': {
+                'tokens': ['here', 'our', 'supply', 'of', 'energy', 'is',
+                           'gone'],
+                'lemmas': ['here', 'our', 'supply', 'of', 'energy', 'is', 'go']
+            },
+            'destination': {
+                'tokens': ['our', 'supply', 'is', 'gone'],
+                'lemmas': ['our', 'supply', 'is', 'go']
+            },
+            'position': 0,
+            'start': 3
+        },
+        'two words deletion (left, 2nd substitution)': {
+            'tokens': ('energy', 'supply'),
+            'lemmas': ('energy', 'supply'),
+            'source': {
+                'tokens': ['here', 'our', 'supply', 'of', 'energy', 'is',
+                           'gone'],
+                'lemmas': ['here', 'our', 'supply', 'of', 'energy', 'is', 'go']
+            },
+            'destination': {
+                'tokens': ['our', 'supply', 'is', 'gone'],
+                'lemmas': ['our', 'supply', 'is', 'go']
+            },
+            'position': 1,
+            'start': 3
         },
         'word insertion (right, 1st substitution)': {
             'tokens': ('school', 'highest'),
@@ -1754,8 +1822,8 @@ validator_mixin_cases = {
     },
     True: {
         'all good 1': {
-            'tokens': ('hello', 'tchuss'),
-            'lemmas': ('hello', 'tchuss'),
+            'tokens': ('hello', 'goodbye'),
+            'lemmas': ('hello', 'goodbye'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,
@@ -1763,7 +1831,7 @@ validator_mixin_cases = {
         },
         'all good 2': {
             'tokens': ('tree', 'band'),
-            'lemmas': ('tree', 'willness'),
+            'lemmas': ('tree', 'bush'),
             'source': {'tokens': [], 'lemmas': []},
             'destination': {'tokens': [], 'lemmas': []},
             'position': 0,

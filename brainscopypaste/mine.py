@@ -5,6 +5,7 @@ import logging
 import click
 from progressbar import ProgressBar
 import numpy as np
+from nltk.corpus import wordnet
 
 from brainscopypaste.conf import settings
 from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
@@ -303,6 +304,13 @@ class ClusterMinerMixin:
                                position=int(position), model=model)
 
 
+@memoized
+def _get_wordnet_words():
+    return set(word.lower()
+               for synset in wordnet.all_synsets()
+               for word in synset.lemma_names())
+
+
 class SubstitutionValidatorMixin:
 
     def validate(self):
@@ -311,6 +319,10 @@ class SubstitutionValidatorMixin:
         tokens1, tokens2 = self.source.tokens, self.destination.tokens
         lemmas1, lemmas2 = self.source.lemmas, self.destination.lemmas
 
+        # Only real-word lemmas.
+        wordnet_words = _get_wordnet_words()
+        if lem1 not in wordnet_words or lem2 not in wordnet_words:
+            return False
         # '21st'/'twenty-first', etc.
         if (is_int(token1[0]) or is_int(token2[0]) or
                 is_int(lem1[0]) or is_int(lem2[0])):
@@ -355,6 +367,15 @@ class SubstitutionValidatorMixin:
         if (self.position < len(tokens2) - 1 and
             (token1 == tokens2[self.position + 1] or
              lem1 == lemmas2[self.position + 1])):
+            return False
+        # Two words deletion ('supply of energy' -> 'supply')
+        if (self.start + self.position > 1 and
+            (token2 == tokens1[self.start + self.position - 2] or
+             lem2 == lemmas1[self.start + self.position - 2])):
+            return False
+        if (self.start + self.position < len(tokens1) - 2 and
+            (token2 == tokens1[self.start + self.position + 2] or
+             lem2 == lemmas1[self.start + self.position + 2])):
             return False
         # Words stuck together ('policy maker' -> 'policymaker'
         # or 'policy-maker')
