@@ -1,4 +1,4 @@
-This file holds the codings for the *substitution* filter precision-recall analysis in notebooks/filter_evaluations.ipynb
+This file holds the codings for the *double-substitutions* filter precision-recall analysis in notebooks/filter_evaluations.ipynb
 
 The codings are as follows:
 tp: true positive
@@ -6,37 +6,47 @@ tn: true negative
 fp: false positive
 fn: false negative
 
+The counts are:
+false negatives: 2
+false positives: 3
+true negatives: 89
+true positives: 6
+
+Conclusion:
+precision: .667
+recall: .75
+
 Substitution number	Coding
 001			tn
-002			tp
+002			tn
 003			tn
-004			tp
+004			tn
 005			tn
-006			tn
+006			tp
 007			tn
-008			tn
-009			fn
+008			tp
+009			tn
 010			tn
 011			tn
 012			tn
 013			tn
 014			tn
-015			tp
+015			tn
 016			tn
 017			tn
 018			tn
 019			tn
-020			tn
-021			fn
+020			fn
+021			tn
 022			tn
 023			tn
 024			tn
-025			tn
+025			fp
 026			tn
 027			tn
 028			tn
-029			tn
-030			tp
+029			fp
+030			fp
 031			tn
 032			tn
 033			tn
@@ -44,7 +54,7 @@ Substitution number	Coding
 035			tn
 036			tn
 037			tn
-038			tn
+038			tp
 039			tn
 040			tn
 041			tn
@@ -52,7 +62,7 @@ Substitution number	Coding
 043			tn
 044			tn
 045			tn
-046			tn
+046			fn
 047			tn
 048			tn
 049			tn
@@ -67,31 +77,31 @@ Substitution number	Coding
 058			tn
 059			tn
 060			tn
-061			tn
+061			tp
 062			tn
 063			tn
-064			fp
+064			tn
 065			tn
-066			tn
-067			tp
-068			tp
-069			tp
-070			tp
-071			tp
+066			tp
+067			tn
+068			tn
+069			tn
+070			tn
+071			tn
 072			tn
-073			tp
+073			tn
 074			tn
 075			tn
-076			tn
-077			tp
+076			tp
+077			tn
 078			tn
 079			tn
-080			tp
+080			tn
 081			tn
 082			tn
 083			tn
 084			tn
-085			tp
+085			tn
 086			tn
 087			tn
 088			tn
