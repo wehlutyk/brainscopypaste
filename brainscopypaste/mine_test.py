@@ -2123,49 +2123,49 @@ def test_cluster_miner_mixin_substitutions(substitutions_db):
 
 mine_substitutions_content = (
     '''
-3\t8\tit's real that i love pooda\t1'''
+3\t8\tit's real that i love fooling\t1'''
     # The first part of this cluster defines basic substitutions,
     # simple and double.
     '''
-\t4\t3\tit's real that i love pooda\t1
+\t4\t3\tit's real that i love fooling\t1
 \t\t2008-07-31 00:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
 \t\t2008-08-01 08:00:00\t2\tB\tsome-url
 
-\t3\t2\tit's real that i bloom bladi\t2
+\t3\t2\tit's real that i adore playing\t2
 \t\t2008-07-31 08:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t2\tB\tsome-url
 '''
-    # This substitution here will not validate() ('poo' abbreviates 'pooda'),
+    # This substitution here will not validate() ('foo' abbreviates 'fooling'),
     # and we're making sure the non-validation doesn't wipe out the previously
     # detected substitutions.
     '''
-\t1\t1\tit's real that i love poo\t3
+\t1\t1\tit's real that i love foo\t3
 \t\t2008-08-02 07:00:00\t1\tB\tsome-url
 '''
     # Change of majority quote.
     '''
-2\t6\tit's real that i love pooda\t2
-\t4\t4\tit's real that i love pooda\t4
+2\t6\tit's real that i love fooling\t2
+\t4\t4\tit's real that i love fooling\t4
 \t\t2008-07-31 09:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
 \t\t2008-07-31 18:00:00\t1\tB\tsome-url
 \t\t2008-08-01 08:00:00\t1\tB\tsome-url
 
-\t2\t2\tit's real that i love bladi\t5
+\t2\t2\tit's real that i love playing\t5
 \t\t2008-07-31 10:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t1\tB\tsome-url
 '''
     # Majority masquing.
     '''
-3\t10\tit's real that i love pooda\t3
-\t4\t4\tit's real that i love pooda\t6
+3\t10\tit's real that i love fooling\t3
+\t4\t4\tit's real that i love fooling\t6
 \t\t2008-07-31 09:00:00\t1\tM\tsome-url
 \t\t2008-07-31 16:00:00\t1\tB\tsome-url
 \t\t2008-07-31 18:00:00\t1\tB\tsome-url
 \t\t2008-08-01 08:00:00\t1\tB\tsome-url
 
-\t2\t2\tit's real that i love bladi\t7
+\t2\t2\tit's real that i love playing\t7
 \t\t2008-07-31 10:00:00\t1\tB\tsome-url
 \t\t2008-08-01 00:00:00\t1\tB\tsome-url
 
@@ -2273,6 +2273,10 @@ def test_mine_substitutions_with_model(mine_substitutions_db):
         substitutions = sorted((s.source.sid, s.destination.sid,
                                 s.occurrence, s.position)
                                for s in session.query(Substitution))
+        print(substitutions)
+        print(sorted((s['source_sid'], s['destination_sid'],
+                      s['occurrence'], s['position'])
+                     for s in expected_substitutions))
         assert substitutions == sorted((s['source_sid'], s['destination_sid'],
                                         s['occurrence'], s['position'])
                                        for s in expected_substitutions)
