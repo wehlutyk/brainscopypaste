@@ -4,21 +4,28 @@ Cluster filter precision-recall analysis
 Codings for section 3 of notebooks/filter_evaluations.ipynb.
 
 The codings are as follows:
+```
 tp: true positive
 tn: true negative
 fp: false positive
 fn: false negative
+```
 
 The counts are:
+```
 false negatives: 15
 false positives: 9
 true negatives: 20
 true positives: 56
+```
 
 Conclusion:
+```
 precision: .862
 recall: .789
+```
 
+```
 Cluster number	Coding
 001		fn
 002		tp
@@ -120,3 +127,4 @@ Cluster number	Coding
 098		tp
 099		fp
 100		tp
+```

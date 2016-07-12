@@ -4,25 +4,32 @@ Single-substitutions filter precision-recall analysis
 Codings for section 4.1 of notebooks/filter_evaluations.ipynb.
 
 The codings are as follows:
+```
 tp: true positive
 tn: true negative
 fp: false positive
 fn: false negative
+```
 
 
 Sample from kept and non-kept substitutions
 -------------------------------------------
 
 The counts are:
+```
 false negatives: 5
 false positives: 0
 true negatives: 84
 true positives: 11
+```
 
 Conclusion:
+```
 precision: 1
 recall: .688
+```
 
+```
 Substitution number	Coding
 001			tn
 002			tn
@@ -124,18 +131,24 @@ Substitution number	Coding
 098			tn
 099			tn
 100			tn
+```
 
 
 Sample from only kept substitutions
 -----------------------------------
 
 The counts are:
+```
 false positives: 13
 true positives: 87
+```
 
 Conclusion:
+```
 precision: .87
+```
 
+```
 Substitution number	Coding
 001			tp
 002			tp
@@ -237,3 +250,4 @@ Substitution number	Coding
 098			tp
 099			tp
 100			tp
+```
