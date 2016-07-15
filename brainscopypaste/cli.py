@@ -9,13 +9,12 @@ from traitlets.config import Config
 from nbconvert.exporters import Exporter
 
 from brainscopypaste.db import Base, Cluster, Substitution
-from brainscopypaste.utils import session_scope, init_db
+from brainscopypaste.utils import session_scope, init_db, mkdirp
 from brainscopypaste.load import (MemeTrackerParser, load_fa_features,
                                   load_mt_frequency_and_tokens)
 from brainscopypaste.filter import filter_clusters
 from brainscopypaste.mine import (mine_substitutions_with_model, Time, Source,
                                   Past, Durl, Model)
-from brainscopypaste.utils import mkdirp
 from brainscopypaste.conf import settings
 
 
@@ -193,15 +192,17 @@ def mine():
 @click.argument('source', type=click.Choice(map('{}'.format, Source)))
 @click.argument('past', type=click.Choice(map('{}'.format, Past)))
 @click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
+@click.argument('max_distance',
+                type=click.IntRange(1, settings.MT_FILTER_MIN_TOKENS // 2))
 @click.option('--limit', default=None, type=int,
               help='Limit number of clusters processed')
-def mine_substitutions(time, source, past, durl, limit):
+def mine_substitutions(time, source, past, durl, max_distance, limit):
     """Mine the database for substitutions."""
 
     time, source, past, durl = map(lambda s: s.split('.')[1],
                                    [time, source, past, durl])
-    model = Model(time=Time[time], source=Source[source],
-                  past=Past[past], durl=Durl[durl])
+    model = Model(time=Time[time], source=Source[source], past=Past[past],
+                  durl=Durl[durl], max_distance=max_distance)
 
     logger.info('Starting substitution mining in memetracker data')
     if limit is not None:
@@ -217,17 +218,19 @@ def mine_substitutions(time, source, past, durl, limit):
 @click.argument('source', type=click.Choice(map('{}'.format, Source)))
 @click.argument('past', type=click.Choice(map('{}'.format, Past)))
 @click.argument('durl', type=click.Choice(map('{}'.format, Durl)))
+@click.argument('max_distance',
+                type=click.IntRange(1, settings.MT_FILTER_MIN_TOKENS // 2))
 @click.argument('notebook_path', metavar='NOTEBOOK',
                 type=click.Path(exists=True))
-def variant(time, source, past, durl, notebook_path):
+def variant(time, source, past, durl, max_distance, notebook_path):
     """Generate and run a variant of an analysis notebook based on a specific
     substitution-detection model."""
 
     # Create the model defined on the command line.
     time, source, past, durl = map(lambda s: s.split('.')[1],
                                    [time, source, past, durl])
-    model = Model(time=Time[time], source=Source[source],
-                  past=Past[past], durl=Durl[durl])
+    model = Model(time=Time[time], source=Source[source], past=Past[past],
+                  durl=Durl[durl], max_distance=max_distance)
     notebook_folder, notebook_file = split(notebook_path)
     variant_path = settings.NOTEBOOK.format(model=model,
                                             notebook=notebook_file)

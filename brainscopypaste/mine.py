@@ -5,7 +5,9 @@ import logging
 import click
 from progressbar import ProgressBar
 import numpy as np
+from nltk.corpus import wordnet
 
+from brainscopypaste.conf import settings
 from brainscopypaste.utils import (is_int, is_same_ending_us_uk_spelling,
                                    stopwords, levenshtein, subhamming,
                                    session_scope, memoized)
@@ -128,7 +130,7 @@ class Model:
 
     bin_span = timedelta(days=1)
 
-    def __init__(self, time, source, past, durl):
+    def __init__(self, time, source, past, durl, max_distance):
         assert time in Time
         self.time = time
         assert source in Source
@@ -137,6 +139,8 @@ class Model:
         self.past = past
         assert durl in Durl
         self.durl = durl
+        assert 0 < max_distance <= settings.MT_FILTER_MIN_TOKENS // 2
+        self.max_distance = max_distance
 
         self._source_validation_table = {
             Source.all: self._ok,
@@ -149,13 +153,17 @@ class Model:
 
     def __repr__(self):
         return ('Model(time={0.time}, source={0.source}, past={0.past}, '
-                'durl={0.durl})').format(self)
+                'durl={0.durl}, max_distance={0.max_distance})').format(self)
 
     @memoized
     def validate(self, source, durl):
-        return (self._validate_base(source, durl) and
+        return (self._validate_distance(source, durl) and
+                self._validate_base(source, durl) and
                 self._validate_source(source, durl) and
                 self._validate_durl(source, durl))
+
+    def _validate_distance(self, source, durl):
+        return 0 < self._distance_start(source, durl)[0] <= self.max_distance
 
     def _validate_base(self, source, durl):
         past = self._past(source.cluster, durl)
@@ -188,6 +196,18 @@ class Model:
         past_quotes = [surl.quote for surl in
                        self.past_surls(source.cluster, durl)]
         return durl.quote not in past_quotes
+
+    def _distance_start(self, source, durl):
+        # We allow for substrings.
+        # Note here that there can be a difference in lemmas without
+        # there being a difference in tokens, because of fluctuations
+        # in lemmatization. This is caught later on in the validation
+        # of substitutions (see SubstitutionValidatorMixin.validate()),
+        # instead of making this function more complicated.
+        return subhamming(source.lemmas, durl.quote.lemmas)
+
+    def find_start(self, source, durl):
+        return self._distance_start(source, durl)[1]
 
     @memoized
     def past_surls(self, cluster, durl):
@@ -232,10 +252,11 @@ class Model:
         self._past.drop_cache()
 
     def __key(self):
-        return (self.time, self.source, self.past, self.durl)
+        return (self.time, self.source, self.past, self.durl,
+                self.max_distance)
 
     def __eq__(self, other):
-        return self.__key() == other.__key()
+        return hasattr(other, '_Model__key') and self.__key() == other.__key()
 
     def __hash__(self):
         return hash(self.__key())
@@ -258,34 +279,36 @@ class ClusterMinerMixin:
                 if len(source.lemmas) < len(durl.quote.lemmas):
                     continue
 
-                # We allow for substrings.
-                # Note here that there can be a difference in lemmas without
-                # there being a difference in tokens, because of fluctuations
-                # in lemmatization. This is caught later on in the validation
-                # of substitutions (see SubstitutionValidatorMixin.validate()),
-                # instead of making this function more complicated.
-                distance, start = subhamming(source.lemmas,
-                                             durl.quote.lemmas)
-
                 # Check distance, source and durl validity.
-                if distance == 1 and model.validate(source, durl):
-                    logger.debug('Found candidate substitution between '
+                if model.validate(source, durl):
+                    logger.debug('Found candidate substitution(s) between '
                                  'quote #%s and durl #%s/%s', source.sid,
                                  durl.quote.sid, durl.occurrence)
-                    yield self._substitution(source, durl, start, model)
+                    for substitution in self._substitutions(source, durl,
+                                                            model):
+                        yield substitution
 
     @classmethod
-    def _substitution(cls, source, durl, start, model):
+    def _substitutions(cls, source, durl, model):
         from brainscopypaste.db import Substitution
 
+        start = model.find_start(source, durl)
         dlemmas = durl.quote.lemmas
         slemmas = source.lemmas[start:start + len(dlemmas)]
         positions = np.where([c1 != c2
                               for (c1, c2) in zip(slemmas, dlemmas)])[0]
-        assert len(positions) == 1
-        return Substitution(source=source, destination=durl.quote,
-                            occurrence=durl.occurrence, start=int(start),
-                            position=int(positions[0]), model=model)
+        assert 0 < len(positions) <= model.max_distance
+        for position in positions:
+            yield Substitution(source=source, destination=durl.quote,
+                               occurrence=durl.occurrence, start=int(start),
+                               position=int(position), model=model)
+
+
+@memoized
+def _get_wordnet_words():
+    return set(word.lower()
+               for synset in wordnet.all_synsets()
+               for word in synset.lemma_names())
 
 
 class SubstitutionValidatorMixin:
@@ -293,8 +316,13 @@ class SubstitutionValidatorMixin:
     def validate(self):
         token1, token2 = self.tokens
         lem1, lem2 = self.lemmas
-        tokens1, lemmas1 = self.source.tokens, self.source.lemmas
+        tokens1, tokens2 = self.source.tokens, self.destination.tokens
+        lemmas1, lemmas2 = self.source.lemmas, self.destination.lemmas
 
+        # Only real-word lemmas.
+        wordnet_words = _get_wordnet_words()
+        if lem1 not in wordnet_words or lem2 not in wordnet_words:
+            return False
         # '21st'/'twenty-first', etc.
         if (is_int(token1[0]) or is_int(token2[0]) or
                 is_int(lem1[0]) or is_int(lem2[0])):
@@ -331,14 +359,82 @@ class SubstitutionValidatorMixin:
             (token2 == tokens1[self.start + self.position + 1] or
              lem2 == lemmas1[self.start + self.position + 1])):
             return False
-        # Words stuck together ('policy maker' -> 'policymaker')
+        # Word insertion ('school' -> 'high school')
+        if (self.position > 0 and
+            (token1 == tokens2[self.position - 1] or
+             lem1 == lemmas2[self.position - 1])):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (token1 == tokens2[self.position + 1] or
+             lem1 == lemmas2[self.position + 1])):
+            return False
+        # Two words deletion ('supply of energy' -> 'supply')
+        if (self.start + self.position > 1 and
+            (token2 == tokens1[self.start + self.position - 2] or
+             lem2 == lemmas1[self.start + self.position - 2])):
+            return False
+        if (self.start + self.position < len(tokens1) - 2 and
+            (token2 == tokens1[self.start + self.position + 2] or
+             lem2 == lemmas1[self.start + self.position + 2])):
+            return False
+        # Words stuck together ('policy maker' -> 'policymaker'
+        # or 'policy-maker')
         if (self.start + self.position > 0 and
             (token2 == tokens1[self.start + self.position - 1] + token1 or
-             lem2 == lemmas1[self.start + self.position - 1] + lem1)):
+             token2 == tokens1[self.start + self.position - 1] +
+                '-' + token1 or
+             lem2 == lemmas1[self.start + self.position - 1] + lem1 or
+             lem2 == lemmas1[self.start + self.position - 1] + '-' + lem1)):
             return False
         if (self.start + self.position < len(tokens1) - 1 and
             (token2 == token1 + tokens1[self.start + self.position + 1] or
-             lem2 == lem1 + lemmas1[self.start + self.position + 1])):
+             token2 == token1 + '-' +
+                tokens1[self.start + self.position + 1] or
+             lem2 == lem1 + lemmas1[self.start + self.position + 1] or
+             lem2 == lem1 + '-' + lemmas1[self.start + self.position + 1])):
+            return False
+        # Words separated ('policymaker' or 'policy-maker' -> 'policy maker')
+        if (self.position > 0 and
+            (token1 == tokens2[self.position - 1] + token2 or
+             token1 == tokens2[self.position - 1] + '-' + token2 or
+             lem1 == lemmas2[self.position - 1] + lem2 or
+             lem1 == lemmas2[self.position - 1] + '-' + lem2)):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (token1 == token2 + tokens2[self.position + 1] or
+             token1 == token2 + '-' + tokens2[self.position + 1] or
+             lem1 == lem2 + lemmas2[self.position + 1] or
+             lem1 == lem2 + '-' + lemmas2[self.position + 1])):
+            return False
+        # We need 2 extra checks compare to the words-stuck-together situation,
+        # to detect teh second substitution appearing because of word
+        # separation. Indeed in this case, contrary to words-stuck-together, we
+        # can't rely on word shifts always being present, since the destination
+        # can be cut shorter. In other words, in the following case:
+        # (1) i'll come anytime there
+        # (2) i'll come any time
+        # these checks let us exclude 'there' -> 'time' as a substitution (in
+        # the words-stuck-together case, the word 'there' would be present in
+        # both sentences, shifted).
+        if (self.position > 0 and
+            (tokens1[self.start + self.position - 1] ==
+                tokens2[self.position - 1] + token2 or
+             tokens1[self.start + self.position - 1] ==
+                tokens2[self.position - 1] + '-' + token2 or
+             lemmas1[self.start + self.position - 1] ==
+                lemmas2[self.position - 1] + lem2 or
+             lemmas1[self.start + self.position - 1] ==
+                lemmas2[self.position - 1] + '-' + lem2)):
+            return False
+        if (self.position < len(tokens2) - 1 and
+            (tokens1[self.start + self.position + 1] ==
+                token2 + tokens2[self.position + 1] or
+             tokens1[self.start + self.position + 1] ==
+                token2 + '-' + tokens2[self.position + 1] or
+             lemmas1[self.start + self.position + 1] ==
+                lem2 + lemmas2[self.position + 1] or
+             lemmas1[self.start + self.position + 1] ==
+                lem2 + '-' + lemmas2[self.position + 1])):
             return False
 
         return True

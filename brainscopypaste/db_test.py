@@ -211,9 +211,13 @@ def test_substitution(some_substitutions):
         assert session.query(Substitution)\
             .filter(Substitution.model == model2).count() == 2
         model3 = Model(Time.continuous, Source.majority,
-                       Past.last_bin, Durl.all)
+                       Past.last_bin, Durl.all, 1)
         assert session.query(Substitution)\
             .filter(Substitution.model == model3).count() == 0
+        model4 = Model(Time.discrete, Source.majority,
+                       Past.last_bin, Durl.all, 2)
+        assert session.query(Substitution)\
+            .filter(Substitution.model == model4).count() == 0
 
 
 def test_clone_cluster(some_urls):

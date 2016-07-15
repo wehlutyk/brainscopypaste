@@ -61,8 +61,8 @@ def some_urls(some_clusters, some_quotes):
 
 @pytest.fixture
 def some_substitutions(some_clusters, some_quotes, some_urls):
-    model1 = Model(Time.discrete, Source.majority, Past.last_bin, Durl.all)
-    model2 = Model(Time.discrete, Source.majority, Past.all, Durl.all)
+    model1 = Model(Time.discrete, Source.majority, Past.last_bin, Durl.all, 1)
+    model2 = Model(Time.discrete, Source.majority, Past.all, Durl.all, 1)
     with session_scope() as session:
         c0 = session.query(Cluster).filter_by(sid=0).one()
         c1 = session.query(Cluster).filter_by(sid=1).one()
@@ -83,18 +83,15 @@ def some_substitutions(some_clusters, some_quotes, some_urls):
                                  occurrence=0, start=5,
                                  position=3, model=model1))
         # Same durl (destination, occurrence) as above, but different source,
-        # different start and different destination position. So this
-        # substitution is pooled with the previous.
+        # different start and different destination position.
         session.add(Substitution(source=q12, destination=q11,
                                  occurrence=0, start=2,
                                  position=2, model=model1))
         # Same destination but different occurrence (so different durl).
-        # This substitution is not pooled with the first one.
         session.add(Substitution(source=q13, destination=q11,
                                  occurrence=1, start=5,
                                  position=3, model=model1))
-        # Different destination altogether. This substitution is also
-        # not pooled with the first one.
+        # Different destination altogether.
         session.add(Substitution(source=q13, destination=q12,
                                  occurrence=0, start=0,
                                  position=1, model=model2))
