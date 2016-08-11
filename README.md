@@ -6,6 +6,6 @@ The latex source (along with compiled pdf) for the paper is at [wehlutyk/brainsc
 
 TODO/OUTDATED: See the [documentation](https://brainscopypaste.readthedocs.org/en/latest/) if you want to install, run, or understand any of this.
 
-## Licence
+## License
 
 GNU/GPLv3.
