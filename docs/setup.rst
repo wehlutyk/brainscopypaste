@@ -26,7 +26,7 @@ Now let's get started. If you haven't done so already, open a shell, clone the m
 Creating the environment
 ------------------------
 
-You need ``virtualenv`` (`documentation <http://www.virtualenv.org/en/latest/>`_), ``virtualenvwrapper`` (`documentation <http://virtualenvwrapper.readthedocs.org/en/latest/>`_), ``tk-dev`` and ``redis-server`` for the environment to run the suite. On Debian/Ubuntu you can do this by running the following commands in a shell::
+You need ``virtualenv`` <http://www.virtualenv.org/en/latest/>`_, ``virtualenvwrapper`` <http://virtualenvwrapper.readthedocs.org/en/latest/>`_, ``tk-dev`` and ``redis-server`` for the environment to run the suite. On Debian/Ubuntu you can do this by running the following commands in a shell::
 
    sudo apt-get install virtualenvwrapper  # For isolating python environments; pulls in virtualenv automatically
    sudo apt-get install redis-server       # A key-value store for data storage
