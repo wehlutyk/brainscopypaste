@@ -1,3 +1,8 @@
+"""Tests for :mod:`.filter`.
+
+"""
+
+
 from datetime import datetime, timedelta
 
 import pytest

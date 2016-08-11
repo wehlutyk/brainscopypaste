@@ -1,0 +1,4 @@
+Filtering
+=========
+
+.. automodule:: brainscopypaste.filter

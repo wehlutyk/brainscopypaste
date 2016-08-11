@@ -1,5 +1,5 @@
 .. Brains Copy Paste documentation master file, created by
-   sphinx-quickstart on Tue Jan 29 16:18:55 2013.
+   sphinx-quickstart on Thu Aug 11 18:12:40 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 

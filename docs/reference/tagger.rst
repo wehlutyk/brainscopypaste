@@ -1,0 +1,4 @@
+Tagger
+======
+
+.. automodule:: brainscopypaste.tagger

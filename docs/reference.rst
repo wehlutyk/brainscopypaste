@@ -8,12 +8,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   reference/root-scripts
-   reference/root-modules
-   reference/analyze
-   reference/datainterface
-   reference/datastructure
-   reference/linguistics
+   reference/cli
+   reference/db
+   reference/features
+   reference/filter
+   reference/load
    reference/mine
-   reference/util
-   reference/visualize
+   reference/tagger
+   reference/utils
+   reference/settings
+   reference/test

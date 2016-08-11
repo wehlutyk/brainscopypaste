@@ -1,4 +1,6 @@
-"""Load data from the MemeTracker dataset."""
+"""Load data from the MemeTracker dataset.
+
+"""
 
 
 from datetime import datetime

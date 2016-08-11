@@ -1,0 +1,4 @@
+Features
+========
+
+.. automodule:: brainscopypaste.features
