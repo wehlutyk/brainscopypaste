@@ -1,3 +1,8 @@
+"""Database models and related utilities.
+
+"""
+
+
 import re
 from io import StringIO
 import logging
@@ -325,8 +330,6 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
 
 
 def _copy(string, table, columns):
-    from brainscopypaste.utils import session_scope
-
     string.seek(0)
     with session_scope() as session:
         cursor = session.connection().connection.cursor()

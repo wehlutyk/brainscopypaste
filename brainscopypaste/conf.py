@@ -1,3 +1,9 @@
+"""Manage settings from :mod:`.settings`, allowing overriding
+of some values.
+
+"""
+
+
 import logging
 import importlib
 from contextlib import contextmanager

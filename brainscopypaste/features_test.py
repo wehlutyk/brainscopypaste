@@ -1,3 +1,8 @@
+"""Tests for :mod:`.features`.
+
+"""
+
+
 from os.path import exists
 import pickle
 

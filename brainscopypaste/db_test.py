@@ -1,3 +1,8 @@
+"""Tests for :mod:`.db`.
+
+"""
+
+
 from datetime import datetime, timedelta
 
 from sqlalchemy.exc import DataError

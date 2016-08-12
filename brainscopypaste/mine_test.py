@@ -1,3 +1,8 @@
+"""Tests for :mod:`.mine`.
+
+"""
+
+
 import os
 from tempfile import mkstemp
 from datetime import datetime

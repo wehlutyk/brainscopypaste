@@ -1,3 +1,8 @@
+"""Tests for :mod:`.tagger`.
+
+"""
+
+
 from brainscopypaste.tagger import tag, tags, tokens, lemmas
 
 

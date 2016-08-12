@@ -1,3 +1,8 @@
+"""Tests for :mod:`.load`.
+
+"""
+
+
 import os
 from tempfile import mkstemp
 from datetime import timedelta

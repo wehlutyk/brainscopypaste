@@ -1,3 +1,8 @@
+"""General settings for the analysis.
+
+"""
+
+
 from os.path import abspath, join
 
 

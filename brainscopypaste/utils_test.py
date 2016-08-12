@@ -1,3 +1,8 @@
+"""Tests for :mod:`.utils`.
+
+"""
+
+
 import pickle
 from tempfile import mkstemp
 import os

@@ -1,3 +1,8 @@
+"""Filter clusters and quotes to clean to MemeTracker dataset.
+
+"""
+
+
 from datetime import timedelta
 import logging
 

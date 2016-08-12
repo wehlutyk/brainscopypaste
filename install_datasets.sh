@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+# Find python3 command
+if which python3  >/dev/null 2>&1; then
+  PYTHON=python3
+else
+  PYTHON=python
+fi
+
 # Download NLTK data
 echo
 echo "[BrainsCopyPaste installer] Installing WordNet and CMU data..."
-python -m nltk.downloader cmudict wordnet wordnet_ic
+$PYTHON -m nltk.downloader cmudict wordnet wordnet_ic
 
 # Download Free Association Norms
 echo

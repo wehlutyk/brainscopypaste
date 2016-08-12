@@ -1,4 +1,6 @@
-"""Tag and tokenize sentences and quotes."""
+"""Tag and tokenize sentences and quotes.
+
+"""
 
 
 from treetaggerwrapper import TreeTagger, TreeTaggerError

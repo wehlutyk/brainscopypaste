@@ -1,3 +1,8 @@
+"""CLI tool for stepping through the analysis.
+
+"""
+
+
 from os.path import exists, basename, split, join
 from os import remove
 import logging

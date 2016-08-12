@@ -1,3 +1,8 @@
+"""Mine substitutions with various mining models.
+
+"""
+
+
 from enum import Enum, unique
 from datetime import timedelta, datetime
 import logging
