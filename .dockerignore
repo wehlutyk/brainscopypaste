@@ -1,0 +1,14 @@
+*.egg-info
+.cache
+data/clearpond
+data/figures
+data/FreeAssociation
+data/MemeTracker
+data/notebooks
+docs/_build
+docs/data
+Dockerfile
+.git
+.ipynb_checkpoints
+**/__pycache__
+treetagger

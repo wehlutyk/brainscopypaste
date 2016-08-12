@@ -2,7 +2,7 @@
 set -e
 
 # Find python3 command
-if which python3; then
+if which python3  >/dev/null 2>&1; then
   PYTHON=python3
 else
   PYTHON=python
