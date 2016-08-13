@@ -6,12 +6,16 @@
 Welcome to Brains Copy Paste's documentation!
 =============================================
 
-Contents:
+
+.. include:: intro.rst
+
+
+Documentation contents
+----------------------
 
 .. toctree::
    :maxdepth: 2
 
-   intro
    setup
    usage
    reference
@@ -21,7 +25,7 @@ Contents:
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
