@@ -15,9 +15,12 @@ from brainscopypaste.mine import Model, Time, Source, Past, Durl
 
 @pytest.yield_fixture
 def tmpdb():
-    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
-                           '@localhost:5432/brainscopypaste_test',
-                           client_encoding='utf8')
+    from brainscopypaste.conf import settings
+    engine = create_engine(
+        'postgresql+psycopg2://{user}:{pw}@localhost:5432/{db}'
+        .format(user=settings.DB_USER, pw=settings.DB_PASSWORD,
+                db=settings.DB_NAME_TEST),
+        client_encoding='utf8')
     Session.configure(bind=engine)
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)

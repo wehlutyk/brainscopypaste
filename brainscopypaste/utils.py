@@ -361,11 +361,14 @@ def unpickle(filename):
 
 def init_db(echo_sql=False):
     from brainscopypaste.db import Base, Session
+    from brainscopypaste.conf import settings
     logger.info('Initializing database connection')
 
-    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
-                           '@localhost:5432/brainscopypaste',
-                           client_encoding='utf8', echo=echo_sql)
+    engine = create_engine(
+        'postgresql+psycopg2://{user}:{pw}@localhost:5432/{db}'
+        .format(user=settings.DB_USER, pw=settings.DB_PASSWORD,
+                db=settings.DB_NAME),
+        client_encoding='utf8', echo=echo_sql)
     Session.configure(bind=engine)
 
     logger.info('Database connected')

@@ -63,3 +63,9 @@ FIGURE_VARIANTS = join(figures_root, '{notebook}', '{model}')
 
 # TreeTagger library folder.
 TREETAGGER_TAGDIR = 'treetagger'
+
+# Database credentials.
+DB_USER = 'brainscopypaste'
+DB_PASSWORD = ''
+DB_NAME = 'brainscopypaste'
+DB_NAME_TEST = 'brainscopypaste_test'
