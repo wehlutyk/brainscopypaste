@@ -1,5 +1,9 @@
 """CLI tool for stepping through the analysis.
 
+Invoke using ``brainscopypaste <command>``. The documentation for this tool can
+be explored using ``brainscopypaste --help`` or ``brainscopypaste <command>
+--help``.
+
 """
 
 
@@ -54,6 +58,8 @@ def drop():
 
 
 def confirm(fillin):
+    """Confirm the dropping of `fillin`."""
+
     text = "About to drop {}. Are you sure? (type 'yes') ".format(fillin)
     click.secho(text, nl=False, fg='red', bold=True)
     answer = input()
@@ -121,6 +127,8 @@ def drop_substitutions(obj):
 
 
 def _drop_features():
+    """Drop computed features from the filesystem."""
+
     logger.info('Dropping computed features from filesystem')
     click.secho('Dropping computed features... ', nl=False)
 
@@ -283,6 +291,8 @@ def variant(time, source, past, durl, max_distance, notebook_path):
 
 
 def cliobj():
+    """Convenience function to launch the CLI tool, used by the setup.py
+    script."""
     cli(obj={})
 
 
