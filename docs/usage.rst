@@ -3,187 +3,161 @@
 Usage
 =====
 
-In the previous section we set up the environment, installed the dependencies, and downloaded the datasets. Those datasets divide in two categories:
-
-* The MemeTracker dataset, which contains all the blog and quotes data
-* All the other datasets, which are used to compute word features
-
+This section explains how to re-run the full analysis (including what is described in the paper).
 The general flow for the analysis is as follows:
 
-#. Filter through all of the MemeTracker data looking for substitutions from one quote to another. This is not a trivial task, since substitutions are not directly available from the dataset (because it contains no ``source -> destination`` information) and thus have to be detected based on various models that imagine how the substitution process takes place. Call this step **substitution mining** . The output of this step is a list of mined substitutions; and since we have several ways of mining those substitutions, we obtain a list of mined substitutions for each mining method (or *argument set*). *This step accounts for about half of the total computation time of the final results.*
-#. To characterize the way words are modified upon substitution we compute a set of features for each word, which we use in the next step by examining how those features vary when a word is substituted. Call this step **word feature computation**. *This step accounts for the other half of the computation time of the final results.*
-#. We now have lists of substitutions (one for each mining method) and a set of features for the words involved in the substitutions ; it's time to plot the variations of those features upon substitution. This is the final exploratory step, which we can call **substitution visualization**.
+#. :ref:`usage_preload`, which consists of the following 3 steps:
+
+   #. :ref:`usage_memetracker_load`
+   #. :ref:`usage_memetracker_filter`
+   #. :ref:`usage_features_load`
+
+#. :ref:`usage_single_model`, which consists of the following 2 steps:
+
+   #. :ref:`usage_mine`
+   #. :ref:`usage_notebooks`
+
+Once you did that for a particular substitution model, you can do the :ref:`usage_variants`.
 
 Now let's get all this running!
 
+.. _usage_preload:
+
+Preload all necessary data
+--------------------------
+
+The first big part is to load and preprocess all the bits necessary for the analysis. Let's go:
+
+.. _usage_memetracker_load:
+
+Load the MemeTracker data into the database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The MemeTracker data comes in a text-based format, which isn't suitable for the analysis we want to perform.
+So the first thing we do is load it into a PostgreSQL database.
+First, make sure the database service is running::
+
+   sudo service postgresql start
+
+Then, from inside the analysis' repository (with the virtual environment activated if you're not using Docker --- see the :ref:`setup` section if you're lost here), tell the toolchain to load the MemeTracker data into the database::
+
+   brainscopypaste load memetracker
+
+This might take a while to complete, as the MemeTracker data takes up about 1GB and needs to be processed for the database.
+The command-line tool will inform you about its progress.
+
+.. _usage_memetracker_filter:
 
 Preprocess the MemeTracker data
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The MemeTracker data comes in a text-based format, which isn't quite suitable for the analysis we want to perform. Before diving into substitution mining, we need to parse the dataset to store it in better-suited python objects. All these objects will be stored in the Redis backend (this speeds up program loading and lets multiple processes read the data without needing to copy it several times in memory).
+Now, the data we just loaded contains quite some noise.
+Our next step is to filter out all the noise we can, to work on a cleaner data set overall.
+To do so, run::
 
-The following commands will read the MemeTracker clusters file and import various filtered versions of the clusters into usable python datastructures, stored in Redis::
+   brainscopypaste filter memetracker
 
-   sudo service redis-server start             # Start redis server
-   python -u load_mt_clusters_to_pickle.py     # Filter clusters and save to pickle files
-   python -u load_mt_pickle_to_redis.py        # Load the filtered clusters to Redis
+This is also a bit long (but, as usual, informs you of the progress).
 
-The data that was loaded to Redis is also stored in files in pickle format, located at ``data/MemeTracker/clust-qt08080902w3mfq5.txt*.pickle``.
+.. _usage_features_load:
 
-You can already get some preliminary statistics on the data by running the following::
+Load and compute word features
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   python -u mine_statistics.py
+The final preloading step is to compute the features we'll use on words involved in substitutions.
+This comes after loading and filtering the MemeTracker data, since some features (like word frequency) are computed on the filtered MemeTracker data itself.
+To load all the features, run::
 
-.. note::
+   brainscopypaste load features
 
-   For most graphing, you will also need to install a working LaTeX distribution since text rendering is done through LaTeX. On Arch, ``sudo pacman -S texlive-core texlive-latexextra`` does the trick. Alternatively, you can comment out line 154 of the ``matplotlibrc`` file at the root of this repository, which will disable LaTeX rendering.
+Now you're ready to mine substitutions and plot the results.
 
+.. _usage_single_model:
 
-Run substitution mining
------------------------
+Analyse substitutions mined by one model
+----------------------------------------
 
-You can now start the actual substitution mining. ``mine_substitutions.py`` will mine with one given set of arguments defining a model, and ``mine_substitutions_multiple.py`` will mine with multiple sets of arguments, testing all correct combinations of the lists of arguments you provide. The arguments for those commands fall into two types (the plurals, denoted by ``[s]``, are for ``mine_substitutions_multiple.py``):
+So first, choose a substitution model (read the `paper <https://hal.archives-ouvertes.fr/hal-01143986/>`_ for more information on this).
+If you want to use the model detailed in the paper, just follow the instructions below.
 
-* On one side:
+.. _usage_mine:
 
-  * ``--ff[s]``: selects which filtered version of the MemeTracker clusters to work on
-
-* On the other side:
-
-  * ``--model[s]``: selects which substitution detection model to use (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
-  * ``--substrings[s]``: indicates whether or not to include susbtitutions of substrings of quotes
-  * ``--POS[s]``: selects which kind of filtering is applied using the POS tags of the words (see the paper's supplementary data [LeriqueRoth12suppl]_ and the :ref:`reference` documentation for more details)
-  * ``--timebag_size[s]``: selects the size (in days) of the timebags the clusters are sliced into, for substitution detection models that use slicing (i.e. ``tbgs``, ``cumtbgs``, ``slidetbgs`` and ``growtbgs``)
-
-So to mine with all imaginable models, settings,  and filtered versions of the clusters::
-
-   python -u mine_substitutions_multiple.py \
-       --ffs full framed filtered ff \                         # All filtered versions of clusters
-       --models tbgs cumtbgs slidetbgs growtbgs time root \    # All detection models
-       --substringss 0 1 \                                     # Include or don't include substitutions on substrings
-       --POSs a n v r all \                                    # All filters on POS tags
-       --timebag_sizes 1 2 3                                   # Various slicings of clusters into timebags
-
-.. note::
-
-   These commands are multiprocesssed and will use all your CPUs minus one (so that I/O doesn't block) and a lot of RAM. As an example, the command above took about a day to complete on a 48-CPU / 500G-RAM workserver! You might want to try only a subset of those arguments.
-
-
-Compute word features
----------------------
-
-To measure what happens during a substitution (the ones you just mined), you need to characterize the way words are changed upon substitution. This step computes the features used to characterize substitutions.
-
-.. todo::
-
-   Add a link to the computed data for those who don't have a workstation to compute it all.
-
-
-Word Frequencies
-^^^^^^^^^^^^^^^^
-
-Compute the word frequencies in the MemeTracker dataset, and save that to a pickle file::
-
-   ## Compute word frequencies
-   python -u load_mt_frequencies_to_pickle.py
-
-
-Age-of-Acquisition
-^^^^^^^^^^^^^^^^^^
-
-Load the Age-of-Acquisition features to a usable pickle file::
-
-   ## Load feature to pickle
-   python -u load_aoa_Kuperman_to_pickle.py
-
-
-CMU Pronunciation Dictionary
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Compute the Mean Number of Phonemes and the Mean Number of Syllables using NLTK / CMU, and save them to a usable pickle file::
-
-   ## Compute features
-   python -u load_cmu_MNphonemes_to_pickle.py      # Mean numbers of phonemes
-   python -u load_cmu_MNsyllables_to_pickle.py     # Mean numbers of syllables
-
-
-Free Association Norms
+Mine for substitutions
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Load Free Association Norms to a usable pickle file, and compute the four main features based on the norms as well as the path lengths distribution::
+To mine for all the substitutions that the model presented in the paper detects, run::
 
-   ## Preprocess norms data
-   python -u load_fa_norms_to_pickle.py
+   brainscopypaste mine substitutions Time.discrete Source.majority Past.last_bin Durl.all 1
 
-   ## Compute features
-   python -u load_fa_degrees_to_pickle.py          # Degrees of words
-   python -u load_fa_CCs_to_pickle.py              # Clustering coefficients of words
-   python -u load_fa_PageRank_to_pickle.py         # PageRank of words
+This will iterate through the MemeTracker data, detect all substitutions that conform to the main model presented in the paper, and store them in the database.
 
-   # /!\ laptop: 30 minutes
-   python -u load_fa_BCs_to_pickle.py              # Betweenness centralities of words
+Head over to the :ref:`reference_cli` reference for more details about what the arguments in this command mean.
 
-   # /!\ laptop: 30 minutes
-   python -u load_fa_paths_to_pickle.py            # Path lengths distribution
+.. _usage_notebooks:
 
-.. note::
+Run the analysis notebooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   Lines marked with a ``/!\`` sign can be resource-demanding. The time indicated is an order of magnitude of the computing time with a 4x2.4GHz / 4G-RAM laptop.
+Once substitutions are mined, results are obtained by running the Jupyter notebooks located in the ``notebooks/`` folder.
+To do so, still in the same terminal, run::
 
+   jupyter notebook
 
-WordNet
-^^^^^^^
+Which will open the Jupyter file browser in your web browser.
 
-Compute the four main features and path lengths distribution from the WordNet network::
-
-   ## Compute features
-   python -u load_wn_degrees_to_pickle.py          # Degrees of words
-   python -u load_wn_CCs_to_pickle.py              # Clustering coefficients of words
-   python -u load_wn_NSigns_to_pickle.py           # Number of meanings of words
-   python -u load_wn_MNSyns_to_pickle.py           # Mean number of synonyms of words
-
-   # /!\ laptop: 2 hours
-   python -u load_wn_PageRank_to_pickle.py         # PageRank of words
-
-   # /!\ workserver: 20 hours
-   python -u load_wn_BCs_to_pickle.py              # Betweenness centralities of words
-
-   # /!\ workserver: 20 hours
-   python -u load_wn_paths_to_pickle.py            # Path lengths distribution
+Then click on the ``notebooks/`` folder, and open any analysis notebook you want and run it.
+All the figures presenting results in the paper come from these notebooks.
 
 .. note::
 
-   Again, lines marked with a ``/!\`` sign are pretty resource-demanding. The workserver used has 48 CPUs and 500G of RAM, and the last two commands used up to half the RAM.
+   If you used another substitution model than the one used above, you must correct the corresponding ``model = Model(...)`` line in the ``distance.ipynb``, ``susceptibility.ipynb``, and ``variation.ipynb`` notebooks.
 
-.. todo::
+.. _usage_variants:
 
-   We're using the FA network for network measures, so ``degree``, ``CC`, ``PageRank``, ``BC``, and ``path`` on WordNet are not used any more. We can remove them from these instructions and save the computations.
+Analysis exploring all mining models
+------------------------------------
 
+Part of the robustness of the analysis comes from the fact that results are reproducible across substitution models.
+To compute the results for all substitution models, you must first mine all the possible substitutions.
+This can be done with the following command::
 
-Plot the results
-----------------
+   for time in discrete continuous; do \
+     for source in majority all; do \
+       for past in last_bin all; do \
+         for durl in all exclude_past; do \
+           for maxdistance in 1 2; do \
+             echo "\n-----\n\nDoing Time.$time Source.$source Past.$past Durl.$durl $maxdistance"; \
+             brainscopypaste mine substitutions Time.$time Source.$source Past.$past Durl.$durl $maxdistance; \
+           done; \
+         done; \
+       done; \
+     done; \
+   done;
 
-You can now generate a (too) large number of graphs based on the mined data.
+(This will take a loooong time to complete.
+The ``Time.continuous|discrete Source.all Past.all Durl.all 1|2`` models especially, will use a lot of RAM.)
 
-``analyze_substitutions.py`` will let you see one graph for a set of arguments, and ``analyze_substitutions_multiple.py`` will build a series of graphs based on the argument sets you give it, combining them into all meaningful possibilities.
+Once substitutions are mined for all possible models (or a subset of those), you can run notebooks for each model directly in the command-line (i.e. without having to open each notebook in the browser) with the ``brainscopypaste variant <model-parameters> <notebook-file>`` command.
+It will create a copy of the notebook you asked for, set the proper ``model = Model(...)`` line in it, run it and save it in the ``data/notebooks/`` folder.
+All the figures produced by that notebook will also be saved in the ``data/figures/<model> - <notebook>/`` folder.
 
+So to run the whole analysis for all models, after mining for all models, run::
 
-The graph outputs can be:
+   for time in discrete continuous; do \
+     for source in majority all; do \
+       for past in last_bin all; do \
+         for durl in all exclude_past; do \
+           for maxdistance in 1 2; do \
+             echo "\n-----\n\nDoing Time.$time Source.$source Past.$past Durl.$durl $maxdistance"; \
+             brainscopypaste variant Time.$time Source.$source Past.$past Durl.$durl $maxdistance notebooks/distance.ipynb; \
+             brainscopypaste variant Time.$time Source.$source Past.$past Durl.$durl $maxdistance notebooks/susceptibility.ipynb; \
+             brainscopypaste variant Time.$time Source.$source Past.$past Durl.$durl $maxdistance notebooks/variation.ipynb; \
+           done; \
+         done; \
+       done; \
+     done; \
+   done;
 
-* Feature variation curves
-* Feature susceptibilities
-* Path lengths travelled upon substitution
-* Position of substituted word in substituted quote
+Needless to say, this plus mining will take at least a couple days to complete.
 
-
-With all this you should be able to reproduce most of the figures in the paper [to be pusblished].
-
-
-References
-----------
-
-.. [LeriqueRoth12suppl] to be pusblished
-
-.. todo::
-
-   Add paper supplementary data reference
+If you want to know more to try and hack on the analysis on the notebooks, head over to the :ref:`reference`.
