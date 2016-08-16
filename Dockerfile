@@ -22,6 +22,8 @@ RUN set -x \
         python3 \
         python3-pip \
         sudo \
+        texlive \
+        texlive-latex-extra \
         unzip \
         wget \
     && rm -rf /var/lib/apt/lists/*
@@ -85,6 +87,3 @@ RUN set -x \
     && cd /home/brainscopypaste \
     && sudo service postgresql restart \
     && py.test
-
-# Use the CLI tool, for easier use.
-CMD ["/home/brainscopypaste/dockerstart.sh"]

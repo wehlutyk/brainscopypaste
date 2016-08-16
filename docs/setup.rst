@@ -83,12 +83,13 @@ Now let's get started.
 Install preliminary dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, there's a bunch of packages we're going to need: among them are `virtualenv <http://www.virtualenv.org/en/latest/>`_ and `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest/>`_ to isolate the environment, PostgreSQL for database handling, and some build-time dependencies.
+First, there's a bunch of packages we're going to need: among them are `virtualenv <http://www.virtualenv.org/en/latest/>`_ and `virtualenvwrapper <http://virtualenvwrapper.readthedocs.org/en/latest/>`_ to isolate the environment, PostgreSQL for database handling, a LaTeX distribution for math rendering in figures, and some build-time dependencies.
 To get all the necessary stuff in one fell swoop, run::
 
     sudo apt-get install virtualenv virtualenvwrapper \
-        postgresql postgresql-server-dev pkg-config python3-dev \
-        build-essential libfreetype6-dev libpng12-0 libpng12-dev tk-dev
+        postgresql postgresql-server-dev texlive texlive-latex-extra \
+        pkg-config python3-dev build-essential \
+        libfreetype6-dev libpng12-0 libpng12-dev tk-dev
 
 Then close and reopen your terminal (this loads the virtualenvwrapper scripts at startup).
 
