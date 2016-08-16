@@ -20,18 +20,37 @@ Quick setup using Docker
 
 If you have Docker installed, just run::
 
-   docker run wehlutyk/brainscopypaste
+   docker run -it wehlutyk/brainscopypaste bash
 
-That command will download the complete container (which might take a while since it bundles all the necessary data) and run the general command-line tool.
-With that you can jump straight to the :ref:`usage` section, and you just need to replace all instances of::
+That command will download the complete container (which might take a while since it bundles all the necessary data) and start a session in the container.
+You see a normal shell prompt, which looks like this::
 
-   brainscopypaste [arguments]
+   brainscopypaste@3651c3dbcc4d:/$
 
-with::
+Keep a note of the hexadecimal number after the ``@`` sign (it will be different for you), we'll use it later on to restart this session.
+It's the ID of your container instance.
 
-   docker run wehlutyk/brainscopypaste [arguments]
+Now, in that same shell, start the PostgreSQL server::
 
-If you're not a fan of Docker, you want see the detailed environment to use it yourself, or for any other reason you want to manually set up the analysis environment, keep reading below.
+   sudo service postgresql start
+
+Then, ``cd`` into the analysis' home directory and run anything you want from the :ref:`usage` section::
+
+   cd /home/brainscopypaste
+   brainscopypaste <any-analysis-command>
+   # -> the container computes...
+   brainscopypaste <another-analysis-command>
+   # -> the container does more computing...
+
+Once you're done, just type ``exit`` (or Ctrl-D) to quit as usual in a terminal.
+
+To restart the same container next time (and not a new instance, which will not now about any analyses you may have run), use your last container's ID::
+
+   docker start -i <instance-id>
+
+(You can also find a more human-readable name associated to that container ID by running ``docker ps -a``.)
+
+Now if you're not a fan of Docker, you want see the detailed environment to use it yourself, or for any other reason you want to manually set up the analysis environment, keep reading below.
 
 .. _setup_manual:
 
