@@ -1,12 +1,12 @@
 Settings
 ========
 
-Settings management
--------------------
+Accessing settings
+------------------
 
 .. automodule:: brainscopypaste.conf
 
-Actual settings
----------------
+Defining settings
+-----------------
 
 .. automodule:: brainscopypaste.settings
