@@ -27,9 +27,8 @@ import mock
 
 MOCK_MODULES = ['click', 'langdetect', 'langdetect.lang_detect_exception',
                 'nbconvert.exporters', 'nbformat', 'networkx', 'nltk',
-                'nltk.corpus', 'numpy', 'progressbar', 'pytest',
-                'sklearn.decomposition', 'traitlets.config',
-                'treetaggerwrapper']
+                'nltk.corpus', 'numpy', 'progressbar', 'sklearn.decomposition',
+                'traitlets.config', 'treetaggerwrapper']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
