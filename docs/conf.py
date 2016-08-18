@@ -371,7 +371,10 @@ intersphinx_mapping = {'networkx': ('http://networkx.github.io/', None),
                        'scipy': ('http://docs.scipy.org/doc/scipy-0.17.1/'
                                  'reference/', None),
                        'python': ('http://docs.python.org/3.5/', None),
-                       'matplotlib': ('http://matplotlib.org/', None)}
+                       'matplotlib': ('http://matplotlib.org/', None),
+                       'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/',
+                                      None),
+                       'psycopg2': ('http://initd.org/psycopg/docs/', None)}
 
 # Default flags for autodoc
 autodoc_default_flags = ['members', 'private-members', 'show-inheritance']
