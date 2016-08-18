@@ -2,29 +2,29 @@
 
 This module defines the database structure underlying storage for the analysis.
 This consists in models that get turned into PostgreSQL tables by `SQLAlchemy
-<http://www.sqlalchemy.org/>`_, along with a few utility classes and exceptions
-around them.
+<http://www.sqlalchemy.org/>`_, along with a few utility classes, functions and
+exceptions around them.
 
 :class:`Cluster` and :class:`Quote` represent respectively an individual
 cluster or quote from the MemeTracker data set. :class:`Url` represents a quote
-occurrence, and those are stored as attributes to Quotes (as opposed to in
-their own table). :class:`Substitution` represents an individual substitution
-mined with a given substitution :class:`~.mine.Model`.
+occurrence, and those are stored as attributes of :class:`Quote`\ s (as opposed
+to in their own table). :class:`Substitution` represents an individual
+substitution mined with a given substitution :class:`~.mine.Model`.
 
-Each model (except Url, which doesn't have its own table) inherits the
-:class:`BaseMixin`, which defines the table name, id, and provides a common
-:meth:`BaseMixin.clone` method.
+Each model (except :class:`Url`, which doesn't have its own table) inherits the
+:class:`BaseMixin`, which defines the table name, `id` field, and provides a
+common :meth:`~BaseMixin.clone` method.
 
 On top of that, models define a few computed properties (using the
-:meth:`.utils.cache` decorator) which provide useful information that doesn't
-need to be stored directly in the database (storing that in the database makes
-subsequent access faster, but introduces more possibilities of inconsistent
+:class:`.utils.cache` decorator) which provide useful information that doesn't
+need to be stored directly in the database (storing that in the database would
+make first access faster, but introduces more possibilities of inconsistent
 data if updates don't align well). :class:`Cluster` and :class:`Substitution`
-also inherit functionality from the :mod:`.mine` and :mod:`.filter` modules,
-which you can inspect for more details.
+also inherit functionality from the :mod:`.mine`, :mod:`.filter` and
+:mod:`.features` modules, which you can inspect for more details.
 
-Finally, this module defines :func:`save_by_copy`, useful for importing
-clusters and quotes in bulk into the database.
+Finally, this module defines :func:`save_by_copy`, a useful function to
+efficiently import clusters and quotes in bulk into the database.
 
 """
 
@@ -55,8 +55,8 @@ Session = sessionmaker()
 
 class BaseMixin:
 
-    """Common mixin for all models defining table name, id, and `clone()`
-    method."""
+    """Common mixin for all models defining a table name, an `id` field, and a
+    `clone()` method."""
 
     @declared_attr
     def __tablename__(cls):
@@ -102,8 +102,12 @@ class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
     Attributes below are defined as class attributes or
     :class:`~.utils.cache`\ d methods, but they appear as instance attributes
     when you have an actual cluster instance. For instance, if `cluster` is a
-    `Cluster` instance, `cluster.size` will give you that instance's
+    :class:`Cluster` instance, `cluster.size` will give you that instance's
     :attr:`size`.
+
+    See Also
+    --------
+    .filter.ClusterFilterMixin, .mine.ClusterMinerMixin
 
     """
 
@@ -126,7 +130,7 @@ class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
 
     def format_copy(self):
         """Create a string representing the cluster in a
-        :meth:`cursor.copy_from` call."""
+        :meth:`cursor.copy_from` or :func:`_copy` call."""
 
         base = ('{cluster.id}\t{cluster.sid}\t{cluster.filtered}\t'
                 '{cluster.source}')
@@ -141,14 +145,23 @@ class Cluster(Base, BaseMixin, ClusterFilterMixin, ClusterMinerMixin):
     @cache
     def size_urls(self):
         """Number of urls of all the quotes in the cluster (i.e. not counting
-        url frequencies)."""
+        url frequencies)
+
+        Look at :attr:`frequency` for a count that takes url frequencies into
+        account.
+
+        """
 
         return sum(quote.size for quote in self.quotes.all())
 
     @cache
     def frequency(self):
         """Complete number of occurrences of all the quotes in the cluster
-        (i.e. counting url frequencies)."""
+        (i.e. counting url frequencies).
+
+        Look at :attr:`size_urls` for a count that ignores url frequencies.
+
+        """
 
         return sum(url.frequency for url in self.urls)
 
@@ -227,7 +240,8 @@ class Quote(Base, BaseMixin):
     Attributes below are defined as class attributes or
     :class:`~.utils.cache`\ d methods, but they appear as instance attributes
     when you have an actual quote instance. For instance, if `quote` is a
-    `Quote` instance, `quote.size` will give you that instance's :attr:`size`.
+    :class:`Quote` instance, `quote.size` will give you that instance's
+    :attr:`size`.
 
     Note that children :class:`Url`\ s are stored directly inside this model
     through lists of url attributes, where a given url is defined by items at
@@ -280,7 +294,7 @@ class Quote(Base, BaseMixin):
 
     def format_copy(self):
         """Create a string representing the quote and all its children urls in
-        a :meth:`cursor.copy_from` call."""
+        a :meth:`cursor.copy_from` or :func:`_copy` call."""
 
         base = '{quote.id}\t{quote.cluster_id}\t{quote.sid}\t{quote.filtered}'
         parts = [base.format(quote=self)]
@@ -313,7 +327,12 @@ class Quote(Base, BaseMixin):
 
     @cache
     def size(self):
-        """Number of urls in the quote."""
+        """Number of urls in the quote.
+
+        Look at :attr:`frequency` for a count that takes url frequencies into
+        account.
+
+        """
 
         if self.url_timestamps is None:
             return 0
@@ -322,7 +341,11 @@ class Quote(Base, BaseMixin):
     @cache
     def frequency(self):
         """Complete number of occurrences of the quote (i.e. counting url
-        frequencies)."""
+        frequencies).
+
+        Look at :attr:`size` for a count that ignores url frequencies.
+
+        """
 
         if self.size == 0:
             return 0
@@ -399,7 +422,8 @@ class Quote(Base, BaseMixin):
 
     @cache
     def urls(self):
-        """Unordered list of :class:`Url`\ s of the quote."""
+        """Unordered list of :class:`Url`\ s of the quote; use this to access
+        urls of the quote, instead of the `url_*` attributes."""
 
         if self.size == 0:
             return []
@@ -469,8 +493,8 @@ class Url:
 
     The url :attr:`occurrence` is defined below as a :class:`~.utils.cache`\ d
     method, but it appears as an instance attribute when you have an actual url
-    instance. For instance, if `url` is a `Url` instance, `url.occurrence` will
-    give you that url's :attr:`occurrence`.
+    instance. For instance, if `url` is a :class:`Url` instance,
+    `url.occurrence` will give you that url's :attr:`occurrence`.
 
     Note that :class:`Url`\ s are stored directly inside :class:`Quote`
     instances, and don't have a dedicated database table.
@@ -498,7 +522,8 @@ class Url:
         self.url = url
 
     def __key(self):
-        """Unique identifier for this url, used to compute e.g. equality."""
+        """Unique identifier for this url, used to compute e.g. equality
+        between two :class:`Url` instances."""
 
         return (self.quote, self.timestamp, self.frequency,
                 self.url_type, self.url)
@@ -536,6 +561,7 @@ class ModelType(TypeDecorator):
     """Database type representing a substitution :class:`~.mine.Model`, used in
     the definition of :class:`Substitution`."""
 
+    # Store models as strings in the database.
     impl = String
 
     def process_bind_param(self, value, dialect):
@@ -568,8 +594,12 @@ class Substitution(Base, BaseMixin, SubstitutionValidatorMixin,
     Attributes below are defined as class attributes or
     :class:`~.utils.cache`\ d methods, but they appear as instance attributes
     when you have an actual substitution instance. For instance, if
-    `substitution` is a `Substitution` instance, `substitution.tags` will give
-    you that instance's :attr:`tags`.
+    `substitution` is a :class:`Substitution` instance, `substitution.tags`
+    will give you that instance's :attr:`tags`.
+
+    See Also
+    --------
+    .mine.SubstitutionValidatorMixin, .features.SubstitutionFeaturesMixin
 
     """
 
@@ -671,7 +701,7 @@ def save_by_copy(clusters, quotes):
         List of clusters to import in the database.
     quotes : list of :class:`Quote`\ s
         List of quotes to import in the database. Any clusters they reference
-        should be in the `clusters` parameters.
+        should be in the `clusters` parameter.
 
     See Also
     --------
