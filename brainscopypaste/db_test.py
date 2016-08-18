@@ -15,6 +15,8 @@ from brainscopypaste.mine import Model, Past, Source, Time, Durl
 
 
 def test_cluster(some_clusters):
+    """Test base functionality of :class:`~.db.Cluster`."""
+
     # Test empty cluster attributes.
     cluster = Cluster()
     assert cluster.size == 0
@@ -43,6 +45,8 @@ def test_cluster(some_clusters):
 
 
 def test_quote(some_quotes):
+    """Test base functionality of :class:`~.db.Quote`."""
+
     # Test empty quote attributes.
     quote = Quote()
     assert quote.size == 0
@@ -106,6 +110,9 @@ def test_quote(some_quotes):
 
 
 def test_quote_add_url_sealed(some_quotes):
+    """Check you can't add :class:`~.db.Url`\ s to a :class:`~.db.Quote` where
+    you've already access :class:`~.utils.cache`\ d attributes."""
+
     with pytest.raises(SealedException):
         with session_scope() as session:
             u = Url(timestamp=datetime.utcnow(), frequency=1,
@@ -116,6 +123,9 @@ def test_quote_add_url_sealed(some_quotes):
 
 
 def test_quote_add_urls_sealed(some_quotes):
+    """Check you can't add :class:`~.db.Url`\ s to a :class:`~.db.Quote` where
+    you've already access :class:`~.utils.cache`\ d attributes."""
+
     u1 = Url(timestamp=datetime.utcnow(), frequency=1,
              url_type='B', url='some url 1')
     u2 = Url(timestamp=datetime.utcnow(), frequency=1,
@@ -129,6 +139,8 @@ def test_quote_add_urls_sealed(some_quotes):
 
 
 def test_url(some_urls):
+    """Test base functionality of :class:`~.db.Url`."""
+
     with session_scope() as session:
         q0 = session.query(Quote).filter_by(sid=0).one()
         q3 = session.query(Quote).filter_by(sid=3).one()
@@ -170,12 +182,18 @@ def test_url(some_urls):
 
 
 def test_cluster_cascade_to_quotes(some_quotes):
+    """Check deleting a :class:`~.db.Cluster` also deletes its
+    :class:`~.db.Quote`\ s."""
+
     with session_scope() as session:
         session.query(Cluster).delete()
         assert session.query(Quote).count() == 0
 
 
 def test_cluster_cascade_to_substitutions(some_substitutions):
+    """Check deleting a :class:`~.db.Cluster` also deletes its
+    :class:`~.db.Substitution`\ s."""
+
     with session_scope() as session:
         session.query(Cluster).delete()
         assert session.query(Quote).count() == 0
@@ -183,12 +201,17 @@ def test_cluster_cascade_to_substitutions(some_substitutions):
 
 
 def test_quote_cascade_to_substitutions(some_substitutions):
+    """Check deleting a :class:`~.db.Quote` also deletes its
+    :class:`~.db.Substitution`\ s."""
+
     with session_scope() as session:
         session.query(Quote).delete()
         assert session.query(Substitution).count() == 0
 
 
 def test_substitution(some_substitutions):
+    """Test base functionality of :class:`~.db.Substitution`."""
+
     model1, model2 = some_substitutions
     with session_scope() as session:
         q10 = session.query(Quote).filter_by(sid=10).one()
@@ -226,6 +249,8 @@ def test_substitution(some_substitutions):
 
 
 def test_clone_cluster(some_urls):
+    """Test cloning of a :class:`~.db.Cluster`."""
+
     with session_scope() as session:
         cluster = session.query(Cluster).get(1)
         cloned = cluster.clone()
@@ -247,6 +272,8 @@ def test_clone_cluster(some_urls):
 
 
 def test_clone_quote(some_urls):
+    """Test cloning of a :class:`~.db.Quote`."""
+
     with session_scope() as session:
         quote = session.query(Quote).get(1)
         cloned = quote.clone()
