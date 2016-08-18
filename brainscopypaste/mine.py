@@ -133,6 +133,8 @@ class Interval:
 
 class Model:
 
+    """A substitution mining model."""
+
     bin_span = timedelta(days=1)
 
     def __init__(self, time, source, past, durl, max_distance):
