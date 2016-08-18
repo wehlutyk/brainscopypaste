@@ -8,6 +8,10 @@ temporarily override settings).
 All uppercase variables defined in this module are considered settings, the
 rest is ignored.
 
+See Also
+--------
+:class:`brainscopypaste.conf.Settings`
+
 """
 
 
