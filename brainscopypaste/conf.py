@@ -87,8 +87,8 @@ class Settings:
         Override MemeTracker filter settings for the duration of a test:
 
         >>> from brainscopypaste.conf import settings
-        >>> with settings.override([('MT_FILTER_MIN_TOKENS', 2),
-        ...                         ('MT_FILTER_MAX_DAYS, 50)]):
+        >>> with settings.override(('MT_FILTER_MIN_TOKENS', 2),
+        ...                        ('MT_FILTER_MAX_DAYS, 50)):
         ...     # Here: some test code using the overridden settings.
         >>> # `settings` is back to default here.
 
@@ -135,7 +135,7 @@ class Settings:
         imports it as a word feature:
 
         >>> from brainscopypaste.conf import settings
-        >>> with settings.file_override(['AOA']):
+        >>> with settings.file_override('AOA'):
         ...    with open(settings.AOA, 'w') as aoa:
         ...        # Write test content to the temporary AOA file.
         ...    # Test your code on the temporary AOA content.
