@@ -9,6 +9,7 @@ from contextlib import contextmanager
 import functools
 from itertools import zip_longest
 import os
+from types import MethodType
 
 import numpy as np
 from langdetect import detect
@@ -104,12 +105,12 @@ class memoized:
             self.cache[key] = value
             return value
 
-    def __get__(self, obj, objtype):
+    def __get__(self, instance, klass):
         """Support instance methods."""
-        func = functools.partial(self.__call__, obj)
-        functools.update_wrapper(func, self)
-        func.drop_cache = self.drop_cache
-        return func
+        if instance is None:
+            return self
+        else:
+            return MethodType(self, instance)
 
     def drop_cache(self):
         logger.debug('Dropping cache for %s', self.func)
