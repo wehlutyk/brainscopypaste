@@ -236,6 +236,47 @@ def test_memoized_class_classmethod():
     assert klass2.clsfunc() == 4
 
 
+def test_memoized_class_staticmethod():
+    counter = 0
+
+    class Klass:
+        @staticmethod
+        @memoized
+        def staticfunc():
+            """My super static func."""
+            nonlocal counter
+            counter += 1
+            return counter
+
+    klass1 = Klass()
+    klass2 = Klass()
+
+    # Doc is propagated through memoization.
+    assert klass1.staticfunc.__doc__ == 'My super static func.'
+    assert klass2.staticfunc.__doc__ == 'My super static func.'
+    assert Klass.staticfunc.__doc__ == 'My super static func.'
+
+    # Caching works on the class and instances, and having a different instance
+    # counts as the same argument.
+    assert Klass.staticfunc() == 1
+    assert klass1.staticfunc() == 1
+    assert klass2.staticfunc() == 1
+
+    # Dropping cache on the class or any of the instances has the same effect.
+    Klass.staticfunc.drop_cache()
+    assert Klass.staticfunc() == 2
+    assert klass1.staticfunc() == 2
+    assert klass2.staticfunc() == 2
+    klass1.staticfunc.drop_cache()
+    assert Klass.staticfunc() == 3
+    assert klass1.staticfunc() == 3
+    assert klass2.staticfunc() == 3
+    klass2.staticfunc.drop_cache()
+    assert Klass.staticfunc() == 4
+    assert klass1.staticfunc() == 4
+    assert klass2.staticfunc() == 4
+
+
 def test_cache():
 
     class Klass:
