@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 def _get_pronunciations():
     """Get the CMU pronunciation data as a dict.
 
+    The method is :func:`~.utils.memoized` since it is called so often.
+
     Returns
     -------
     dict
@@ -43,6 +45,8 @@ def _get_pronunciations():
 @memoized
 def _get_aoa():
     """Get the Age-of-Acquisition data as a dict.
+
+    The method is :func:`~.utils.memoized` since it is called so often.
 
     Returns
     -------
@@ -72,6 +76,8 @@ def _get_aoa():
 @memoized
 def _get_clearpond():
     """Get CLEARPOND neighbourhood density data as a dict.
+
+    The method is :func:`~.utils.memoized` since it is called so often.
 
     Returns
     -------
@@ -111,7 +117,7 @@ class SubstitutionFeaturesMixin:
 
     Methods in this class fall into 3 categories:
 
-    * Raw feature methods: they are :class:`~.utils.memoized` class methods of
+    * Raw feature methods: they are :func:`~.utils.memoized` class methods of
       the form `cls._feature_name(cls, word=None)`. Calling them with a `word`
       returns either the feature value of that word, or `np.nan` if the word is
       not encoded. Calling them with `word=None` returns the set of words
@@ -165,6 +171,28 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def _substitution_features(self, name):
+        """Compute feature `name` for source and destination words of this
+        substitution.
+
+        Feature values are transformed as explained in
+        :meth:`_transformed_feature`.
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        name : str
+            Name of the feature for which to compute source and destination
+            values.
+
+        Returns
+        -------
+        tuple of float
+            Feature values of the source and destination words of this
+            substitution.
+
+        """
+
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -179,6 +207,46 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def source_destination_features(self, name, sentence_relative=None):
+        """Compute the feature values for all words in source and destination
+        sentences of this substitution, possibly sentence-relative.
+
+        Feature values are transformed as explained in
+        :meth:`_transformed_feature`.
+
+        If `sentence_relative` is not `None`, it indicates a NumPy function
+        used to aggregate word features in the source and destination sentences
+        of this substitution; this method then returns the source/destination
+        feature values minus the corresponding aggregate value. For instance,
+        if `sentence_relative='median'`, this method returns the source
+        sentence feature values minus the median of that same sentence, and the
+        destination sentence feature values minus the median of that same
+        sentence (words valued at `np.nan` are ignored).
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        name : str
+            Name of the feature for which to compute source and destination
+            values.
+        sentence_relative : str, optional
+            If not `None` (which is the default), return features relative to
+            values of their corresponding sentence aggregated by this function;
+            must be a name for which `np.nan<sentence_relative>` exists.
+
+        Returns
+        -------
+        source_features : array of float
+            Array of feature values (possibly sentence-relative) for each word
+            in the source sentence of this substitution. Non-coded words appear
+            as `np.nan`.
+        destination_features : array of float
+            Array of feature values (possibly sentence-relative) for each word
+            in the destination sentence of this substitution. Non-coded words
+            appear as `np.nan`.
+
+        """
+
         if name not in self.__features__:
             raise ValueError("Unknown feature: '{}'".format(name))
 
@@ -209,6 +277,41 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def features(self, name, sentence_relative=None):
+        """Compute feature `name` for source and destination words of this
+        substitution, possibly sentence-relative.
+
+        Feature values are transformed as explained in
+        :meth:`_transformed_feature`.
+
+        If `sentence_relative` is not `None`, it indicates a NumPy function
+        used to aggregate word features in the source and destination sentences
+        of this substitution; this method then returns the source/destination
+        word feature values minus the corresponding aggregate value. For
+        instance, if `sentence_relative='median'`, this method returns the
+        source word feature minus the median of the source sentence, and the
+        destination word feature minus the median of the destination sentence
+        (words valued at `np.nan` are ignored).
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        name : str
+            Name of the feature for which to compute source and destination
+            values.
+        sentence_relative : str, optional
+            If not `None` (which is the default), return features relative to
+            values of their corresponding sentence aggregated by this function;
+            must be a name for which `np.nan<sentence_relative>` exists.
+
+        Returns
+        -------
+        tuple of float
+            Feature values (possibly sentence-relative) of the source and
+            destination words of this substitution.
+
+        """
+
         feature1, feature2 = self._substitution_features(name)
 
         if sentence_relative is not None:
@@ -224,6 +327,32 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def _source_destination_components(self, n, pca, feature_names):
+        """Compute the `n`-th component of pca for all words in source and
+        destination sentences of this substitution.
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        n : int
+            Index of the component in `pca` that is to be computed.
+        pca : :class:`sklearn.decomposition.PCA`
+            :class:`~sklearn.decomposition.PCA` instance that was computed
+            using the features listed in `feature_names`.
+        feature_names : tuple of str
+            Tuple of feature names used in the computation of `pca`.
+
+        Returns
+        -------
+        source_components : array of float
+            Array of component values for each word in the source sentence of
+            this substitution. Non-coded words appear as `np.nan`.
+        destination_components : array of float
+            Array of component values for each word in the destination sentence
+            of this substitution. Non-coded words appear as `np.nan`.
+
+        """
+
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -252,6 +381,42 @@ class SubstitutionFeaturesMixin:
 
     @memoized
     def components(self, n, pca, feature_names, sentence_relative=None):
+        """Compute the `n`-th components of `pca` for source and destination
+        words of this substitution, possibly sentence-relative.
+
+        If `sentence_relative` is not `None`, it indicates a NumPy function
+        used to aggregate word components in the source and destination
+        sentences of this substitution; this method then returns the
+        source/destination word component values minus the corresponding
+        aggregate value. For instance, if `sentence_relative='median'`, this
+        method returns the source word component minus the median of the source
+        sentence, and the destination word component minus the median of the
+        destination sentence (words valued at `np.nan` are ignored).
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        n : int
+            Index of the component in `pca` that is to be computed.
+        pca : :class:`sklearn.decomposition.PCA`
+            :class:`~sklearn.decomposition.PCA` instance that was computed
+            using the features listed in `feature_names`.
+        feature_names : tuple of str
+            Tuple of feature names used in the computation of `pca`.
+        sentence_relative : str, optional
+            If not `None` (which is the default), return components relative to
+            values of their corresponding sentence aggregated by this function;
+            must be a name for which `np.nan<sentence_relative>` exists.
+
+        Returns
+        -------
+        tuple of float
+            Components (possibly sentence-relative) of the source and
+            destination words of this substitution.
+
+        """
+
         # Check the PCA was computed for as many features as we're given.
         n_features = len(feature_names)
         assert n_features == len(pca.mean_)
@@ -277,15 +442,49 @@ class SubstitutionFeaturesMixin:
 
         return components
 
-    @classmethod
+    @staticmethod
     @memoized
-    def _static_average(cls, func):
+    def _static_average(func):
+        """Static version of :meth:`_average`, without the `source_synonyms`
+        argument.
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        """
+
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=RuntimeWarning)
             return np.nanmean([func(word) for word in func()])
 
     @memoized
     def _average(self, func, source_synonyms):
+        """Compute the average value of `func` over the words it codes, or over
+        the synonyms of this substitution's source word.
+
+        If `source_synonyms` is `True`, the method computes the average feature
+        of the synonyms of the source word of this substitution. Otherwise, it
+        computes the average over all words coded by `func`.
+
+        The method is :func:`~.utils.memoized` since it is called so often.
+
+        Parameters
+        ----------
+        func : function
+            The function to average. Calling `func()` must return the pool of
+            words that the function codes. Calling `func(word)` must return the
+            value for `word`.
+        source_synonyms : bool
+            If `True`, compute the average `func` of the synonyms of the source
+            word in this substitution. If `False`, compute the average over all
+            coded words.
+
+        Returns
+        -------
+        float
+            Average `func` value.
+
+        """
+
         if source_synonyms:
             # We always use the lemmas (vs. tokens) here, for two reasons:
             # - WordNet lemmatizes when looking for synsets (although it
@@ -309,18 +508,22 @@ class SubstitutionFeaturesMixin:
     @memoized
     def feature_average(self, name, source_synonyms=False,
                         sentence_relative=None):
-        """Compute the average of feature `name` over all coded words.
+        """Compute the average of feature `name` over all coded words or over
+        synonyms of this substitution's source word, possibly
+        sentence-relative.
 
         If `source_synonyms` is `True`, the method computes the average feature
-        of the synonyms of the source word of this substitution.  Otherwise, it
+        of the synonyms of the source word of this substitution. Otherwise, it
         computes the average over all words coded by the feature.
 
-        If `sentence_relative` is not `None`, it is used to aggregate feature
-        values of the words in the source sentence of this substitution, and
-        this method returns the feature average minus that aggregate value.
-        For instance, if `sentence_relative=np.median`, `feature_average`
-        returns the average feature minus the median feature value in the
-        sentence (words in the sentence valued at `np.nan` are ignored).
+        If `sentence_relative` is not `None`, it indicates a NumPy function
+        used to aggregate word features in the source sentence of this
+        substitution; this method then returns the feature average minus that
+        aggregate value. For instance, if `sentence_relative='median'`, this
+        method returns the average feature minus the median feature value in
+        the source sentence (words valued at `np.nan` are ignored).
+
+        The method is :func:`~.utils.memoized` since it is called so often.
 
         Parameters
         ----------
@@ -330,18 +533,19 @@ class SubstitutionFeaturesMixin:
             If `True`, compute the average feature of the synonyms of the
             source word in this substitution. If `False` (default), compute the
             average over all coded words.
-        sentence_relative : aggregating function, optional
+        sentence_relative : str, optional
             If not `None` (which is the default), return average feature
-            relative to feature values of the sentence aggregated by this
-            function.
+            relative to feature values of the source sentence of this
+            substitution aggregated by this function; must be a name for which
+            `np.nan<sentence_relative>` exists.
 
         Returns
         -------
         float
             Average feature, of all coded words or of synonyms of the
             substitution's source word (depending on `source_synonyms`),
-            relative to an aggregated sentence value if `sentence_relative`
-            specifies it.
+            relative to an aggregated source sentence value if
+            `sentence_relative` specifies it.
 
         """
 
@@ -361,20 +565,23 @@ class SubstitutionFeaturesMixin:
     @memoized
     def component_average(self, n, pca, feature_names,
                           source_synonyms=False, sentence_relative=None):
-        """Compute the average, over all coded words, of component `n` of `pca`
-        using `feature_names`.
+        """Compute the average, over all coded words or synonyms of this
+        substitution's source word, of the `n`-th component of `pca` using
+        `feature_names`, possibly sentence-relative.
 
         If `source_synonyms` is `True`, the method computes the average
         component of the synonyms of the source word of this substitution.
         Otherwise, it computes the average over all words coded by the
         component.
 
-        If `sentence_relative` is not `None`, it is used to aggregate component
-        values of the words in the source sentence of this substitution, and
-        this method returns the component average minus that aggregate value.
-        For instance, if `sentence_relative=np.median`, `component_average`
-        returns the average component minus the median component value in the
-        sentence (words in the sentence valued at `np.nan` are ignored).
+        If `sentence_relative` is not `None`, it indicates a NumPy function
+        used to aggregate word components in the source sentence of this
+        substitution; this method then returns the component average minus that
+        aggregate value. For instance, if `sentence_relative='median'`, this
+        method returns the average component minus the median component value
+        in the source sentence (words valued at `np.nan` are ignored).
+
+        The method is :func:`~.utils.memoized` since it is called so often.
 
         Parameters
         ----------
@@ -389,18 +596,19 @@ class SubstitutionFeaturesMixin:
             If `True`, compute the average component of the synonyms of the
             source word in this substitution. If `False` (default), compute the
             average over all coded words.
-        sentence_relative : aggregating function, optional
+        sentence_relative : str, optional
             If not `None` (which is the default), return average component
-            relative to component values of the sentence aggregated by this
-            function.
+            relative to component values of the source sentence of this
+            substitution aggregated by this function; must be a name for which
+            `np.nan<sentence_relative>` exists.
 
         Returns
         -------
         float
             Average component, of all coded words or of synonyms of the
             substitution's source word (depending on `source_synonyms`),
-            relative to an aggregated sentence value if `sentence_relative`
-            specifies it.
+            relative to an aggregated source sentence value if
+            `sentence_relative` specifies it.
 
         """
 
@@ -421,7 +629,10 @@ class SubstitutionFeaturesMixin:
     @classmethod
     @memoized
     def _component(cls, n, pca, feature_names):
-        """Get a function computing component `n` of `pca` using `feature_names`.
+        """Get a function computing the `n`-th component of `pca` using
+        `feature_names`.
+
+        The method is :func:`~.utils.memoized` since it is called so often.
 
         Parameters
         ----------
@@ -517,7 +728,7 @@ class SubstitutionFeaturesMixin:
         feature `name`, this method will generate a function that proxies calls
         to the raw feature method, and transforms the value if necessary.
 
-        This method is :meth:`~.utils.memoized` for speed, since other methods
+        This method is :func:`~.utils.memoized` for speed, since other methods
         call it all the time.
 
         Parameters
