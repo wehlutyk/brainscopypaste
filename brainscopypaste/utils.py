@@ -6,15 +6,14 @@
 import logging
 import pickle
 from contextlib import contextmanager
-import functools
 from itertools import zip_longest
 import os
-from types import MethodType
 
 import numpy as np
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 from sqlalchemy import create_engine
+from decorator import decorate
 
 
 logger = logging.getLogger(__name__)
@@ -83,38 +82,36 @@ class cache:
         return result
 
 
-class memoized:
-    """Decorate a function to cache its return value each time it is called.
+def _memoize(func, *args, **kwargs):
+    # frozenset is used to ensure hashability
+    if kwargs:
+        key = args, frozenset(kwargs.items())
+    else:
+        key = args
+    # Attribute added by memoized
+    cache = func.cache
+    if key not in cache:
+        cache[key] = func(*args, **kwargs)
+    return cache[key]
+
+
+def memoized(f):
+    """Decorate a function to cache its return value the first time it is
+    called.
 
     If called later with the same arguments, the cached value is returned
     (not reevaluated).
 
     """
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-        functools.update_wrapper(self, self.func)
+    f.cache = {}
 
-    def __call__(self, *args, **kwargs):
-        key = (args, frozenset(kwargs.items()))
-        if key in self.cache:
-            return self.cache[key]
-        else:
-            value = self.func(*args, **kwargs)
-            self.cache[key] = value
-            return value
+    def drop_cache():
+        logger.debug('Dropping cache for %s', f)
+        f.cache = {}
 
-    def __get__(self, instance, klass):
-        """Support instance methods."""
-        if instance is None:
-            return self
-        else:
-            return MethodType(self, instance)
-
-    def drop_cache(self):
-        logger.debug('Dropping cache for %s', self.func)
-        self.cache = {}
+    f.drop_cache = drop_cache
+    return decorate(f, _memoize)
 
 
 def mpl_palette(n_colors, variation='Set2'):  # or variation='colorblind'
