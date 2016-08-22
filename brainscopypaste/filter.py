@@ -1,5 +1,10 @@
 """Filter clusters and quotes to clean to MemeTracker dataset.
 
+This module defines the :class:`ClusterFilterMixin` mixin which adds filtering
+capabilities to :class:`~.db.Cluster`, and the :func:`filter_clusters` function
+which uses that mixin to filter the whole MemeTracker dataset. A few other
+utility functions are also defined.
+
 """
 
 
@@ -20,10 +25,40 @@ logger = logging.getLogger(__name__)
 
 
 class AlreadyFiltered(Exception):
-    pass
+    """Exception raised when trying to filter a dataset that has already been
+    filtered."""
 
 
 def filter_clusters(limit=None):
+    """Filter the whole MemeTracker dataset by copying all valid
+    :class:`~.db.Cluster`\ s and :class:`~.db.Quote`\ s and setting their
+    `filtered` attributes to `True`.
+
+    This function will iterate through all the MemeTracker
+    :class:`~.db.Cluster`\ s, and filter each of them to see if it's worth
+    keeping. If a :class:`~.db.Cluster` is to be kept, the function creates a
+    copy of it and all of its kept :class:`~.db.Quote`\ s, marking them as
+    filtered. Progress of this operation is printed to stdout.
+
+    Once the operation finishes, a VACCUM and an ANALYZE operation are run on
+    the database so that it recomputes its optimisations.
+
+    Parameters
+    ----------
+    limit : int, optional
+        If not `None`, stop filtering after `limit` clusters have been seen
+        (useful for testing purposes).
+
+    Raises
+    ------
+    AlreadyFiltered
+        If there are already some filtered :class:`~.db.Cluster`\ s or
+        :class:`~.db.Quote`\ s stored in the database (indicating another
+        filtering operation has already been completed, or started and
+        aborted).
+
+    """
+
     from brainscopypaste.db import Session, Cluster, save_by_copy
 
     logger.info('Filtering memetracker clusters')
@@ -81,11 +116,27 @@ def filter_clusters(limit=None):
 
 
 def _top_id(id):
+    """Get the smallest power of ten three orders of magnitude greater than
+    `id`.
+
+    This function is used to compute :func:`filter_cluster_offset` and
+    :func:`filter_quote_offset`.
+
+    """
+
     return int(10 ** (np.floor(np.log10(id)) + 3))
 
 
 @memoized
 def filter_cluster_offset():
+    """Get the offset to add to filtered :class:`~.db.Cluster` ids.
+
+    A filtered :class:`~.db.Cluster`'s id will be its original
+    :class:`~.db.Cluster`'s id plus this offset.  The function is
+    :func:`~.utils.memoized` since it is called so often.
+
+    """
+
     from brainscopypaste.db import Cluster
     with session_scope() as session:
         maxid = session.query(func.max(Cluster.id)).scalar()
@@ -94,6 +145,14 @@ def filter_cluster_offset():
 
 @memoized
 def filter_quote_offset():
+    """Get the offset to add to filtered :class:`~.db.Quote` ids.
+
+    A filtered :class:`~.db.Quote`'s id will be its original
+    :class:`~.db.Quote`'s id plus this offset.  The function is
+    :func:`~.utils.memoized` since it is called so often.
+
+    """
+
     from brainscopypaste.db import Quote
     with session_scope() as session:
         maxid = session.query(func.max(Quote.id)).scalar()
@@ -102,7 +161,47 @@ def filter_quote_offset():
 
 class ClusterFilterMixin:
 
+    """Mixin for :class:`~.db.Cluster`\ s adding the :meth:`filter` method used
+    in :func:`filter_clusters`."""
+
     def filter(self):
+        """Filter this :class:`~.db.Cluster` and its children
+        :class:`~.db.Quote`\ s to see if they're worth keeping.
+
+        This method first iterates through all the children
+        :class:`~.db.Quote`\ s of the cluster, seeing if each one of them is
+        worth keeping. A :class:`~.db.Quote` is discarded if it has no urls,
+        less than :data:`~.settings.MT_FILTER_MIN_TOKENS`, spans longer than
+        :data:`~.settings.MT_FILTER_MAX_DAYS`, or is not in English. Any
+        :class:`~.db.Quote` that has none of those problems will be kept.
+
+        If after this filtering there are no :class:`Quote`\ s left, or the
+        :class:`~.db.Cluster` made of the remaining :class:`~.db.Quote`\ s
+        still spans longer than :data:`~.settings.MT_FILTER_MAX_DAYS`, the
+        cluster and all its quotes will be discarded and `None` is returned.
+        If not, a new :class:`~.db.Cluster` is created with `cluster.filtered =
+        True` and `cluster.id = original_cluster.id +`
+        :func:`filter_cluster_offset`. That new cluster points to copies of all
+        the kept :class:`Quote`\ s, with `quote.filtered = True` and `quote.id
+        = original_quote.id +` :func:`filter_quote_offset`. All those models
+        (new cluster and new quotes) should later be saved to the database (the
+        method does not do it for you), e.g. by running this method inside a
+        :func:`~.utils.session_scope`.
+
+        Returns
+        -------
+        cluster : :class:`~.db.Cluster` or None
+            The filtered cluster pointing to filtered quotes, or `None` if it
+            is to be discarded.
+
+        Raises
+        ------
+        AlreadyFiltered
+            If this cluster is already filtered (i.e.
+            :attr:`~.db.Cluster.filtered` is `True`).
+
+        """
+
         if self.filtered:
             raise AlreadyFiltered('Cluster is already filtered')
 
