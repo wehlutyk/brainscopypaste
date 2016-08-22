@@ -6,7 +6,6 @@
 import logging
 import pickle
 from contextlib import contextmanager
-import functools
 from itertools import zip_longest
 import os
 
@@ -14,6 +13,7 @@ import numpy as np
 from langdetect import detect
 from langdetect.lang_detect_exception import LangDetectException
 from sqlalchemy import create_engine
+from decorator import decorate
 
 
 logger = logging.getLogger(__name__)
@@ -21,19 +21,41 @@ logger = logging.getLogger(__name__)
 
 class Namespace:
 
+    """Convert a dict to a namespace by creating a class out of it.
+
+    Parameters
+    ----------
+    init_dict : dict
+        The dict you wish to turn into a namespace.
+
+    """
+
     def __init__(self, init_dict):
         self.__dict__.update(init_dict)
 
 
 def grouper(iterable, n, fillvalue=None):
     """Iterate over `n`-wide slices of `iterable`, filling the
-    last slice with `fillvalue`."""
+    last slice with `fillvalue`.
+
+    See :func:`grouper_adaptive` for a version of this that doesn't fill the
+    last slice.
+
+    """
 
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
 
 def grouper_adaptive(iterable, n):
+    """Iterate over `n`-wide slices of `iterable`, ending the last slice once
+    `iterable` is empty.
+
+    See :func:`grouper_adaptive` for a version of this that fills the last
+    slice with a value of your choosing.
+
+    """
+
     it = iter(iterable)
     keepgoing = True
 
@@ -50,12 +72,16 @@ def grouper_adaptive(iterable, n):
 
 
 class cache:
-    """Computes attribute value and caches it in the instance.
+    """Compute an attribute's value and cache it in the instance.
 
-    Python Cookbook (Denis Otkidach)
-    http://stackoverflow.com/users/168352/denis-otkidach This decorator allows
-    you to create a property which can be computed once and accessed many
-    times. Sort of like memoization.
+    This is meant to be used as a decorator on class methods, to turn them into
+    cached computed attributes: the value is computed the first time you access
+    the attribute, and this decorator then replaces the method with the
+    computed value. Any subsequent access gives you the cached value
+    immediately.
+
+    Taken from the `Python Cookbook (Denis Otkidach)
+    <http://stackoverflow.com/users/168352/denis-otkidach>`_.
 
     """
 
@@ -82,38 +108,36 @@ class cache:
         return result
 
 
-class memoized:
-    """Decorate a function to cache its return value each time it is called.
+def _memoize(func, *args, **kwargs):
+    # frozenset is used to ensure hashability
+    if kwargs:
+        key = args, frozenset(kwargs.items())
+    else:
+        key = args
+    # Attribute added by memoized
+    cache = func.cache
+    if key not in cache:
+        cache[key] = func(*args, **kwargs)
+    return cache[key]
+
+
+def memoized(f):
+    """Decorate a function to cache its return value the first time it is
+    called.
 
     If called later with the same arguments, the cached value is returned
     (not reevaluated).
 
     """
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
-        functools.update_wrapper(self, self.func)
+    f.cache = {}
 
-    def __call__(self, *args, **kwargs):
-        key = (args, frozenset(kwargs.items()))
-        if key in self.cache:
-            return self.cache[key]
-        else:
-            value = self.func(*args, **kwargs)
-            self.cache[key] = value
-            return value
+    def drop_cache():
+        logger.debug('Dropping cache for %s', f)
+        f.cache = {}
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        func = functools.partial(self.__call__, obj)
-        functools.update_wrapper(func, self)
-        func.drop_cache = self.drop_cache
-        return func
-
-    def drop_cache(self):
-        logger.debug('Dropping cache for %s', self.func)
-        self.cache = {}
+    f.drop_cache = drop_cache
+    return decorate(f, _memoize)
 
 
 def mpl_palette(n_colors, variation='Set2'):  # or variation='colorblind'
@@ -127,7 +151,17 @@ def mpl_palette(n_colors, variation='Set2'):  # or variation='colorblind'
 
 @contextmanager
 def session_scope():
-    """Provide a transactional scope around a series of operations."""
+    """Provide an SQLAlchemy transactional scope around a series of
+    operations.
+
+    Wrap your SQLAlchemy operations (queries, insertions, modifications, etc.)
+    in a ``with session_scope() as session`` block to deal with sessions
+    easily.  Changes are committed when the block finishes. If an exception
+    occurrs in the block, the session is rolled back and the exception
+    propagated.
+
+    """
+
     from brainscopypaste.db import Session
     session = Session()
     logger.debug('Opened session %s', session)
@@ -146,6 +180,7 @@ def session_scope():
 
 def mkdirp(folder):
     """Create `folder` if it doesn't exist."""
+
     if not os.path.exists(folder):
         logger.debug("Creating folder '%s'", folder)
         os.makedirs(folder)
@@ -184,10 +219,6 @@ def find_parent_rel_dir(rel_dir):
     NotFoundError
         If no relative directory is found in the parent directories.
 
-    See Also
-    --------
-    iter_upper_dirs, NotFoundError
-
     """
 
     for d in iter_parent_dirs(rel_dir):
@@ -203,6 +234,8 @@ class NotFoundError(Exception):
 
 @memoized
 def langdetect(sentence):
+    """Detect the language of `sentence`."""
+
     try:
         return detect(sentence)
     except LangDetectException:
@@ -210,6 +243,19 @@ def langdetect(sentence):
 
 
 def execute_raw(engine, statement):
+    """Execute the raw SQL statement `statement` on SQLAlchemy engine `engine`.
+
+    Useful to run ANALYZE or VACUUM operations on the database.
+
+    Parameters
+    ----------
+    engine : :class:`sqlalchemy.engine.Engine`
+        The engine to run `statement` on.
+    statement : str
+        A valid SQL statement for `engine`.
+
+    """
+
     logger.debug("Raw execution of SQL '%s'", statement)
 
     connection = engine.connect()
@@ -226,6 +272,7 @@ def execute_raw(engine, statement):
 def is_same_ending_us_uk_spelling(w1, w2):
     """Test if `w1` and `w2` differ by only the last two letters inverted,
     as in `center`/`centre` (words must be at least 4 letters)."""
+
     if len(w1) < 4 or len(w2) < 4:
         # Words too short
         return False
@@ -243,7 +290,9 @@ def is_same_ending_us_uk_spelling(w1, w2):
 
 @memoized
 def is_int(s):
-    """Test if `s` is a string that represents an integer."""
+    """Test if `s` is a string that represents an integer; returns `True` if
+    so, `False` in any other case."""
+
     if not isinstance(s, str) or isinstance(s, bytes):
         return False
     try:
@@ -255,7 +304,9 @@ def is_int(s):
 
 @memoized
 def levenshtein(s1, s2):
-    """Compute levenshtein distance between `s1` and `s2`."""
+    """Compute the levenshtein distance between strings or lists `s1` and
+    `s2`."""
+
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
 
@@ -280,7 +331,8 @@ def levenshtein(s1, s2):
 
 @memoized
 def hamming(s1, s2):
-    """Compute the hamming distance between `s1` and `s2`."""
+    """Compute the hamming distance between strings or lists `s1` and `s2`."""
+
     if len(s1) != len(s2):
         raise ValueError('Strings must be the same length.')
     else:
@@ -290,6 +342,7 @@ def hamming(s1, s2):
 @memoized
 def sublists(s, l):
     """Get all sublists of `s` of length `l`."""
+
     if l == 0:
         return ()
     if l > len(s):
@@ -301,6 +354,7 @@ def sublists(s, l):
 def subhamming(s1, s2):
     """Compute the minimum hamming distance between `s2` and all sublists of
     `s1` as long as `s2`, returning `(distance, sublist start in s1)`."""
+
     l1 = len(s1)
     l2 = len(s2)
 
@@ -324,13 +378,18 @@ def subhamming(s1, s2):
 
 class Stopwords:
 
-    """Detect if a word is a stopword."""
+    """Detect if a word is a stopword.
+
+    Prefer using this module's :data:`stopwords` instance of this class for
+    stopword-checking.
+
+    """
 
     def __init__(self):
         self._loaded = False
 
     def _load(self):
-        """Read and load stopwords file."""
+        """Read and load the underlying stopwords file."""
 
         logger.debug('Loading stopwords')
 
@@ -344,28 +403,60 @@ class Stopwords:
         self._loaded = True
 
     def __contains__(self, word):
-        """Is `word` a stopword or not."""
+        """Test if `word` is a stopword or not."""
+
         if not self._loaded:
             self._load()
         return word in self._stopwords
 
 
+#: Instance of :class:`Stopwords` to be used for stopword-testing.
 stopwords = Stopwords()
 
 
 @memoized
 def unpickle(filename):
+    """Load a pickle file at path `filename`.
+
+    This function is :func:`memoized` so a file is only loaded the first time.
+
+    """
+
     with open(filename, 'rb') as file:
         return pickle.load(file)
 
 
 def init_db(echo_sql=False):
+    """Connect to the database and bind :mod:`.db`'s `Session` object to it.
+
+    Uses the :data:`~.settings.DB_USER` and :data:`~.settings.DB_PASSWORD`
+    credentials to connect to PostgreSQL database :data:`~.settings.DB_NAME`.
+    It binds the `Session` object in :mod:`.db` to this engine, and returns the
+    engine object. Note that once this is done, you can directly use
+    :func:`session_scope` since it uses the right `Session` object.
+
+    Parameters
+    ----------
+    echo_sql : bool, optional
+        If `True`, print to stdout all SQL commands sent to the engine;
+        defaults to `False`.
+
+    Returns
+    -------
+    :class:`sqlalchemy.engine.Engine`
+        The engine connected to the database.
+
+    """
+
     from brainscopypaste.db import Base, Session
+    from brainscopypaste.conf import settings
     logger.info('Initializing database connection')
 
-    engine = create_engine('postgresql+psycopg2://brainscopypaste:'
-                           '@localhost:5432/brainscopypaste',
-                           client_encoding='utf8', echo=echo_sql)
+    engine = create_engine(
+        'postgresql+psycopg2://{user}:{pw}@localhost:5432/{db}'
+        .format(user=settings.DB_USER, pw=settings.DB_PASSWORD,
+                db=settings.DB_NAME),
+        client_encoding='utf8', echo=echo_sql)
     Session.configure(bind=engine)
 
     logger.info('Database connected')

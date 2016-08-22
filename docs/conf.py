@@ -27,9 +27,8 @@ import mock
 
 MOCK_MODULES = ['click', 'langdetect', 'langdetect.lang_detect_exception',
                 'nbconvert.exporters', 'nbformat', 'networkx', 'nltk',
-                'nltk.corpus', 'numpy', 'progressbar', 'pytest',
-                'sklearn.decomposition', 'traitlets.config',
-                'treetaggerwrapper']
+                'nltk.corpus', 'numpy', 'progressbar', 'sklearn.decomposition',
+                'traitlets.config', 'treetaggerwrapper']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -366,13 +365,18 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'https://docs.python.org/': None}
-intersphinx_mapping = {'networkx': ('http://networkx.github.io/', None),
+intersphinx_mapping = {'networkx':
+                       ('https://networkx.readthedocs.io/en/stable/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy-1.11.0/',
                                  None),
                        'scipy': ('http://docs.scipy.org/doc/scipy-0.17.1/'
                                  'reference/', None),
-                       'python': ('http://docs.python.org/3.5/', None),
-                       'matplotlib': ('http://matplotlib.org/', None)}
+                       'sklearn': ('http://scikit-learn.org/stable/', None),
+                       'python': ('https://docs.python.org/3.5/', None),
+                       'matplotlib': ('http://matplotlib.org/', None),
+                       'sqlalchemy': ('http://docs.sqlalchemy.org/en/rel_1_0/',
+                                      None),
+                       'psycopg2': ('http://initd.org/psycopg/docs/', None)}
 
 # Default flags for autodoc
 autodoc_default_flags = ['members', 'private-members', 'show-inheritance']
