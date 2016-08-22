@@ -17,4 +17,3 @@ Contents:
    reference/tagger
    reference/utils
    reference/settings
-   reference/test
