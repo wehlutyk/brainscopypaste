@@ -271,6 +271,8 @@ class Model:
 
 class ClusterMinerMixin:
 
+    """ClusterMinerMixin."""
+
     def substitutions(self, model):
         # Multiple occurrences of a sentence at the same url (url 'frequency')
         # are ignored, so as not to artificially inflate results.
@@ -319,6 +321,8 @@ def _get_wordnet_words():
 
 
 class SubstitutionValidatorMixin:
+
+    """SubstitutionValidatorMixin."""
 
     def validate(self):
         token1, token2 = self.tokens
