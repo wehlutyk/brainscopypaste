@@ -75,7 +75,7 @@ DEGREE = join(fa_root, 'degree.pickle')
 #: Path to the source MemeTracker data set.
 MT_SOURCE = join(mt_root, 'clust-qt08080902w3mfq5.txt')
 #: Number of lines in the :data:`MT_SOURCE` file (pre-computed with ``wc -l
-#: <memetracker-file>``).
+#: <memetracker-file>``); used by :class:`~.load.MemeTrackerParser`.
 MT_LENGTH = 8357595
 #: Path to the pickle file containing word frequency values.
 FREQUENCY = join(mt_root, 'frequency.pickle')
