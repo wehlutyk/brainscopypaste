@@ -175,18 +175,18 @@ class ClusterFilterMixin:
         :data:`~.settings.MT_FILTER_MAX_DAYS`, or is not in English. Any
         :class:`~.db.Quote` that has none of those problems will be kept.
 
-        If after this filtering there are no :class:`Quote`\ s left, or the
-        :class:`~.db.Cluster` made of the remaining :class:`~.db.Quote`\ s
+        If after this filtering there are no :class:`~.db.Quote`\ s left, or
+        the :class:`~.db.Cluster` made of the remaining :class:`~.db.Quote`\ s
         still spans longer than :data:`~.settings.MT_FILTER_MAX_DAYS`, the
         cluster and all its quotes will be discarded and `None` is returned.
         If not, a new :class:`~.db.Cluster` is created with `cluster.filtered =
         True` and `cluster.id = original_cluster.id +`
         :func:`filter_cluster_offset`. That new cluster points to copies of all
-        the kept :class:`Quote`\ s, with `quote.filtered = True` and `quote.id
-        = original_quote.id +` :func:`filter_quote_offset`. All those models
-        (new cluster and new quotes) should later be saved to the database (the
-        method does not do it for you), e.g. by running this method inside a
-        :func:`~.utils.session_scope`.
+        the kept :class:`~.db.Quote`\ s, with `quote.filtered = True` and
+        `quote.id = original_quote.id +` :func:`filter_quote_offset`. All those
+        models (new cluster and new quotes) should later be saved to the
+        database (the method does not do it for you), e.g. by running this
+        method inside a :func:`~.utils.session_scope`.
 
         Returns
         -------
