@@ -1,5 +1,12 @@
 """Load data from various datasets.
 
+This module defines functions and classes to load and parse dataset files.
+:func:`load_fa_features` loads Free Association features (using
+:class:`FAFeatureLoader`) and :func:`load_mt_frequency_and_tokens` loads
+MemeTracker features. Both save their computed features to pickle files for
+later use in analyses. :class:`MemeTrackerParser` parses and loads the whole
+MemeTracker dataset into the database and is used by :mod:`.cli`.
+
 """
 
 
