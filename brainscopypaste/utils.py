@@ -432,7 +432,8 @@ def init_db(echo_sql=False):
     Uses the :data:`~.settings.DB_USER` and :data:`~.settings.DB_PASSWORD`
     credentials to connect to PostgreSQL database :data:`~.settings.DB_NAME`.
     It binds the `Session` object in :mod:`.db` to this engine, and returns the
-    engine object.
+    engine object. Note that once this is done, you can directly use
+    :func:`session_scope` since it uses the right `Session` object.
 
     Parameters
     ----------
