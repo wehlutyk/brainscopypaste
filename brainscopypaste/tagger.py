@@ -1,4 +1,7 @@
-"""Tag and tokenize sentences and quotes.
+"""Tag and tokenize strings using TreeTagger.
+
+All the functions in this module are :func:`~.utils.memoized`, because they are
+called very often and repeatedly.
 
 """
 
@@ -21,25 +24,34 @@ except NotFoundError:
 
 @memoized
 def tag(sentence):
-    """Tag a sentence."""
+    """Get all the TreeTagger codings of `sentence` (tokens, POS tags,
+    lemmas).
+
+    Prefer using :func:`tags`, :func:`tokens`, or :func:`lemmas` which parse
+    this function's output for you.
+
+    """
+
     return tuple(t.split('\t') for t in
                  _treetagger.tag_text(sentence, notagdns=True))
 
 
 @memoized
 def tags(sentence):
-    """Get the tags of a sentence."""
+    """Get the list of TreeTagger POS tags of `sentence`."""
+
     return tuple(t[1] for t in tag(sentence))
 
 
 @memoized
 def tokens(sentence):
-    """Get the tokens of a sentence."""
+    """Get the list of tokens of `sentence`."""
+
     return tuple(t[0].lower() for t in tag(sentence))
 
 
 @memoized
 def lemmas(sentence):
-    """Get the lemmas of a sentence."""
-    # TODO: try relemmatizing with wordnet here (will apply everywhere)
+    """Get the list of lemmas of `sentence`."""
+
     return tuple(t[2].lower() for t in tag(sentence))
