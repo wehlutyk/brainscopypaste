@@ -34,11 +34,11 @@ def filter_clusters(limit=None):
     :class:`~.db.Cluster`\ s and :class:`~.db.Quote`\ s and setting their
     `filtered` attributes to `True`.
 
-    This function will iterate through all the MemeTracker
-    :class:`~.db.Cluster`\ s, and filter each of them to see if it's worth
-    keeping. If a :class:`~.db.Cluster` is to be kept, the function creates a
-    copy of it and all of its kept :class:`~.db.Quote`\ s, marking them as
-    filtered. Progress of this operation is printed to stdout.
+    Iterate through all the MemeTracker :class:`~.db.Cluster`\ s, and filter
+    each of them to see if it's worth keeping. If a :class:`~.db.Cluster` is to
+    be kept, the function creates a copy of it and all of its kept
+    :class:`~.db.Quote`\ s, marking them as filtered. Progress of this
+    operation is printed to stdout.
 
     Once the operation finishes, a VACUUM and an ANALYZE operation are run on
     the database so that it recomputes its optimisations.
@@ -119,7 +119,7 @@ def _top_id(id):
     """Get the smallest power of ten three orders of magnitude greater than
     `id`.
 
-    This function is used to compute :func:`filter_cluster_offset` and
+    Used to compute :func:`filter_cluster_offset` and
     :func:`filter_quote_offset`.
 
     """
@@ -168,10 +168,10 @@ class ClusterFilterMixin:
         """Filter this :class:`~.db.Cluster` and its children
         :class:`~.db.Quote`\ s to see if they're worth keeping.
 
-        This method first iterates through all the children
-        :class:`~.db.Quote`\ s of the cluster, seeing if each one of them is
-        worth keeping. A :class:`~.db.Quote` is discarded if it has no urls,
-        less than :data:`~.settings.MT_FILTER_MIN_TOKENS`, spans longer than
+        First, iterate through all the children :class:`~.db.Quote`\ s of the
+        cluster, seeing if each one of them is worth keeping. A
+        :class:`~.db.Quote` is discarded if it has no urls, less than
+        :data:`~.settings.MT_FILTER_MIN_TOKENS`, spans longer than
         :data:`~.settings.MT_FILTER_MAX_DAYS`, or is not in English. Any
         :class:`~.db.Quote` that has none of those problems will be kept.
 

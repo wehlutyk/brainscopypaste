@@ -28,7 +28,7 @@ def tag(sentence):
     lemmas).
 
     Prefer using :func:`tags`, :func:`tokens`, or :func:`lemmas` which parse
-    this function's output for you.
+    this function's output.
 
     """
 

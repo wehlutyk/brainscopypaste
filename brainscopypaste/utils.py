@@ -429,10 +429,10 @@ def unpickle(filename):
 def init_db(echo_sql=False):
     """Connect to the database and bind :mod:`.db`'s `Session` object to it.
 
-    This function uses the :data:`~.settings.DB_USER` and
-    :data:`~.settings.DB_PASSWORD` credentials to connect to PostgreSQL
-    database :data:`~.settings.DB_NAME`. It binds the `Session` object in
-    :mod:`.db` to this engine, and returns the engine object.
+    Uses the :data:`~.settings.DB_USER` and :data:`~.settings.DB_PASSWORD`
+    credentials to connect to PostgreSQL database :data:`~.settings.DB_NAME`.
+    It binds the `Session` object in :mod:`.db` to this engine, and returns the
+    engine object.
 
     Parameters
     ----------
