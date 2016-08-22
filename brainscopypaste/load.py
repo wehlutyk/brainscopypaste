@@ -199,7 +199,7 @@ class FAFeatureLoader(Parser):
 
         Returns
         -------
-        :class:`networkx.DiGraph`
+        :func:`networkx.DiGraph`
             The FA weighted directed graph.
 
         """
@@ -224,7 +224,7 @@ class FAFeatureLoader(Parser):
 
         Returns
         -------
-        :class:`networkx.DiGraph`
+        :func:`networkx.DiGraph`
             The FA inversely weighted directed graph.
 
         """
@@ -250,7 +250,7 @@ class FAFeatureLoader(Parser):
 
         Returns
         -------
-        :class:`networkx.Graph`
+        :func:`networkx.Graph`
             The FA weighted undirected graph.
 
         """

@@ -365,7 +365,8 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'https://docs.python.org/': None}
-intersphinx_mapping = {'networkx': ('http://networkx.github.io/', None),
+intersphinx_mapping = {'networkx':
+                       ('https://networkx.readthedocs.io/en/stable/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy-1.11.0/',
                                  None),
                        'scipy': ('http://docs.scipy.org/doc/scipy-0.17.1/'
