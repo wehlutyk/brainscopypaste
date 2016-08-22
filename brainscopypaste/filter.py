@@ -40,7 +40,7 @@ def filter_clusters(limit=None):
     copy of it and all of its kept :class:`~.db.Quote`\ s, marking them as
     filtered. Progress of this operation is printed to stdout.
 
-    Once the operation finishes, a VACCUM and an ANALYZE operation are run on
+    Once the operation finishes, a VACUUM and an ANALYZE operation are run on
     the database so that it recomputes its optimisations.
 
     Parameters
