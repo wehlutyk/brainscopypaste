@@ -65,7 +65,7 @@ echo
 mkdir -p data/MemeTracker
 cd data/MemeTracker
 if [ ! -e "clust-qt08080902w3mfq5.txt" ]; then
-  wget http://snap.stanford.edu/data/d/quotes/Old-UniqUrls/clust-qt08080902w3mfq5.txt.gz
+  wget http://snap.stanford.edu/memetracker/srcdata/clust-qt08080902w3mfq5.txt.gz
   gunzip clust-qt08080902w3mfq5.txt.gz
 fi
 cd ../..
