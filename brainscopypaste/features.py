@@ -67,7 +67,7 @@ def _get_aoa():
             if mean == 'NA':
                 continue
             if word in aoa:
-                raise Exception("'{}' is already is AoA dictionary"
+                raise Exception("'{}' is already in the AoA dictionary"
                                 .format(word))
             aoa[word] = float(mean)
     return aoa
