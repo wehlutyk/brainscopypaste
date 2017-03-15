@@ -99,11 +99,11 @@ def _get_clearpond():
         for row in reader:
             word = row[0].lower()
             if word in clearpond_phonological:
-                raise Exception("'{}' is already is Clearpond phonological "
-                                'dictionary'.format(word))
+                raise Exception("'{}' is already in the Clearpond "
+                                'phonological dictionary'.format(word))
             if word in clearpond_orthographic:
-                raise Exception("'{}' is already is Clearpond orthographic "
-                                'dictionary'.format(word))
+                raise Exception("'{}' is already in the Clearpond "
+                                'orthographic dictionary'.format(word))
             clearpond_orthographic[word] = int(row[5])
             clearpond_phonological[word] = int(row[29])
     return {'orthographic': clearpond_orthographic,
