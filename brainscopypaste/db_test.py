@@ -74,11 +74,11 @@ def test_quote(some_quotes):
         assert session.query(Quote).filter_by(sid=4).one().cluster.sid == 4
         assert session.query(Quote).filter_by(sid=6).one().cluster.sid == 1
         assert session.query(Quote).filter_by(sid=6).one().tokens == \
-            ('some', 'quote', 'to', 'tokenize', '@card@')
+            ('some', 'quote', 'to', 'tokenize', '6')
         assert session.query(Quote).filter_by(sid=6).one().tags == \
             ('DT', 'NN', 'TO', 'VV', 'CD')
         assert session.query(Quote).filter_by(sid=6).one().lemmas == \
-            ('some', 'quote', 'to', 'tokenize', '@card@')
+            ('some', 'quote', 'to', 'tokenize', '6')
 
         assert set([quote.sid for quote in
                     session.query(Cluster).filter_by(sid=3).one().quotes]) == \
